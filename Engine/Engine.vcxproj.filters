@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Stdafx.cpp" />
+    <ClCompile Include="Application.cpp" />
+    <ClCompile Include="Core\Utility.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="Application.h" />
+    <ClInclude Include="Core\BitmaskEnum.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Containers.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\DWParam.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\IObject.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\NonCopyable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\NonMovable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utility.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{fe4c128f-3403-4d7c-91a7-ae31a0b366f7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
