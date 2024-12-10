@@ -65,9 +65,11 @@
 #include "Core\BitmaskEnum.h"
 #include "Core\Containers.h"
 #include "Core\DWParam.h"
+#include "Core\Hash.h"
 #include "Core\IObject.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "Core\VectorMath.h"
 
 // Engine info
 #define LUNA_MAKE_VERSION(major, minor, patch) \

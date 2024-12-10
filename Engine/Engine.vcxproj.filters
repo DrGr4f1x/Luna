@@ -7,6 +7,21 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="AppWindow.cpp" />
+    <ClCompile Include="Core\Hash.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Color.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Math\BoundingBox.cpp">
+      <Filter>Core\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Math\Frustum.cpp">
+      <Filter>Core\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Math\Random.cpp">
+      <Filter>Core\Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Stdafx.h" />
@@ -33,13 +48,64 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="AppWindow.h" />
+    <ClInclude Include="Core\Hash.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\CommonMath.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Color.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\VectorMath.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\BoundingBox.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\BoundingPlane.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\BoundingSphere.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Frustum.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Matrix3.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Matrix4.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Quaternion.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Random.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Scalar.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Transform.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\Vector.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
       <UniqueIdentifier>{fe4c128f-3403-4d7c-91a7-ae31a0b366f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Core\Math">
+      <UniqueIdentifier>{5ba2a9b0-8856-491f-b45f-d5e7091c1f4b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Core\Math\Functions.inl">
+      <Filter>Core\Math</Filter>
+    </None>
   </ItemGroup>
 </Project>

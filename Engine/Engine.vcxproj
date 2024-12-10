@@ -97,6 +97,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -118,6 +119,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,6 +141,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
       <AdditionalLibraryDirectories>
@@ -150,6 +153,11 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="AppWindow.cpp" />
+    <ClCompile Include="Core\Color.cpp" />
+    <ClCompile Include="Core\Hash.cpp" />
+    <ClCompile Include="Core\Math\BoundingBox.cpp" />
+    <ClCompile Include="Core\Math\Frustum.cpp" />
+    <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -159,15 +167,31 @@
     <ClInclude Include="Application.h" />
     <ClInclude Include="AppWindow.h" />
     <ClInclude Include="Core\BitmaskEnum.h" />
+    <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\Containers.h" />
     <ClInclude Include="Core\DWParam.h" />
+    <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\IObject.h" />
+    <ClInclude Include="Core\Math\BoundingBox.h" />
+    <ClInclude Include="Core\Math\BoundingPlane.h" />
+    <ClInclude Include="Core\Math\BoundingSphere.h" />
+    <ClInclude Include="Core\Math\CommonMath.h" />
+    <ClInclude Include="Core\Math\Frustum.h" />
+    <ClInclude Include="Core\Math\Matrix3.h" />
+    <ClInclude Include="Core\Math\Matrix4.h" />
+    <ClInclude Include="Core\Math\Quaternion.h" />
+    <ClInclude Include="Core\Math\Random.h" />
+    <ClInclude Include="Core\Math\Scalar.h" />
+    <ClInclude Include="Core\Math\Transform.h" />
+    <ClInclude Include="Core\Math\Vector.h" />
     <ClInclude Include="Core\NonCopyable.h" />
     <ClInclude Include="Core\NonMovable.h" />
     <ClInclude Include="Core\Utility.h" />
+    <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="Stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Core\Math\Functions.inl" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
