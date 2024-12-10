@@ -12,12 +12,18 @@
 
 #include "TEMPLATEApp.h"
 
-using namespace Kodiak;
+#include "AppWindow.h"
+
+using namespace Luna;
+using namespace winrt::Windows::ApplicationModel::Core;
 
 
-int wmain(int argc, char* argv[])
+int __stdcall wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int)
 {
-	TEMPLATEApp app{ s_appName };
+	winrt::init_apartment();
 
-	return app.Run(argc, argv);
+	TEMPLATEApp app{ 1920, 1280 };
+	CoreApplication::Run(winrt::make<AppWindow>(&app));
+
+	return 0;
 }

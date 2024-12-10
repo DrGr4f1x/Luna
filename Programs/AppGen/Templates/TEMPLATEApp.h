@@ -13,24 +13,15 @@
 #include "Application.h"
 
 
-class TEMPLATEApp : public Kodiak::Application
+class TEMPLATEApp : public Luna::Application
 {
 public:
-	explicit TEMPLATEApp(const std::string& name) 
-		: Application{ name }
-	{}
+	TestApp(uint32_t width, uint32_t height);
 
-	int ProcessCommandLine(int argc, char* argv[]) final;
 	void Configure() final;
 	void Startup() final;
 	void Shutdown() final;
 
 	bool Update() final;
 	void Render() final;
-
-private:
-	// Add member functions here
-
-private:
-	// Add data members here
 };
