@@ -12,7 +12,7 @@
 
 #include "TestApp.h"
 
-#include "..\..\Engine\AppWindow.h"
+#include "AppWindow.h"
 
 using namespace Luna;
 using namespace winrt::Windows::ApplicationModel::Core;

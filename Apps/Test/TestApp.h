@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "..\..\Engine\Application.h"
+#include "Application.h"
 
 class TestApp : public Luna::Application
 {
