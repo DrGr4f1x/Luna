@@ -12,23 +12,43 @@
 
 #include "TestApp.h"
 
+using namespace Luna;
+
 
 TestApp::TestApp(uint32_t width, uint32_t height)
-	: IApplication{ width, height, s_appName }
-{}
+	: Application{ width, height, s_appName }
+{
+}
 
 
-void TestApp::OnInit()
-{ }
+void TestApp::Configure()
+{
+	// Application config, before device creation
+	Application::Configure();
+}
 
 
-void TestApp::OnUpdate()
-{ }
+void TestApp::Startup()
+{
+	// Application initialization, after device creation
+}
 
 
-void TestApp::OnRender()
-{ }
+void TestApp::Shutdown()
+{
+	// Application cleanup on shutdown
+}
 
 
-void TestApp::OnDestroy()
-{ }
+bool TestApp::Update()
+{
+	// Application update tick
+
+	return true;
+}
+
+
+void TestApp::Render()
+{
+	// Application main render loop
+}

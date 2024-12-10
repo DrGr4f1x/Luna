@@ -1,0 +1,3 @@
+D:\Depot\Luna\Engine\Intermediate\Profile\Engine.vcxproj.MdMergeInputs.cache
+D:\Depot\Luna\Engine\Intermediate\Profile\Engine.vcxproj.cppwinrt_plat.cache
+D:\Depot\Luna\Engine\Intermediate\Profile\Engine.vcxproj.cppwinrt_comp.cache

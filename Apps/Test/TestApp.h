@@ -12,13 +12,15 @@
 
 #include "..\..\Engine\Application.h"
 
-class TestApp : public Luna::IApplication
+class TestApp : public Luna::Application
 {
 public:
 	TestApp(uint32_t width, uint32_t height);
 
-	void OnInit() override;
-	void OnUpdate() override;
-	void OnRender() override;
-	void OnDestroy() override;
+	void Configure() final;
+	void Startup() final;
+	void Shutdown() final;
+
+	bool Update() final;
+	void Render() final;
 };

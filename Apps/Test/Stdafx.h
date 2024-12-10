@@ -20,14 +20,10 @@
 // Windows headers
 #include <windows.h>
 #include <wrl.h>
-#include <comdef.h>
-#include <shellapi.h>
 
-
-// Standard library headers
+// Standard headers
 #include <cstdint>
 #include <string>
-
 
 // App name
 static const std::string s_appName{ "Test" };

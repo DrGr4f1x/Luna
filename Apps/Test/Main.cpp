@@ -12,15 +12,18 @@
 
 #include "TestApp.h"
 
-#include "..\Common\UWP\ViewProvider.h"
+#include "..\..\Engine\AppWindow.h"
+
+using namespace Luna;
+using namespace winrt::Windows::ApplicationModel::Core;
 
 
-[Platform::MTAThread]
-int WINAPIV main(Platform::Array<Platform::String^>^ /*params*/)
+int __stdcall wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int)
 {
-	TestApp app{ 1280, 720 };
-	auto viewProvider = ref new Luna::ViewProvider(reinterpret_cast<UINT_PTR>(&app));
+	winrt::init_apartment();
 
-	Windows::ApplicationModel::Core::CoreApplication::Run(viewProvider);
+	TestApp app{ 1920, 1280 };
+	CoreApplication::Run(winrt::make<AppWindow>(&app));
+
 	return 0;
 }

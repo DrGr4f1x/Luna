@@ -13,30 +13,37 @@
 namespace Luna
 {
 
-class IApplication
+class Application
 {
+	friend struct AppWindow;
+
 public:
-	IApplication(uint32_t width, uint32_t height, const std::string& appTitle);
+	Application(uint32_t width, uint32_t height, const std::string& appTitle);
 
-	uint32_t GetWidth() const { return m_width; }
-	uint32_t GetHeight() const { return m_height; }
-	const std::string& GetTitle() const { return m_appTitle; }
-	const std::wstring GetWTitle() const;
+	virtual void Configure();
+	virtual void Startup() {}
+	virtual void Shutdown() {}
 
-	virtual void OnInit() = 0;
-	virtual void OnUpdate() = 0;
-	virtual void OnRender() = 0;
-	virtual void OnDestroy() = 0;
+	virtual bool Update() { return true; }
+	virtual void UpdateUI() {}
+	virtual void Render() {}
 
-	virtual void OnKeyDown(UINT8 /*key*/) {}
-	virtual void OnKeyUp(UINT8 /*key*/) {}
-
-	virtual void ParseCommandLineArgs(WCHAR* argv[], int argc) {}
+	void Run();
+	void Close() { m_bWindowClosed = true; }
 
 protected:
 	uint32_t m_width{ 0 };
 	uint32_t m_height{ 0 };
 	std::string m_appTitle;
+
+	bool m_bIsRunning{ false };
+	bool m_bWindowClosed{ false };
+	bool m_bIsVisible{ true };
+
+private:
+	void Initialize();
+	void Finalize();
+	void CreateDevice();
 };
 
 } // namespace Luna
