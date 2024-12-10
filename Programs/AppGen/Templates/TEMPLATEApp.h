@@ -16,7 +16,7 @@
 class TEMPLATEApp : public Luna::Application
 {
 public:
-	TestApp(uint32_t width, uint32_t height);
+	TEMPLATEApp(uint32_t width, uint32_t height);
 
 	void Configure() final;
 	void Startup() final;

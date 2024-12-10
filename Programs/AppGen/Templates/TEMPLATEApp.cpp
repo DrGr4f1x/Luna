@@ -15,6 +15,11 @@
 using namespace Luna;
 
 
+TEMPLATEApp::TEMPLATEApp(uint32_t width, uint32_t height)
+	: Application{ width, height, s_appName }
+{
+}
+
 void TEMPLATEApp::Configure()
 {
 	// Application config, before device creation

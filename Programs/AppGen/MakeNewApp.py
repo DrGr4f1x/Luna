@@ -30,9 +30,9 @@ def copy_template_file(filename, project, guid):
     with open(template_filename, 'r', encoding='utf-8') as infile:
         with open(output_filename, 'w', encoding='utf-8') as outfile:
             contents = infile.read()
+            contents = contents.replace('TEMPLATE_GUID', guid)
             contents = contents.replace('TEMPLATE_NAME', project)
             contents = contents.replace('TEMPLATE', project)
-            contents = contents.replace('TEMPLATE_GUID', guid)
             outfile.write(contents)
 
 def copy_asset_file(filename, project):
