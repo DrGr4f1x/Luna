@@ -23,7 +23,12 @@
 
 // Standard headers
 #include <cstdint>
+#include <filesystem>
 #include <string>
+
+// Engine headers
+#include "Core\NonCopyable.h"
+#include "Core\NonMovable.h"
 
 // App name
 static const std::string s_appName{ "Test" };

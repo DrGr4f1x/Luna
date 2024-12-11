@@ -26,6 +26,7 @@
 #include <array>
 #include <chrono>
 #include <cstdarg>
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <future>
@@ -35,7 +36,8 @@
 #include <variant>
 
 // Engine headers
-
+#include "Core\NonCopyable.h"
+#include "Core\NonMovable.h"
 
 // App name
 static const std::string s_appName{ "TEMPLATE" };

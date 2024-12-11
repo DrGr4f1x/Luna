@@ -32,8 +32,6 @@ Application::Application(uint32_t width, uint32_t height, const std::string& app
 
 void Application::Configure()
 { 
-	// TODO
-	// Setup filesystem
 }
 
 
@@ -71,7 +69,8 @@ void Application::Run()
 void Application::Initialize()
 {
 	// TODO
-	// Create core engine systems
+	m_filesystem = make_unique<FileSystem>(m_appTitle);
+	m_filesystem->SetDefaultRootPath();
 
 	// Application setup before device creation
 	Configure();

@@ -69,6 +69,7 @@
 #include "Core\IObject.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "Core\Utility.h"
 #include "Core\VectorMath.h"
 
 // Engine info

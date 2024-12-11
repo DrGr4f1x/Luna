@@ -159,6 +159,7 @@
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
+    <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -188,6 +189,7 @@
     <ClInclude Include="Core\NonMovable.h" />
     <ClInclude Include="Core\Utility.h" />
     <ClInclude Include="Core\VectorMath.h" />
+    <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Stdafx.h" />
   </ItemGroup>
   <ItemGroup>

@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include "FileSystem.h"
+
+
 namespace Luna
 {
 
@@ -39,6 +42,9 @@ protected:
 	bool m_bIsRunning{ false };
 	bool m_bWindowClosed{ false };
 	bool m_bIsVisible{ true };
+
+	// Engine systems
+	std::unique_ptr<FileSystem> m_filesystem;
 
 private:
 	void Initialize();
