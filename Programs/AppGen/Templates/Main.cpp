@@ -12,18 +12,11 @@
 
 #include "TEMPLATEApp.h"
 
-#include "AppWindow.h"
-
-using namespace Luna;
-using namespace winrt::Windows::ApplicationModel::Core;
-
 
 int __stdcall wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int)
 {
-	winrt::init_apartment();
-
 	TEMPLATEApp app{ 1920, 1280 };
-	CoreApplication::Run(winrt::make<AppWindow>(&app));
+	Luna::Run(&app);
 
 	return 0;
 }

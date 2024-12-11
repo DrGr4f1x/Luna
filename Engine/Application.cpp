@@ -13,6 +13,7 @@
 #include "Application.h"
 
 #include "Core\Utility.h"
+#include "AppWindow.h"
 
 #include <winrt/Windows.UI.Core.h>
 
@@ -92,6 +93,16 @@ void Application::Finalize()
 void Application::CreateDevice()
 {
 	// TODO
+}
+
+
+void Run(Application* pApplication)
+{
+	using namespace winrt::Windows::ApplicationModel::Core;
+
+	winrt::init_apartment();
+
+	CoreApplication::Run(winrt::make<AppWindow>(pApplication));
 }
 
 } // namespace Luna

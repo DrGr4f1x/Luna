@@ -89,10 +89,3 @@ static const std::string s_engineVersionStr
 };
 
 static const std::string s_engineName{ "Luna" };
-
-namespace Luna
-{
-
-void HelloEngine();
-
-}

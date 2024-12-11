@@ -46,4 +46,7 @@ private:
 	void CreateDevice();
 };
 
+
+void Run(Application* pApplication);
+
 } // namespace Luna

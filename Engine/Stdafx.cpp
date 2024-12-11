@@ -9,17 +9,3 @@
 //
 
 #include "Stdafx.h"
-
-#include <iostream>
-
-using namespace std;
-
-namespace Luna
-{
-
-void HelloEngine()
-{
-	cout << "Hello from Engine" << endl;
-}
-
-}
