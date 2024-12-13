@@ -20,15 +20,25 @@
 // Windows headers
 #include <windows.h>
 #include <wrl.h>
+#include <comdef.h>
 
-// Standard headers
-#include <cstdint>
+// Standard library headers
+#include <array>
+#include <chrono>
+#include <cstdarg>
 #include <filesystem>
+#include <format>
+#include <fstream>
+#include <future>
+#include <memory>
+#include <mutex>
 #include <string>
+#include <variant>
 
 // Engine headers
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "LogSystem.h"
 
 // App name
 static const std::string s_appName{ "Test" };

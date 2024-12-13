@@ -20,7 +20,6 @@ TestApp::TestApp(uint32_t width, uint32_t height)
 {
 }
 
-
 void TestApp::Configure()
 {
 	// Application config, before device creation

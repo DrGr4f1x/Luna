@@ -10,31 +10,6 @@
     <ClInclude Include="TEMPLATEApp.h" />
   </ItemGroup>
   <ItemGroup>
-    <AppxManifest Include="Package.appxmanifest" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Assets\tile-sdk.png">
-      <Filter>Assets</Filter>
-    </Image>
-    <Image Include="Assets\storelogo-sdk.png">
-      <Filter>Assets</Filter>
-    </Image>
-    <Image Include="Assets\squaretile-sdk.png">
-      <Filter>Assets</Filter>
-    </Image>
-    <Image Include="Assets\splash-sdk.png">
-      <Filter>Assets</Filter>
-    </Image>
-    <Image Include="Assets\smalltile-sdk.png">
-      <Filter>Assets</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Assets">
-      <UniqueIdentifier>{10f546a1-bb77-43df-840d-44e2319091c0}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
 </Project>

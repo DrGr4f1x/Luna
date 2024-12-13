@@ -16,10 +16,11 @@
 namespace Luna
 {
 
+class LogSystem;
+
+
 class Application
 {
-	friend struct AppWindow;
-
 public:
 	Application(uint32_t width, uint32_t height, const std::string& appTitle);
 
@@ -31,7 +32,7 @@ public:
 	virtual void UpdateUI() {}
 	virtual void Render() {}
 
-	void Run();
+	void Run(int argc, char* argv[]);
 	void Close() { m_bWindowClosed = true; }
 
 protected:
@@ -44,15 +45,13 @@ protected:
 	bool m_bIsVisible{ true };
 
 	// Engine systems
-	std::unique_ptr<FileSystem> m_filesystem;
+	std::unique_ptr<FileSystem> m_fileSystem;
+	//std::unique_ptr<LogSystem> m_logSystem;
 
 private:
 	void Initialize();
 	void Finalize();
 	void CreateDevice();
 };
-
-
-void Run(Application* pApplication);
 
 } // namespace Luna

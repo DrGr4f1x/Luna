@@ -13,10 +13,10 @@
 #include "TEMPLATEApp.h"
 
 
-int __stdcall wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR, int)
+int main(int argc, char* argv[])
 {
-	TEMPLATEApp app{ 1920, 1280 };
-	Luna::Run(&app);
+	TEMPLATEApp app{ 1920, 1080 };
+	app.Run(argc, argv);
 
 	return 0;
 }

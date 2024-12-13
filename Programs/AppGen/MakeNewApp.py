@@ -19,7 +19,6 @@ from uuid import uuid4
 
 APPS_FOLDER = "./Apps"
 TEMPLATES_FOLDER = "./Programs/AppGen/Templates"
-ASSETS_FOLDER = "./Programs/AppGen/Templates/Assets"
 
 def copy_template_file(filename, project, guid):
     '''Copies one template file and replaces templated values'''
@@ -35,14 +34,6 @@ def copy_template_file(filename, project, guid):
             contents = contents.replace('TEMPLATE', project)
             outfile.write(contents)
 
-def copy_asset_file(filename, project):
-    '''Copies one asset file'''
-    asset_filename = os.path.join(ASSETS_FOLDER, filename)
-    output_filename = os.path.join(APPS_FOLDER, project)
-    output_filename = os.path.join(output_filename, "Assets")
-    output_filename = os.path.join(output_filename, filename)
-    shutil.copy(asset_filename, output_filename)
-
 def copy_app_template(project, guid):
     '''Instantiates a new solution from a template'''
     copy_template_file('Stdafx.h', project, guid)
@@ -52,14 +43,7 @@ def copy_app_template(project, guid):
     copy_template_file('Main.cpp', project, guid)
     copy_template_file('TEMPLATE.vcxproj', project, guid)
     copy_template_file('TEMPLATE.vcxproj.filters', project, guid)
-    copy_template_file('Package.appxmanifest', project, guid)
     copy_template_file('packages.config', project, guid)
-    copy_asset_file('smalltile-sdk.png', project)
-    copy_asset_file('splash-sdk.png', project)
-    copy_asset_file('squaretile-sdk.png', project)
-    copy_asset_file('storelogo-sdk.png', project)
-    copy_asset_file('tile-sdk.png', project)
-
 
 def create_project():
     if len(sys.argv) != 2:
@@ -77,8 +61,6 @@ def create_project():
     else:
         new_app_dir = os.path.join(APPS_FOLDER, project_name)
         os.mkdir(new_app_dir)
-        new_app_assets_dir = os.path.join(new_app_dir, "Assets")
-        os.mkdir(new_app_assets_dir)
         copy_app_template(project_name, str(uuid4()).upper())
         
 

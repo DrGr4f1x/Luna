@@ -38,6 +38,7 @@
 // Engine headers
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "LogSystem.h"
 
 // App name
 static const std::string s_appName{ "TEMPLATE" };

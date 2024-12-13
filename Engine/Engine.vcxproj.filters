@@ -1,18 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Stdafx.cpp" />
     <ClCompile Include="Application.cpp" />
-    <ClCompile Include="Core\Utility.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="AppWindow.cpp" />
-    <ClCompile Include="Core\Hash.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Core\Color.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
+    <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="LogSystem.cpp" />
+    <ClCompile Include="Stdafx.cpp" />
     <ClCompile Include="Core\Math\BoundingBox.cpp">
       <Filter>Core\Math</Filter>
     </ClCompile>
@@ -22,45 +14,21 @@
     <ClCompile Include="Core\Math\Random.cpp">
       <Filter>Core\Math</Filter>
     </ClCompile>
-    <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="Core\Color.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Hash.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Utility.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Stdafx.h" />
     <ClInclude Include="Application.h" />
-    <ClInclude Include="Core\BitmaskEnum.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Containers.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\DWParam.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\IObject.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\NonCopyable.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\NonMovable.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Utility.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="AppWindow.h" />
-    <ClInclude Include="Core\Hash.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Math\CommonMath.h">
-      <Filter>Core\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\Color.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Core\VectorMath.h">
-      <Filter>Core</Filter>
-    </ClInclude>
+    <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="LogSystem.h" />
+    <ClInclude Include="Stdafx.h" />
     <ClInclude Include="Core\Math\BoundingBox.h">
       <Filter>Core\Math</Filter>
     </ClInclude>
@@ -68,6 +36,9 @@
       <Filter>Core\Math</Filter>
     </ClInclude>
     <ClInclude Include="Core\Math\BoundingSphere.h">
+      <Filter>Core\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Math\CommonMath.h">
       <Filter>Core\Math</Filter>
     </ClInclude>
     <ClInclude Include="Core\Math\Frustum.h">
@@ -94,20 +65,49 @@
     <ClInclude Include="Core\Math\Vector.h">
       <Filter>Core\Math</Filter>
     </ClInclude>
-    <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="Core\BitmaskEnum.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Color.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Containers.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\DWParam.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Hash.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\IObject.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\NonCopyable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\NonMovable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Utility.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\VectorMath.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
-      <UniqueIdentifier>{fe4c128f-3403-4d7c-91a7-ae31a0b366f7}</UniqueIdentifier>
+      <UniqueIdentifier>{6329aded-edc7-4494-a88d-73cb7ef493d9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Core\Math">
-      <UniqueIdentifier>{5ba2a9b0-8856-491f-b45f-d5e7091c1f4b}</UniqueIdentifier>
+      <UniqueIdentifier>{df2292ed-b3b7-4261-bf5d-cfc5540b4081}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Core\Math\Functions.inl">
       <Filter>Core\Math</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

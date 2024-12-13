@@ -12,18 +12,15 @@
 
 #include "Application.h"
 
-#include "Core\Utility.h"
-#include "AppWindow.h"
+#include "FileSystem.h"
 
-#include <winrt/Windows.UI.Core.h>
-
-using namespace winrt::Windows::UI::Core;
+using namespace std;
 
 
 namespace Luna
 {
 
-Application::Application(uint32_t width, uint32_t height, const std::string& appTitle)
+Application::Application(uint32_t width, uint32_t height, const string& appTitle)
 	: m_width{ width }
 	, m_height{ height }
 	, m_appTitle{ appTitle }
@@ -35,42 +32,17 @@ void Application::Configure()
 }
 
 
-void Application::Run()
+void Application::Run(int argc, char* argv[])
 {
-	while (m_bIsRunning && !m_bWindowClosed)
-	{
-		if (m_bIsVisible)
-		{
-			CoreWindow::GetForCurrentThread().Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
-
-			bool res = Update();
-			if (res)
-			{
-				// TODO
-				// begin frame
-
-				Render();
-
-				// TODO
-				// present
-			}
-			m_bIsRunning = res;
-		}
-		else
-		{
-			CoreWindow::GetForCurrentThread().Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessOneAndAllPending);
-		}
-		
-	}
-
-	Finalize();
 }
 
 void Application::Initialize()
 {
-	// TODO
-	m_filesystem = make_unique<FileSystem>(m_appTitle);
-	m_filesystem->SetDefaultRootPath();
+	// Create core engine systems
+	m_fileSystem = make_unique<FileSystem>(m_appTitle);
+	m_fileSystem->SetDefaultRootPath();
+
+	//m_logSystem = make_unique<LogSystem>();
 
 	// Application setup before device creation
 	Configure();
@@ -92,16 +64,6 @@ void Application::Finalize()
 void Application::CreateDevice()
 {
 	// TODO
-}
-
-
-void Run(Application* pApplication)
-{
-	using namespace winrt::Windows::ApplicationModel::Core;
-
-	winrt::init_apartment();
-
-	CoreApplication::Run(winrt::make<AppWindow>(pApplication));
 }
 
 } // namespace Luna

@@ -32,6 +32,7 @@
 #include <ppl.h>
 #include <ppltasks.h>
 #include <comdef.h>
+#include <shlwapi.h>
 
 
 // Standard library headers
@@ -71,6 +72,7 @@
 #include "Core\NonMovable.h"
 #include "Core\Utility.h"
 #include "Core\VectorMath.h"
+#include "LogSystem.h"
 
 // Engine info
 #define LUNA_MAKE_VERSION(major, minor, patch) \
