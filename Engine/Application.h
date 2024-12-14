@@ -12,10 +12,15 @@
 
 #include "FileSystem.h"
 
+// Forward declarations
+struct GLFWwindow;
+
 
 namespace Luna
 {
 
+// Forward declarations
+class FileSystem;
 class LogSystem;
 
 
@@ -23,6 +28,9 @@ class Application
 {
 public:
 	Application(uint32_t width, uint32_t height, const std::string& appTitle);
+	virtual ~Application();
+
+	virtual void ProcessCommandLine(int argc, char* argv[]) {}
 
 	virtual void Configure();
 	virtual void Startup() {}
@@ -32,7 +40,7 @@ public:
 	virtual void UpdateUI() {}
 	virtual void Render() {}
 
-	void Run(int argc, char* argv[]);
+	void Run();
 	void Close() { m_bWindowClosed = true; }
 
 protected:
@@ -49,9 +57,16 @@ protected:
 	//std::unique_ptr<LogSystem> m_logSystem;
 
 private:
-	void Initialize();
+	bool Initialize();
 	void Finalize();
+	bool CreateAppWindow();
 	void CreateDevice();
+
+private:
+	GLFWwindow* m_pWindow{ nullptr };
 };
+
+
+int Run(Application* pApplication);
 
 } // namespace Luna

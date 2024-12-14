@@ -8,16 +8,24 @@
 // Author:  David Elder
 //
 
-#include "Stdafx.h"
+#pragma once
 
-#include "TestApp.h"
-
-
-int main(int argc, char* argv[])
+namespace Luna
 {
-	TestApp app{ 1920, 1080 };
-	
-	app.ProcessCommandLine(argc, argv);
 
-	return Luna::Run(&app);
-}
+// Forward declarations
+class Application;
+
+
+class Window
+{
+public:
+	explicit Window(Application* pApplication);
+
+
+
+private:
+	Application* m_pApplication{ nullptr };
+};
+
+} // namespace Luna

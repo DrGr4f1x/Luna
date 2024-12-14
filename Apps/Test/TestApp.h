@@ -18,6 +18,8 @@ class TestApp : public Luna::Application
 public:
 	TestApp(uint32_t width, uint32_t height);
 
+	void ProcessCommandLine(int argc, char* argv[]) final;
+
 	void Configure() final;
 	void Startup() final;
 	void Shutdown() final;

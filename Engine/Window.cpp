@@ -10,14 +10,16 @@
 
 #include "Stdafx.h"
 
-#include "TestApp.h"
+#include "Window.h"
 
+#include <GLFW/glfw3.h>
 
-int main(int argc, char* argv[])
+namespace Luna
 {
-	TestApp app{ 1920, 1080 };
-	
-	app.ProcessCommandLine(argc, argv);
 
-	return Luna::Run(&app);
+Window::Window(Application* pApplication)
+	: m_pApplication{ pApplication }
+{
 }
+
+} // namespace Luna

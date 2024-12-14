@@ -16,7 +16,8 @@
 int main(int argc, char* argv[])
 {
 	TEMPLATEApp app{ 1920, 1080 };
-	app.Run(argc, argv);
+	
+	app.ProcessCommandLine(argc, argv);
 
-	return 0;
+	return Luna::Run(&app);
 }

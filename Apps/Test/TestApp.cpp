@@ -20,6 +20,13 @@ TestApp::TestApp(uint32_t width, uint32_t height)
 {
 }
 
+
+void TestApp::ProcessCommandLine(int argc, char* argv[])
+{
+	// Handle commandline arguments here
+}
+
+
 void TestApp::Configure()
 {
 	// Application config, before device creation
