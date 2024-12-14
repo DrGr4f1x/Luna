@@ -63,7 +63,7 @@ InputSystem::~InputSystem()
 }
 
 
-void InputSystem::Update(float deltaT)
+void InputSystem::Update()
 {
 	using enum AnalogInput;
 	using enum DigitalInput;

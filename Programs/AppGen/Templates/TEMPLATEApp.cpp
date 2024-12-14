@@ -21,9 +21,10 @@ TEMPLATEApp::TEMPLATEApp(uint32_t width, uint32_t height)
 }
 
 
-void TEMPLATEApp::ProcessCommandLine(int argc, char* argv[])
+int TEMPLATEApp::ProcessCommandLine(int argc, char* argv[])
 {
 	// Handle commandline arguments here
+	return Application::ProcessCommandLine(argc, argv);
 }
 
 

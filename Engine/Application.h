@@ -23,6 +23,34 @@ namespace Luna
 class FileSystem;
 class InputSystem;
 class LogSystem;
+enum class GraphicsApi;
+
+
+struct ApplicationInfo
+{
+	std::string name{ "Unnamed" };
+	uint32_t width{ 1920 };
+	uint32_t height{ 1080 };
+	GraphicsApi api{ GraphicsApi::D3D12 };
+#if ENABLE_VALIDATION
+	bool useValidation{ true };
+#else
+	bool useValidation{ false };
+#endif // ENABLE_VALIDATION
+
+#if ENABLE_DEBUG_MARKERS
+	bool useDebugMarkers{ true };
+#else
+	bool useDebugMarkers{ false };
+#endif
+
+	ApplicationInfo& SetName(const std::string& value) { name = value; return *this; }
+	constexpr ApplicationInfo& SetWidth(uint32_t value) noexcept { width = value; return *this; }
+	constexpr ApplicationInfo& SetHeight(uint32_t value) noexcept { height = value; return *this; }
+	constexpr ApplicationInfo& SetApi(GraphicsApi value) noexcept { api = value; return *this; }
+	constexpr ApplicationInfo& SetUseValidation(bool value) noexcept { useValidation = value; return *this; }
+	constexpr ApplicationInfo& SetUseDebugMarkers(bool value) noexcept { useDebugMarkers = value; return *this; }
+};
 
 
 class Application
@@ -31,7 +59,7 @@ public:
 	Application(uint32_t width, uint32_t height, const std::string& appTitle);
 	virtual ~Application();
 
-	virtual void ProcessCommandLine(int argc, char* argv[]) {}
+	virtual int ProcessCommandLine(int argc, char* argv[]);
 
 	virtual void Configure();
 	virtual void Startup() {}
@@ -48,15 +76,14 @@ public:
 	virtual void OnWindowPosition(int xPos, int yPos);
 
 	void Run();
-	void Close() { m_bWindowClosed = true; }
+
+	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 protected:
-	uint32_t m_width{ 0 };
-	uint32_t m_height{ 0 };
-	std::string m_appTitle;
+	ApplicationInfo m_appInfo;
+	std::string m_appNameWithApi;
 
 	bool m_bIsRunning{ false };
-	bool m_bWindowClosed{ false };
 	bool m_bIsVisible{ true };
 
 	// Frame time and counter

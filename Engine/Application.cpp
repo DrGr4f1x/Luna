@@ -20,6 +20,8 @@
 #define GLFW_EXPOSE_NATIVE_WIN32 1
 #include <glfw\glfw3native.h>
 
+#include <CLI11\CLI11.hpp>
+
 using namespace std;
 
 
@@ -81,14 +83,42 @@ namespace Luna
 
 
 Application::Application(uint32_t width, uint32_t height, const string& appTitle)
-	: m_width{ width }
-	, m_height{ height }
-	, m_appTitle{ appTitle }
-{}
+{
+	m_appInfo.SetName(appTitle);
+	m_appInfo.SetWidth(width);
+	m_appInfo.SetHeight(height);
+}
 
 
 Application::~Application()
 {}
+
+
+int Application::ProcessCommandLine(int argc, char* argv[])
+{
+	CLI::App app{ "Luna App", m_appInfo.name };
+	
+	// Graphic API selection
+	bool bDX12{ false };
+	bool bVulkan{ false };
+	auto dxOpt = app.add_flag("--dx,--dx12,--d3d12", bDX12, "Select DirectX renderer");
+	auto vkOpt = app.add_flag("--vk,--vulkan", bVulkan, "Select Vulkan renderer");
+	dxOpt->excludes(vkOpt);
+	vkOpt->excludes(dxOpt);
+
+	// Width, height
+	auto widthOpt = app.add_option("--resx,--width", m_appInfo.width, "Sets initial window width");
+	auto heightOpt = app.add_option("--resy,--height", m_appInfo.height, "Sets initial window height");
+
+	// Parse command line
+	CLI11_PARSE(app, argc, argv);
+
+	// Set application parameters from command line
+	m_appInfo.api = bVulkan ? GraphicsApi::Vulkan : GraphicsApi::D3D12;
+	m_appNameWithApi = format("[{}] {}", GraphicsApiToString(m_appInfo.api), m_appInfo.name);
+
+	return 0;
+}
 
 
 void Application::Configure()
@@ -137,13 +167,12 @@ void Application::Run()
 bool Application::Initialize()
 {
 	// Create core engine systems
-	m_fileSystem = make_unique<FileSystem>(m_appTitle);
+	m_fileSystem = make_unique<FileSystem>(m_appInfo.name);
 	m_fileSystem->SetDefaultRootPath();
-
 	m_logSystem = make_unique<LogSystem>();
 
 	// This is the first place we can post a startup message
-	LogInfo(LogApplication) << "App " << m_appTitle << " initializing" << endl;
+	LogInfo(LogApplication) << "App " << m_appInfo.name << " initializing" << endl;
 
 	// Application setup before device creation
 	Configure();
@@ -187,7 +216,7 @@ bool Application::Tick()
 	double curTime = glfwGetTime();
 	double deltaTime = curTime - m_prevFrameTime;
 
-	m_inputSystem->Update(deltaTime);
+	m_inputSystem->Update();
 
 	// Close on Escape key
 	if (m_inputSystem->IsFirstPressed(DigitalInput::kKey_escape))
@@ -210,9 +239,7 @@ bool Application::Tick()
 
 bool Application::CreateAppWindow()
 {
-	glfwSetErrorCallback(GlfwErrorCallback);
-
-	m_pWindow = glfwCreateWindow(m_width, m_height, m_appTitle.c_str(), nullptr, nullptr);
+	m_pWindow = glfwCreateWindow(m_appInfo.width, m_appInfo.height, m_appInfo.name.c_str(), nullptr, nullptr);
 
 	if (m_pWindow == nullptr)
 	{
@@ -238,6 +265,8 @@ void Application::CreateDevice()
 
 int Run(Application* pApplication)
 {
+	glfwSetErrorCallback(GlfwErrorCallback);
+
 	if (!glfwInit())
 	{
 		return -1;

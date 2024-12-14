@@ -23,6 +23,7 @@ namespace
 {
 
 Luna::LogSystem* g_logSystem{ nullptr };
+std::queue<Luna::LogMessage> g_deferredMessages;
 
 bool outputToFile{ true };
 bool outputToConsole{ true };
@@ -57,7 +58,17 @@ void PostLogMessage(LogMessage&& message)
 	auto* logSystem = GetLogSystem();
 	if (logSystem)
 	{
+		for (; !g_deferredMessages.empty(); g_deferredMessages.pop())
+		{
+			LogMessage deferredMessage = g_deferredMessages.front();
+			logSystem->PostLogMessage(move(deferredMessage));
+		}
+
 		logSystem->PostLogMessage(move(message));
+	}
+	else
+	{
+		g_deferredMessages.emplace(move(message));
 	}
 }
 

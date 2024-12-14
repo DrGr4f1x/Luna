@@ -21,9 +21,10 @@ TestApp::TestApp(uint32_t width, uint32_t height)
 }
 
 
-void TestApp::ProcessCommandLine(int argc, char* argv[])
+int TestApp::ProcessCommandLine(int argc, char* argv[])
 {
 	// Handle commandline arguments here
+	return Application::ProcessCommandLine(argc, argv);
 }
 
 

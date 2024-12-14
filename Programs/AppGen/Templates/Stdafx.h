@@ -36,6 +36,7 @@
 #include <variant>
 
 // Engine headers
+#include "Core\CoreEnums.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
 #include "LogSystem.h"
