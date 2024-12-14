@@ -77,6 +77,7 @@
 #include "Core\CoreEnums.h"
 #include "Core\DWParam.h"
 #include "Core\Hash.h"
+#include "Core\IntrusivePtr.h"
 #include "Core\IObject.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"

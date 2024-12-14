@@ -102,6 +102,9 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="Core\IntrusivePtr.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -109,6 +112,9 @@
     </Filter>
     <Filter Include="Core\Math">
       <UniqueIdentifier>{df2292ed-b3b7-4261-bf5d-cfc5540b4081}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{45e3e9e6-1acc-4a27-84e3-ed584659d31d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

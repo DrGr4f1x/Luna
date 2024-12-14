@@ -40,6 +40,7 @@
     <ClInclude Include="Core\CoreEnums.h" />
     <ClInclude Include="Core\DWParam.h" />
     <ClInclude Include="Core\Hash.h" />
+    <ClInclude Include="Core\IntrusivePtr.h" />
     <ClInclude Include="Core\IObject.h" />
     <ClInclude Include="Core\Math\BoundingBox.h" />
     <ClInclude Include="Core\Math\BoundingPlane.h" />

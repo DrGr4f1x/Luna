@@ -36,9 +36,17 @@
 #include <variant>
 
 // Engine headers
+#include "Core\BitmaskEnum.h"
+#include "Core\Containers.h"
 #include "Core\CoreEnums.h"
+#include "Core\DWParam.h"
+#include "Core\Hash.h"
+#include "Core\IntrusivePtr.h"
+#include "Core\IObject.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "Core\Utility.h"
+#include "Core\VectorMath.h"
 #include "LogSystem.h"
 
 // App name
