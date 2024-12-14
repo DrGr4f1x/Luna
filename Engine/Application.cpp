@@ -120,11 +120,11 @@ void Application::Run()
 
 	while (m_bIsRunning && !glfwWindowShouldClose(m_pWindow))
 	{
-		Update();
-
-		Render();
-
 		glfwPollEvents();
+
+		// TODO: Update window size here
+
+		m_bIsRunning = Tick();
 	}
 
 	Finalize();
@@ -151,6 +151,8 @@ bool Application::Initialize()
 
 	CreateDevice();
 
+	// TODO: Update window size here
+
 	Startup();
 
 	m_bIsRunning = true;
@@ -165,6 +167,31 @@ void Application::Finalize()
 
 	glfwDestroyWindow(m_pWindow);
 	m_pWindow = nullptr;
+}
+
+
+bool Application::Tick()
+{
+	if (!m_bIsRunning)
+	{
+		return false;
+	}
+
+	double curTime = glfwGetTime();
+	double deltaTime = curTime - m_prevFrameTime;
+
+	// TODO: Update input system here
+
+	bool res = Update(deltaTime);
+	if (res)
+	{
+		Render();
+	}
+
+	++m_frameNumber;
+	m_prevFrameTime = curTime;
+
+	return res;
 }
 
 

@@ -46,7 +46,7 @@ void TestApp::Shutdown()
 }
 
 
-bool TestApp::Update()
+bool TestApp::Update(double deltaTime)
 {
 	// Application update tick
 

@@ -24,6 +24,6 @@ public:
 	void Startup() final;
 	void Shutdown() final;
 
-	bool Update() final;
+	bool Update(double deltaTime) final;
 	void Render() final;
 };

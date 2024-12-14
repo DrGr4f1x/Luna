@@ -36,7 +36,7 @@ public:
 	virtual void Startup() {}
 	virtual void Shutdown() {}
 
-	virtual bool Update() { return true; }
+	virtual bool Update(double deltaTime) { return true; }
 	virtual void UpdateUI() {}
 	virtual void Render() {}
 
@@ -58,6 +58,10 @@ protected:
 	bool m_bWindowClosed{ false };
 	bool m_bIsVisible{ true };
 
+	// Frame time and counter
+	double m_prevFrameTime{ 0.0 };
+	uint32_t m_frameNumber{ 0 };
+
 	// Engine systems
 	std::unique_ptr<FileSystem> m_fileSystem;
 	std::unique_ptr<LogSystem> m_logSystem;
@@ -65,6 +69,7 @@ protected:
 private:
 	bool Initialize();
 	void Finalize();
+	bool Tick();
 	bool CreateAppWindow();
 	void CreateDevice();
 
