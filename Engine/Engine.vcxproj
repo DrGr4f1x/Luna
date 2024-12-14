@@ -23,6 +23,7 @@
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="LogSystem.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -36,6 +37,7 @@
     <ClInclude Include="Core\BitmaskEnum.h" />
     <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\Containers.h" />
+    <ClInclude Include="Core\CoreEnums.h" />
     <ClInclude Include="Core\DWParam.h" />
     <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\IObject.h" />
@@ -56,6 +58,7 @@
     <ClInclude Include="Core\Utility.h" />
     <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="InputSystem.h" />
     <ClInclude Include="LogSystem.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="Window.h" />

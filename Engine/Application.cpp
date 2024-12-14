@@ -13,11 +13,15 @@
 #include "Application.h"
 
 #include "FileSystem.h"
+#include "InputSystem.h"
 #include "Window.h"
 
 #include <glfw\glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32 1
+#include <glfw\glfw3native.h>
 
 using namespace std;
+
 
 namespace 
 {
@@ -149,6 +153,9 @@ bool Application::Initialize()
 		return false;
 	}
 
+	HWND hwnd = glfwGetWin32Window(m_pWindow);
+	m_inputSystem = make_unique<InputSystem>(hwnd);
+
 	CreateDevice();
 
 	// TODO: Update window size here
@@ -180,7 +187,13 @@ bool Application::Tick()
 	double curTime = glfwGetTime();
 	double deltaTime = curTime - m_prevFrameTime;
 
-	// TODO: Update input system here
+	m_inputSystem->Update(deltaTime);
+
+	// Close on Escape key
+	if (m_inputSystem->IsFirstPressed(DigitalInput::kKey_escape))
+	{
+		return false;
+	}
 
 	bool res = Update(deltaTime);
 	if (res)
