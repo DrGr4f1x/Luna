@@ -40,6 +40,12 @@ public:
 	virtual void UpdateUI() {}
 	virtual void Render() {}
 
+	virtual void OnWindowIconify(int iconified);
+	virtual void OnWindowFocus(int focused);
+	virtual void OnWindowRefresh();
+	virtual void OnWindowClose();
+	virtual void OnWindowPosition(int xPos, int yPos);
+
 	void Run();
 	void Close() { m_bWindowClosed = true; }
 
@@ -54,7 +60,7 @@ protected:
 
 	// Engine systems
 	std::unique_ptr<FileSystem> m_fileSystem;
-	//std::unique_ptr<LogSystem> m_logSystem;
+	std::unique_ptr<LogSystem> m_logSystem;
 
 private:
 	bool Initialize();
@@ -68,5 +74,9 @@ private:
 
 
 int Run(Application* pApplication);
+
+inline LogCategory LogApplication{ "LogApplication" };
+inline LogCategory LogEngine{ "LogEngine" };
+inline LogCategory LogGlfw{ "GLFW" };
 
 } // namespace Luna
