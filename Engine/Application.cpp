@@ -22,6 +22,8 @@
 
 #include <CLI11\CLI11.hpp>
 
+#pragma comment(lib, "runtimeobject.lib")
+
 using namespace std;
 
 
@@ -147,6 +149,9 @@ void Application::OnWindowPosition(int xPos, int yPos)
 
 void Application::Run()
 {
+	Microsoft::WRL::Wrappers::RoInitializeWrapper InitializeWinRT(RO_INIT_MULTITHREADED);
+	assert_succeeded(InitializeWinRT);
+
 	if (!Initialize())
 	{
 		return;
