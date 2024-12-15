@@ -12,6 +12,7 @@
 
 #include "Graphics\DeviceManager.h"
 #include "Graphics\Enums.h"
+#include "Formats.h"
 
 
 namespace Luna

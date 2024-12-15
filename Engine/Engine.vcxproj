@@ -25,6 +25,7 @@
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp" />
+    <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
     <ClCompile Include="InputSystem.cpp" />
@@ -66,6 +67,7 @@
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\DeviceManager12.h" />
     <ClInclude Include="Graphics\Enums.h" />
+    <ClInclude Include="Graphics\Formats.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />
     <ClInclude Include="InputSystem.h" />
