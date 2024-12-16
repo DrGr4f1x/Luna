@@ -81,8 +81,15 @@ public:
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 protected:
+	virtual void CreateDeviceDependentResources() {}
+	virtual void CreateWindowSizeDependentResources() {}
+
+protected:
 	ApplicationInfo m_appInfo;
 	std::string m_appNameWithApi;
+
+	HWND m_hwnd{};
+	HINSTANCE m_hinst{};
 
 	bool m_bIsRunning{ false };
 	bool m_bIsVisible{ true };
@@ -96,12 +103,14 @@ protected:
 	std::unique_ptr<LogSystem> m_logSystem;
 	std::unique_ptr<InputSystem> m_inputSystem;
 
+	DeviceManagerHandle m_deviceManager;
+
 private:
 	bool Initialize();
 	void Finalize();
 	bool Tick();
 	bool CreateAppWindow();
-	void CreateDevice();
+	void CreateDeviceManager();
 
 private:
 	GLFWwindow* m_pWindow{ nullptr };

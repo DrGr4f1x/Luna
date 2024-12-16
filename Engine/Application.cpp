@@ -152,6 +152,8 @@ void Application::Run()
 	Microsoft::WRL::Wrappers::RoInitializeWrapper InitializeWinRT(RO_INIT_MULTITHREADED);
 	assert_succeeded(InitializeWinRT);
 
+	m_hinst = GetModuleHandle(nullptr);
+
 	if (!Initialize())
 	{
 		return;
@@ -168,6 +170,7 @@ void Application::Run()
 
 	Finalize();
 }
+
 
 bool Application::Initialize()
 {
@@ -187,12 +190,15 @@ bool Application::Initialize()
 		return false;
 	}
 
-	HWND hwnd = glfwGetWin32Window(m_pWindow);
-	m_inputSystem = make_unique<InputSystem>(hwnd);
+	m_hwnd = glfwGetWin32Window(m_pWindow);
+	m_inputSystem = make_unique<InputSystem>(m_hwnd);
 
-	CreateDevice();
+	CreateDeviceManager();
+	CreateDeviceDependentResources();
 
 	// TODO: Update window size here
+	// UpdateWindowSize();
+	CreateWindowSizeDependentResources();
 
 	Startup();
 
@@ -262,9 +268,24 @@ bool Application::CreateAppWindow()
 }
 
 
-void Application::CreateDevice()
+void Application::CreateDeviceManager()
 {
-	// TODO
+	auto desc = DeviceManagerDesc{}
+		.SetAppName(m_appInfo.name)
+		.SetGraphicsApi(m_appInfo.api)
+		.SetEnableValidation(m_appInfo.useValidation)
+		.SetEnableDebugMarkers(m_appInfo.useDebugMarkers)
+		.SetBackBufferWidth(m_appInfo.width)
+		.SetBackBufferHeight(m_appInfo.height)
+		.SetHwnd(m_hwnd)
+		.SetHinstance(m_hinst);
+
+	m_deviceManager = Luna::CreateDeviceManager(desc);
+	bool res = m_deviceManager->CreateDeviceResources();
+	if (!res)
+	{
+		LogFatal(LogApplication) << "Failed to create device resources" << endl;
+	}
 }
 
 

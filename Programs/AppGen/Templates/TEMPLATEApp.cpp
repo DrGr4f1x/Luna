@@ -59,3 +59,15 @@ void TEMPLATEApp::Render()
 {
 	// Application main render loop
 }
+
+
+void TEMPLATEApp::CreateDeviceDependentResources()
+{
+	// Create any resources that depend on the device, but not the window size
+}
+
+
+void TEMPLATEApp::CreateWindowSizeDependentResources()
+{
+	// Create any resources that depend on window size.  May be called when the window size changes.
+}

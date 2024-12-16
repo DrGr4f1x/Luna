@@ -26,4 +26,8 @@ public:
 
 	bool Update(double deltaTime) final;
 	void Render() final;
+
+protected:
+	void CreateDeviceDependentResources() final;
+	void CreateWindowSizeDependentResources() final;
 };

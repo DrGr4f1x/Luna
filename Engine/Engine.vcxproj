@@ -18,13 +18,18 @@
   <ItemGroup>
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="Core\Color.cpp" />
+    <ClCompile Include="Core\FlagStringMap.cpp" />
     <ClCompile Include="Core\Hash.cpp" />
     <ClCompile Include="Core\Math\BoundingBox.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp" />
+    <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
+    <ClCompile Include="Graphics\DX12\Enums12.cpp" />
+    <ClCompile Include="Graphics\DX12\Formats12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
@@ -44,6 +49,7 @@
     <ClInclude Include="Core\Containers.h" />
     <ClInclude Include="Core\CoreEnums.h" />
     <ClInclude Include="Core\DWParam.h" />
+    <ClInclude Include="Core\FlagStringMap.h" />
     <ClInclude Include="Core\Hash.h" />
     <ClInclude Include="Core\IntrusivePtr.h" />
     <ClInclude Include="Core\IObject.h" />
@@ -65,7 +71,13 @@
     <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
+    <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />
     <ClInclude Include="Graphics\DX12\DeviceManager12.h" />
+    <ClInclude Include="Graphics\DX12\DirectXCommon.h" />
+    <ClInclude Include="Graphics\DX12\Enums12.h" />
+    <ClInclude Include="Graphics\DX12\Flags12.h" />
+    <ClInclude Include="Graphics\DX12\Formats12.h" />
+    <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
     <ClInclude Include="Graphics\Formats.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />

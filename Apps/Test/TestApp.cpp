@@ -59,3 +59,15 @@ void TestApp::Render()
 {
 	// Application main render loop
 }
+
+
+void TestApp::CreateDeviceDependentResources()
+{
+	// Create any resources that depend on the device, but not the window size
+}
+
+
+void TestApp::CreateWindowSizeDependentResources()
+{
+	// Create any resources that depend on window size.  May be called when the window size changes.
+}

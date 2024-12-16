@@ -16,12 +16,21 @@
 namespace Luna::VK
 {
 
-class DeviceManagerVK : public DeviceManager, public NonCopyable
+class DeviceManager : public Luna::DeviceManager, public NonCopyable
 {
 	IMPLEMENT_IOBJECT
 
 public:
-	virtual ~DeviceManagerVK() = default;
+	DeviceManager(const DeviceManagerDesc& desc);
+	virtual ~DeviceManager() = default;
+
+protected:
+	void Initialize();
+
+private:
+	DeviceManagerDesc m_desc{};
+	bool m_bIsDeveloperModeEnabled{ false };
+	bool m_bIsRenderDocAvailable{ false };
 };
 
 } // namespace Luna::VK

@@ -12,7 +12,29 @@
 
 #include "GraphicsCommon.h"
 
+#include "Graphics\DX12\DeviceManager12.h"
+#include "Graphics\Vulkan\DeviceManagerVK.h"
+
 using namespace std;
+
+
+namespace
+{
+
+Luna::DeviceManagerHandle CreateD3D12DeviceManager(const Luna::DeviceManagerDesc& desc)
+{
+	auto deviceManager = new Luna::DX12::DeviceManager(desc);
+	return Luna::DeviceManagerHandle::Create(deviceManager);
+}
+
+
+//Luna::DeviceManagerHandle CreateVulkanDeviceManager(const Luna::DeviceManagerDesc& desc)
+//{
+//	auto deviceManager = new Luna::VK::DeviceManager(desc);
+//	return Luna::DeviceManagerHandle::Create(deviceManager);
+//}
+
+} // anonymous namespace
 
 
 namespace Luna
@@ -66,6 +88,22 @@ bool IsRenderDocAvailable()
 		initialized = true;
 	}
 	return isRenderDocAvailable;
+}
+
+
+DeviceManagerHandle CreateDeviceManager(const DeviceManagerDesc& desc)
+{
+	switch (desc.graphicsApi)
+	{
+	//case GraphicsApi::Vulkan:
+	//	return CreateVulkanDeviceManager(desc);
+	//	break;
+
+		// Default to D3D12
+	default:
+		return CreateD3D12DeviceManager(desc);
+		break;
+	}
 }
 
 } // namespace Luna
