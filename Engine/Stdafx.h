@@ -26,6 +26,7 @@
 // Windows headers
 #include <windows.h>
 #include <wrl.h>
+#include <wrl\implements.h>
 #include <Shlwapi.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>

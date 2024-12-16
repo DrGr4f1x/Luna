@@ -25,6 +25,7 @@
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
@@ -71,6 +72,7 @@
     <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
+    <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />
     <ClInclude Include="Graphics\DX12\DeviceManager12.h" />
     <ClInclude Include="Graphics\DX12\DirectXCommon.h" />
@@ -81,6 +83,7 @@
     <ClInclude Include="Graphics\Enums.h" />
     <ClInclude Include="Graphics\Formats.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
+    <ClInclude Include="Graphics\GraphicsDevice.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="LogSystem.h" />

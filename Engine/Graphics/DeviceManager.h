@@ -75,7 +75,7 @@ struct DeviceManagerDesc
 };
 
 
-class DeviceManager : public IObject
+class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) DeviceManager : public IObject
 {
 public:
 	virtual ~DeviceManager() = default;
