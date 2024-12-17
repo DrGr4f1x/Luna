@@ -149,6 +149,7 @@ bool DeviceManager::CreateDeviceResources()
 
 bool DeviceManager::CreateWindowSizeDependentResources()
 { 
+	m_device->CreateWindowSizeDependentResources();
 	return true;
 }
 

@@ -53,6 +53,7 @@ struct GraphicsDeviceDesc
 	uint32_t swapChainSampleQuality{ 0 };
 	bool allowModeSwitch{ false };
 	bool isTearingSupported{ false };
+	bool allowHDROutput{ false };
 
 	bool enableVSync{ false };
 	uint32_t maxFramesInFlight{ 2 };
@@ -81,6 +82,7 @@ struct GraphicsDeviceDesc
 	constexpr GraphicsDeviceDesc& SetSwapChainSampleQuality(uint32_t value) noexcept { swapChainSampleQuality = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetAllowModeSwitch(bool value) noexcept { allowModeSwitch = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetIsTearingSupported(bool value) noexcept { isTearingSupported = value; return *this; }
+	constexpr GraphicsDeviceDesc& SetAllowHDROutput(bool value) noexcept { allowHDROutput = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetEnableVSync(bool value) noexcept { enableVSync = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetMaxFramesInFlight(uint32_t value) noexcept { maxFramesInFlight = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetHwnd(HWND value) noexcept { hwnd = value; return *this; }
@@ -90,7 +92,7 @@ struct GraphicsDeviceDesc
 
 
 class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::GraphicsDevice>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IGraphicsDevice>
 	, public NonCopyable
 {
 public:
@@ -100,12 +102,19 @@ public:
 	void WaitForGpu() final;
 
 	void CreateResources();
+	void CreateWindowSizeDependentResources();
 
 private:
 	void InstallDebugCallback();
 	void ReadCaps();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
+	Queue& GetQueue(QueueType queueType);
+	Queue& GetQueue(CommandListType commandListType);
+
+	void UpdateColorSpace();
+
+	void HandleDeviceLost();
 
 private:
 	GraphicsDeviceDesc m_desc{};
@@ -116,6 +125,20 @@ private:
 	DeviceRLDOHelper m_deviceRLDOHelper;
 	ComPtr<ID3D12InfoQueue1> m_dxInfoQueue;
 	DWORD m_callbackCookie{ 0 };
+
+	// Swap-chain objects
+	ComPtr<IDXGISwapChain3> m_dxSwapChain;
+	ComPtr<ID3D12Resource> m_renderTargets[3]; // TODO: wrap this in ColorBuffer/FrameBuffer
+	ComPtr<ID3D12Resource> m_depthStencil;
+	uint32_t m_backBufferIndex{ 0 };
+
+	// Presentation synchronization
+	ComPtr<ID3D12Fence> m_fence;
+	uint64_t m_fenceValues[3];
+	Wrappers::Event m_fenceEvent;
+
+	// HDR Support
+	DXGI_COLOR_SPACE_TYPE m_colorSpace;
 
 	// Queues
 	bool m_bQueuesCreated{ false };

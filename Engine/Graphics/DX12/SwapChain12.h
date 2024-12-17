@@ -10,16 +10,15 @@
 
 #pragma once
 
-namespace Luna
+namespace Luna::DX12
 {
 
-class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown
+class SwapChain
 {
 public:
-	virtual ~IGraphicsDevice() = default;
 
-	virtual void WaitForGpu() = 0;
+private:
+
 };
-using DeviceHandle = Microsoft::WRL::ComPtr<IGraphicsDevice>;
 
-} // namespace Luna
+} // namespace Luna::DX12

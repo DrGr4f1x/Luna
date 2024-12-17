@@ -10,16 +10,17 @@
 
 #pragma once
 
+#include "Core\IObject.h"
+
 namespace Luna
 {
 
-class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown
+class __declspec(uuid("7910A354-F69A-4A9C-9D69-816A27E68BB6")) IGpuImage : public IUnknown
 {
 public:
-	virtual ~IGraphicsDevice() = default;
+	virtual ~IGpuImage() = default;
 
-	virtual void WaitForGpu() = 0;
+	virtual NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept { (void)nativeObjectType; return nullptr; }
 };
-using DeviceHandle = Microsoft::WRL::ComPtr<IGraphicsDevice>;
 
 } // namespace Luna

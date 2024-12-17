@@ -10,16 +10,18 @@
 
 #pragma once
 
+#include "Graphics\PixelBuffer.h"
+
 namespace Luna
 {
 
-class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown
+class __declspec(uuid("F49A3931-9E4F-4B90-8BFD-B912A13ED31E")) IColorBuffer : public IPixelBuffer
 {
 public:
-	virtual ~IGraphicsDevice() = default;
+	virtual ~IColorBuffer() = default;
 
-	virtual void WaitForGpu() = 0;
+	virtual void SetClearColor(Color clearColor) noexcept = 0;
+	virtual Color GetClearColor() const noexcept = 0;
 };
-using DeviceHandle = Microsoft::WRL::ComPtr<IGraphicsDevice>;
 
 } // namespace Luna

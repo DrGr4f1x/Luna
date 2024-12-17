@@ -64,6 +64,12 @@
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\SwapChain12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -196,6 +202,21 @@
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\SwapChain12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\GpuImage.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\PixelBuffer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\ColorBuffer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\ColorBuffer12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
   </ItemGroup>

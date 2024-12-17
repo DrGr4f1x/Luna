@@ -8,18 +8,17 @@
 // Author:  David Elder
 //
 
-#pragma once
+#include "Stdafx.h"
 
-namespace Luna
+#include "SwapChain12.h"
+
+#include "Graphics\DX12\DirectXCommon.h"
+
+using namespace std;
+using namespace Microsoft::WRL;
+
+
+namespace Luna::DX12
 {
 
-class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown
-{
-public:
-	virtual ~IGraphicsDevice() = default;
-
-	virtual void WaitForGpu() = 0;
-};
-using DeviceHandle = Microsoft::WRL::ComPtr<IGraphicsDevice>;
-
-} // namespace Luna
+} // namespace Luna::DX12

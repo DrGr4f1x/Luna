@@ -123,4 +123,19 @@ inline bool IsColorFormat(Format format)
 	return !IsDepthStencilFormat(format);
 }
 
+
+inline Format RemoveSrgb(Format format)
+{
+	switch (format)
+	{
+	case Format::SRGBA8_UNorm: return Format::RGBA8_UNorm;
+	case Format::SBGRA8_UNorm: return Format::BGRA8_UNorm;
+	case Format::BC1_UNorm_Srgb: return Format::BC1_UNorm;
+	case Format::BC2_UNorm_Srgb: return Format::BC2_UNorm;
+	case Format::BC7_UNorm_Srgb: return Format::BC7_UNorm;
+	default:
+		return format;
+	}
+}
+
 } // namespace Luna
