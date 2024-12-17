@@ -13,12 +13,14 @@
 #include "Graphics\DeviceManager.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
+using namespace Microsoft::WRL;
 
 namespace Luna::DX12
 {
 
 // Forward declarations
 struct DeviceCaps;
+class GraphicsDevice;
 
 
 struct DxgiRLOHelper
@@ -30,10 +32,10 @@ struct DxgiRLOHelper
 };
 
 
-class DeviceManager : public Luna::DeviceManager, public NonCopyable
+class __declspec(uuid("2B2F2AAF-4D90-45F4-8BF8-9D8136AB6FC8")) DeviceManager 
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::DeviceManager>
+	, public NonCopyable
 {
-	IMPLEMENT_IOBJECT
-
 public:
 	DeviceManager(const DeviceManagerDesc& desc);
 	virtual ~DeviceManager() = default;
@@ -56,10 +58,13 @@ private:
 	D3D_FEATURE_LEVEL m_bestFeatureLevel{ D3D_FEATURE_LEVEL_12_2 };
 	D3D_SHADER_MODEL m_bestShaderModel{ D3D_SHADER_MODEL_6_7 };
 
-	IntrusivePtr<IDXGIFactory4> m_dxgiFactory;
+	ComPtr<IDXGIFactory4> m_dxgiFactory;
 
 	bool m_bIsWarpAdapter{ false };
 	bool m_bIsTearingSupported{ false };
+
+	// Luna objects
+	ComPtr<GraphicsDevice> m_device;
 };
 
 } // namespace Luna::DX12

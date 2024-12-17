@@ -25,12 +25,15 @@
     <ClCompile Include="Core\Math\Random.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
+    <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
     <ClCompile Include="Graphics\DX12\Enums12.cpp" />
     <ClCompile Include="Graphics\DX12\Formats12.cpp" />
+    <ClCompile Include="Graphics\DX12\Queue12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
@@ -72,6 +75,8 @@
     <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
+    <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
+    <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
     <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />
     <ClInclude Include="Graphics\DX12\DeviceManager12.h" />
@@ -79,6 +84,7 @@
     <ClInclude Include="Graphics\DX12\Enums12.h" />
     <ClInclude Include="Graphics\DX12\Flags12.h" />
     <ClInclude Include="Graphics\DX12\Formats12.h" />
+    <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
     <ClInclude Include="Graphics\Formats.h" />

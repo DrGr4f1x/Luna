@@ -13,11 +13,13 @@
 namespace Luna
 {
 
-class GraphicsDevice : public IObject
+class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) GraphicsDevice : public IUnknown
 {
 public:
 	virtual ~GraphicsDevice() = default;
+
+	virtual void WaitForGpu() = 0;
 };
-using DeviceHandle = IntrusivePtr<GraphicsDevice>;
+using DeviceHandle = Microsoft::WRL::ComPtr<GraphicsDevice>;
 
 } // namespace Luna

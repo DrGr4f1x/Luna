@@ -55,6 +55,15 @@
     <ClCompile Include="Graphics\DX12\Device12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\Queue12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -178,6 +187,15 @@
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\Device12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\Queue12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
   </ItemGroup>

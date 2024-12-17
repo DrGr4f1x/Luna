@@ -19,12 +19,12 @@
 #define ENABLE_D3D12_DEBUG_MARKERS (ENABLE_DEBUG_MARKERS || FORCE_D3D12_DEBUG_MARKERS)
 
 // DirectX 12 headers
+#include <d3d12.h>
+#include <d3dx12\d3dx12.h>
 #include <dxgi1_4.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
 #include <dxgiformat.h>
-#include <d3d12.h>
-#include <d3dx12\d3dx12.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")

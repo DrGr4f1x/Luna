@@ -15,9 +15,14 @@
 using namespace std;
 
 
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 614; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
+
+
 namespace Luna::DX12
 {
 
+#if ENABLE_D3D12_DEBUG_MARKERS
 void SetDebugName(IDXGIObject* object, const string& name)
 {
 	object->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)name.size(), name.data());
@@ -28,5 +33,9 @@ void SetDebugName(ID3D12Object* object, const string& name)
 {
 	object->SetName(MakeWStr(name).c_str());
 }
+#else
+void SetDebugName(IDXGIObject* object, const string& name) {}
+void SetDebugName(ID3D12Object* object, const string& name) {}
+#endif
 
 } // namespace Luna::DX12

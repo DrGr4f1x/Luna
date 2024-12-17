@@ -75,7 +75,7 @@ struct DeviceManagerDesc
 };
 
 
-class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) DeviceManager : public IObject
+class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) DeviceManager : public IUnknown
 {
 public:
 	virtual ~DeviceManager() = default;
@@ -83,7 +83,6 @@ public:
 	virtual bool CreateDeviceResources() = 0;
 	virtual bool CreateWindowSizeDependentResources() = 0;
 };
-
-using DeviceManagerHandle = IntrusivePtr<DeviceManager>;
+using DeviceManagerHandle = Microsoft::WRL::ComPtr<DeviceManager>;
 
 } // namespace Luna

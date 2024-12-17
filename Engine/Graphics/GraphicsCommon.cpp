@@ -16,15 +16,17 @@
 #include "Graphics\Vulkan\DeviceManagerVK.h"
 
 using namespace std;
-
+using namespace Microsoft::WRL;
 
 namespace
 {
 
 Luna::DeviceManagerHandle CreateD3D12DeviceManager(const Luna::DeviceManagerDesc& desc)
 {
-	auto deviceManager = new Luna::DX12::DeviceManager(desc);
-	return Luna::DeviceManagerHandle::Create(deviceManager);
+	ComPtr<Luna::DX12::DeviceManager> deviceManager12 = Make<Luna::DX12::DeviceManager>(desc);
+
+	Luna::DeviceManagerHandle deviceManager = deviceManager12;
+	return deviceManager;
 }
 
 

@@ -14,8 +14,10 @@
 
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\DX12\DeviceCaps12.h"
+#include "Graphics\DX12\Device12.h"
 
 using namespace std;
+using namespace Microsoft::WRL;
 
 
 namespace Luna::DX12
@@ -23,11 +25,11 @@ namespace Luna::DX12
 
 bool TestCreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, DeviceBasicCaps& deviceBasicCaps)
 {
-	IntrusivePtr<ID3D12Device> device;
+	ComPtr<ID3D12Device> device;
 	if (SUCCEEDED(D3D12CreateDevice(adapter, minFeatureLevel, IID_PPV_ARGS(&device))))
 	{
 		DeviceCaps testCaps;
-		testCaps.ReadBasicCaps(device, minFeatureLevel);
+		testCaps.ReadBasicCaps(device.Get(), minFeatureLevel);
 		deviceBasicCaps = testCaps.basicCaps;
 
 		return true;
@@ -38,7 +40,7 @@ bool TestCreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, 
 
 AdapterType GetAdapterType(IDXGIAdapter* adapter)
 {
-	IntrusivePtr<IDXGIAdapter3> adapter3;
+	ComPtr<IDXGIAdapter3> adapter3;
 	adapter->QueryInterface(IID_PPV_ARGS(&adapter3));
 
 	// Check for integrated adapter
@@ -68,11 +70,10 @@ DxgiRLOHelper::~DxgiRLOHelper()
 {
 	if (doReport)
 	{
-		IDXGIDebug1* pDebug{ nullptr };
+		ComPtr<IDXGIDebug1> pDebug;
 		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
 		{
 			pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-			pDebug->Release();
 		}
 	}
 }
@@ -92,7 +93,7 @@ bool DeviceManager::CreateDeviceResources()
 
 	if (m_desc.enableValidation)
 	{
-		IntrusivePtr<ID3D12Debug> debugInterface;
+		ComPtr<ID3D12Debug> debugInterface;
 		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface))))
 		{
 			debugInterface->EnableDebugLayer();
@@ -124,9 +125,9 @@ bool DeviceManager::CreateDeviceResources()
 			return false;
 		}
 	}
-	SetDebugName(m_dxgiFactory, "DXGI Factory");
+	SetDebugName(m_dxgiFactory.Get(), "DXGI Factory");
 
-	IntrusivePtr<IDXGIFactory5> dxgiFactory5;
+	ComPtr<IDXGIFactory5> dxgiFactory5;
 	if (SUCCEEDED(m_dxgiFactory->QueryInterface(IID_PPV_ARGS(&dxgiFactory5))))
 	{
 		BOOL supported{ 0 };
@@ -137,6 +138,10 @@ bool DeviceManager::CreateDeviceResources()
 	}
 
 	bool res = CreateDevice();
+	if (res)
+	{
+		m_device->CreateResources();
+	}
 
 	return res;
 }
@@ -214,12 +219,12 @@ bool DeviceManager::CreateDevice()
 	}
 
 	// Create device, either WARP or hardware
-	IntrusivePtr<ID3D12Device> device{ nullptr };
+	ComPtr<ID3D12Device> device;
 	if (chosenAdapterIdx == warpAdapterIdx)
 	{
-		IntrusivePtr<IDXGIAdapter> tempAdapter;
+		ComPtr<IDXGIAdapter> tempAdapter;
 		assert_succeeded(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&tempAdapter)));
-		assert_succeeded(D3D12CreateDevice(tempAdapter, m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(D3D12CreateDevice(tempAdapter.Get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		m_bIsWarpAdapter = true;
 
@@ -227,9 +232,9 @@ bool DeviceManager::CreateDevice()
 	}
 	else
 	{
-		IntrusivePtr<IDXGIAdapter> tempAdapter;
+		ComPtr<IDXGIAdapter> tempAdapter;
 		assert_succeeded(m_dxgiFactory->EnumAdapters((UINT)chosenAdapterIdx, &tempAdapter));
-		assert_succeeded(D3D12CreateDevice(tempAdapter, m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(D3D12CreateDevice(tempAdapter.Get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		LogInfo(LogDirectX) << "Selected D3D12 adapter " << chosenAdapterIdx << endl;
 	}
@@ -245,7 +250,25 @@ bool DeviceManager::CreateDevice()
 	}
 #endif
 
-	// Create Luna device here
+	// Create Luna GraphicsDevice
+	auto deviceDesc = GraphicsDeviceDesc{}
+		.SetDxgiFactory(m_dxgiFactory.Get())
+		.SetDevice(device.Get())
+		.SetBackBufferWidth(m_desc.backBufferWidth)
+		.SetBackBufferHeight(m_desc.backBufferHeight)
+		.SetNumSwapChainBuffers(m_desc.numSwapChainBuffers)
+		.SetSwapChainFormat(m_desc.swapChainFormat)
+		.SetSwapChainSampleCount(m_desc.swapChainSampleCount)
+		.SetSwapChainSampleQuality(m_desc.swapChainSampleQuality)
+		.SetAllowModeSwitch(m_desc.allowModeSwitch)
+		.SetIsTearingSupported(m_bIsTearingSupported)
+		.SetEnableVSync(m_desc.enableVSync)
+		.SetMaxFramesInFlight(m_desc.maxFramesInFlight)
+		.SetHwnd(m_desc.hwnd)
+		.SetEnableValidation(m_desc.enableValidation)
+		.SetEnableDebugMarkers(m_desc.enableDebugMarkers);
+
+	m_device = Make<GraphicsDevice>(deviceDesc);
 
 	return true;
 }
@@ -255,7 +278,7 @@ vector<AdapterInfo> DeviceManager::EnumerateAdapters()
 {
 	vector<AdapterInfo> adapters;
 
-	IntrusivePtr<IDXGIFactory6> dxgiFactory6;
+	ComPtr<IDXGIFactory6> dxgiFactory6;
 	m_dxgiFactory->QueryInterface(IID_PPV_ARGS(&dxgiFactory6));
 
 	const D3D_FEATURE_LEVEL minRequiredLevel{ D3D_FEATURE_LEVEL_11_0 };
