@@ -51,5 +51,6 @@ public:
 
 	virtual Color GetClearColor() const noexcept = 0;
 };
+using ColorBufferHandle = Microsoft::WRL::ComPtr<IColorBuffer>;
 
 } // namespace Luna

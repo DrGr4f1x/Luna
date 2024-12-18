@@ -115,6 +115,10 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 {
 	m_bIsDeveloperModeEnabled = IsDeveloperModeEnabled();
 	m_bIsRenderDocAvailable = IsRenderDocAvailable();
+
+	m_fenceValues[0] = 0;
+	m_fenceValues[1] = 0;
+	m_fenceValues[2] = 0;
 }
 
 
@@ -182,10 +186,20 @@ void DeviceManager::CreateDeviceResources()
 	CreateDevice();
 	
 	// Create queues
-	m_queues[(uint32_t)QueueType::Graphics] = make_unique<Queue>(m_device->GetDevice(), QueueType::Graphics);
-	m_queues[(uint32_t)QueueType::Compute] = make_unique<Queue>(m_device->GetDevice(), QueueType::Compute);
-	m_queues[(uint32_t)QueueType::Copy] = make_unique<Queue>(m_device->GetDevice(), QueueType::Copy);
+	m_queues[(uint32_t)QueueType::Graphics] = make_unique<Queue>(m_device->GetD3D12Device(), QueueType::Graphics);
+	m_queues[(uint32_t)QueueType::Compute] = make_unique<Queue>(m_device->GetD3D12Device(), QueueType::Compute);
+	m_queues[(uint32_t)QueueType::Copy] = make_unique<Queue>(m_device->GetD3D12Device(), QueueType::Copy);
 	m_bQueuesCreated = true;
+
+	// Create a fence for tracking GPU execution progress
+	auto d3d12Device = m_device->GetD3D12Device();
+	ThrowIfFailed(d3d12Device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
+
+	m_fenceValues[m_backBufferIndex]++;
+
+	m_fence->SetName(L"DeviceResources");
+
+	m_fenceEvent.Attach(CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE));
 }
 
 
@@ -198,13 +212,9 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	// Release resources tied to swap chain and update fence values
 	// TODO: hard-coded backbuffer count is 3 here.  Get this from somewhere else.
 	const uint32_t backBufferCount{ 3 };
-	for (uint32_t i = 0; i < backBufferCount; ++i)
-	{
-		m_renderTargets[i].Reset();
-		m_fenceValues[i] = m_fenceValues[m_backBufferIndex];
-	}
+	m_swapChainBuffers.clear();
 
-	// TODO: The window dimensions might have changed externally.  Need to pass those in from somewhere else (DeviceManager?).
+	// TODO: The window dimensions might have changed externally.  Need to pass those in from somewhere else.
 	const uint32_t newBackBufferWidth = m_desc.backBufferWidth;
 	const uint32_t newBackBufferHeight = m_desc.backBufferHeight;
 	DXGI_FORMAT dxgiFormat = FormatToDxgi(RemoveSrgb(m_desc.swapChainFormat)).resourceFormat;
@@ -221,7 +231,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 		if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
 		{
 			LogWarning(LogDirectX) << format("Device lost on ResizeBuffers: Reason code {}",
-				static_cast<uint32_t>((hr == DXGI_ERROR_DEVICE_REMOVED) ? m_device->GetDevice()->GetDeviceRemovedReason() : hr)) << endl;
+				static_cast<uint32_t>((hr == DXGI_ERROR_DEVICE_REMOVED) ? m_device->GetD3D12Device()->GetDeviceRemovedReason() : hr)) << endl;
 
 			// If the device was removed for any reason, a new device and swap chain will need to be created.
 			HandleDeviceLost();
@@ -274,23 +284,12 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	UpdateColorSpace();
 
 	// Obtain the back buffers for this window which will be the final render targets
-   // and create render target views for each of them.
-	// TODO: replace this with CreateColorBufferFromSwapChain
-	/*for (UINT n = 0; n < backBufferCount; n++)
+    // and create render target views for each of them.
+	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
-		ThrowIfFailed(m_dxSwapChain->GetBuffer(n, IID_PPV_ARGS(m_renderTargets[n].GetAddressOf())));
-
-		wchar_t name[25] = {};
-		swprintf_s(name, L"Render target %u", n);
-		m_renderTargets[n]->SetName(name);
-
-		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-		rtvDesc.Format = dxgiFormat;
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
-		const auto rtvDescriptor = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		m_dxDevice->CreateRenderTargetView(m_renderTargets[n].Get(), &rtvDesc, rtvDescriptor);
-	}*/
+		auto bufferHandle = CreateColorBufferFromSwapChain(i);
+		m_swapChainBuffers.emplace_back(bufferHandle);
+	}
 
 	// Reset the index to the current back buffer.
 	m_backBufferIndex = m_dxSwapChain->GetCurrentBackBufferIndex();
@@ -298,7 +297,45 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 
 void DeviceManager::HandleDeviceLost()
-{ }
+{ 
+	// TODO
+	/*if (m_deviceNotify)
+	{
+		m_deviceNotify->OnDeviceLost();
+	}*/
+
+	m_swapChainBuffers.clear();
+	m_depthStencil.Reset();
+
+	m_queues[(uint32_t)QueueType::Graphics].reset();
+	m_queues[(uint32_t)QueueType::Compute].reset();
+	m_queues[(uint32_t)QueueType::Copy].reset();
+
+	m_device.Reset();
+
+	m_fence.Reset();
+	m_dxSwapChain.Reset();
+	m_dxgiFactory.Reset();
+
+#if _DEBUG
+	{
+		ComPtr<IDXGIDebug1> dxgiDebug;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug))))
+		{
+			dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+		}
+	}
+#endif
+
+	CreateDeviceResources();
+	CreateWindowSizeDependentResources();
+
+	// TODO
+	/*if(m_deviceNotify)
+	{
+		m_deviceNotify->OnDeviceRestored();
+	}*/
+}
 
 
 void DeviceManager::CreateDevice()
@@ -624,6 +661,48 @@ void DeviceManager::UpdateColorSpace()
 	{
 		ThrowIfFailed(m_dxSwapChain->SetColorSpace1(colorSpace));
 	}
+}
+
+ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
+{
+	ComPtr<ID3D12Resource> displayPlane;
+	assert_succeeded(m_dxSwapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
+
+	const string name = format("Primary SwapChain Image {}", imageIndex);
+	SetDebugName(displayPlane.Get(), name);
+
+	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
+
+	auto colorBufferDesc = ColorBufferDesc{}
+		.SetName(name)
+		.SetResourceType(ResourceType::Texture2D)
+		.SetWidth(resourceDesc.Width)
+		.SetHeight(resourceDesc.Height)
+		.SetArraySize(resourceDesc.DepthOrArraySize)
+		.SetNumSamples(resourceDesc.SampleDesc.Count)
+		.SetFormat(DxgiToFormat(resourceDesc.Format));
+
+	auto d3d12Device = m_device->GetD3D12Device();
+
+	auto rtvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	d3d12Device->CreateRenderTargetView(displayPlane.Get(), nullptr, rtvHandle);
+
+	auto srvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	d3d12Device->CreateShaderResourceView(displayPlane.Get(), nullptr, srvHandle);
+
+	const uint8_t planeCount = m_device->GetFormatPlaneCount(resourceDesc.Format);
+
+	auto colorBufferDescExt = ColorBufferDescExt{}
+		.SetResource(displayPlane.Get())
+		.SetUsageState(ResourceState::Present)
+		.SetPlaneCount(planeCount)
+		.SetRtvHandle(rtvHandle)
+		.SetSrvHandle(srvHandle);
+
+	ColorBufferHandle handle;
+	ComPtr<ColorBuffer> handle12 = Make<ColorBuffer>(colorBufferDesc, colorBufferDescExt);
+	ThrowIfFailed(handle12.As(&handle));
+	return handle;
 }
 
 } // namespace Luna::DX12

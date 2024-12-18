@@ -95,19 +95,26 @@ class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IGraphicsDevice>
 	, public NonCopyable
 {
+	friend class DeviceManager;
+
 public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept;
 	virtual ~GraphicsDevice();
 
 	void CreateResources();
 
-	ID3D12Device* GetDevice() { return m_dxDevice.Get(); }
+	
 
 private:
+	ID3D12Device* GetD3D12Device() { return m_dxDevice.Get(); }
+
 	void InstallDebugCallback();
 	void ReadCaps();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
+
+	// Texture formats
+	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
 
 private:
 	GraphicsDeviceDesc m_desc{};
@@ -124,6 +131,9 @@ private:
 
 	// DirectX caps
 	std::unique_ptr<DeviceCaps> m_caps;
+
+	// Format properties
+	std::unordered_map<DXGI_FORMAT, uint8_t> m_dxgiFormatPlaneCounts;
 };
 
 } // namespace Luna::DX12

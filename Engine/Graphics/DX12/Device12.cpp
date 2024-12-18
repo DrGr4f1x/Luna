@@ -186,4 +186,31 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::AllocateDescriptor(D3D12_DESCRIPTOR_
 	return m_descriptorAllocators[type]->Allocate(m_dxDevice.Get(), count);
 }
 
+
+uint8_t GraphicsDevice::GetFormatPlaneCount(DXGI_FORMAT format)
+{
+	uint8_t& planeCount = m_dxgiFormatPlaneCounts[format];
+	if (planeCount == 0)
+	{
+		D3D12_FEATURE_DATA_FORMAT_INFO formatInfo{ format, 1 };
+		if (FAILED(m_dxDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &formatInfo, sizeof(formatInfo))))
+		{
+			// Format not supported, store a special value in the cache to avoid querying later
+			planeCount = 255;
+		}
+		else
+		{
+			// Format supported - store the plane count in the cache
+			planeCount = formatInfo.PlaneCount;
+		}
+	}
+
+	if (planeCount == 255)
+	{
+		return 0;
+	}
+
+	return planeCount;
+}
+
 } // namespace Luna::DX12

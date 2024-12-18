@@ -16,6 +16,27 @@
 namespace Luna::DX12
 {
 
+ColorBuffer::ColorBuffer(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt)
+	: m_name{ desc.name }
+	, m_resource{ descExt.resource }
+	, m_usageState{ descExt.usageState }
+	, m_resourceType{ desc.resourceType }
+	, m_width{ desc.width }
+	, m_height{ desc.height }
+	, m_arraySizeOrDepth{ desc.arraySizeOrDepth }
+	, m_numMips{ desc.numMips }
+	, m_numSamples{ desc.numSamples }
+	, m_planeCount{ descExt.planeCount }
+	, m_format{ desc.format }
+	, m_clearColor{ desc.clearColor }
+	, m_srvHandle{ descExt.srvHandle }
+	, m_rtvHandle{ descExt.rtvHandle }
+	, m_uavHandles{ descExt.uavHandles }
+{
+	m_numMips = m_numMips == 0 ? ComputeNumMips(m_width, m_height) : m_numMips;
+}
+
+
 NativeObjectPtr ColorBuffer::GetNativeObject(NativeObjectType nativeObjectType) const noexcept
 {
 	if (nativeObjectType == NativeObjectType::DX12_Resource)

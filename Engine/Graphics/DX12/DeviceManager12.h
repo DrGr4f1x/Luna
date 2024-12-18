@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\DeviceManager.h"
+#include "Graphics\DX12\ColorBuffer12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 using namespace Microsoft::WRL;
@@ -58,6 +59,8 @@ private:
 
 	void UpdateColorSpace();
 
+	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex);
+
 private:
 	DeviceManagerDesc m_desc{};
 	bool m_bIsDeveloperModeEnabled{ false };
@@ -72,7 +75,7 @@ private:
 
 	// Swap-chain objects
 	ComPtr<IDXGISwapChain3> m_dxSwapChain;
-	ComPtr<ID3D12Resource> m_renderTargets[3]; // TODO: wrap this in ColorBuffer/FrameBuffer
+	std::vector<ColorBufferHandle> m_swapChainBuffers;
 	ComPtr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
 
