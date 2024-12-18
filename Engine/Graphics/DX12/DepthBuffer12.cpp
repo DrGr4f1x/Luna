@@ -10,13 +10,12 @@
 
 #include "Stdafx.h"
 
-#include "ColorBuffer12.h"
-
+#include "DepthBuffer12.h"
 
 namespace Luna::DX12
 {
 
-NativeObjectPtr ColorBuffer::GetNativeObject(NativeObjectType nativeObjectType) const noexcept
+NativeObjectPtr DepthBuffer::GetNativeObject(NativeObjectType nativeObjectType) const noexcept
 {
 	if (nativeObjectType == NativeObjectType::DX12_Resource)
 	{

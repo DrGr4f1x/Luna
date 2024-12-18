@@ -99,22 +99,15 @@ public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept;
 	virtual ~GraphicsDevice();
 
-	void WaitForGpu() final;
-
 	void CreateResources();
-	void CreateWindowSizeDependentResources();
+
+	ID3D12Device* GetDevice() { return m_dxDevice.Get(); }
 
 private:
 	void InstallDebugCallback();
 	void ReadCaps();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
-	Queue& GetQueue(QueueType queueType);
-	Queue& GetQueue(CommandListType commandListType);
-
-	void UpdateColorSpace();
-
-	void HandleDeviceLost();
 
 private:
 	GraphicsDeviceDesc m_desc{};
@@ -125,24 +118,6 @@ private:
 	DeviceRLDOHelper m_deviceRLDOHelper;
 	ComPtr<ID3D12InfoQueue1> m_dxInfoQueue;
 	DWORD m_callbackCookie{ 0 };
-
-	// Swap-chain objects
-	ComPtr<IDXGISwapChain3> m_dxSwapChain;
-	ComPtr<ID3D12Resource> m_renderTargets[3]; // TODO: wrap this in ColorBuffer/FrameBuffer
-	ComPtr<ID3D12Resource> m_depthStencil;
-	uint32_t m_backBufferIndex{ 0 };
-
-	// Presentation synchronization
-	ComPtr<ID3D12Fence> m_fence;
-	uint64_t m_fenceValues[3];
-	Wrappers::Event m_fenceEvent;
-
-	// HDR Support
-	DXGI_COLOR_SPACE_TYPE m_colorSpace;
-
-	// Queues
-	bool m_bQueuesCreated{ false };
-	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
 
 	// Descriptor allocators
 	std::array<std::unique_ptr<DescriptorAllocator>, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_descriptorAllocators;

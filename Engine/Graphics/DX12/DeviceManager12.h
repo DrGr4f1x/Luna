@@ -21,6 +21,7 @@ namespace Luna::DX12
 // Forward declarations
 struct DeviceCaps;
 class GraphicsDevice;
+class Queue;
 
 
 struct DxgiRLOHelper
@@ -40,13 +41,22 @@ public:
 	DeviceManager(const DeviceManagerDesc& desc);
 	virtual ~DeviceManager() = default;
 
-	bool CreateDeviceResources() final;
-	bool CreateWindowSizeDependentResources() final;
+	void WaitForGpu() final;
+
+	void CreateDeviceResources() final;
+	void CreateWindowSizeDependentResources() final;
+
+	void HandleDeviceLost();
 
 private:
-	bool CreateDevice();
+	void CreateDevice();
 	std::vector<AdapterInfo> EnumerateAdapters();
 	HRESULT EnumAdapter(int32_t adapterIdx, DXGI_GPU_PREFERENCE gpuPreference, IDXGIFactory6* dxgiFactory6, IDXGIAdapter** adapter);
+
+	Queue& GetQueue(QueueType queueType);
+	Queue& GetQueue(CommandListType commandListType);
+
+	void UpdateColorSpace();
 
 private:
 	DeviceManagerDesc m_desc{};
@@ -60,11 +70,30 @@ private:
 
 	ComPtr<IDXGIFactory4> m_dxgiFactory;
 
+	// Swap-chain objects
+	ComPtr<IDXGISwapChain3> m_dxSwapChain;
+	ComPtr<ID3D12Resource> m_renderTargets[3]; // TODO: wrap this in ColorBuffer/FrameBuffer
+	ComPtr<ID3D12Resource> m_depthStencil;
+	uint32_t m_backBufferIndex{ 0 };
+
+	// Presentation synchronization
+	ComPtr<ID3D12Fence> m_fence;
+	uint64_t m_fenceValues[3];
+	Wrappers::Event m_fenceEvent;
+
+	// HDR Support
+	DXGI_COLOR_SPACE_TYPE m_colorSpace;
+
 	bool m_bIsWarpAdapter{ false };
 	bool m_bIsTearingSupported{ false };
+	bool m_bIsAgilitySDKAvailable{ false };
 
 	// Luna objects
 	ComPtr<GraphicsDevice> m_device;
+
+	// Queues
+	bool m_bQueuesCreated{ false };
+	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
 };
 
 } // namespace Luna::DX12

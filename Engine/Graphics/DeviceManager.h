@@ -43,6 +43,7 @@ struct DeviceManagerDesc
 	uint32_t swapChainSampleQuality{ 0 };
 	uint32_t maxFramesInFlight{ 2 };
 	bool enablePerMonitorDPI{ false };
+	bool allowHDROutput{ false };
 
 	HWND hwnd{ nullptr };
 	HINSTANCE hinstance{ nullptr };
@@ -70,6 +71,7 @@ struct DeviceManagerDesc
 	constexpr DeviceManagerDesc& SetSwapChainSampleQuality(uint32_t value) noexcept { swapChainSampleQuality = value; return *this; }
 	constexpr DeviceManagerDesc& SetMaxFramesInFlight(uint32_t value) noexcept { maxFramesInFlight = value; return *this; }
 	constexpr DeviceManagerDesc& SetEnablePerMonitorDPI(bool value) noexcept { enablePerMonitorDPI = value; return *this; }
+	constexpr DeviceManagerDesc& SetAllowHDROutput(bool value) noexcept { allowHDROutput = value; return *this; }
 	constexpr DeviceManagerDesc& SetHwnd(HWND value) noexcept { hwnd = value; return *this; }
 	constexpr DeviceManagerDesc& SetHinstance(HINSTANCE value) noexcept { hinstance = value; return *this; }
 };
@@ -80,8 +82,10 @@ class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) DeviceManager : p
 public:
 	virtual ~DeviceManager() = default;
 
-	virtual bool CreateDeviceResources() = 0;
-	virtual bool CreateWindowSizeDependentResources() = 0;
+	virtual void WaitForGpu() = 0;
+
+	virtual void CreateDeviceResources() = 0;
+	virtual void CreateWindowSizeDependentResources() = 0;
 };
 using DeviceManagerHandle = Microsoft::WRL::ComPtr<DeviceManager>;
 

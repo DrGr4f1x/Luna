@@ -281,11 +281,7 @@ void Application::CreateDeviceManager()
 		.SetHinstance(m_hinst);
 
 	m_deviceManager = Luna::CreateDeviceManager(desc);
-	bool res = m_deviceManager->CreateDeviceResources();
-	if (!res)
-	{
-		LogFatal(LogApplication) << "Failed to create device resources" << endl;
-	}
+	m_deviceManager->CreateDeviceResources();
 }
 
 

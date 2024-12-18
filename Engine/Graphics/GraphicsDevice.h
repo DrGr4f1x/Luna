@@ -13,12 +13,14 @@
 namespace Luna
 {
 
+// Forward declarations
+struct IDeviceNotify;
+
+
 class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown
 {
 public:
 	virtual ~IGraphicsDevice() = default;
-
-	virtual void WaitForGpu() = 0;
 };
 using DeviceHandle = Microsoft::WRL::ComPtr<IGraphicsDevice>;
 

@@ -10,8 +10,7 @@
 
 #pragma once
 
-#include "Core\Color.h"
-#include "Graphics\ColorBuffer.h"
+#include "Graphics\DepthBuffer.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 using namespace Microsoft::WRL;
@@ -20,23 +19,10 @@ using namespace Microsoft::WRL;
 namespace Luna::DX12
 {
 
-class __declspec(uuid("9F27F827-B4AA-44CA-84AE-CBE99F8F2EF4")) IColorBuffer12 : public IColorBuffer
-{
-public:
-	virtual ~IColorBuffer12() = default;
-
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept = 0;
-};
-
-
-class __declspec(uuid("FA13EEEA-C815-4D64-B0B6-7173D5C6D1E0")) ColorBuffer
-	: RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBuffer12, IColorBuffer, IPixelBuffer, IGpuImage>>
+class __declspec(uuid("36E0E19C-7D07-46EA-A6FE-E222A083957D")) DepthBuffer
+	: RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBuffer, IPixelBuffer, IGpuImage>>
 	, NonCopyable
 {
-	friend class GraphicsDevice;
-
 public:
 	// IGpuResource implementation
 	NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept final;
@@ -52,14 +38,6 @@ public:
 	uint32_t GetPlaneCount() const noexcept override { return m_planeCount; }
 	TextureDimension GetDimension() const noexcept override { return ResourceTypeToTextureDimension(m_resourceType); }
 
-	// IColorBuffer implementation
-	Color GetClearColor() const noexcept { return m_clearColor; }
-
-	// IColorBuffer12 implementation
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept final { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept final { return m_rtvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept final { return m_uavHandles[uavIndex]; }
-
 private:
 	ComPtr<ID3D12Resource> m_resource;
 	ResourceState m_usageState{ ResourceState::Undefined };
@@ -74,14 +52,6 @@ private:
 	uint32_t m_numSamples{ 1 };
 	uint32_t m_planeCount{ 1 };
 	Format m_format{ Format::Unknown };
-
-	// ColorBuffer data
-	Color m_clearColor;
-
-	// Pre-constructed descriptors
-	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> m_uavHandles;
 };
 
 } // namespace Luna::DX12

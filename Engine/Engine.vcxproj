@@ -27,6 +27,7 @@
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
+    <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
@@ -77,9 +78,11 @@
     <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Graphics\ColorBuffer.h" />
+    <ClInclude Include="Graphics\DepthBuffer.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
+    <ClInclude Include="Graphics\DX12\DepthBuffer12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
     <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />

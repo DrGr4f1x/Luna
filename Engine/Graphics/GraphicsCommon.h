@@ -59,6 +59,16 @@ inline uint32_t ComputeNumMips(uint64_t width, uint32_t height)
 }
 
 
+struct IDeviceNotify
+{
+	virtual void OnDeviceLost() = 0;
+	virtual void OnDeviceRestored() = 0;
+
+protected:
+	~IDeviceNotify() = default;
+};
+
+
 struct AdapterInfo
 {
 	std::string name{};
