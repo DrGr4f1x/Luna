@@ -103,7 +103,7 @@ protected:
 	std::unique_ptr<LogSystem> m_logSystem;
 	std::unique_ptr<InputSystem> m_inputSystem;
 
-	DeviceManagerHandle m_deviceManager;
+	wil::com_ptr<IDeviceManager> m_deviceManager;
 
 private:
 	bool Initialize();

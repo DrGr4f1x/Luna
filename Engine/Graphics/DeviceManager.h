@@ -10,11 +10,16 @@
 
 #pragma once
 
+#include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 
 
 namespace Luna
 {
+
+// Forward declarations
+class ICommandContext;
+
 
 struct DeviceManagerDesc
 {
@@ -77,16 +82,17 @@ struct DeviceManagerDesc
 };
 
 
-class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) DeviceManager : public IUnknown
+class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) IDeviceManager : public IUnknown
 {
 public:
-	virtual ~DeviceManager() = default;
+	virtual ~IDeviceManager() = default;
 
 	virtual void WaitForGpu() = 0;
 
 	virtual void CreateDeviceResources() = 0;
 	virtual void CreateWindowSizeDependentResources() = 0;
+
+	virtual ICommandContext* AllocateContext(CommandListType commandListType) = 0;
 };
-using DeviceManagerHandle = Microsoft::WRL::ComPtr<DeviceManager>;
 
 } // namespace Luna

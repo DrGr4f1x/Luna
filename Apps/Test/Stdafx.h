@@ -20,6 +20,7 @@
 // Windows headers
 #include <windows.h>
 #include <wrl.h>
+#include <wil\com.h>
 #include <comdef.h>
 
 // Standard library headers

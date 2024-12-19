@@ -22,6 +22,5 @@ class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice :
 public:
 	virtual ~IGraphicsDevice() = default;
 };
-using DeviceHandle = Microsoft::WRL::ComPtr<IGraphicsDevice>;
 
 } // namespace Luna

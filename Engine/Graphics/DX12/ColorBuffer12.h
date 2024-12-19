@@ -96,7 +96,7 @@ public:
 private:
 	std::string m_name;
 
-	ComPtr<ID3D12Resource> m_resource;
+	wil::com_ptr<ID3D12Resource> m_resource;
 	ResourceState m_usageState{ ResourceState::Undefined };
 	ResourceState m_transitioningState{ ResourceState::Undefined };
 	ResourceType m_resourceType{ ResourceType::Unknown };

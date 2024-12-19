@@ -13,6 +13,7 @@
 #include "DeviceManager12.h"
 
 #include "Graphics\GraphicsCommon.h"
+#include "Graphics\DX12\CommandContext12.h"
 #include "Graphics\DX12\DeviceCaps12.h"
 #include "Graphics\DX12\Device12.h"
 #include "Graphics\DX12\Queue12.h"
@@ -23,6 +24,8 @@ using namespace Microsoft::WRL;
 
 namespace Luna::DX12
 {
+
+DeviceManager* g_d3d12DeviceManager{ nullptr };
 
 bool IsDirectXAgilitySDKAvailable()
 {
@@ -48,11 +51,11 @@ bool IsAdapterIntegrated(IDXGIAdapter* adapter)
 
 bool TestCreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, DeviceBasicCaps& deviceBasicCaps)
 {
-	ComPtr<ID3D12Device> device;
+	wil::com_ptr<ID3D12Device> device;
 	if (SUCCEEDED(D3D12CreateDevice(adapter, minFeatureLevel, IID_PPV_ARGS(&device))))
 	{
 		DeviceCaps testCaps;
-		testCaps.ReadBasicCaps(device.Get(), minFeatureLevel);
+		testCaps.ReadBasicCaps(device.get(), minFeatureLevel);
 		deviceBasicCaps = testCaps.basicCaps;
 
 		return true;
@@ -63,7 +66,7 @@ bool TestCreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, 
 
 AdapterType GetAdapterType(IDXGIAdapter* adapter)
 {
-	ComPtr<IDXGIAdapter3> adapter3;
+	wil::com_ptr<IDXGIAdapter3> adapter3;
 	adapter->QueryInterface(IID_PPV_ARGS(&adapter3));
 
 	// Check for integrated adapter
@@ -101,7 +104,7 @@ DxgiRLOHelper::~DxgiRLOHelper()
 {
 	if (doReport)
 	{
-		ComPtr<IDXGIDebug1> pDebug;
+		wil::com_ptr<IDXGIDebug1> pDebug;
 		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
 		{
 			pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
@@ -119,8 +122,19 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	m_fenceValues[0] = 0;
 	m_fenceValues[1] = 0;
 	m_fenceValues[2] = 0;
+
+	extern Luna::IDeviceManager* g_deviceManager;
+	g_deviceManager = this;
+	g_d3d12DeviceManager = this;
 }
 
+
+DeviceManager::~DeviceManager()
+{
+	extern Luna::IDeviceManager* g_deviceManager;
+	g_deviceManager = nullptr;
+	g_d3d12DeviceManager = nullptr;
+}
 
 void DeviceManager::WaitForGpu()
 {
@@ -139,7 +153,7 @@ void DeviceManager::CreateDeviceResources()
 
 	if (m_desc.enableValidation)
 	{
-		ComPtr<ID3D12Debug> debugInterface;
+		wil::com_ptr<ID3D12Debug> debugInterface;
 		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface))))
 		{
 			debugInterface->EnableDebugLayer();
@@ -171,9 +185,9 @@ void DeviceManager::CreateDeviceResources()
 			return;
 		}
 	}
-	SetDebugName(m_dxgiFactory.Get(), "DXGI Factory");
+	SetDebugName(m_dxgiFactory.get(), "DXGI Factory");
 
-	ComPtr<IDXGIFactory5> dxgiFactory5;
+	wil::com_ptr<IDXGIFactory5> dxgiFactory5;
 	if (SUCCEEDED(m_dxgiFactory->QueryInterface(IID_PPV_ARGS(&dxgiFactory5))))
 	{
 		BOOL supported{ 0 };
@@ -193,7 +207,7 @@ void DeviceManager::CreateDeviceResources()
 
 	// Create a fence for tracking GPU execution progress
 	auto d3d12Device = m_device->GetD3D12Device();
-	ThrowIfFailed(d3d12Device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.ReleaseAndGetAddressOf())));
+	ThrowIfFailed(d3d12Device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.put())));
 
 	m_fenceValues[m_backBufferIndex]++;
 
@@ -264,17 +278,18 @@ void DeviceManager::CreateWindowSizeDependentResources()
 		fsSwapChainDesc.Windowed = TRUE;
 
 		// Create a swap chain for the window.
-		ComPtr<IDXGISwapChain1> swapChain;
+		wil::com_ptr<IDXGISwapChain1> swapChain;
 		ThrowIfFailed(m_dxgiFactory->CreateSwapChainForHwnd(
 			GetQueue(QueueType::Graphics).GetCommandQueue(),
 			m_desc.hwnd,
 			&swapChainDesc,
 			&fsSwapChainDesc,
 			nullptr,
-			swapChain.GetAddressOf()
+			swapChain.addressof()
 		));
 
-		ThrowIfFailed(swapChain.As(&m_dxSwapChain));
+		m_dxSwapChain = swapChain.query<IDXGISwapChain3>();
+		assert(m_dxSwapChain);
 
 		// This class does not support exclusive full-screen mode and prevents DXGI from responding to the ALT+ENTER shortcut
 		ThrowIfFailed(m_dxgiFactory->MakeWindowAssociation(m_desc.hwnd, DXGI_MWA_NO_ALT_ENTER));
@@ -296,6 +311,69 @@ void DeviceManager::CreateWindowSizeDependentResources()
 }
 
 
+ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
+{
+	lock_guard<mutex> lockGuard(m_contextAllocationMutex);
+
+	D3D12_COMMAND_LIST_TYPE d3d12Type = CommandListTypeToDX12(commandListType);
+
+	auto& availableContexts = m_availableContexts[d3d12Type];
+
+	ICommandContext* retPtr{ nullptr };
+	wil::com_ptr<ICommandContext> ret;
+	if (availableContexts.empty())
+	{
+		switch (d3d12Type)
+		{
+		case D3D12_COMMAND_LIST_TYPE_DIRECT:
+		{
+			wil::com_ptr<GraphicsContext> graphicsContext = Make<GraphicsContext>();
+			ret = graphicsContext.query<ICommandContext>();
+		}
+			break;
+		case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+		{
+			wil::com_ptr<ComputeContext> computeContext = Make<ComputeContext>();
+			ret = computeContext.query<ICommandContext>();
+		}
+		} // switch
+
+		retPtr = ret.get();
+		m_contextPool[d3d12Type].emplace_back(ret);
+		retPtr->Initialize();
+	}
+	else
+	{
+		retPtr = availableContexts.front();
+		availableContexts.pop();
+		retPtr->Reset();
+	}
+
+	assert(retPtr != nullptr);
+	assert(retPtr->GetType() == commandListType);
+
+	return retPtr;
+}
+
+
+void DeviceManager::CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator)
+{
+	assert_msg(commandListType != CommandListType::Bundle, "Bundles are not yet supported");
+
+	*allocator = GetQueue(commandListType).RequestAllocator();
+
+	assert_succeeded(m_device->GetD3D12Device()->CreateCommandList(1, CommandListTypeToDX12(commandListType), *allocator, nullptr, IID_PPV_ARGS(commandList)));
+
+	(*commandList)->SetName(L"CommandList");
+}
+
+
+void DeviceManager::Prepare(ResourceState beforeState, ResourceState afterState)
+{
+
+}
+
+
 void DeviceManager::HandleDeviceLost()
 { 
 	// TODO
@@ -305,21 +383,21 @@ void DeviceManager::HandleDeviceLost()
 	}*/
 
 	m_swapChainBuffers.clear();
-	m_depthStencil.Reset();
+	m_depthStencil.reset();
 
 	m_queues[(uint32_t)QueueType::Graphics].reset();
 	m_queues[(uint32_t)QueueType::Compute].reset();
 	m_queues[(uint32_t)QueueType::Copy].reset();
 
-	m_device.Reset();
+	m_device.reset();
 
-	m_fence.Reset();
-	m_dxSwapChain.Reset();
-	m_dxgiFactory.Reset();
+	m_fence.reset();
+	m_dxSwapChain.reset();
+	m_dxgiFactory.reset();
 
 #if _DEBUG
 	{
-		ComPtr<IDXGIDebug1> dxgiDebug;
+		wil::com_ptr<IDXGIDebug1> dxgiDebug;
 		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug))))
 		{
 			dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
@@ -404,12 +482,12 @@ void DeviceManager::CreateDevice()
 	}
 
 	// Create device, either WARP or hardware
-	ComPtr<ID3D12Device> device;
+	wil::com_ptr<ID3D12Device> device;
 	if (chosenAdapterIdx == warpAdapterIdx)
 	{
-		ComPtr<IDXGIAdapter> tempAdapter;
+		wil::com_ptr<IDXGIAdapter> tempAdapter;
 		assert_succeeded(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&tempAdapter)));
-		assert_succeeded(D3D12CreateDevice(tempAdapter.Get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(D3D12CreateDevice(tempAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		m_bIsWarpAdapter = true;
 
@@ -417,9 +495,9 @@ void DeviceManager::CreateDevice()
 	}
 	else
 	{
-		ComPtr<IDXGIAdapter> tempAdapter;
+		wil::com_ptr<IDXGIAdapter> tempAdapter;
 		assert_succeeded(m_dxgiFactory->EnumAdapters((UINT)chosenAdapterIdx, &tempAdapter));
-		assert_succeeded(D3D12CreateDevice(tempAdapter.Get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(D3D12CreateDevice(tempAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		LogInfo(LogDirectX) << "Selected D3D12 adapter " << chosenAdapterIdx << endl;
 	}
@@ -440,8 +518,8 @@ void DeviceManager::CreateDevice()
 
 	// Create Luna GraphicsDevice
 	auto deviceDesc = GraphicsDeviceDesc{}
-		.SetDxgiFactory(m_dxgiFactory.Get())
-		.SetDevice(device.Get())
+		.SetDxgiFactory(m_dxgiFactory.get())
+		.SetDevice(device.get())
 		.SetBackBufferWidth(m_desc.backBufferWidth)
 		.SetBackBufferHeight(m_desc.backBufferHeight)
 		.SetNumSwapChainBuffers(m_desc.numSwapChainBuffers)
@@ -466,7 +544,7 @@ vector<AdapterInfo> DeviceManager::EnumerateAdapters()
 {
 	vector<AdapterInfo> adapters;
 
-	ComPtr<IDXGIFactory6> dxgiFactory6;
+	wil::com_ptr<IDXGIFactory6> dxgiFactory6;
 	m_dxgiFactory->QueryInterface(IID_PPV_ARGS(&dxgiFactory6));
 
 	const D3D_FEATURE_LEVEL minRequiredLevel{ D3D_FEATURE_LEVEL_11_0 };
@@ -476,7 +554,7 @@ vector<AdapterInfo> DeviceManager::EnumerateAdapters()
 
 	LogInfo(LogDirectX) << "Enumerating DXGI adapters..." << endl;
 
-	for (int32_t idx = 0; DXGI_ERROR_NOT_FOUND != EnumAdapter((UINT)idx, gpuPreference, dxgiFactory6.Get(), &tempAdapter); ++idx)
+	for (int32_t idx = 0; DXGI_ERROR_NOT_FOUND != EnumAdapter((UINT)idx, gpuPreference, dxgiFactory6.get(), &tempAdapter); ++idx)
 	{
 		DXGI_ADAPTER_DESC desc{};
 		tempAdapter->GetDesc(&desc);
@@ -565,7 +643,7 @@ void DeviceManager::UpdateColorSpace()
 	if (!m_dxgiFactory->IsCurrent())
 	{
 		// Output information is cached on the DXGI Factory. If it is stale we need to create a new factory.
-		ThrowIfFailed(CreateDXGIFactory2(m_desc.enableValidation ? DXGI_CREATE_FACTORY_DEBUG : 0, IID_PPV_ARGS(m_dxgiFactory.ReleaseAndGetAddressOf())));
+		ThrowIfFailed(CreateDXGIFactory2(m_desc.enableValidation ? DXGI_CREATE_FACTORY_DEBUG : 0, IID_PPV_ARGS(m_dxgiFactory.put())));
 	}
 
 	DXGI_COLOR_SPACE_TYPE colorSpace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
@@ -588,17 +666,17 @@ void DeviceManager::UpdateColorSpace()
 		const long ax2 = windowBounds.right;
 		const long ay2 = windowBounds.bottom;
 
-		ComPtr<IDXGIOutput> bestOutput;
+		wil::com_ptr<IDXGIOutput> bestOutput;
 		long bestIntersectArea = -1;
 
-		ComPtr<IDXGIAdapter> adapter;
+		wil::com_ptr<IDXGIAdapter> adapter;
 		for (UINT adapterIndex = 0;
-			SUCCEEDED(m_dxgiFactory->EnumAdapters(adapterIndex, adapter.ReleaseAndGetAddressOf()));
+			SUCCEEDED(m_dxgiFactory->EnumAdapters(adapterIndex, adapter.put()));
 			++adapterIndex)
 		{
-			ComPtr<IDXGIOutput> output;
+			wil::com_ptr<IDXGIOutput> output;
 			for (UINT outputIndex = 0;
-				SUCCEEDED(adapter->EnumOutputs(outputIndex, output.ReleaseAndGetAddressOf()));
+				SUCCEEDED(adapter->EnumOutputs(outputIndex, output.put()));
 				++outputIndex)
 			{
 				// Get the rectangle bounds of current output.
@@ -610,7 +688,7 @@ void DeviceManager::UpdateColorSpace()
 				const long intersectArea = ComputeIntersectionArea(ax1, ay1, ax2, ay2, r.left, r.top, r.right, r.bottom);
 				if (intersectArea > bestIntersectArea)
 				{
-					bestOutput.Swap(output);
+					bestOutput.swap(output);
 					bestIntersectArea = intersectArea;
 				}
 			}
@@ -618,8 +696,8 @@ void DeviceManager::UpdateColorSpace()
 
 		if (bestOutput)
 		{
-			ComPtr<IDXGIOutput6> output6;
-			if (SUCCEEDED(bestOutput.As(&output6)))
+			auto output6 = bestOutput.query<IDXGIOutput6>();
+			if (output6)
 			{
 				DXGI_OUTPUT_DESC1 desc;
 				ThrowIfFailed(output6->GetDesc1(&desc));
@@ -663,13 +741,13 @@ void DeviceManager::UpdateColorSpace()
 	}
 }
 
-ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
+wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
 {
-	ComPtr<ID3D12Resource> displayPlane;
+	wil::com_ptr<ID3D12Resource> displayPlane;
 	assert_succeeded(m_dxSwapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
 
 	const string name = format("Primary SwapChain Image {}", imageIndex);
-	SetDebugName(displayPlane.Get(), name);
+	SetDebugName(displayPlane.get(), name);
 
 	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
 
@@ -685,24 +763,28 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 	auto d3d12Device = m_device->GetD3D12Device();
 
 	auto rtvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	d3d12Device->CreateRenderTargetView(displayPlane.Get(), nullptr, rtvHandle);
+	d3d12Device->CreateRenderTargetView(displayPlane.get(), nullptr, rtvHandle);
 
 	auto srvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	d3d12Device->CreateShaderResourceView(displayPlane.Get(), nullptr, srvHandle);
+	d3d12Device->CreateShaderResourceView(displayPlane.get(), nullptr, srvHandle);
 
 	const uint8_t planeCount = m_device->GetFormatPlaneCount(resourceDesc.Format);
 
 	auto colorBufferDescExt = ColorBufferDescExt{}
-		.SetResource(displayPlane.Get())
+		.SetResource(displayPlane.get())
 		.SetUsageState(ResourceState::Present)
 		.SetPlaneCount(planeCount)
 		.SetRtvHandle(rtvHandle)
 		.SetSrvHandle(srvHandle);
 
-	ColorBufferHandle handle;
-	ComPtr<ColorBuffer> handle12 = Make<ColorBuffer>(colorBufferDesc, colorBufferDescExt);
-	ThrowIfFailed(handle12.As(&handle));
-	return handle;
+	wil::com_ptr<ColorBuffer> handle12 = Make<ColorBuffer>(colorBufferDesc, colorBufferDescExt);
+	return handle12;
+}
+
+
+DeviceManager* GetD3D12DeviceManager()
+{
+	return g_d3d12DeviceManager;
 }
 
 } // namespace Luna::DX12

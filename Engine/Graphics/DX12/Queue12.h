@@ -27,7 +27,7 @@ public:
 	Queue(ID3D12Device* device, QueueType queueType);
 	~Queue();
 
-	ID3D12CommandQueue* GetCommandQueue() noexcept { return m_dxQueue.Get(); }
+	ID3D12CommandQueue* GetCommandQueue() noexcept { return m_dxQueue.get(); }
 
 	uint64_t ExecuteCommandList(ID3D12CommandList* commandList);
 	ID3D12CommandAllocator* RequestAllocator();
@@ -42,14 +42,14 @@ public:
 	}
 
 private:
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_dxQueue;
+	wil::com_ptr<ID3D12CommandQueue> m_dxQueue;
 	QueueType m_type{ QueueType::Graphics };
 
 	CommandAllocatorPool m_allocatorPool;
 	std::mutex m_fenceMutex;
 	std::mutex m_eventMutex;
 
-	Microsoft::WRL::ComPtr<ID3D12Fence> m_dxFence;
+	wil::com_ptr<ID3D12Fence> m_dxFence;
 	uint64_t m_nextFenceValue;
 	uint64_t m_lastCompletedFenceValue;
 	HANDLE m_fenceEventHandle{ nullptr };

@@ -34,7 +34,7 @@ private:
 
 	D3D12_DESCRIPTOR_HEAP_TYPE m_type{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
 	std::mutex m_allocationMutex;
-	std::vector<Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>> m_descriptorHeapPool;
+	std::vector<wil::com_ptr<ID3D12DescriptorHeap>> m_descriptorHeapPool;
 	ID3D12DescriptorHeap* m_currentHeap{ nullptr };
 	D3D12_CPU_DESCRIPTOR_HANDLE m_currentHandle{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
 	uint32_t m_descriptorSize{ 0 };

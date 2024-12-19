@@ -18,22 +18,26 @@
 using namespace std;
 using namespace Microsoft::WRL;
 
+Luna::IDeviceManager* g_deviceManager{ nullptr };
+
 namespace
 {
 
-Luna::DeviceManagerHandle CreateD3D12DeviceManager(const Luna::DeviceManagerDesc& desc)
+wil::com_ptr<Luna::IDeviceManager> CreateD3D12DeviceManager(const Luna::DeviceManagerDesc& desc)
 {
-	ComPtr<Luna::DX12::DeviceManager> deviceManager12 = Make<Luna::DX12::DeviceManager>(desc);
+	wil::com_ptr<Luna::DX12::DeviceManager> deviceManager12 = Make<Luna::DX12::DeviceManager>(desc);
 
-	Luna::DeviceManagerHandle deviceManager = deviceManager12;
+	wil::com_ptr<Luna::IDeviceManager> deviceManager = deviceManager12;
 	return deviceManager;
 }
 
 
-//Luna::DeviceManagerHandle CreateVulkanDeviceManager(const Luna::DeviceManagerDesc& desc)
+//wil::com_ptr<Luna::IDeviceManager> CreateVulkanDeviceManager(const Luna::DeviceManagerDesc& desc)
 //{
-//	auto deviceManager = new Luna::VK::DeviceManager(desc);
-//	return Luna::DeviceManagerHandle::Create(deviceManager);
+//	wil::com_ptr<Luna::Vulkan::DeviceManager> deviceManagerVK = Make<Luna::Vulkan::DeviceManager>(desc);
+// 
+//	wil::com_ptr<Luna::IDeviceManager> deviceManager = deviceManagerVK;
+//	return deviceManager;
 //}
 
 } // anonymous namespace
@@ -93,7 +97,7 @@ bool IsRenderDocAvailable()
 }
 
 
-DeviceManagerHandle CreateDeviceManager(const DeviceManagerDesc& desc)
+wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc)
 {
 	switch (desc.graphicsApi)
 	{

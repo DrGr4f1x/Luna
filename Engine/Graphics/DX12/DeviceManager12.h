@@ -16,10 +16,12 @@
 
 using namespace Microsoft::WRL;
 
+
 namespace Luna::DX12
 {
 
 // Forward declarations
+struct ContextState;
 struct DeviceCaps;
 class GraphicsDevice;
 class Queue;
@@ -35,17 +37,25 @@ struct DxgiRLOHelper
 
 
 class __declspec(uuid("2B2F2AAF-4D90-45F4-8BF8-9D8136AB6FC8")) DeviceManager 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::DeviceManager>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
 	, public NonCopyable
 {
+	friend struct ContextState;
+
 public:
 	DeviceManager(const DeviceManagerDesc& desc);
-	virtual ~DeviceManager() = default;
+	virtual ~DeviceManager();
 
 	void WaitForGpu() final;
 
 	void CreateDeviceResources() final;
 	void CreateWindowSizeDependentResources() final;
+
+	ICommandContext* AllocateContext(CommandListType commandListType);
+	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
+
+	void Prepare(ResourceState beforeState = ResourceState::Present, ResourceState afterState = ResourceState::RenderTarget);
+
 
 	void HandleDeviceLost();
 
@@ -59,7 +69,7 @@ private:
 
 	void UpdateColorSpace();
 
-	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex);
+	wil::com_ptr<ColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex);
 
 private:
 	DeviceManagerDesc m_desc{};
@@ -71,16 +81,16 @@ private:
 	D3D_FEATURE_LEVEL m_bestFeatureLevel{ D3D_FEATURE_LEVEL_12_2 };
 	D3D_SHADER_MODEL m_bestShaderModel{ D3D_SHADER_MODEL_6_7 };
 
-	ComPtr<IDXGIFactory4> m_dxgiFactory;
+	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
 
 	// Swap-chain objects
-	ComPtr<IDXGISwapChain3> m_dxSwapChain;
-	std::vector<ColorBufferHandle> m_swapChainBuffers;
-	ComPtr<ID3D12Resource> m_depthStencil;
+	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
+	std::vector<wil::com_ptr<ColorBuffer>> m_swapChainBuffers;
+	wil::com_ptr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
 
 	// Presentation synchronization
-	ComPtr<ID3D12Fence> m_fence;
+	wil::com_ptr<ID3D12Fence> m_fence;
 	uint64_t m_fenceValues[3];
 	Wrappers::Event m_fenceEvent;
 
@@ -92,11 +102,19 @@ private:
 	bool m_bIsAgilitySDKAvailable{ false };
 
 	// Luna objects
-	ComPtr<GraphicsDevice> m_device;
+	wil::com_ptr<GraphicsDevice> m_device;
 
 	// Queues
 	bool m_bQueuesCreated{ false };
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
+
+	// Command context handling
+	std::mutex m_contextAllocationMutex;
+	std::vector<wil::com_ptr<ICommandContext>> m_contextPool[4];
+	std::queue<ICommandContext*> m_availableContexts[4];
 };
+
+
+DeviceManager* GetD3D12DeviceManager();
 
 } // namespace Luna::DX12

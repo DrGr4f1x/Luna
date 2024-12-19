@@ -51,8 +51,8 @@ ID3D12CommandAllocator* CommandAllocatorPool::RequestAllocator(uint64_t complete
 
 		SetDebugName(allocator, format("CommandAllocator {}", m_allocatorPool.size()));
 
-		ComPtr<ID3D12CommandAllocator> allocatorHandle;
-		allocatorHandle.Attach(allocator);
+		wil::com_ptr<ID3D12CommandAllocator> allocatorHandle;
+		allocatorHandle.attach(allocator);
 
 		m_allocatorPool.emplace_back(allocatorHandle);
 	}

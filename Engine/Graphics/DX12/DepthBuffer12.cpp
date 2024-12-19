@@ -41,7 +41,7 @@ NativeObjectPtr DepthBuffer::GetNativeObject(NativeObjectType nativeObjectType) 
 {
 	if (nativeObjectType == NativeObjectType::DX12_Resource)
 	{
-		return NativeObjectPtr(m_resource.Get());
+		return NativeObjectPtr(m_resource.get());
 	}
 
 	return IGpuImage::GetNativeObject(nativeObjectType);

@@ -83,7 +83,9 @@ struct AdapterInfo
 };
 
 
-DeviceManagerHandle CreateDeviceManager(const DeviceManagerDesc& desc);
+wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
+
+IDeviceManager* GetDeviceManager();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

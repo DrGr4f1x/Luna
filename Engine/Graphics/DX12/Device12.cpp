@@ -56,8 +56,8 @@ DeviceRLDOHelper::~DeviceRLDOHelper()
 {
 	if (device && doReport)
 	{
-		ComPtr<ID3D12DebugDevice> debugInterface;
-		if (SUCCEEDED(device->QueryInterface(debugInterface.GetAddressOf())))
+		wil::com_ptr<ID3D12DebugDevice> debugInterface;
+		if (SUCCEEDED(device->QueryInterface(debugInterface.addressof())))
 		{
 			debugInterface->ReportLiveDeviceObjects(D3D12_RLDO_SUMMARY | D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
 		}
@@ -74,7 +74,7 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept
 	m_dxgiFactory = m_desc.dxgiFactory;
 	m_dxDevice = m_desc.dx12Device;
 
-	SetDebugName(m_dxDevice.Get(), "DX12 Device");
+	SetDebugName(m_dxDevice.get(), "DX12 Device");
 }
 
 
@@ -85,7 +85,7 @@ GraphicsDevice::~GraphicsDevice()
 	if (m_dxInfoQueue)
 	{
 		m_dxInfoQueue->UnregisterMessageCallback(m_callbackCookie);
-		m_dxInfoQueue.Reset();
+		m_dxInfoQueue.reset();
 	}
 }
 
@@ -170,7 +170,7 @@ void GraphicsDevice::ReadCaps()
 	const D3D_FEATURE_LEVEL minFeatureLevel{ D3D_FEATURE_LEVEL_12_0 };
 	const D3D_SHADER_MODEL maxShaderModel{ D3D_SHADER_MODEL_6_8 };
 
-	m_caps->ReadFullCaps(m_dxDevice.Get(), minFeatureLevel, maxShaderModel);
+	m_caps->ReadFullCaps(m_dxDevice.get(), minFeatureLevel, maxShaderModel);
 
 	// TODO
 	//if (g_graphicsDeviceOptions.logDeviceFeatures)
@@ -183,7 +183,7 @@ void GraphicsDevice::ReadCaps()
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count)
 {
-	return m_descriptorAllocators[type]->Allocate(m_dxDevice.Get(), count);
+	return m_descriptorAllocators[type]->Allocate(m_dxDevice.get(), count);
 }
 
 

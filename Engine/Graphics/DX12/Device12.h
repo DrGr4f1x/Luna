@@ -106,7 +106,7 @@ public:
 	
 
 private:
-	ID3D12Device* GetD3D12Device() { return m_dxDevice.Get(); }
+	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }
 
 	void InstallDebugCallback();
 	void ReadCaps();
@@ -120,10 +120,10 @@ private:
 	GraphicsDeviceDesc m_desc{};
 
 	// DirectX 12 objects
-	ComPtr<IDXGIFactory4> m_dxgiFactory;
-	ComPtr<ID3D12Device> m_dxDevice;
+	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
+	wil::com_ptr<ID3D12Device> m_dxDevice;
 	DeviceRLDOHelper m_deviceRLDOHelper;
-	ComPtr<ID3D12InfoQueue1> m_dxInfoQueue;
+	wil::com_ptr<ID3D12InfoQueue1> m_dxInfoQueue;
 	DWORD m_callbackCookie{ 0 };
 
 	// Descriptor allocators

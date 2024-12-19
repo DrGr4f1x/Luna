@@ -31,7 +31,7 @@ private:
 	ID3D12Device* m_dxDevice{ nullptr };
 	const D3D12_COMMAND_LIST_TYPE m_commandListType;
 
-	std::vector<Microsoft::WRL::ComPtr<ID3D12CommandAllocator>> m_allocatorPool;
+	std::vector<wil::com_ptr<ID3D12CommandAllocator>> m_allocatorPool;
 	std::queue<std::pair<uint64_t, ID3D12CommandAllocator*>> m_readyAllocators;
 	std::mutex m_allocatorMutex;
 };

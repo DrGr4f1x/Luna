@@ -54,13 +54,13 @@ ID3D12DescriptorHeap* DescriptorAllocator::RequestNewHeap(ID3D12Device* device)
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	desc.NodeMask = 1;
 
-	ComPtr<ID3D12DescriptorHeap> heap;
+	wil::com_ptr<ID3D12DescriptorHeap> heap;
 	assert_succeeded(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap)));
 
-	SetDebugName(heap.Get(), format("DescriptorAllocator [{}] {}", m_type, m_descriptorHeapPool.size()));
+	SetDebugName(heap.get(), format("DescriptorAllocator [{}] {}", m_type, m_descriptorHeapPool.size()));
 	m_descriptorHeapPool.emplace_back(heap);
 
-	return heap.Get();
+	return heap.get();
 }
 
 } // namespace Luna::DX12

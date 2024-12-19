@@ -12,14 +12,16 @@
 
 #include "Graphics\DeviceManager.h"
 
+using namespace Microsoft::WRL;
+
 
 namespace Luna::VK
 {
 
-class DeviceManager : public Luna::DeviceManager, public NonCopyable
+class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
+	, public NonCopyable
 {
-	IMPLEMENT_IOBJECT
-
 public:
 	DeviceManager(const DeviceManagerDesc& desc);
 	virtual ~DeviceManager() = default;

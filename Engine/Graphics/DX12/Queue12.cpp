@@ -31,10 +31,10 @@ Queue::Queue(ID3D12Device* device, QueueType queueType)
 	queueDesc.NodeMask = 1;
 
 	assert_succeeded(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_dxQueue)));
-	SetDebugName(m_dxQueue.Get(), format("{} Queue", queueType));
+	SetDebugName(m_dxQueue.get(), format("{} Queue", queueType));
 
 	assert_succeeded(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_dxFence)));
-	SetDebugName(m_dxFence.Get(), format("{} Queue Fence", queueType));
+	SetDebugName(m_dxFence.get(), format("{} Queue Fence", queueType));
 
 	m_dxFence->Signal((uint64_t)m_type << 56);
 
@@ -60,7 +60,7 @@ uint64_t Queue::ExecuteCommandList(ID3D12CommandList* commandList)
 	m_dxQueue->ExecuteCommandLists(1, &commandList);
 
 	// Signal the next fence value (with the GPU)
-	m_dxQueue->Signal(m_dxFence.Get(), m_nextFenceValue);
+	m_dxQueue->Signal(m_dxFence.get(), m_nextFenceValue);
 
 	// And increment the fence value.  
 	return m_nextFenceValue++;
@@ -85,7 +85,7 @@ uint64_t Queue::IncrementFence()
 {
 	lock_guard<mutex> lockGuard(m_fenceMutex);
 
-	m_dxQueue->Signal(m_dxFence.Get(), m_nextFenceValue);
+	m_dxQueue->Signal(m_dxFence.get(), m_nextFenceValue);
 
 	return m_nextFenceValue++;
 }

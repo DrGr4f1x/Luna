@@ -27,6 +27,7 @@
 #include <windows.h>
 #include <wrl.h>
 #include <wrl\implements.h>
+#include <wil\com.h>
 #include <Shlwapi.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>
