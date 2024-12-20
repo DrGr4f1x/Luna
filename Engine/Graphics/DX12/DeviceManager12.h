@@ -87,6 +87,9 @@ private:
 
 	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
 
+	// Luna objects
+	wil::com_ptr<GraphicsDevice> m_device;
+
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
 	std::vector<wil::com_ptr<ColorBuffer>> m_swapChainBuffers;
@@ -104,9 +107,6 @@ private:
 	bool m_bIsWarpAdapter{ false };
 	bool m_bIsTearingSupported{ false };
 	bool m_bIsAgilitySDKAvailable{ false };
-
-	// Luna objects
-	wil::com_ptr<GraphicsDevice> m_device;
 
 	// Queues
 	bool m_bQueuesCreated{ false };

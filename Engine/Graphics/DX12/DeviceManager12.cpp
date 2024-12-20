@@ -34,21 +34,6 @@ bool IsDirectXAgilitySDKAvailable()
 }
 
 
-bool IsAdapterIntegrated(IDXGIAdapter* adapter)
-{
-	IntrusivePtr<IDXGIAdapter3> adapter3;
-	adapter->QueryInterface(IID_PPV_ARGS(&adapter3));
-
-	DXGI_QUERY_VIDEO_MEMORY_INFO nonLocalVideoMemoryInfo{};
-	if (adapter3 && SUCCEEDED(adapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &nonLocalVideoMemoryInfo)))
-	{
-		return nonLocalVideoMemoryInfo.Budget == 0;
-	}
-
-	return true;
-}
-
-
 bool TestCreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, DeviceBasicCaps& deviceBasicCaps)
 {
 	wil::com_ptr<ID3D12Device> device;

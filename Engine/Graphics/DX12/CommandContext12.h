@@ -29,6 +29,8 @@ struct ContextState
 	friend class ComputeContext;
 	friend class GraphicsContext;
 
+	~ContextState();
+
 	std::string id;
 	CommandListType type;
 

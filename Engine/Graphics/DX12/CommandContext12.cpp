@@ -40,6 +40,15 @@ static bool IsValidComputeResourceState(ResourceState state)
 }
 
 
+ContextState::~ContextState()
+{
+	if (m_commandList)
+	{
+		m_commandList->Release();
+		m_commandList = nullptr;
+	}
+}
+
 void ContextState::BeginEvent(const string& label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
@@ -210,7 +219,7 @@ void ContextState::ClearColor(IColorBuffer* colorBuffer)
 {
 	FlushResourceBarriers();
 
-	ColorBuffer* colorBuffer12{ nullptr };
+	wil::com_ptr<IColorBuffer12> colorBuffer12;
 	ThrowIfFailed(colorBuffer->QueryInterface(IID_PPV_ARGS(&colorBuffer12)));
 
 	m_commandList->ClearRenderTargetView(colorBuffer12->GetRTV(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
@@ -221,7 +230,7 @@ void ContextState::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
-	IColorBuffer12* colorBuffer12{ nullptr };
+	wil::com_ptr<IColorBuffer12> colorBuffer12;
 	ThrowIfFailed(colorBuffer->QueryInterface(IID_PPV_ARGS(&colorBuffer12)));
 
 	m_commandList->ClearRenderTargetView(colorBuffer12->GetRTV(), clearColor.GetPtr(), 0, nullptr);
