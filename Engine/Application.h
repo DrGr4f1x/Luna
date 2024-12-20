@@ -22,6 +22,7 @@ namespace Luna
 
 // Forward declarations
 class FileSystem;
+class IColorBuffer;
 class InputSystem;
 class LogSystem;
 enum class GraphicsApi;
@@ -68,7 +69,7 @@ public:
 
 	virtual bool Update(double deltaTime) { return true; }
 	virtual void UpdateUI() {}
-	virtual void Render() {}
+	virtual void Render();
 
 	virtual void OnWindowIconify(int iconified);
 	virtual void OnWindowFocus(int focused);
@@ -77,6 +78,8 @@ public:
 	virtual void OnWindowPosition(int xPos, int yPos);
 
 	void Run();
+
+	IColorBuffer* GetColorBuffer() const;
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 

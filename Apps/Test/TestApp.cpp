@@ -58,6 +58,7 @@ bool TestApp::Update(double deltaTime)
 void TestApp::Render()
 {
 	// Application main render loop
+	Application::Render();
 }
 
 

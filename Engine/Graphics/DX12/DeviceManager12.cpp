@@ -136,6 +136,40 @@ DeviceManager::~DeviceManager()
 	g_d3d12DeviceManager = nullptr;
 }
 
+
+void DeviceManager::BeginFrame()
+{
+	// TODO Handle window resize here
+
+	// Schedule a Signal command in the queue.
+	const UINT64 currentFenceValue = m_fenceValues[m_backBufferIndex];
+	ThrowIfFailed(GetQueue(QueueType::Graphics).GetCommandQueue()->Signal(m_fence.get(), currentFenceValue));
+
+	m_backBufferIndex = m_dxSwapChain->GetCurrentBackBufferIndex();
+	
+	// If the next frame is not ready to be rendered yet, wait until it is ready.
+	if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
+	{
+		ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_backBufferIndex], m_fenceEvent.Get()));
+		std::ignore = WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
+	}
+
+	// Set the fence value for the next frame.
+	m_fenceValues[m_backBufferIndex] = currentFenceValue + 1;
+}
+
+
+void DeviceManager::Present()
+{
+	UINT vsync = m_bIsTearingSupported ? 0 : (m_desc.enableVSync ? 1 : 0);
+	UINT presentFlags = m_bIsTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
+	m_dxSwapChain->Present(vsync, presentFlags);
+
+	// Handle device removed
+}
+
+
 void DeviceManager::WaitForGpu()
 {
 	if (m_bQueuesCreated)
@@ -144,6 +178,13 @@ void DeviceManager::WaitForGpu()
 		m_queues[(uint32_t)QueueType::Compute]->WaitForGpu();
 		m_queues[(uint32_t)QueueType::Copy]->WaitForGpu();
 	}
+}
+
+
+void DeviceManager::WaitForFence(uint64_t fenceValue)
+{
+	Queue& producer = GetQueue((CommandListType)(fenceValue >> 56));
+	producer.WaitForFence(fenceValue);
 }
 
 
@@ -231,7 +272,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	// TODO: The window dimensions might have changed externally.  Need to pass those in from somewhere else.
 	const uint32_t newBackBufferWidth = m_desc.backBufferWidth;
 	const uint32_t newBackBufferHeight = m_desc.backBufferHeight;
-	DXGI_FORMAT dxgiFormat = FormatToDxgi(RemoveSrgb(m_desc.swapChainFormat)).resourceFormat;
+	DXGI_FORMAT dxgiFormat = FormatToDxgi(RemoveSrgb(m_desc.swapChainFormat)).rtvFormat;
 
 	if (m_dxSwapChain)
 	{
@@ -368,9 +409,18 @@ void DeviceManager::CreateNewCommandList(CommandListType commandListType, ID3D12
 }
 
 
-void DeviceManager::Prepare(ResourceState beforeState, ResourceState afterState)
+void DeviceManager::FreeContext(ICommandContext* usedContext)
 {
+	assert(usedContext != nullptr);
+	lock_guard<mutex> lockGuard(m_contextAllocationMutex);
 
+	m_availableContexts[(uint32_t)usedContext->GetType()].push(usedContext);
+}
+
+
+IColorBuffer* DeviceManager::GetColorBuffer() const
+{
+	return m_swapChainBuffers[m_backBufferIndex].get();
 }
 
 

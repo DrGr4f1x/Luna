@@ -14,11 +14,57 @@
 #include "DeviceManager12.h"
 #include "Queue12.h"
 
+#if ENABLE_D3D12_DEBUG_MARKERS
+#include <pix3.h>
+#endif
+
 using namespace std;
 
 
 namespace Luna::DX12
 {
+
+static bool IsValidComputeResourceState(ResourceState state)
+{
+	switch (state)
+	{
+	case ResourceState::ShaderResource:
+	case ResourceState::UnorderedAccess:
+	case ResourceState::CopyDest:
+	case ResourceState::CopySource:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+
+void ContextState::BeginEvent(const string& label)
+{
+#if ENABLE_D3D12_DEBUG_MARKERS
+	::PIXBeginEvent(m_commandList, 0, label.c_str());
+#else
+	(label)
+#endif
+}
+
+
+void ContextState::EndEvent()
+{
+#if ENABLE_D3D12_DEBUG_MARKERS
+	::PIXEndEvent(m_commandList);
+#endif
+}
+
+
+void ContextState::SetMarker(const string& label)
+{
+#if ENABLE_D3D12_DEBUG_MARKERS
+	::PIXSetMarker(m_commandList, 0, label.c_str());
+#endif
+}
+
 
 void ContextState::Reset()
 {
@@ -43,6 +89,145 @@ void ContextState::Initialize()
 }
 
 
+uint64_t ContextState::Finish(bool bWaitForCompletion)
+{
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+
+	FlushResourceBarriers();
+
+	// TODO
+#if 0
+	if (m_ID.length() > 0)
+	{
+		EngineProfiling::EndBlock(this);
+	}
+#endif
+
+	assert(m_currentAllocator != nullptr);
+
+	if (m_bHasPendingDebugEvent)
+	{
+		EndEvent();
+		m_bHasPendingDebugEvent = false;
+	}
+
+	auto deviceManager = GetD3D12DeviceManager();
+
+	Queue& cmdQueue = deviceManager->GetQueue(type);
+
+	uint64_t fenceValue = cmdQueue.ExecuteCommandList(m_commandList);
+	cmdQueue.DiscardAllocator(fenceValue, m_currentAllocator);
+	m_currentAllocator = nullptr;
+
+	// TODO
+	//m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
+	//m_gpuLinearAllocator.CleanupUsedPages(fenceValue);
+	//m_dynamicViewDescriptorHeap.CleanupUsedHeaps(fenceValue);
+	//m_dynamicSamplerDescriptorHeap.CleanupUsedHeaps(fenceValue);
+
+	if (bWaitForCompletion)
+	{
+		deviceManager->WaitForFence(fenceValue);
+	}
+
+	return fenceValue;
+}
+
+
+void ContextState::TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate)
+{
+	ResourceState oldState = gpuImage->GetUsageState();
+
+	if (type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	if (oldState != newState)
+	{
+		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrierDesc.Transition.pResource = gpuImage->GetNativeObject(NativeObjectType::DX12_Resource);
+		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
+		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
+
+		// Check to see if we already started the transition
+		if (newState == gpuImage->GetTransitioningState())
+		{
+			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+			gpuImage->SetTransitioningState(ResourceState::Undefined);
+		}
+		else
+		{
+			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		}
+
+		gpuImage->SetUsageState(newState);
+	}
+	else if (newState == ResourceState::UnorderedAccess)
+	{
+		InsertUAVBarrier(gpuImage, bFlushImmediate);
+	}
+
+	if (bFlushImmediate || m_numBarriersToFlush == 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void ContextState::InsertUAVBarrier(IGpuImage* gpuImage, bool bFlushImmediate)
+{
+	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrierDesc.UAV.pResource = gpuImage->GetNativeObject(NativeObjectType::DX12_Resource);
+
+	if (bFlushImmediate)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void ContextState::FlushResourceBarriers()
+{
+	if (m_numBarriersToFlush > 0)
+	{
+		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
+		m_numBarriersToFlush = 0;
+	}
+}
+
+
+void ContextState::ClearColor(IColorBuffer* colorBuffer)
+{
+	FlushResourceBarriers();
+
+	ColorBuffer* colorBuffer12{ nullptr };
+	ThrowIfFailed(colorBuffer->QueryInterface(IID_PPV_ARGS(&colorBuffer12)));
+
+	m_commandList->ClearRenderTargetView(colorBuffer12->GetRTV(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
+}
+
+
+void ContextState::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+{
+	FlushResourceBarriers();
+
+	IColorBuffer12* colorBuffer12{ nullptr };
+	ThrowIfFailed(colorBuffer->QueryInterface(IID_PPV_ARGS(&colorBuffer12)));
+
+	m_commandList->ClearRenderTargetView(colorBuffer12->GetRTV(), clearColor.GetPtr(), 0, nullptr);
+}
+
+
 void ContextState::BindDescriptorHeaps()
 {
 	// TODO
@@ -51,13 +236,33 @@ void ContextState::BindDescriptorHeaps()
 
 ComputeContext::ComputeContext()
 {
-	m_state.type = CommandListType::Direct;
+	m_state.type = CommandListType::Compute;
+}
+
+
+uint64_t ComputeContext::Finish(bool bWaitForCompletion)
+{
+	uint64_t fenceValue = m_state.Finish(bWaitForCompletion);
+
+	GetD3D12DeviceManager()->FreeContext(this);
+
+	return fenceValue;
 }
 
 
 GraphicsContext::GraphicsContext()
 {
-	m_state.type = CommandListType::Compute;
+	m_state.type = CommandListType::Direct;
+}
+
+
+uint64_t GraphicsContext::Finish(bool bWaitForCompletion)
+{
+	uint64_t fenceValue = m_state.Finish(bWaitForCompletion);
+
+	GetD3D12DeviceManager()->FreeContext(this);
+
+	return fenceValue;
 }
 
 } // namespace Luna::DX12

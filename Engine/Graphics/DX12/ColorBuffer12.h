@@ -72,6 +72,11 @@ public:
 	ColorBuffer(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt);
 
 	// IGpuResource implementation
+	ResourceState GetUsageState() const noexcept final { return m_usageState; }
+	void SetUsageState(ResourceState usageState) noexcept final { m_usageState = usageState; }
+	ResourceState GetTransitioningState() const noexcept final { return m_transitioningState; }
+	void SetTransitioningState(ResourceState transitioningState) noexcept final { m_transitioningState = transitioningState; }
+	ResourceType GetResourceType() const noexcept final { return m_resourceType; }
 	NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept final;
 
 	// IPixelBuffer implementation

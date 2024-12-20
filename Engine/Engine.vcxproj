@@ -38,7 +38,6 @@
     <ClCompile Include="Graphics\DX12\Enums12.cpp" />
     <ClCompile Include="Graphics\DX12\Formats12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
-    <ClCompile Include="Graphics\DX12\SwapChain12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
@@ -95,7 +94,6 @@
     <ClInclude Include="Graphics\DX12\Enums12.h" />
     <ClInclude Include="Graphics\DX12\Flags12.h" />
     <ClInclude Include="Graphics\DX12\Formats12.h" />
-    <ClInclude Include="Graphics\DX12\SwapChain12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />

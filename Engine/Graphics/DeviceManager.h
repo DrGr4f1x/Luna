@@ -18,6 +18,7 @@ namespace Luna
 {
 
 // Forward declarations
+class IColorBuffer;
 class ICommandContext;
 
 
@@ -87,12 +88,17 @@ class __declspec(uuid("000FE461-B46B-43D2-803F-19CE5291525A")) IDeviceManager : 
 public:
 	virtual ~IDeviceManager() = default;
 
+	virtual void BeginFrame() = 0;
+	virtual void Present() = 0;
+
 	virtual void WaitForGpu() = 0;
 
 	virtual void CreateDeviceResources() = 0;
 	virtual void CreateWindowSizeDependentResources() = 0;
 
 	virtual ICommandContext* AllocateContext(CommandListType commandListType) = 0;
+
+	virtual IColorBuffer* GetColorBuffer() const = 0;
 };
 
 } // namespace Luna

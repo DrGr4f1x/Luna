@@ -46,16 +46,20 @@ public:
 	DeviceManager(const DeviceManagerDesc& desc);
 	virtual ~DeviceManager();
 
+	void BeginFrame() final;
+	void Present() final;
+
 	void WaitForGpu() final;
+	void WaitForFence(uint64_t fenceValue);
 
 	void CreateDeviceResources() final;
 	void CreateWindowSizeDependentResources() final;
 
 	ICommandContext* AllocateContext(CommandListType commandListType);
 	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
+	void FreeContext(ICommandContext* usedContext);
 
-	void Prepare(ResourceState beforeState = ResourceState::Present, ResourceState afterState = ResourceState::RenderTarget);
-
+	IColorBuffer* GetColorBuffer() const final;
 
 	void HandleDeviceLost();
 

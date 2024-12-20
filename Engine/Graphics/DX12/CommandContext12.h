@@ -33,8 +33,23 @@ struct ContextState
 	CommandListType type;
 
 private:
+	// Debug events and markers
+	void BeginEvent(const std::string& label);
+	void EndEvent();
+	void SetMarker(const std::string& label);
+
 	void Reset();
 	void Initialize();
+
+	uint64_t Finish(bool bWaitForCompletion);
+	
+	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate);
+	void InsertUAVBarrier(IGpuImage* gpuImage, bool bFlushImmediate);
+	void FlushResourceBarriers();
+
+	void ClearColor(IColorBuffer* colorBuffer);
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
+
 	void BindDescriptorHeaps();
 
 private:
@@ -47,6 +62,8 @@ private:
 
 	D3D12_RESOURCE_BARRIER m_resourceBarrierBuffer[16];
 	uint32_t m_numBarriersToFlush{ 0 };
+
+	bool m_bHasPendingDebugEvent{ false };
 };
 
 
@@ -64,8 +81,20 @@ public:
 	void SetId(const std::string& id) final { m_state.id = id; }
 	CommandListType GetType() const final { return m_state.type; }
 
+	// Debug events and markers
+	void BeginEvent(const std::string& label) final { m_state.BeginEvent(label); }
+	void EndEvent() final { m_state.EndEvent(); }
+	void SetMarker(const std::string& label) final { m_state.SetMarker(label); }
+
 	void Reset() final { m_state.Reset(); }
 	void Initialize() final { m_state.Initialize(); }
+
+	uint64_t Finish(bool bWaitForCompletion = false) final;
+
+	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final 
+	{ 
+		m_state.TransitionResource(gpuImage, newState, bFlushImmediate); 
+	}
 
 private:
 	ContextState m_state;
@@ -86,8 +115,23 @@ public:
 	void SetId(const std::string& id) final { m_state.id = id; }
 	CommandListType GetType() const final { return m_state.type; }
 
+	// Debug events and markers
+	void BeginEvent(const std::string& label) final { m_state.BeginEvent(label); }
+	void EndEvent() final { m_state.EndEvent(); }
+	void SetMarker(const std::string& label) final { m_state.SetMarker(label); }
+
 	void Reset() final { m_state.Reset(); }
 	void Initialize() final { m_state.Initialize(); }
+
+	uint64_t Finish(bool bWaitForCompletion = false) final;
+
+	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final
+	{
+		m_state.TransitionResource(gpuImage, newState, bFlushImmediate);
+	}
+
+	void ClearColor(IColorBuffer* colorBuffer) final { m_state.ClearColor(colorBuffer); }
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) final { m_state.ClearColor(colorBuffer, clearColor); }
 
 private:
 	ContextState m_state;

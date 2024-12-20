@@ -16,6 +16,9 @@
 #include "InputSystem.h"
 #include "Window.h"
 
+#include "Graphics\ColorBuffer.h"
+#include "Graphics\CommandContext.h"
+
 #include <glfw\glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32 1
 #include <glfw\glfw3native.h>
@@ -127,6 +130,20 @@ void Application::Configure()
 { }
 
 
+void Application::Render()
+{
+	auto& context = GraphicsContext::Begin("Frame");
+
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
+
+	// Rendering code goes here
+
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.Finish();
+}
+
+
 void Application::OnWindowIconify(int iconified)
 { }
 
@@ -168,7 +185,15 @@ void Application::Run()
 		m_bIsRunning = Tick();
 	}
 
+	m_deviceManager->WaitForGpu();
+
 	Finalize();
+}
+
+
+IColorBuffer* Application::GetColorBuffer() const
+{
+	return m_deviceManager->GetColorBuffer();
 }
 
 
@@ -198,6 +223,7 @@ bool Application::Initialize()
 
 	// TODO: Update window size here
 	// UpdateWindowSize();
+	m_deviceManager->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 
 	Startup();
@@ -238,7 +264,11 @@ bool Application::Tick()
 	bool res = Update(deltaTime);
 	if (res)
 	{
+		m_deviceManager->BeginFrame();
+
 		Render();
+
+		m_deviceManager->Present();
 	}
 
 	++m_frameNumber;
