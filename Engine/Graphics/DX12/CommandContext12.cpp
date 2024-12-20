@@ -53,8 +53,6 @@ void ContextState::BeginEvent(const string& label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
 	::PIXBeginEvent(m_commandList, 0, label.c_str());
-#else
-	(label)
 #endif
 }
 

@@ -18,9 +18,13 @@
 #define FORCE_D3D12_DEBUG_MARKERS 0
 #define ENABLE_D3D12_DEBUG_MARKERS (ENABLE_DEBUG_MARKERS || FORCE_D3D12_DEBUG_MARKERS)
 
+#define USE_AGILITY_SDK 1
+
 // DirectX 12 headers
 #include <d3d12.h>
+#if USE_AGILITY_SDK
 #include <d3dx12\d3dx12.h>
+#endif
 #include <dxgi1_4.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
