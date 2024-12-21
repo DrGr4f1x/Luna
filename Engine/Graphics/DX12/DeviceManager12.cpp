@@ -127,20 +127,22 @@ void DeviceManager::BeginFrame()
 	// TODO Handle window resize here
 
 	// Schedule a Signal command in the queue.
-	const UINT64 currentFenceValue = m_fenceValues[m_backBufferIndex];
-	ThrowIfFailed(GetQueue(QueueType::Graphics).GetCommandQueue()->Signal(m_fence.get(), currentFenceValue));
+	//const UINT64 currentFenceValue = m_fenceValues[m_backBufferIndex];
+	//ThrowIfFailed(GetQueue(QueueType::Graphics).GetCommandQueue()->Signal(m_fence.get(), currentFenceValue));
 
 	m_backBufferIndex = m_dxSwapChain->GetCurrentBackBufferIndex();
 	
+	GetQueue(CommandListType::Direct).WaitForFence(m_fenceValues[m_backBufferIndex]);
+
 	// If the next frame is not ready to be rendered yet, wait until it is ready.
-	if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
+	/*if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
 	{
 		ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_backBufferIndex], m_fenceEvent.Get()));
 		std::ignore = WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
-	}
+	}*/
 
 	// Set the fence value for the next frame.
-	m_fenceValues[m_backBufferIndex] = currentFenceValue + 1;
+	//m_fenceValues[m_backBufferIndex] = currentFenceValue + 1;
 }
 
 
@@ -151,7 +153,10 @@ void DeviceManager::Present()
 
 	m_dxSwapChain->Present(vsync, presentFlags);
 
+	m_fenceValues[m_backBufferIndex] = GetQueue(CommandListType::Direct).GetLastSubmittedFenceValue();
+
 	// Handle device removed
+	BeginFrame();
 }
 
 
@@ -233,7 +238,7 @@ void DeviceManager::CreateDeviceResources()
 
 	// Create a fence for tracking GPU execution progress
 	auto d3d12Device = m_device->GetD3D12Device();
-	ThrowIfFailed(d3d12Device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(m_fence.put())));
+	ThrowIfFailed(d3d12Device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 
 	m_fenceValues[m_backBufferIndex]++;
 

@@ -262,7 +262,7 @@ bool Application::Tick()
 
 	// Render Frame
 	{
-		m_deviceManager->BeginFrame();
+		//m_deviceManager->BeginFrame();
 		Render();
 		m_deviceManager->Present();
 	}

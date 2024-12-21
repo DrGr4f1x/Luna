@@ -23,6 +23,7 @@ Queue::Queue(ID3D12Device* device, QueueType queueType)
 	: m_type{ queueType }
 	, m_allocatorPool{ device, CommandListTypeToDX12(QueueTypeToCommandListType(queueType)) }
 	, m_nextFenceValue((uint64_t)queueType << 56 | 1)
+	, m_lastSubmittedFenceValue{ 0 }
 	, m_lastCompletedFenceValue((uint64_t)queueType << 56)
 {
 	D3D12_COMMAND_QUEUE_DESC queueDesc{};
@@ -37,16 +38,14 @@ Queue::Queue(ID3D12Device* device, QueueType queueType)
 	SetDebugName(m_dxFence.get(), format("{} Queue Fence", queueType));
 
 	m_dxFence->Signal((uint64_t)m_type << 56);
+	m_lastSubmittedFenceValue = (uint64_t)m_type << 56;
 
-	m_fenceEventHandle = CreateEvent(nullptr, false, false, nullptr);
-	assert(m_fenceEventHandle != INVALID_HANDLE_VALUE);
+	m_fenceEvent.Attach(CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE));
 }
 
 
 Queue::~Queue()
 {
-	CloseHandle(m_fenceEventHandle);
-	m_fenceEventHandle = nullptr;
 }
 
 
@@ -61,6 +60,7 @@ uint64_t Queue::ExecuteCommandList(ID3D12CommandList* commandList)
 
 	// Signal the next fence value (with the GPU)
 	m_dxQueue->Signal(m_dxFence.get(), m_nextFenceValue);
+	m_lastSubmittedFenceValue = m_nextFenceValue;
 
 	// And increment the fence value.  
 	return m_nextFenceValue++;
@@ -86,6 +86,7 @@ uint64_t Queue::IncrementFence()
 	lock_guard<mutex> lockGuard(m_fenceMutex);
 
 	m_dxQueue->Signal(m_dxFence.get(), m_nextFenceValue);
+	m_lastSubmittedFenceValue = m_nextFenceValue;
 
 	return m_nextFenceValue++;
 }
@@ -119,8 +120,8 @@ void Queue::WaitForFence(uint64_t fenceValue)
 	{
 		lock_guard<mutex> guard(m_eventMutex);
 
-		m_dxFence->SetEventOnCompletion(fenceValue, m_fenceEventHandle);
-		WaitForSingleObject(m_fenceEventHandle, INFINITE);
+		ThrowIfFailed(m_dxFence->SetEventOnCompletion(fenceValue, m_fenceEvent.Get()));
+		std::ignore = WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
 		m_lastCompletedFenceValue = fenceValue;
 	}
 }

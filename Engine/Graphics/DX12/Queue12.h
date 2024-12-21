@@ -34,6 +34,7 @@ public:
 	void DiscardAllocator(uint64_t fenceValueForReset, ID3D12CommandAllocator* allocator);
 
 	uint64_t IncrementFence();
+	uint64_t GetLastSubmittedFenceValue() const { return m_lastSubmittedFenceValue; }
 	bool IsFenceComplete(uint64_t fenceValue);
 	void WaitForFence(uint64_t fenceValue);
 	void WaitForGpu()
@@ -52,7 +53,8 @@ private:
 	wil::com_ptr<ID3D12Fence> m_dxFence;
 	uint64_t m_nextFenceValue;
 	uint64_t m_lastCompletedFenceValue;
-	HANDLE m_fenceEventHandle{ nullptr };
+	uint64_t m_lastSubmittedFenceValue;
+	Microsoft::WRL::Wrappers::Event m_fenceEvent;
 };
 
 } // namespace Luna::DX12
