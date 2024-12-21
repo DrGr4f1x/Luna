@@ -12,7 +12,621 @@
 
 #include "DeviceManagerVK.h"
 
+#include "Graphics\GraphicsCommon.h"
+#include "Graphics\Vulkan\DeviceVK.h"
+
+using namespace std;
+using namespace Microsoft::WRL;
+
+
 namespace Luna::VK
 {
+
+DeviceManager* g_vulkanDeviceManager{ nullptr };
+
+
+size_t GetDedicatedVideoMemory(VkPhysicalDevice physicalDevice)
+{
+	size_t memory{ 0 };
+
+	VkPhysicalDeviceMemoryProperties memoryProperties{};
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+
+	for (const auto& heap : memoryProperties.memoryHeaps)
+	{
+		if (heap.flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+		{
+			memory += heap.size;
+		}
+	}
+
+	return memory;
+}
+
+
+VkBool32 DebugMessageCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
+{
+	using namespace Luna;
+	using namespace Luna::VK;
+
+	string prefix;
+
+	if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
+	{
+		prefix += prefix.empty() ? "[Performance]" : " [Performance]";
+	}
+	if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT)
+	{
+		prefix += prefix.empty() ? "[Validation]" : " [Validation]";
+	}
+	if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT)
+	{
+		prefix += prefix.empty() ? "[General]" : " [General]";
+	}
+
+	string debugMessage = format("{} [{}] Code {} : {}", prefix, pCallbackData->pMessageIdName, pCallbackData->messageIdNumber, pCallbackData->pMessage);
+
+	if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+	{
+		LogError(LogVulkan) << debugMessage << endl;
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+	{
+		LogWarning(LogVulkan) << debugMessage << endl;
+	}
+	else
+	{
+		LogInfo(LogVulkan) << debugMessage << endl;
+	}
+
+	// The return value of this callback controls whether the Vulkan call that caused
+	// the validation message will be aborted or not
+	// We return VK_FALSE as we DON'T want Vulkan calls that cause a validation message 
+	// (and return a VkResult) to abort
+	// If you instead want to have calls abort, pass in VK_TRUE and the function will 
+	// return VK_ERROR_VALIDATION_FAILED_EXT 
+	return VK_FALSE;
+}
+
+
+DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
+	: m_desc{ desc }
+{
+	m_bIsDeveloperModeEnabled = IsDeveloperModeEnabled();
+	m_bIsRenderDocAvailable = IsRenderDocAvailable();
+
+	extern Luna::IDeviceManager* g_deviceManager;
+	assert(!g_deviceManager);
+
+	g_deviceManager = this;
+	g_vulkanDeviceManager = this;
+}
+
+
+DeviceManager::~DeviceManager()
+{
+	extern Luna::IDeviceManager* g_deviceManager;
+	g_deviceManager = nullptr;
+	g_vulkanDeviceManager = nullptr;
+}
+
+
+void DeviceManager::BeginFrame()
+{ }
+
+
+void DeviceManager::Present()
+{ }
+
+
+void DeviceManager::WaitForGpu()
+{ }
+
+
+void DeviceManager::CreateDeviceResources()
+{
+	// Initialize Volk
+	if (VK_FAILED(volkInitialize()))
+	{
+		LogFatal(LogVulkan) << "Failed to initialize Volk.  Error code: " << res << endl;
+		return;
+	}
+
+	if (!m_extensionManager.InitializeInstance())
+	{
+		LogFatal(LogVulkan) << "Failed to initialize instance extensions." << endl;
+		return;
+	}
+
+	SetRequiredInstanceLayersAndExtensions();
+
+	VkApplicationInfo appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
+	appInfo.pApplicationName = m_desc.appName.c_str();
+	appInfo.pEngineName = s_engineVersionStr.c_str();
+	appInfo.apiVersion = VK_API_VERSION_1_3;
+
+	vector<const char*> instanceExtensions;
+	vector<const char*> instanceLayers;
+	m_extensionManager.GetEnabledInstanceExtensions(instanceExtensions);
+	m_extensionManager.GetEnabledInstanceLayers(instanceLayers);
+
+	VkInstanceCreateInfo createInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
+	createInfo.pApplicationInfo = &appInfo;
+	createInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+	createInfo.ppEnabledExtensionNames = instanceExtensions.data();
+	createInfo.enabledLayerCount = (uint32_t)instanceLayers.size();
+	createInfo.ppEnabledLayerNames = instanceLayers.data();
+
+	VkInstance vkInstance{ VK_NULL_HANDLE };
+	if (VK_FAILED(vkCreateInstance(&createInfo, nullptr, &vkInstance)))
+	{
+		LogFatal(LogVulkan) << "Failed to create Vulkan instance.  Error code: " << res << endl;
+		return;
+	}
+
+	uint32_t instanceVersion{ 0 };
+	if (VK_SUCCEEDED(vkEnumerateInstanceVersion(&instanceVersion)))
+	{
+		m_versionInfo = DecodeVulkanVersion(instanceVersion);
+
+		LogInfo(LogVulkan) << format("Created Vulkan instance, variant {}, API version {}",
+			m_versionInfo.variant, m_versionInfo) << endl;
+	}
+	else
+	{
+		LogInfo(LogVulkan) << "Created Vulkan instance, but failed to enumerate version.  Error code: " << res << endl;
+	}
+
+	volkLoadInstanceOnly(vkInstance);
+
+	m_vkInstance = Make<CVkInstance>(vkInstance);
+
+	if (m_desc.enableValidation)
+	{
+		InstallDebugMessenger();
+	}
+
+	CreateSurface();
+}
+
+
+void DeviceManager::CreateWindowSizeDependentResources()
+{ }
+
+
+ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
+{
+	return nullptr;
+}
+
+
+IColorBuffer* DeviceManager::GetColorBuffer() const
+{
+	return nullptr;
+}
+
+
+void DeviceManager::SetRequiredInstanceLayersAndExtensions()
+{
+	vector<string> requiredLayers{};
+	if (m_desc.enableValidation)
+	{
+		requiredLayers.push_back("VK_LAYER_KHRONOS_validation");
+	}
+	m_extensionManager.SetRequiredInstanceLayers(requiredLayers);
+
+	vector<string> requiredExtensions{
+		"VK_EXT_debug_utils",
+		"VK_KHR_win32_surface",
+		"VK_KHR_surface"
+	};
+	m_extensionManager.SetRequiredInstanceExtensions(requiredExtensions);
+}
+
+
+void DeviceManager::InstallDebugMessenger()
+{
+	VkDebugUtilsMessengerCreateInfoEXT createInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+	createInfo.messageSeverity =
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
+	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+	createInfo.pfnUserCallback = DebugMessageCallback;
+
+	VkDebugUtilsMessengerEXT messenger{ VK_NULL_HANDLE };
+	if (VK_FAILED(vkCreateDebugUtilsMessengerEXT(m_vkInstance->Get(), &createInfo, nullptr, &messenger)))
+	{
+		LogWarning(LogVulkan) << "Failed to create Vulkan debug messenger.  Error Code: " << res << endl;
+		return;
+	}
+
+	m_vkDebugMessenger = Make<CVkDebugUtilsMessenger>(m_vkInstance.get(), messenger);
+}
+
+
+void DeviceManager::CreateSurface()
+{
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+	surfaceCreateInfo.hinstance = m_desc.hinstance;
+	surfaceCreateInfo.hwnd = m_desc.hwnd;
+
+	VkSurfaceKHR vkSurface{ VK_NULL_HANDLE };
+	if (VK_FAILED(vkCreateWin32SurfaceKHR(m_vkInstance->Get(), &surfaceCreateInfo, nullptr, &vkSurface)))
+	{
+		LogError(LogVulkan) << "Failed to create Win32 surface.  Error code: " << res << endl;
+		return;
+	}
+	m_vkSurface = Make<CVkSurface>(m_vkInstance.get(), vkSurface);
+}
+
+
+void DeviceManager::SelectPhysicalDevice()
+{ 
+	using enum AdapterType;
+
+	vector<pair<AdapterInfo, VkPhysicalDevice>> physicalDevices = EnumeratePhysicalDevices();
+
+	if (physicalDevices.empty())
+	{
+		LogFatal(LogVulkan) << "Failed to enumerate any physical devices." << endl;
+		return;
+	}
+
+	int32_t firstDiscreteAdapterIdx{ -1 };
+	int32_t bestMemoryAdapterIdx{ -1 };
+	int32_t firstAdapterIdx{ -1 };
+	int32_t softwareAdapterIdx{ -1 };
+	int32_t chosenAdapterIdx{ -1 };
+	size_t maxMemory{ 0 };
+
+	int32_t adapterIdx{ 0 };
+	for (const auto& adapterPair : physicalDevices)
+	{
+		// Skip adapters that don't support the required Vulkan API version
+		if (adapterPair.first.apiVersion < g_requiredVulkanApiVersion)
+		{
+			continue;
+		}
+
+		// Skip adapters of type 'Other'
+		if (adapterPair.first.adapterType == Other)
+		{
+			continue;
+		}
+
+		// Skip software adapters if we disallow them
+		if (adapterPair.first.adapterType == Software && !m_desc.allowSoftwareDevice)
+		{
+			continue;
+		}
+
+		if (firstAdapterIdx == -1)
+		{
+			firstAdapterIdx = adapterIdx;
+		}
+
+		if (adapterPair.first.adapterType == Discrete && firstDiscreteAdapterIdx == -1)
+		{
+			firstDiscreteAdapterIdx = adapterIdx;
+		}
+
+		if (adapterPair.first.adapterType == Software && softwareAdapterIdx == -1 && m_desc.allowSoftwareDevice)
+		{
+			softwareAdapterIdx = adapterIdx;
+		}
+
+		if (adapterPair.first.dedicatedVideoMemory > maxMemory)
+		{
+			maxMemory = adapterPair.first.dedicatedVideoMemory;
+			bestMemoryAdapterIdx = adapterIdx;
+		}
+
+		++adapterIdx;
+	}
+
+
+	// Now choose our best adapter
+	if (m_desc.preferDiscreteDevice)
+	{
+		if (bestMemoryAdapterIdx != -1)
+		{
+			chosenAdapterIdx = bestMemoryAdapterIdx;
+		}
+		else if (firstDiscreteAdapterIdx != -1)
+		{
+			chosenAdapterIdx = firstDiscreteAdapterIdx;
+		}
+		else
+		{
+			chosenAdapterIdx = firstAdapterIdx;
+		}
+	}
+	else
+	{
+		chosenAdapterIdx = firstAdapterIdx;
+	}
+
+	if (chosenAdapterIdx == -1)
+	{
+		LogFatal(LogVulkan) << "Failed to select a Vulkan physical device." << endl;
+		return;
+	}
+
+	m_vkPhysicalDevice = Make<CVkPhysicalDevice>(m_vkInstance.get(), physicalDevices[chosenAdapterIdx].second);
+	LogInfo(LogVulkan) << "Selected physical device " << chosenAdapterIdx << endl;
+
+	// TODO
+	m_caps.ReadCaps(m_vkPhysicalDevice->Get());
+	//if (g_graphicsDeviceOptions.logDeviceFeatures)
+	if (false)
+	{
+		m_caps.LogCaps();
+	}
+
+	m_extensionManager.InitializeDevice(m_vkPhysicalDevice->Get());
+
+	// Get available queue family properties
+	uint32_t queueCount{ 0 };
+	vkGetPhysicalDeviceQueueFamilyProperties(m_vkPhysicalDevice->Get(), &queueCount, nullptr);
+	assert(queueCount >= 1);
+
+	m_queueFamilyProperties.resize(queueCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(m_vkPhysicalDevice->Get(), &queueCount, m_queueFamilyProperties.data());
+
+	GetQueueFamilyIndices();
+}
+
+
+void DeviceManager::CreateDevice()
+{ 
+	// Desired queues need to be requested upon logical device creation
+	// Due to differing queue family configurations of Vulkan implementations this can be a bit tricky, especially if the application
+	// requests different queue types
+
+	vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
+
+	// Get queue family indices for the requested queue family types
+	// Note that the indices may overlap depending on the implementation
+
+	const float defaultQueuePriority = 0.0f;
+
+	// Graphics queue
+	if (m_queueFamilyIndices.graphics != -1)
+	{
+		VkDeviceQueueCreateInfo queueInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+		queueInfo.queueFamilyIndex = m_queueFamilyIndices.graphics;
+		queueInfo.queueCount = 1;
+		queueInfo.pQueuePriorities = &defaultQueuePriority;
+		queueCreateInfos.push_back(queueInfo);
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to find graphics queue." << endl;
+	}
+
+	// Dedicated compute queue
+	if (m_queueFamilyIndices.compute != -1)
+	{
+		if (m_queueFamilyIndices.compute != m_queueFamilyIndices.graphics)
+		{
+			// If compute family index differs, we need an additional queue create info for the compute queue
+			VkDeviceQueueCreateInfo queueInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+			queueInfo.queueFamilyIndex = m_queueFamilyIndices.compute;
+			queueInfo.queueCount = 1;
+			queueInfo.pQueuePriorities = &defaultQueuePriority;
+			queueCreateInfos.push_back(queueInfo);
+		}
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to find compute queue." << endl;
+	}
+
+	// Dedicated transfer queue
+	if (m_queueFamilyIndices.transfer != -1)
+	{
+		if ((m_queueFamilyIndices.transfer != m_queueFamilyIndices.graphics) && (m_queueFamilyIndices.transfer != m_queueFamilyIndices.compute))
+		{
+			// If compute family index differs, we need an additional queue create info for the transfer queue
+			VkDeviceQueueCreateInfo queueInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
+			queueInfo.queueFamilyIndex = m_queueFamilyIndices.transfer;
+			queueInfo.queueCount = 1;
+			queueInfo.pQueuePriorities = &defaultQueuePriority;
+			queueCreateInfos.push_back(queueInfo);
+		}
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to find transfer queue." << endl;
+	}
+
+	// HACK - replace with real device extension handling
+	vector<const char*> extensions{ "VK_KHR_swapchain", "VK_KHR_swapchain_mutable_format" };
+
+	VkDeviceCreateInfo createInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+	createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.pEnabledFeatures = nullptr;
+	// TODO - device extensions
+	createInfo.enabledExtensionCount = (uint32_t)extensions.size();;
+	createInfo.ppEnabledExtensionNames = extensions.data();
+	createInfo.enabledLayerCount = 0;
+	createInfo.ppEnabledLayerNames = nullptr;
+	createInfo.pNext = m_caps.GetPhysicalDeviceFeatures2();
+
+	VkDevice device{ VK_NULL_HANDLE };
+	if (VK_FAILED(vkCreateDevice(m_vkPhysicalDevice->Get(), &createInfo, nullptr, &device)))
+	{
+		LogError(LogVulkan) << "Failed to create Vulkan device.  Error code: " << res << endl;
+	}
+
+	volkLoadDevice(device);
+
+	m_vkDevice = Make<CVkDevice>(m_vkPhysicalDevice.get(), device);
+
+	// Create Luna GraphicsDevice
+	auto deviceDesc = GraphicsDeviceDesc{}
+		.SetInstance(m_vkInstance->Get())
+		.SetPhysicalDevice(m_vkPhysicalDevice.get())
+		.SetDevice(device)
+		.SetGraphicsQueueIndex(m_queueFamilyIndices.graphics)
+		.SetComputeQueueIndex(m_queueFamilyIndices.compute)
+		.SetTransferQueueIndex(m_queueFamilyIndices.transfer)
+		.SetPresentQueueIndex(m_queueFamilyIndices.present)
+		.SetBackBufferWidth(m_desc.backBufferWidth)
+		.SetBackBufferHeight(m_desc.backBufferHeight)
+		.SetNumSwapChainBuffers(m_desc.numSwapChainBuffers)
+		.SetSwapChainFormat(m_desc.swapChainFormat)
+		.SetSurface(m_vkSurface->Get())
+		.SetEnableVSync(m_desc.enableVSync)
+		.SetMaxFramesInFlight(m_desc.maxFramesInFlight)
+		.SetEnableValidation(m_desc.enableValidation)
+		.SetEnableDebugMarkers(m_desc.enableDebugMarkers);
+
+	m_device = Make<GraphicsDevice>(deviceDesc);
+}
+
+
+vector<pair<AdapterInfo, VkPhysicalDevice>> DeviceManager::EnumeratePhysicalDevices()
+{
+	vector<pair<AdapterInfo, VkPhysicalDevice>> adapters;
+
+	uint32_t gpuCount{ 0 };
+
+	// Get number of available physical devices
+	if (VK_FAILED(vkEnumeratePhysicalDevices(m_vkInstance->Get(), &gpuCount, nullptr)))
+	{
+		LogError(LogVulkan) << "Failed to get physical device count.  Error code: " << res << endl;
+		return adapters;
+	}
+
+	// Enumerate physical devices
+	vector<VkPhysicalDevice> physicalDevices(gpuCount);
+	if (VK_FAILED(vkEnumeratePhysicalDevices(m_vkInstance->Get(), &gpuCount, physicalDevices.data())))
+	{
+		LogError(LogVulkan) << "Failed to enumerate physical devices.  Error code: " << res << endl;
+		return adapters;
+	}
+
+	LogInfo(LogVulkan) << "Enumerating Vulkan physical devices" << endl;
+
+	for (size_t deviceIdx = 0; deviceIdx < physicalDevices.size(); ++deviceIdx)
+	{
+		DeviceCaps caps{};
+		caps.ReadCaps(physicalDevices[deviceIdx]);
+
+		AdapterInfo adapterInfo{};
+		adapterInfo.name = caps.properties.deviceName;
+		adapterInfo.deviceId = caps.properties.deviceID;
+		adapterInfo.vendorId = caps.properties.vendorID;
+		adapterInfo.dedicatedVideoMemory = GetDedicatedVideoMemory(physicalDevices[deviceIdx]);
+		adapterInfo.vendor = VendorIdToHardwareVendor(adapterInfo.vendorId);
+		adapterInfo.adapterType = VkPhysicalDeviceTypeToEngine(caps.properties.deviceType);
+		adapterInfo.apiVersion = caps.properties.apiVersion;
+
+		LogInfo(LogVulkan) << format("  {} physical device {} is Vulkan-capable: {} (VendorId: {:#x}, DeviceId: {:#x}, API version: {})",
+			AdapterTypeToString(adapterInfo.adapterType),
+			deviceIdx,
+			adapterInfo.name,
+			adapterInfo.vendorId, adapterInfo.deviceId, VulkanVersionToString(adapterInfo.apiVersion))
+			<< endl;
+
+		LogInfo(LogVulkan) << format("    Physical device memory: {} MB dedicated video memory, {} MB dedicated system memory, {} MB shared memory",
+			(uint32_t)(adapterInfo.dedicatedVideoMemory >> 20),
+			(uint32_t)(adapterInfo.dedicatedSystemMemory >> 20),
+			(uint32_t)(adapterInfo.sharedSystemMemory >> 20))
+			<< endl;
+
+		adapters.push_back(make_pair(adapterInfo, physicalDevices[deviceIdx]));
+	}
+
+	return adapters;
+}
+
+
+void DeviceManager::GetQueueFamilyIndices()
+{
+	m_queueFamilyIndices.graphics = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
+	m_queueFamilyIndices.compute = GetQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
+	m_queueFamilyIndices.transfer = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+}
+
+
+int32_t DeviceManager::GetQueueFamilyIndex(VkQueueFlags queueFlags)
+{
+	int32_t index{ 0 };
+
+	// Dedicated queue for compute
+	// Try to find a queue family index that supports compute but not graphics
+	if (queueFlags & VK_QUEUE_COMPUTE_BIT)
+	{
+		for (const auto& properties : m_queueFamilyProperties)
+		{
+			if ((properties.queueFlags & queueFlags) && ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
+			{
+				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(m_vkPhysicalDevice->Get(), index))
+				{
+					m_queueFamilyIndices.present = index;
+				}
+
+				return index;
+			}
+			++index;
+		}
+	}
+
+	// Dedicated queue for transfer
+	// Try to find a queue family index that supports transfer but not graphics and compute
+	if (queueFlags & VK_QUEUE_TRANSFER_BIT)
+	{
+		index = 0;
+		for (const auto& properties : m_queueFamilyProperties)
+		{
+			if ((properties.queueFlags & queueFlags) && ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((properties.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
+			{
+				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(m_vkPhysicalDevice->Get(), index))
+				{
+					m_queueFamilyIndices.present = index;
+				}
+
+				return index;
+			}
+			++index;
+		}
+	}
+
+	// For other queue types or if no separate compute queue is present, return the first one to support the requested flags
+	index = 0;
+	for (const auto& properties : m_queueFamilyProperties)
+	{
+		if (properties.queueFlags & queueFlags)
+		{
+			if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(m_vkPhysicalDevice->Get(), index))
+			{
+				m_queueFamilyIndices.present = index;
+			}
+
+			return index;
+		}
+		++index;
+	}
+
+	LogWarning(LogVulkan) << "Failed to find a matching queue family index for queue bit(s) " << VkQueueFlagsToString(queueFlags) << endl;
+	return -1;
+}
+
+
+DeviceManager* GetVulkanDeviceManager()
+{
+	return g_vulkanDeviceManager;
+}
 
 } // namespace Luna::VK

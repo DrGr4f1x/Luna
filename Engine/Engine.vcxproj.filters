@@ -88,6 +88,21 @@
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\ExtensionManagerVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\VersionVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -269,6 +284,18 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\VersionVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DeviceVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>

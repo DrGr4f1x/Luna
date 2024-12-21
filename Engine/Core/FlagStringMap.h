@@ -29,4 +29,4 @@ private:
 	uint32_t m_startIndex{ 0 };
 };
 
-} // namespace Kodiak
+} // namespace Luna

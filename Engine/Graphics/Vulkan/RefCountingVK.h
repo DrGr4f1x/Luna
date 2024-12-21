@@ -27,7 +27,6 @@ public:
 	virtual ~IVkInstance() = default;
 	
 	virtual VkInstance Get() const noexcept = 0;
-	operator VkInstance() const noexcept { return Get(); }
 };
 
 
@@ -40,7 +39,6 @@ public:
 	virtual ~IVkPhysicalDevice() = default;
 
 	virtual VkPhysicalDevice Get() const noexcept = 0;
-	operator VkPhysicalDevice() const noexcept { return Get(); }
 	virtual VkInstance GetInstance() const noexcept = 0;
 };
 
@@ -54,21 +52,19 @@ public:
 	virtual ~IVkDevice() = default;
 
 	virtual VkDevice Get() const noexcept = 0;
-	operator VkDevice() const noexcept { return Get(); }
 	virtual VkPhysicalDevice GetPhysicalDevice() const noexcept = 0;
 };
 
 
 //
-// IVkSurfaceKHR
+// IVkSurface
 //
-class __declspec(uuid("ACF9E4F7-2643-4878-AC96-E1F83D4BD499")) IVkSurfaceKHR : public IUnknown
+class __declspec(uuid("ACF9E4F7-2643-4878-AC96-E1F83D4BD499")) IVkSurface : public IUnknown
 {
 public:
-	virtual ~IVkSurfaceKHR() = default;
+	virtual ~IVkSurface() = default;
 
 	virtual VkSurfaceKHR Get() const noexcept = 0;
-	operator VkSurfaceKHR() const noexcept { return Get(); }
 	virtual VkInstance GetInstance() const noexcept = 0;
 };
 
@@ -82,7 +78,6 @@ public:
 	virtual ~IVmaAllocator() = default;
 
 	virtual VmaAllocator Get() const noexcept = 0;
-	operator VmaAllocator() const noexcept { return Get(); }
 	virtual VkDevice GetDevice() const noexcept = 0;
 };
 
@@ -96,21 +91,72 @@ public:
 	virtual ~IVkImage() = default;
 
 	virtual VkImage Get() const noexcept = 0;
-	operator VkImage() const noexcept { return Get(); }
 	virtual VkDevice GetDevice() const noexcept = 0;
 };
 
 
 //
-// IVkSwapchainKHR
+// IVkSwapchain
 //
-class __declspec(uuid("233E85CB-8FEF-4508-ACA2-D91EF3368F39")) IVkSwapchainKHR : public IUnknown
+class __declspec(uuid("233E85CB-8FEF-4508-ACA2-D91EF3368F39")) IVkSwapchain : public IUnknown
 {
 public:
-	virtual ~IVkSwapchainKHR() = default;
+	virtual ~IVkSwapchain() = default;
 
 	virtual VkSwapchainKHR Get() const noexcept = 0;
-	operator VkSwapchainKHR() const noexcept { return Get(); }
+	virtual VkDevice GetDevice() const noexcept = 0;
+};
+
+
+//
+// IVkSemaphore
+//
+class __declspec(uuid("5834F4D9-0933-4FB2-B8E8-F5EF34C19DDB")) IVkSemaphore : public IUnknown
+{
+public:
+	virtual ~IVkSemaphore() = default;
+
+	virtual VkSemaphore Get() const noexcept = 0;
+	virtual VkDevice GetDevice() const noexcept = 0;
+};
+
+
+//
+// IVkDebugUtilsMessenger
+//
+class __declspec(uuid("001FDEE9-F24A-4AEA-9078-54609845454B")) IVkDebugUtilsMessenger : public IUnknown
+{
+public:
+	virtual ~IVkDebugUtilsMessenger() = default;
+
+	virtual VkDebugUtilsMessengerEXT Get() const noexcept = 0;
+	virtual VkInstance GetInstance() const noexcept = 0;
+};
+
+
+//
+// IVkFence
+//
+class __declspec(uuid("546A4B53-9A05-430E-8F6C-1E2388330910")) IVkFence : public IUnknown
+{
+public:
+	virtual ~IVkFence() = default;
+
+	virtual VkFence Get() const noexcept = 0;
+	virtual VkDevice GetDevice() const noexcept = 0;
+};
+
+
+
+//
+// IVkCommandPool
+//
+class __declspec(uuid("32597150-B24B-4209-8A0E-812C7CE3396A")) IVkCommandPool : public IUnknown
+{
+public:
+	virtual ~IVkCommandPool() = default;
+
+	virtual VkCommandPool Get() const noexcept = 0;
 	virtual VkDevice GetDevice() const noexcept = 0;
 };
 

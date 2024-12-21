@@ -32,13 +32,13 @@ wil::com_ptr<Luna::IDeviceManager> CreateD3D12DeviceManager(const Luna::DeviceMa
 }
 
 
-//wil::com_ptr<Luna::IDeviceManager> CreateVulkanDeviceManager(const Luna::DeviceManagerDesc& desc)
-//{
-//	wil::com_ptr<Luna::Vulkan::DeviceManager> deviceManagerVK = Make<Luna::Vulkan::DeviceManager>(desc);
-// 
-//	wil::com_ptr<Luna::IDeviceManager> deviceManager = deviceManagerVK;
-//	return deviceManager;
-//}
+wil::com_ptr<Luna::IDeviceManager> CreateVulkanDeviceManager(const Luna::DeviceManagerDesc& desc)
+{
+	wil::com_ptr<Luna::VK::DeviceManager> deviceManagerVK = Make<Luna::VK::DeviceManager>(desc);
+
+	wil::com_ptr<Luna::IDeviceManager> deviceManager = deviceManagerVK;
+	return deviceManager;
+}
 
 } // anonymous namespace
 
@@ -101,9 +101,9 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc)
 {
 	switch (desc.graphicsApi)
 	{
-	//case GraphicsApi::Vulkan:
-	//	return CreateVulkanDeviceManager(desc);
-	//	break;
+	case GraphicsApi::Vulkan:
+		return CreateVulkanDeviceManager(desc);
+		break;
 
 		// Default to D3D12
 	default:

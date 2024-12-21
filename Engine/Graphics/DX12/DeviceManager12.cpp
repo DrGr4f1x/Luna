@@ -109,6 +109,8 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	m_fenceValues[2] = 0;
 
 	extern Luna::IDeviceManager* g_deviceManager;
+	assert(!g_deviceManager);
+
 	g_deviceManager = this;
 	g_d3d12DeviceManager = this;
 }
