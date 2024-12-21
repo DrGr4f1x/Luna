@@ -1,3 +1,9 @@
 [submodule "External\\glfw"]
 	path = External\\glfw
 	url = https://github.com/glfw/glfw
+[submodule "External/VulkanMemoryAllocator"]
+	path = External/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
+[submodule "External/D3D12MemoryAllocator"]
+	path = External/D3D12MemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator
