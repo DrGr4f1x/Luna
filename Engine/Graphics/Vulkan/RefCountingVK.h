@@ -71,4 +71,47 @@ public:
 	operator VkSurfaceKHR() const noexcept { return Get(); }
 	virtual VkInstance GetInstance() const noexcept = 0;
 };
+
+
+//
+// IVmaAllocator
+//
+class __declspec(uuid("AA6FC27E-6B32-4246-8366-E4AB1FCAD230")) IVmaAllocator : public IUnknown
+{
+public:
+	virtual ~IVmaAllocator() = default;
+
+	virtual VmaAllocator Get() const noexcept = 0;
+	operator VmaAllocator() const noexcept { return Get(); }
+	virtual VkDevice GetDevice() const noexcept = 0;
+};
+
+
+//
+// IVkImage
+//
+class __declspec(uuid("23AA6F3B-24A6-40CD-8851-8DDA46A7182A")) IVkImage : public IUnknown
+{
+public:
+	virtual ~IVkImage() = default;
+
+	virtual VkImage Get() const noexcept = 0;
+	operator VkImage() const noexcept { return Get(); }
+	virtual VkDevice GetDevice() const noexcept = 0;
+};
+
+
+//
+// IVkSwapchainKHR
+//
+class __declspec(uuid("233E85CB-8FEF-4508-ACA2-D91EF3368F39")) IVkSwapchainKHR : public IUnknown
+{
+public:
+	virtual ~IVkSwapchainKHR() = default;
+
+	virtual VkSwapchainKHR Get() const noexcept = 0;
+	operator VkSwapchainKHR() const noexcept { return Get(); }
+	virtual VkDevice GetDevice() const noexcept = 0;
+};
+
 } // namespace Luna::VK

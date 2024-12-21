@@ -46,4 +46,30 @@ void CVkSurface::Destroy()
 	m_surfaceKHR = VK_NULL_HANDLE;
 }
 
+
+void CVmaAllocator::Destroy()
+{
+	vmaDestroyAllocator(m_allocator);
+	m_allocator = VK_NULL_HANDLE;
+}
+
+
+void CVkImage::Destroy()
+{
+	if (m_bOwnsImage)
+	{
+		vmaDestroyImage(*m_allocator, m_image, m_allocation);
+		m_allocation = VK_NULL_HANDLE;
+	}
+	m_image = VK_NULL_HANDLE;
+}
+
+
+void CVkSwapchain::Destroy()
+{
+	vkDeviceWaitIdle(*m_device);
+	vkDestroySwapchainKHR(*m_device, m_swapchainKHR, nullptr);
+	m_swapchainKHR = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

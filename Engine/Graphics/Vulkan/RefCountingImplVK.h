@@ -68,10 +68,10 @@ public:
 		Destroy();
 	}
 
-	VkPhysicalDevice Get() const noexcept { return m_physicalDevice; }
+	VkPhysicalDevice Get() const noexcept final { return m_physicalDevice; }
 	operator VkPhysicalDevice() const noexcept { return Get(); }
 
-	VkInstance GetInstance() const noexcept { return *m_instance; }
+	VkInstance GetInstance() const noexcept final { return *m_instance; }
 
 	void Destroy();
 
@@ -101,10 +101,10 @@ public:
 		Destroy();
 	}
 
-	VkDevice Get() const noexcept { return m_device; }
+	VkDevice Get() const noexcept final { return m_device; }
 	operator VkDevice() const { return Get(); }
 
-	VkPhysicalDevice GetPhysicalDevice() const noexcept { return *m_physicalDevice; }
+	VkPhysicalDevice GetPhysicalDevice() const noexcept final { return *m_physicalDevice; }
 
 	void Destroy();
 
@@ -134,16 +134,128 @@ public:
 		Destroy();
 	}
 
-	VkSurfaceKHR Get() const noexcept { return m_surfaceKHR; }
+	VkSurfaceKHR Get() const noexcept final { return m_surfaceKHR; }
 	operator VkSurfaceKHR() const noexcept { return Get(); }
 
-	VkInstance GetInstance() const noexcept { return *m_instance; }
+	VkInstance GetInstance() const noexcept final { return *m_instance; }
 
 	void Destroy();
 
 private:
 	wil::com_ptr<IVkInstance> m_instance;
 	VkSurfaceKHR m_surfaceKHR{ VK_NULL_HANDLE };
+};
+
+
+//
+// VmaAllocator
+//
+class __declspec(uuid("4284F64C-DB1D-4531-ADE0-15B18A4F70AD")) CVmaAllocator 
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVmaAllocator>
+	, public NonCopyable
+{
+public:
+	CVmaAllocator() noexcept = default;
+	CVmaAllocator(IVkDevice* device, VmaAllocator allocator) noexcept
+		: m_device{ device }
+		, m_allocator{ allocator }
+	{
+	}
+
+	~CVmaAllocator() final
+	{
+		Destroy();
+	}
+
+	VmaAllocator Get() const noexcept final { return m_allocator; }
+	operator VmaAllocator() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept final { return *m_device; }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<IVkDevice> m_device;
+	VmaAllocator m_allocator{ VK_NULL_HANDLE };
+};
+
+
+//
+// VkImage
+//
+class __declspec(uuid("D2D93E23-1D35-4E0D-997D-035CB6BDE2A9")) CVkImage 
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkImage>
+	, public NonCopyable
+{
+public:
+	CVkImage(CVkDevice* cdevice, VkImage image) noexcept
+		: m_device{ cdevice }
+		, m_allocator{}
+		, m_image{ image }
+		, m_allocation{ VK_NULL_HANDLE }
+	{
+	}
+
+	CVkImage(CVkDevice* device, CVmaAllocator* allocator, VkImage image, VmaAllocation allocation) noexcept
+		: m_device{ device }
+		, m_allocator{ allocator }
+		, m_image{ image }
+		, m_allocation{ allocation }
+		, m_bOwnsImage{ true }
+	{
+	}
+
+	~CVkImage() final
+	{
+		Destroy();
+	}
+
+	VkImage Get() const noexcept final { return m_image; }
+	operator VkImage() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept final { return *m_device; }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<IVkDevice> m_device;
+	wil::com_ptr<IVmaAllocator> m_allocator;
+	VkImage m_image{ VK_NULL_HANDLE };
+	VmaAllocation m_allocation{ VK_NULL_HANDLE };
+	bool m_bOwnsImage{ false };
+};
+
+
+//
+// VkSwapchainKHR
+//
+class __declspec(uuid("CEC815F2-5037-49AC-89AA-F865D02D9CAE")) CVkSwapchain 
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkSwapchainKHR>
+	, public NonCopyable
+{
+public:
+	CVkSwapchain() noexcept = default;
+	CVkSwapchain(CVkDevice* device, VkSwapchainKHR swapchain) noexcept
+		: m_device{ device }
+		, m_swapchainKHR{ swapchain }
+	{
+	}
+
+	~CVkSwapchain()
+	{
+		Destroy();
+	}
+
+	VkSwapchainKHR Get() const noexcept final { return m_swapchainKHR; }
+	operator VkSwapchainKHR() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept final { return *m_device; }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<IVkDevice> m_device;
+	VkSwapchainKHR m_swapchainKHR{ VK_NULL_HANDLE };
 };
 
 } // namespace Luna::VK
