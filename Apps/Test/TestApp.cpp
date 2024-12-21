@@ -47,11 +47,10 @@ void TestApp::Shutdown()
 }
 
 
-bool TestApp::Update(double deltaTime)
+void TestApp::Update()
 {
 	// Application update tick
-
-	return true;
+	// Set m_bIsRunning to false if your application wants to exit
 }
 
 

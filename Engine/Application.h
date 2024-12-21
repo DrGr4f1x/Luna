@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "StepTimer.h"
 #include "Graphics\GraphicsCommon.h"
 
 
@@ -67,7 +68,7 @@ public:
 	virtual void Startup() {}
 	virtual void Shutdown() {}
 
-	virtual bool Update(double deltaTime) { return true; }
+	virtual void Update() {}
 	virtual void UpdateUI() {}
 	virtual void Render();
 
@@ -97,9 +98,8 @@ protected:
 	bool m_bIsRunning{ false };
 	bool m_bIsVisible{ true };
 
-	// Frame time and counter
-	double m_prevFrameTime{ 0.0 };
-	uint32_t m_frameNumber{ 0 };
+	// Frame timer
+	StepTimer m_timer;
 
 	// Engine systems
 	std::unique_ptr<FileSystem> m_fileSystem;

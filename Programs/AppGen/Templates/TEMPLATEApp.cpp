@@ -47,11 +47,10 @@ void TEMPLATEApp::Shutdown()
 }
 
 
-bool TEMPLATEApp::Update(double deltaTime)
+void TEMPLATEApp::Update()
 {
 	// Application update tick
-
-	return true;
+	// Set m_bIsRunning to false if your application wants to exit
 }
 
 

@@ -248,12 +248,7 @@ bool Application::Tick()
 	if (!m_bIsRunning)
 	{
 		return false;
-	}
-
-	double curTime = glfwGetTime();
-	double deltaTime = curTime - m_prevFrameTime;
-
-	m_inputSystem->Update();
+	}	
 
 	// Close on Escape key
 	if (m_inputSystem->IsFirstPressed(DigitalInput::kKey_escape))
@@ -261,20 +256,24 @@ bool Application::Tick()
 		return false;
 	}
 
-	bool res = Update(deltaTime);
-	if (res)
+	// Tick the timer and update
+	uint32_t frameCount = m_timer.GetFrameCount();
+	m_timer.Tick([&]() { Update(); });
+
+	// Render Frame
 	{
 		m_deviceManager->BeginFrame();
-
 		Render();
-
 		m_deviceManager->Present();
 	}
 
-	++m_frameNumber;
-	m_prevFrameTime = curTime;
+	if ((frameCount % 1000) == 0)
+	{
+		string windowTitle = format("{} - {} fps", m_appNameWithApi, m_timer.GetFramesPerSecond());
+		glfwSetWindowTitle(m_pWindow, windowTitle.c_str());
+	}
 
-	return res;
+	return m_bIsRunning;
 }
 
 

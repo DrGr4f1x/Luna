@@ -234,6 +234,7 @@
     <ClInclude Include="Graphics\DX12\CommandContext12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="StepTimer.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
