@@ -43,6 +43,7 @@
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\EnumsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\FormatsVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanCommon.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="LogSystem.cpp" />
@@ -107,7 +108,12 @@
     <ClInclude Include="Graphics\PixelBuffer.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\EnumsVK.h" />
+    <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
+    <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
+    <ClInclude Include="Graphics\Vulkan\RefCountingVK.h" />
+    <ClInclude Include="Graphics\Vulkan\StringsVK.h" />
+    <ClInclude Include="Graphics\Vulkan\VersionVK.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanCommon.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="LogSystem.h" />

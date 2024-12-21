@@ -30,6 +30,10 @@
 
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\Vulkan\EnumsVK.h"
+#include "Graphics\Vulkan\FormatsVK.h"
+#include "Graphics\Vulkan\RefCountingImplVK.h"
+#include "Graphics\Vulkan\StringsVK.h"
+#include "Graphics\Vulkan\VersionVK.h"
 
 #define VK_SUCCEEDED(resexpr) VkResult res = resexpr; res == VK_SUCCESS
 #define VK_FAILED(resexpr) VkResult res = resexpr; res != VK_SUCCESS
