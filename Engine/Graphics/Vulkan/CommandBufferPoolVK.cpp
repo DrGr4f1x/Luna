@@ -18,7 +18,7 @@ using namespace std;
 namespace Luna::VK
 {
 
-void CommandBufferPool::Initialize(IVkCommandPool* commandPool, CommandListType commandListType)
+void CommandBufferPool::Initialize(CVkCommandPool* commandPool, CommandListType commandListType)
 {
 	m_vkCommandPool = commandPool;
 	m_commandListType = commandListType;

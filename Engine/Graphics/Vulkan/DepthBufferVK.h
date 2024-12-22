@@ -96,7 +96,7 @@ private:
 	std::string m_name;
 
 	// GpuImage data
-	wil::com_ptr<IVkImage> m_image;
+	wil::com_ptr<CVkImage> m_image;
 	ResourceState m_usageState{ ResourceState::Undefined };
 	ResourceState m_transitioningState{ ResourceState::Undefined };
 	ResourceType m_resourceType{ ResourceType::Unknown };
@@ -114,9 +114,9 @@ private:
 	float m_clearDepth{ 1.0f };
 	uint8_t m_clearStencil{ 0 };
 
-	wil::com_ptr<IVkImageView> m_imageViewDepthStencil;
-	wil::com_ptr<IVkImageView> m_imageViewDepthOnly;
-	wil::com_ptr<IVkImageView> m_imageViewStencilOnly;
+	wil::com_ptr<CVkImageView> m_imageViewDepthStencil;
+	wil::com_ptr<CVkImageView> m_imageViewDepthOnly;
+	wil::com_ptr<CVkImageView> m_imageViewStencilOnly;
 	VkDescriptorImageInfo m_imageInfoDepth{};
 	VkDescriptorImageInfo m_imageInfoStencil{};
 };

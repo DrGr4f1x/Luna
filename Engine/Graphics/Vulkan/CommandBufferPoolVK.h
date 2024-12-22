@@ -26,7 +26,7 @@ public:
 		Destroy();
 	}
 
-	void Initialize(IVkCommandPool* commandPool, CommandListType commandListType);
+	void Initialize(CVkCommandPool* commandPool, CommandListType commandListType);
 
 	VkCommandBuffer RequestCommandBuffer(uint64_t completedFenceValue);
 	void DiscardCommandBuffer(uint64_t fenceValue, VkCommandBuffer commandBuffer);
@@ -37,7 +37,7 @@ private:
 	void Destroy();
 
 private:
-	wil::com_ptr<IVkCommandPool> m_vkCommandPool;
+	wil::com_ptr<CVkCommandPool> m_vkCommandPool;
 	CommandListType m_commandListType{ CommandListType::Direct };
 
 	std::vector<VkCommandBuffer> m_commandBuffers;

@@ -21,7 +21,7 @@ namespace Luna::VK
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
 {
-	m_vkDevice = Make<CVkDevice>(desc.physicalDevice, desc.device);
+	m_vkDevice = Create<CVkDevice>(desc.physicalDevice, desc.device);
 }
 
 
@@ -45,7 +45,7 @@ wil::com_ptr<CVkFence> GraphicsDevice::CreateFence(bool bSignaled) const
 	VkFence fence{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateFence(m_vkDevice->Get(), &createInfo, nullptr, &fence)))
 	{
-		return Make<CVkFence>(m_vkDevice.get(), fence);
+		return Create<CVkFence>(m_vkDevice.get(), fence);
 	}
 
 	return nullptr;
@@ -64,7 +64,7 @@ wil::com_ptr<CVkSemaphore> GraphicsDevice::CreateSemaphore(VkSemaphoreType semap
 	VkSemaphore semaphore{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateSemaphore(m_vkDevice->Get(), &createInfo, nullptr, &semaphore)))
 	{
-		return Make<CVkSemaphore>(m_vkDevice.get(), semaphore);
+		return Create<CVkSemaphore>(m_vkDevice.get(), semaphore);
 	}
 
 	return nullptr;
@@ -96,7 +96,7 @@ wil::com_ptr<CVkCommandPool> GraphicsDevice::CreateCommandPool(CommandListType c
 	VkCommandPool vkCommandPool{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateCommandPool(m_vkDevice->Get(), &createInfo, nullptr, &vkCommandPool)))
 	{
-		return Make<CVkCommandPool>(m_vkDevice.get(), vkCommandPool);
+		return Create<CVkCommandPool>(m_vkDevice.get(), vkCommandPool);
 	}
 
 	return nullptr;
@@ -118,7 +118,7 @@ wil::com_ptr<CVmaAllocator> GraphicsDevice::CreateVmaAllocator() const
 	VmaAllocator vmaAllocator{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vmaCreateAllocator(&createInfo, &vmaAllocator)))
 	{
-		return Make<CVmaAllocator>(m_vkDevice.get(), vmaAllocator);
+		return Create<CVmaAllocator>(m_vkDevice.get(), vmaAllocator);
 	}
 	else
 	{
@@ -152,7 +152,7 @@ wil::com_ptr<CVkImageView> GraphicsDevice::CreateImageView(const ImageViewDesc& 
 	VkImageView vkImageView{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateImageView(m_vkDevice->Get(), &createInfo, nullptr, &vkImageView)))
 	{
-		return Make<CVkImageView>(m_vkDevice.get(), desc.image, vkImageView);
+		return Create<CVkImageView>(m_vkDevice.get(), desc.image, vkImageView);
 	}
 	else
 	{

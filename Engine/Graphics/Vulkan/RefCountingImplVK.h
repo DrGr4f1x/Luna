@@ -11,7 +11,6 @@
 #pragma once
 
 #include "Graphics\Vulkan\VulkanCommon.h"
-#include "Graphics\Vulkan\RefCountingVK.h"
 
 using namespace Microsoft::WRL;
 
@@ -23,7 +22,7 @@ namespace Luna::VK
 // VkInstance
 //
 class __declspec(uuid("D7BB5E27-8C83-4AF3-B5F6-92CEF5575057")) CVkInstance
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkInstance>
+	: public RefCounted<CVkInstance>
 	, public NonCopyable
 {
 public:
@@ -38,7 +37,7 @@ public:
 		Destroy();
 	}
 
-	VkInstance Get() const noexcept final { return m_instance; }
+	VkInstance Get() const noexcept { return m_instance; }
 	operator VkInstance() const noexcept { return Get(); }
 
 	void Destroy();
@@ -52,7 +51,7 @@ private:
 // VkPhysicalDevice
 //
 class __declspec(uuid("9DF46137-E220-42FC-BE3A-9A3695F58F83")) CVkPhysicalDevice
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkPhysicalDevice>
+	: public RefCounted<CVkPhysicalDevice>
 	, public NonCopyable
 {
 public:
@@ -68,10 +67,10 @@ public:
 		Destroy();
 	}
 
-	VkPhysicalDevice Get() const noexcept final { return m_physicalDevice; }
+	VkPhysicalDevice Get() const noexcept { return m_physicalDevice; }
 	operator VkPhysicalDevice() const noexcept { return Get(); }
 
-	VkInstance GetInstance() const noexcept final { return m_instance->Get(); }
+	VkInstance GetInstance() const noexcept { return m_instance->Get(); }
 
 	void Destroy();
 
@@ -85,7 +84,7 @@ private:
 // VkDevice
 //
 class __declspec(uuid("883F7812-D71F-42E1-B6D1-A9FBB842FE78")) CVkDevice
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkDevice>
+	: public RefCounted<CVkDevice>
 	, public NonCopyable
 {
 public:
@@ -101,10 +100,10 @@ public:
 		Destroy();
 	}
 
-	VkDevice Get() const noexcept final { return m_device; }
+	VkDevice Get() const noexcept { return m_device; }
 	operator VkDevice() const { return Get(); }
 
-	VkPhysicalDevice GetPhysicalDevice() const noexcept final { return m_physicalDevice->Get(); }
+	VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_physicalDevice->Get(); }
 
 	void Destroy();
 
@@ -118,7 +117,7 @@ private:
 // VkSurfaceKHR
 //
 class __declspec(uuid("B61E2455-F5E2-40D1-A4D7-06A7ACCAC9D9")) CVkSurface 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkSurface>
+	: public RefCounted<CVkSurface>
 	, public NonCopyable
 {
 public:
@@ -134,10 +133,10 @@ public:
 		Destroy();
 	}
 
-	VkSurfaceKHR Get() const noexcept final { return m_surfaceKHR; }
+	VkSurfaceKHR Get() const noexcept { return m_surfaceKHR; }
 	operator VkSurfaceKHR() const noexcept { return Get(); }
 
-	VkInstance GetInstance() const noexcept final { return m_instance->Get(); }
+	VkInstance GetInstance() const noexcept { return m_instance->Get(); }
 
 	void Destroy();
 
@@ -151,7 +150,7 @@ private:
 // VmaAllocator
 //
 class __declspec(uuid("4284F64C-DB1D-4531-ADE0-15B18A4F70AD")) CVmaAllocator 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVmaAllocator>
+	: public RefCounted<CVmaAllocator>
 	, public NonCopyable
 {
 public:
@@ -167,10 +166,10 @@ public:
 		Destroy();
 	}
 
-	VmaAllocator Get() const noexcept final { return m_allocator; }
+	VmaAllocator Get() const noexcept { return m_allocator; }
 	operator VmaAllocator() const noexcept { return Get(); }
 
-	VkDevice GetDevice() const noexcept final { return m_device->Get(); }
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 
 	void Destroy();
 
@@ -184,7 +183,7 @@ private:
 // VkImage
 //
 class __declspec(uuid("D2D93E23-1D35-4E0D-997D-035CB6BDE2A9")) CVkImage 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkImage>
+	: public RefCounted<CVkImage>
 	, public NonCopyable
 {
 public:
@@ -210,11 +209,11 @@ public:
 		Destroy();
 	}
 
-	VkImage Get() const noexcept final { return m_image; }
+	VkImage Get() const noexcept { return m_image; }
 	operator VkImage() const noexcept { return Get(); }
 
-	VkDevice GetDevice() const noexcept final { return m_device->Get(); }
-	VmaAllocator GetAllocator() const noexcept final { return m_allocator->Get(); }
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+	VmaAllocator GetAllocator() const noexcept { return m_allocator->Get(); }
 
 	void Destroy();
 
@@ -231,7 +230,7 @@ private:
 // VkSwapchainKHR
 //
 class __declspec(uuid("CEC815F2-5037-49AC-89AA-F865D02D9CAE")) CVkSwapchain 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkSwapchain>
+	: public RefCounted<CVkSwapchain>
 	, public NonCopyable
 {
 public:
@@ -242,15 +241,15 @@ public:
 	{
 	}
 
-	~CVkSwapchain()
+	~CVkSwapchain() final
 	{
 		Destroy();
 	}
 
-	VkSwapchainKHR Get() const noexcept final { return m_swapchainKHR; }
+	VkSwapchainKHR Get() const noexcept { return m_swapchainKHR; }
 	operator VkSwapchainKHR() const noexcept { return Get(); }
 
-	VkDevice GetDevice() const noexcept final { return m_device->Get(); }
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 
 	void Destroy();
 
@@ -264,7 +263,7 @@ private:
 // VkSemaphore
 //
 class __declspec(uuid("03D730C5-D309-4AD4-A219-7EC2281BE856")) CVkSemaphore 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkSemaphore>
+	: public RefCounted<CVkSemaphore>
 	, public NonCopyable
 {
 public:
@@ -280,10 +279,10 @@ public:
 		Destroy();
 	}
 
-	VkSemaphore Get() const noexcept final { return m_semaphore; }
+	VkSemaphore Get() const noexcept { return m_semaphore; }
 	operator VkSemaphore() const noexcept { return Get(); }
 
-	VkDevice GetDevice() const noexcept final { return m_device->Get(); }
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 
 	void Destroy();
 
@@ -297,7 +296,7 @@ private:
 // VkDebugUtilsMessengerEXT
 //
 class __declspec(uuid("9F3D00C9-FA3B-4137-B89D-265989EE3561")) CVkDebugUtilsMessenger 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkDebugUtilsMessenger>
+	: public RefCounted<CVkDebugUtilsMessenger>
 	, public NonCopyable
 {
 public:
@@ -313,10 +312,10 @@ public:
 		Destroy();
 	}
 
-	VkDebugUtilsMessengerEXT Get() const noexcept final { return m_messenger; }
+	VkDebugUtilsMessengerEXT Get() const noexcept { return m_messenger; }
 	operator VkDebugUtilsMessengerEXT() const noexcept { return Get(); }
 
-	VkInstance GetInstance() const noexcept final { return m_instance->Get(); }
+	VkInstance GetInstance() const noexcept { return m_instance->Get(); }
 
 	void Destroy();
 
@@ -330,7 +329,7 @@ private:
 // VkFence
 //
 class __declspec(uuid("19767FEC-831E-4D3E-B825-932B7F37A287")) CVkFence 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkFence>
+	: public RefCounted<CVkFence>
 	, public NonCopyable
 {
 public:
@@ -346,10 +345,10 @@ public:
 		Destroy();
 	}
 
-	VkFence Get() const noexcept final { return m_fence; }
+	VkFence Get() const noexcept { return m_fence; }
 	operator VkFence() const noexcept { return Get(); }
 
-	VkDevice GetDevice() const noexcept final { return m_device->Get(); }
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 
 	void Destroy();
 
@@ -363,7 +362,7 @@ private:
 // VkCommandPool
 //
 class __declspec(uuid("E9AAB404-DFAC-4DDE-890D-6C9BCF7695C6")) CVkCommandPool 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkCommandPool>
+	: public RefCounted<CVkCommandPool>
 	, public NonCopyable
 {
 public:
@@ -379,10 +378,10 @@ public:
 		Destroy();
 	}
 
-	VkCommandPool Get() const noexcept final { return m_commandPool; }
+	VkCommandPool Get() const noexcept { return m_commandPool; }
 	operator VkCommandPool() const noexcept { return Get(); }
 
-	VkDevice GetDevice() const noexcept final { return m_device->Get(); }
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 
 	void Destroy();
 
@@ -396,7 +395,7 @@ private:
 // VkImageView
 //
 class __declspec(uuid("D97705D7-0380-4DF4-89B9-167EF8355085")) CVkImageView 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IVkImageView>
+	: public RefCounted<CVkImageView>
 	, public NonCopyable
 {
 public:
@@ -408,7 +407,7 @@ public:
 	{
 	}
 
-	~CVkImageView()
+	~CVkImageView() final
 	{
 		Destroy();
 	}

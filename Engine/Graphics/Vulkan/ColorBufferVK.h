@@ -56,7 +56,7 @@ public:
 	ColorBuffer(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt);
 	~ColorBuffer() final = default;
 
-	// IObject implementation
+	// IGpuImage implementation
 	ResourceState GetUsageState() const noexcept final { return m_usageState; }
 	void SetUsageState(ResourceState usageState) noexcept final { m_usageState = usageState; }
 	ResourceState GetTransitioningState() const noexcept final { return m_transitioningState; }
@@ -88,7 +88,7 @@ private:
 	std::string m_name;
 
 	// GpuImage data
-	wil::com_ptr<IVkImage> m_image;
+	wil::com_ptr<CVkImage> m_image;
 	ResourceState m_usageState{ ResourceState::Undefined };
 	ResourceState m_transitioningState{ ResourceState::Undefined };
 	ResourceType m_resourceType{ ResourceType::Unknown };
@@ -106,8 +106,8 @@ private:
 	Color m_clearColor;
 
 	// ColorBufferVK data
-	wil::com_ptr<IVkImageView> m_imageViewRtv;
-	wil::com_ptr<IVkImageView> m_imageViewSrv;
+	wil::com_ptr<CVkImageView> m_imageViewRtv;
+	wil::com_ptr<CVkImageView> m_imageViewSrv;
 	VkDescriptorImageInfo m_imageInfoSrv{};
 	VkDescriptorImageInfo m_imageInfoUav{};
 };

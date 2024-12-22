@@ -71,8 +71,7 @@
     <ClInclude Include="Core\DWParam.h" />
     <ClInclude Include="Core\FlagStringMap.h" />
     <ClInclude Include="Core\Hash.h" />
-    <ClInclude Include="Core\IntrusivePtr.h" />
-    <ClInclude Include="Core\IObject.h" />
+    <ClInclude Include="Core\NativeObjectPtr.h" />
     <ClInclude Include="Core\Math\BoundingBox.h" />
     <ClInclude Include="Core\Math\BoundingPlane.h" />
     <ClInclude Include="Core\Math\BoundingSphere.h" />
@@ -87,6 +86,7 @@
     <ClInclude Include="Core\Math\Vector.h" />
     <ClInclude Include="Core\NonCopyable.h" />
     <ClInclude Include="Core\NonMovable.h" />
+    <ClInclude Include="Core\RefCounted.h" />
     <ClInclude Include="Core\Utility.h" />
     <ClInclude Include="Core\VectorMath.h" />
     <ClInclude Include="FileSystem.h" />
@@ -126,7 +126,6 @@
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
-    <ClInclude Include="Graphics\Vulkan\RefCountingVK.h" />
     <ClInclude Include="Graphics\Vulkan\StringsVK.h" />
     <ClInclude Include="Graphics\Vulkan\VersionVK.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanCommon.h" />

@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Core\IObject.h"
+#include "Core\NativeObjectPtr.h"
 
 namespace Luna
 {

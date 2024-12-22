@@ -185,7 +185,7 @@ void DeviceManager::CreateDeviceResources()
 
 	volkLoadInstanceOnly(vkInstance);
 
-	m_vkInstance = Make<CVkInstance>(vkInstance);
+	m_vkInstance = Create<CVkInstance>(vkInstance);
 
 	if (m_desc.enableValidation)
 	{
@@ -296,7 +296,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 		LogError(LogVulkan) << "Failed to create Vulkan swapchain.  Error code: " << res << endl;
 		return;
 	}
-	m_vkSwapChain = Make<CVkSwapchain>(m_vkDevice.get(), swapchain);
+	m_vkSwapChain = Create<CVkSwapchain>(m_vkDevice.get(), swapchain);
 
 	// Get swapchain images
 	uint32_t imageCount{ 0 };
@@ -315,7 +315,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	m_vkSwapChainImages.reserve(imageCount);
 	for (auto image : images)
 	{
-		m_vkSwapChainImages.push_back(Make<CVkImage>(m_vkDevice.get(), image));
+		m_vkSwapChainImages.push_back(Create<CVkImage>(m_vkDevice.get(), image));
 	}
 
 	m_swapChainBuffers.reserve(imageCount);
@@ -376,7 +376,7 @@ void DeviceManager::InstallDebugMessenger()
 		return;
 	}
 
-	m_vkDebugMessenger = Make<CVkDebugUtilsMessenger>(m_vkInstance.get(), messenger);
+	m_vkDebugMessenger = Create<CVkDebugUtilsMessenger>(m_vkInstance.get(), messenger);
 }
 
 
@@ -392,7 +392,7 @@ void DeviceManager::CreateSurface()
 		LogError(LogVulkan) << "Failed to create Win32 surface.  Error code: " << res << endl;
 		return;
 	}
-	m_vkSurface = Make<CVkSurface>(m_vkInstance.get(), vkSurface);
+	m_vkSurface = Create<CVkSurface>(m_vkInstance.get(), vkSurface);
 }
 
 
@@ -488,7 +488,7 @@ void DeviceManager::SelectPhysicalDevice()
 		return;
 	}
 
-	m_vkPhysicalDevice = Make<CVkPhysicalDevice>(m_vkInstance.get(), physicalDevices[chosenAdapterIdx].second);
+	m_vkPhysicalDevice = Create<CVkPhysicalDevice>(m_vkInstance.get(), physicalDevices[chosenAdapterIdx].second);
 	LogInfo(LogVulkan) << "Selected physical device " << chosenAdapterIdx << endl;
 
 	// TODO
@@ -598,7 +598,7 @@ void DeviceManager::CreateDevice()
 
 	volkLoadDevice(device);
 
-	m_vkDevice = Make<CVkDevice>(m_vkPhysicalDevice.get(), device);
+	m_vkDevice = Create<CVkDevice>(m_vkPhysicalDevice.get(), device);
 
 	// Create Luna GraphicsDevice
 	auto deviceDesc = GraphicsDeviceDesc{
@@ -635,6 +635,7 @@ void DeviceManager::CreateQueue(QueueType queueType)
 }
 
 
+
 wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
 {
 	const string name = format("Primary Swapchain Image {}", imageIndex);
@@ -650,12 +651,12 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 		.format				= m_desc.swapChainFormat
 	};
 
-	auto image = Make<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
+	auto image = Create<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
 	SetDebugName(m_vkDevice->Get(), image->Get(), name);
 
 	// RTV view
 	auto imageViewDesc = ImageViewDesc{
-		.image				= image.Get(),
+		.image				= image.get(),
 		.name				= format("Primary Swapchain {} RTV Image View", imageIndex),
 		.resourceType		= ResourceType::Texture2D,
 		.imageUsage			= GpuImageUsage::RenderTarget,
@@ -681,7 +682,7 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, imageViewSrv->Get(), GetImageLayout(ResourceState::UnorderedAccess)};
 
 	auto descExt = ColorBufferDescExt{
-		.image			= image.Get(),
+		.image			= image.get(),
 		.imageViewRtv	= imageViewRtv.get(),
 		.imageViewSrv	= imageViewSrv.get(),
 		.imageInfoSrv	= imageInfoSrv,

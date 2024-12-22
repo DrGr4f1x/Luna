@@ -10,7 +10,6 @@
 
 #pragma once
 
-
 namespace Luna
 {
 
@@ -30,16 +29,6 @@ struct NativeObjectPtr
 	NativeObjectPtr(void* p) noexcept : pointer{ p } {}
 
 	template <typename T> operator T* () const noexcept { return static_cast<T*>(pointer); }
-};
-
-struct __declspec(novtable) IObject
-{
-	virtual ~IObject() noexcept = default;
-
-	virtual unsigned long AddRef() noexcept = 0;
-	virtual unsigned long Release() noexcept = 0;
-
-	virtual NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept { (void)nativeObjectType; return nullptr; }
 };
 
 } // namespace Luna

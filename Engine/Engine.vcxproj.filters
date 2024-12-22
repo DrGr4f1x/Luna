@@ -169,7 +169,7 @@
     <ClInclude Include="Core\Hash.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Core\IObject.h">
+    <ClInclude Include="Core\NativeObjectPtr.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Core\NonCopyable.h">
@@ -189,9 +189,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="InputSystem.h" />
-    <ClInclude Include="Core\IntrusivePtr.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\DeviceManager.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -280,9 +277,6 @@
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\RefCountingVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
@@ -315,6 +309,9 @@
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h">
       <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\RefCounted.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
