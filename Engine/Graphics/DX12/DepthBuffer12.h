@@ -78,17 +78,17 @@ public:
 	NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept final;
 
 	// IPixelBuffer implementation
-	uint64_t GetWidth() const noexcept override { return m_width; }
-	uint32_t GetHeight() const noexcept override { return m_height; }
-	uint32_t GetDepth() const noexcept override { return m_resourceType == ResourceType::Texture3D ? m_arraySizeOrDepth : 1; }
-	uint32_t GetArraySize() const noexcept override { return m_resourceType == ResourceType::Texture3D ? 1 : m_arraySizeOrDepth; }
-	uint32_t GetNumMips() const noexcept override { return m_numMips; }
-	uint32_t GetNumSamples() const noexcept override { return m_numSamples; }
-	Format GetFormat() const noexcept override { return m_format; }
-	uint32_t GetPlaneCount() const noexcept override { return m_planeCount; }
-	TextureDimension GetDimension() const noexcept override { return ResourceTypeToTextureDimension(m_resourceType); }
+	uint64_t GetWidth() const noexcept final { return m_width; }
+	uint32_t GetHeight() const noexcept final { return m_height; }
+	uint32_t GetDepth() const noexcept final { return m_resourceType == ResourceType::Texture3D ? m_arraySizeOrDepth : 1; }
+	uint32_t GetArraySize() const noexcept final { return m_resourceType == ResourceType::Texture3D ? 1 : m_arraySizeOrDepth; }
+	uint32_t GetNumMips() const noexcept final { return m_numMips; }
+	uint32_t GetNumSamples() const noexcept final { return m_numSamples; }
+	Format GetFormat() const noexcept final { return m_format; }
+	uint32_t GetPlaneCount() const noexcept final { return m_planeCount; }
+	TextureDimension GetDimension() const noexcept final { return ResourceTypeToTextureDimension(m_resourceType); }
 
-	// IDEpthBuffer implementation
+	// IDepthBuffer implementation
 	float GetClearDepth() const noexcept final { return m_clearDepth; }
 	uint8_t GetClearStencil() const noexcept final { return m_clearStencil; }
 

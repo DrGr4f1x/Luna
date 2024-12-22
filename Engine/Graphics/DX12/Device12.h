@@ -103,8 +103,6 @@ public:
 
 	void CreateResources();
 
-	
-
 private:
 	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }
 

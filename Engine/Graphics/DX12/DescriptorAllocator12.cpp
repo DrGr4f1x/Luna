@@ -48,11 +48,12 @@ ID3D12DescriptorHeap* DescriptorAllocator::RequestNewHeap(ID3D12Device* device)
 {
 	lock_guard<mutex> guard{ m_allocationMutex };
 
-	D3D12_DESCRIPTOR_HEAP_DESC desc{};
-	desc.Type = m_type;
-	desc.NumDescriptors = m_numDescriptorsPerHeap;
-	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	desc.NodeMask = 1;
+	auto desc = D3D12_DESCRIPTOR_HEAP_DESC{
+		.Type				= m_type,
+		.NumDescriptors		= m_numDescriptorsPerHeap,
+		.Flags				= D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+		.NodeMask			= 1
+	};
 
 	wil::com_ptr<ID3D12DescriptorHeap> heap;
 	assert_succeeded(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap)));

@@ -294,21 +294,22 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	}
 	else
 	{
-		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-		swapChainDesc.Width = newBackBufferWidth;
-		swapChainDesc.Height = newBackBufferHeight;
-		swapChainDesc.Format = dxgiFormat;
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.BufferCount = backBufferCount;
-		swapChainDesc.SampleDesc.Count = 1;
-		swapChainDesc.SampleDesc.Quality = 0;
-		swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
-		swapChainDesc.Flags = m_bIsTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u;
+		auto swapChainDesc = DXGI_SWAP_CHAIN_DESC1{
+			.Width			= newBackBufferWidth,
+			.Height			= newBackBufferHeight,
+			.Format			= dxgiFormat,
+			.SampleDesc	= { .Count = 1, .Quality = 0 },
+			.BufferUsage	= DXGI_USAGE_RENDER_TARGET_OUTPUT,
+			.BufferCount	= backBufferCount,
+			.Scaling		= DXGI_SCALING_STRETCH,
+			.SwapEffect	= DXGI_SWAP_EFFECT_FLIP_DISCARD,
+			.AlphaMode		= DXGI_ALPHA_MODE_IGNORE,
+			.Flags			= m_bIsTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u
+		};
 
-		DXGI_SWAP_CHAIN_FULLSCREEN_DESC fsSwapChainDesc{};
-		fsSwapChainDesc.Windowed = TRUE;
+		auto fsSwapChainDesc = DXGI_SWAP_CHAIN_FULLSCREEN_DESC{ 
+			.Windowed		= TRUE
+		};
 
 		// Create a swap chain for the window.
 		wil::com_ptr<IDXGISwapChain1> swapChain;
@@ -559,22 +560,23 @@ void DeviceManager::CreateDevice()
 #endif
 
 	// Create Luna GraphicsDevice
-	auto deviceDesc = GraphicsDeviceDesc{}
-		.SetDxgiFactory(m_dxgiFactory.get())
-		.SetDevice(device.get())
-		.SetBackBufferWidth(m_desc.backBufferWidth)
-		.SetBackBufferHeight(m_desc.backBufferHeight)
-		.SetNumSwapChainBuffers(m_desc.numSwapChainBuffers)
-		.SetSwapChainFormat(m_desc.swapChainFormat)
-		.SetSwapChainSampleCount(m_desc.swapChainSampleCount)
-		.SetSwapChainSampleQuality(m_desc.swapChainSampleQuality)
-		.SetAllowModeSwitch(m_desc.allowModeSwitch)
-		.SetIsTearingSupported(m_bIsTearingSupported)
-		.SetEnableVSync(m_desc.enableVSync)
-		.SetMaxFramesInFlight(m_desc.maxFramesInFlight)
-		.SetHwnd(m_desc.hwnd)
-		.SetEnableValidation(m_desc.enableValidation)
-		.SetEnableDebugMarkers(m_desc.enableDebugMarkers);
+	auto deviceDesc = GraphicsDeviceDesc{
+		.dxgiFactory				= m_dxgiFactory.get(),
+		.dx12Device					= device.get(),
+		.backBufferWidth			= m_desc.backBufferWidth,
+		.backBufferHeight			= m_desc.backBufferHeight,
+		.numSwapChainBuffers		= m_desc.numSwapChainBuffers,
+		.swapChainFormat			= m_desc.swapChainFormat,
+		.swapChainSampleCount		= m_desc.swapChainSampleCount,
+		.swapChainSampleQuality		= m_desc.swapChainSampleQuality,
+		.allowModeSwitch			= m_desc.allowModeSwitch,
+		.isTearingSupported			= m_bIsTearingSupported,
+		.enableVSync				= m_desc.enableVSync,
+		.maxFramesInFlight			= m_desc.maxFramesInFlight,
+		.hwnd						= m_desc.hwnd,
+		.enableValidation			= m_desc.enableValidation,
+		.enableDebugMarkers			= m_desc.enableDebugMarkers
+	};
 
 	m_device = Make<GraphicsDevice>(deviceDesc);
 
@@ -793,14 +795,15 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 
 	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
 
-	auto colorBufferDesc = ColorBufferDesc{}
-		.SetName(name)
-		.SetResourceType(ResourceType::Texture2D)
-		.SetWidth(resourceDesc.Width)
-		.SetHeight(resourceDesc.Height)
-		.SetArraySize(resourceDesc.DepthOrArraySize)
-		.SetNumSamples(resourceDesc.SampleDesc.Count)
-		.SetFormat(DxgiToFormat(resourceDesc.Format));
+	auto colorBufferDesc = ColorBufferDesc{
+		.name				= name,
+		.resourceType		= ResourceType::Texture2D,
+		.width				= resourceDesc.Width,
+		.height				= resourceDesc.Height,
+		.arraySizeOrDepth	= resourceDesc.DepthOrArraySize,
+		.numSamples			= resourceDesc.SampleDesc.Count,
+		.format				= DxgiToFormat(resourceDesc.Format)
+	};
 
 	auto d3d12Device = m_device->GetD3D12Device();
 

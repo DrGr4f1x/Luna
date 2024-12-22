@@ -23,7 +23,9 @@ namespace Luna::VK
 {
 
 // Forward declarations
+class ColorBuffer;
 class GraphicsDevice;
+class Queue;
 
 
 class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
@@ -53,6 +55,9 @@ private:
 	void CreateSurface();
 	void SelectPhysicalDevice();
 	void CreateDevice();
+	void CreateQueue(QueueType queueType);
+
+	wil::com_ptr<ColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex);
 
 	std::vector<std::pair<AdapterInfo, VkPhysicalDevice>> EnumeratePhysicalDevices();
 	void GetQueueFamilyIndices();
@@ -68,14 +73,25 @@ private:
 	DeviceCaps m_caps;
 
 	// Vulkan instance objects owned by the DeviceManager
-	wil::com_ptr<IVkInstance> m_vkInstance;
-	wil::com_ptr<IVkDebugUtilsMessenger> m_vkDebugMessenger;
-	wil::com_ptr<IVkSurface> m_vkSurface;
-	wil::com_ptr<IVkPhysicalDevice> m_vkPhysicalDevice;
-	wil::com_ptr<IVkDevice> m_vkDevice;
+	wil::com_ptr<CVkInstance> m_vkInstance;
+	wil::com_ptr<CVkDebugUtilsMessenger> m_vkDebugMessenger;
+	wil::com_ptr<CVkSurface> m_vkSurface;
+	wil::com_ptr<CVkPhysicalDevice> m_vkPhysicalDevice;
+	wil::com_ptr<CVkDevice> m_vkDevice;
 
 	// Luna objects
 	wil::com_ptr<GraphicsDevice> m_device;
+
+	// Swapchain
+	wil::com_ptr<CVkSwapchain> m_vkSwapChain;
+	// TODO - get rid of this, just use m_swapChainBuffers below
+	std::vector<wil::com_ptr<CVkImage>> m_vkSwapChainImages;
+	uint32_t m_swapChainIndex{ (uint32_t)-1 };
+	bool m_swapChainMutableFormatSupported{ false };
+	VkSurfaceFormatKHR m_swapChainFormat{};
+
+	// Swapchain color buffers
+	std::vector<wil::com_ptr<ColorBuffer>> m_swapChainBuffers;
 
 	// Queues and queue families
 	std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;
@@ -86,6 +102,13 @@ private:
 		int32_t transfer{ -1 };
 		int32_t present{ -1 };
 	} m_queueFamilyIndices;
+	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
+
+	// Present synchronization
+	std::vector<wil::com_ptr<CVkSemaphore>> m_presentSemaphores;
+	std::vector<wil::com_ptr<CVkFence>> m_presentFences;
+	std::vector<uint32_t> m_presentFenceState;
+	uint32_t m_presentSemaphoreIndex{ 0 };
 };
 
 

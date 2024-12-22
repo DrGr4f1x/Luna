@@ -92,6 +92,7 @@ public:
 
 	virtual VkImage Get() const noexcept = 0;
 	virtual VkDevice GetDevice() const noexcept = 0;
+	virtual VmaAllocator GetAllocator() const noexcept = 0;
 };
 
 
@@ -147,7 +148,6 @@ public:
 };
 
 
-
 //
 // IVkCommandPool
 //
@@ -160,4 +160,17 @@ public:
 	virtual VkDevice GetDevice() const noexcept = 0;
 };
 
+
+//
+// IVkImageView
+//
+class __declspec(uuid("EE8412CB-3646-42D0-BD14-ADF319D0B399")) IVkImageView : public IUnknown
+{
+public:
+	virtual ~IVkImageView() = default;
+
+	virtual VkImageView Get() const noexcept = 0;
+	virtual VkDevice GetDevice() const noexcept = 0;
+	virtual VkImage GetImage() const noexcept = 0;
+};
 } // namespace Luna::VK

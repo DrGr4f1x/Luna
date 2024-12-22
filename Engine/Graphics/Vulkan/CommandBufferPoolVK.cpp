@@ -18,6 +18,13 @@ using namespace std;
 namespace Luna::VK
 {
 
+void CommandBufferPool::Initialize(IVkCommandPool* commandPool, CommandListType commandListType)
+{
+	m_vkCommandPool = commandPool;
+	m_commandListType = commandListType;
+}
+
+
 VkCommandBuffer CommandBufferPool::RequestCommandBuffer(uint64_t completedFenceValue)
 {
 	lock_guard<mutex> guard{ m_commandBufferMutex };

@@ -71,7 +71,7 @@ class __declspec(uuid("FA13EEEA-C815-4D64-B0B6-7173D5C6D1E0")) ColorBuffer
 public:
 	ColorBuffer(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt);
 
-	// IGpuResource implementation
+	// IGpuImage implementation
 	ResourceState GetUsageState() const noexcept final { return m_usageState; }
 	void SetUsageState(ResourceState usageState) noexcept final { m_usageState = usageState; }
 	ResourceState GetTransitioningState() const noexcept final { return m_transitioningState; }

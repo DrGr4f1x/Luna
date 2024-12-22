@@ -26,10 +26,11 @@ Queue::Queue(ID3D12Device* device, QueueType queueType)
 	, m_lastSubmittedFenceValue{ 0 }
 	, m_lastCompletedFenceValue((uint64_t)queueType << 56)
 {
-	D3D12_COMMAND_QUEUE_DESC queueDesc{};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.Type = CommandListTypeToDX12(QueueTypeToCommandListType(queueType));
-	queueDesc.NodeMask = 1;
+	auto queueDesc = D3D12_COMMAND_QUEUE_DESC{
+		.Type		= CommandListTypeToDX12(QueueTypeToCommandListType(queueType)),
+		.Flags		= D3D12_COMMAND_QUEUE_FLAG_NONE,
+		.NodeMask	= 1
+	};
 
 	assert_succeeded(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_dxQueue)));
 	SetDebugName(m_dxQueue.get(), format("{} Queue", queueType));

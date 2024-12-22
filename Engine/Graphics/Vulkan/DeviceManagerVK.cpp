@@ -13,7 +13,9 @@
 #include "DeviceManagerVK.h"
 
 #include "Graphics\GraphicsCommon.h"
+#include "Graphics\Vulkan\ColorBufferVK.h"
 #include "Graphics\Vulkan\DeviceVK.h"
+#include "Graphics\Vulkan\QueueVK.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -191,11 +193,137 @@ void DeviceManager::CreateDeviceResources()
 	}
 
 	CreateSurface();
+
+	SelectPhysicalDevice();
+
+	CreateDevice();
+
+	// Create queues
+	CreateQueue(QueueType::Graphics);
+	CreateQueue(QueueType::Compute);
+	CreateQueue(QueueType::Copy);
+
+	// Create the semaphores and fences for present
+	m_presentSemaphores.reserve(m_desc.maxFramesInFlight + 1);
+	m_presentFences.reserve(m_desc.maxFramesInFlight + 1);
+	for (uint32_t i = 0; i < m_desc.maxFramesInFlight + 1; ++i)
+	{
+		// Create semaphore
+		auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
+		assert(semaphore);
+		m_presentSemaphores.push_back(semaphore);
+		SetDebugName(m_vkDevice->Get(), semaphore->Get(), format("Present Semaphore {}", i));
+
+		// Create fence
+		auto fence = m_device->CreateFence(false);
+		assert(fence);
+		m_presentFences.push_back(fence);
+		SetDebugName(m_vkDevice->Get(), fence->Get(), format("Present Fence {}", i));
+
+		// Present fence state
+		m_presentFenceState.push_back(0);
+	}
 }
 
 
 void DeviceManager::CreateWindowSizeDependentResources()
-{ }
+{ 
+	m_swapChainFormat = { FormatToVulkan(m_desc.swapChainFormat), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+
+	VkExtent2D extent{
+		m_desc.backBufferWidth,
+		m_desc.backBufferHeight };
+
+	unordered_set<uint32_t> uniqueQueues{
+		(uint32_t)m_queueFamilyIndices.graphics,
+		(uint32_t)m_queueFamilyIndices.present };
+	vector<uint32_t> queues(uniqueQueues.begin(), uniqueQueues.end());
+
+	VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+	m_swapChainMutableFormatSupported = true;
+
+	const bool enableSwapChainSharing = queues.size() > 1;
+
+	VkSwapchainCreateInfoKHR createInfo{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
+	createInfo.surface = m_vkSurface->Get();
+	createInfo.minImageCount = m_desc.numSwapChainBuffers;
+	createInfo.imageFormat = m_swapChainFormat.format;
+	createInfo.imageColorSpace = m_swapChainFormat.colorSpace;
+	createInfo.imageExtent = extent;
+	createInfo.imageArrayLayers = 1;
+	createInfo.imageUsage = usage;
+	createInfo.imageSharingMode = enableSwapChainSharing ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
+	createInfo.flags = m_swapChainMutableFormatSupported ? VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR : 0;
+	createInfo.queueFamilyIndexCount = enableSwapChainSharing ? (uint32_t)queues.size() : 0;
+	createInfo.pQueueFamilyIndices = enableSwapChainSharing ? queues.data() : nullptr;
+	createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	createInfo.presentMode = m_desc.enableVSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+	createInfo.clipped = true;
+	createInfo.oldSwapchain = nullptr;
+
+	vector<VkFormat> imageFormats{ m_swapChainFormat.format };
+	switch (m_swapChainFormat.format)
+	{
+	case VK_FORMAT_R8G8B8A8_UNORM:
+		imageFormats.push_back(VK_FORMAT_R8G8B8A8_SRGB);
+		break;
+	case VK_FORMAT_R8G8B8A8_SRGB:
+		imageFormats.push_back(VK_FORMAT_R8G8B8A8_UNORM);
+		break;
+	case VK_FORMAT_B8G8R8A8_UNORM:
+		imageFormats.push_back(VK_FORMAT_B8G8R8A8_SRGB);
+		break;
+	case VK_FORMAT_B8G8R8A8_SRGB:
+		imageFormats.push_back(VK_FORMAT_B8G8R8A8_UNORM);
+		break;
+	}
+
+	VkImageFormatListCreateInfo imageFormatListCreateInfo{ VK_STRUCTURE_TYPE_IMAGE_FORMAT_LIST_CREATE_INFO };
+	imageFormatListCreateInfo.viewFormatCount = (uint32_t)imageFormats.size();
+	imageFormatListCreateInfo.pViewFormats = imageFormats.data();
+
+	if (m_swapChainMutableFormatSupported)
+	{
+		createInfo.pNext = &imageFormatListCreateInfo;
+	}
+
+	VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
+	if (VK_FAILED(vkCreateSwapchainKHR(m_vkDevice->Get(), &createInfo, nullptr, &swapchain)))
+	{
+		LogError(LogVulkan) << "Failed to create Vulkan swapchain.  Error code: " << res << endl;
+		return;
+	}
+	m_vkSwapChain = Make<CVkSwapchain>(m_vkDevice.get(), swapchain);
+
+	// Get swapchain images
+	uint32_t imageCount{ 0 };
+	if (VK_FAILED(vkGetSwapchainImagesKHR(m_vkDevice->Get(), m_vkSwapChain->Get(), &imageCount, nullptr)))
+	{
+		LogError(LogVulkan) << "Failed to get swapchain image count.  Error code: " << res << endl;
+		return;
+	}
+
+	vector<VkImage> images{ imageCount };
+	if (VK_FAILED(vkGetSwapchainImagesKHR(m_vkDevice->Get(), m_vkSwapChain->Get(), &imageCount, images.data())))
+	{
+		LogError(LogVulkan) << "Failed to get swapchain images.  Error code: " << res << endl;
+		return;
+	}
+	m_vkSwapChainImages.reserve(imageCount);
+	for (auto image : images)
+	{
+		m_vkSwapChainImages.push_back(Make<CVkImage>(m_vkDevice.get(), image));
+	}
+
+	m_swapChainBuffers.reserve(imageCount);
+	for (uint32_t i = 0; i < imageCount; ++i)
+	{
+		m_swapChainBuffers.push_back(CreateColorBufferFromSwapChain(i));
+	}
+}
 
 
 ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
@@ -473,25 +601,95 @@ void DeviceManager::CreateDevice()
 	m_vkDevice = Make<CVkDevice>(m_vkPhysicalDevice.get(), device);
 
 	// Create Luna GraphicsDevice
-	auto deviceDesc = GraphicsDeviceDesc{}
-		.SetInstance(m_vkInstance->Get())
-		.SetPhysicalDevice(m_vkPhysicalDevice.get())
-		.SetDevice(device)
-		.SetGraphicsQueueIndex(m_queueFamilyIndices.graphics)
-		.SetComputeQueueIndex(m_queueFamilyIndices.compute)
-		.SetTransferQueueIndex(m_queueFamilyIndices.transfer)
-		.SetPresentQueueIndex(m_queueFamilyIndices.present)
-		.SetBackBufferWidth(m_desc.backBufferWidth)
-		.SetBackBufferHeight(m_desc.backBufferHeight)
-		.SetNumSwapChainBuffers(m_desc.numSwapChainBuffers)
-		.SetSwapChainFormat(m_desc.swapChainFormat)
-		.SetSurface(m_vkSurface->Get())
-		.SetEnableVSync(m_desc.enableVSync)
-		.SetMaxFramesInFlight(m_desc.maxFramesInFlight)
-		.SetEnableValidation(m_desc.enableValidation)
-		.SetEnableDebugMarkers(m_desc.enableDebugMarkers);
+	auto deviceDesc = GraphicsDeviceDesc{
+		.instance				= m_vkInstance->Get(),
+		.physicalDevice			= m_vkPhysicalDevice.get(),
+		.device					= device,
+		.queueFamilyIndices		= { 
+			.graphics	= m_queueFamilyIndices.graphics,
+			.compute	= m_queueFamilyIndices.compute,
+			.transfer	= m_queueFamilyIndices.transfer,
+			.present	= m_queueFamilyIndices.present },
+		.backBufferWidth		= m_desc.backBufferWidth,
+		.backBufferHeight		= m_desc.backBufferHeight,
+		.numSwapChainBuffers	= m_desc.numSwapChainBuffers,
+		.swapChainFormat		= m_desc.swapChainFormat,
+		.surface				= m_vkSurface->Get(),
+		.enableVSync			= m_desc.enableVSync,
+		.maxFramesInFlight		= m_desc.maxFramesInFlight,
+		.enableValidation		= m_desc.enableValidation,
+		.enableDebugMarkers		= m_desc.enableDebugMarkers
+	};
 
 	m_device = Make<GraphicsDevice>(deviceDesc);
+
+	m_device->CreateResources();
+}
+
+
+void DeviceManager::CreateQueue(QueueType queueType)
+{
+	VkQueue vkQueue{ VK_NULL_HANDLE };
+	vkGetDeviceQueue(m_vkDevice->Get(), m_queueFamilyIndices.graphics, 0, &vkQueue);
+	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_device.get(), vkQueue, queueType);
+}
+
+
+wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
+{
+	const string name = format("Primary Swapchain Image {}", imageIndex);
+
+	// Swapchain image
+	auto desc = ColorBufferDesc{
+		.name				= name,
+		.resourceType		= ResourceType::Texture2D,
+		.width				= m_desc.backBufferWidth,
+		.height				= m_desc.backBufferHeight,
+		.arraySizeOrDepth	= 1,
+		.numSamples			= 1,
+		.format				= m_desc.swapChainFormat
+	};
+
+	auto image = Make<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
+	SetDebugName(m_vkDevice->Get(), image->Get(), name);
+
+	// RTV view
+	auto imageViewDesc = ImageViewDesc{
+		.image				= image.Get(),
+		.name				= format("Primary Swapchain {} RTV Image View", imageIndex),
+		.resourceType		= ResourceType::Texture2D,
+		.imageUsage			= GpuImageUsage::RenderTarget,
+		.format				= m_desc.swapChainFormat,
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= 1,
+		.baseArraySlice		= 0,
+		.arraySize			= 1
+	};
+
+	auto imageViewRtv = m_device->CreateImageView(imageViewDesc);
+
+	// SRV view
+	imageViewDesc
+		.SetImageUsage(GpuImageUsage::ShaderResource)
+		.SetName(format("Primary SwapChain {} SRV Image View", imageIndex));
+
+	auto imageViewSrv = m_device->CreateImageView(imageViewDesc);
+
+	// Descriptors
+	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, imageViewSrv->Get(), GetImageLayout(ResourceState::ShaderResource)};
+	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, imageViewSrv->Get(), GetImageLayout(ResourceState::UnorderedAccess)};
+
+	auto descExt = ColorBufferDescExt{
+		.image			= image.Get(),
+		.imageViewRtv	= imageViewRtv.get(),
+		.imageViewSrv	= imageViewSrv.get(),
+		.imageInfoSrv	= imageInfoSrv,
+		.imageInfoUav	= imageInfoUav,
+		.usageState		= ResourceState::Undefined
+	};
+
+	return Make<ColorBuffer>(desc, descExt);
 }
 
 

@@ -22,7 +22,7 @@ namespace Luna::VK
 struct GraphicsDeviceDesc
 {
 	VkInstance instance{ VK_NULL_HANDLE };
-	IVkPhysicalDevice* physicalDevice{ nullptr };
+	CVkPhysicalDevice* physicalDevice{ nullptr };
 	VkDevice device{ VK_NULL_HANDLE };
 
 	struct {
@@ -54,7 +54,7 @@ struct GraphicsDeviceDesc
 #endif
 
 	constexpr GraphicsDeviceDesc& SetInstance(VkInstance value) noexcept { instance = value; return *this; }
-	constexpr GraphicsDeviceDesc& SetPhysicalDevice(IVkPhysicalDevice* value) noexcept { physicalDevice = value; return *this; }
+	constexpr GraphicsDeviceDesc& SetPhysicalDevice(CVkPhysicalDevice* value) noexcept { physicalDevice = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetDevice(VkDevice value) noexcept { device = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetGraphicsQueueIndex(int32_t value) noexcept { queueFamilyIndices.graphics = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetComputeQueueIndex(int32_t value) noexcept { queueFamilyIndices.compute = value; return *this; }
@@ -72,16 +72,62 @@ struct GraphicsDeviceDesc
 };
 
 
+struct ImageViewDesc
+{
+	CVkImage* image{ nullptr };
+	std::string name;
+	ResourceType resourceType{ ResourceType::Unknown };
+	GpuImageUsage imageUsage{ GpuImageUsage::Unknown };
+	Format format{ Format::Unknown };
+	ImageAspect imageAspect{ 0 };
+	TextureSubresourceViewType viewType{ TextureSubresourceViewType::AllAspects };
+	uint32_t baseMipLevel{ 0 };
+	uint32_t mipCount{ 1 };
+	uint32_t baseArraySlice{ 0 };
+	uint32_t arraySize{ 1 };
+
+	constexpr ImageViewDesc& SetImage(CVkImage* value) noexcept { image = value; return *this; }
+	ImageViewDesc& SetName(const std::string& value) { name = value; return *this; }
+	constexpr ImageViewDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
+	constexpr ImageViewDesc& SetImageUsage(GpuImageUsage value) noexcept { imageUsage = value; return *this; }
+	constexpr ImageViewDesc& SetFormat(Format value) noexcept { format = value; return *this; }
+	constexpr ImageViewDesc& SetImageAspect(ImageAspect value) noexcept { imageAspect = value; return *this; }
+	constexpr ImageViewDesc& SetViewType(TextureSubresourceViewType value) noexcept { viewType = value; return *this; }
+	constexpr ImageViewDesc& SetBaseMipLevel(uint32_t value) noexcept { baseMipLevel = value; return *this; }
+	constexpr ImageViewDesc& SetMipCount(uint32_t value) noexcept { mipCount = value; return *this; }
+	constexpr ImageViewDesc& SetBaseArraySlice(uint32_t value) noexcept { baseArraySlice = value; return *this; }
+	constexpr ImageViewDesc& SetArraySize(uint32_t value) noexcept { arraySize = value; return *this; }
+};
+
+
 class __declspec(uuid("402B61AE-0C51-46D3-B0EC-A2911B380181")) GraphicsDevice
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IGraphicsDevice>
 	, public NonCopyable
 {
+	//friend class CommandContext;
+	friend class DeviceManager;
+	friend class Queue;
+
 public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc);
 	virtual ~GraphicsDevice();
 
+	void CreateResources();
+
+private:
+	wil::com_ptr<CVkFence> CreateFence(bool bSignalled) const;
+	wil::com_ptr<CVkSemaphore> CreateSemaphore(VkSemaphoreType semaphoreType, uint64_t initialValue) const;
+	wil::com_ptr<CVkCommandPool> CreateCommandPool(CommandListType commandListType) const;
+	wil::com_ptr<CVmaAllocator> CreateVmaAllocator() const;
+	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& desc) const;
+
 private:
 	GraphicsDeviceDesc m_desc{};
+
+	wil::com_ptr<CVkDevice> m_vkDevice;
+
+	// VmaAllocator
+	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
 };
 
 } // namespace Luna::VK

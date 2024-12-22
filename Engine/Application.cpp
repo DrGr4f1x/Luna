@@ -299,15 +299,16 @@ bool Application::CreateAppWindow()
 
 void Application::CreateDeviceManager()
 {
-	auto desc = DeviceManagerDesc{}
-		.SetAppName(m_appInfo.name)
-		.SetGraphicsApi(m_appInfo.api)
-		.SetEnableValidation(m_appInfo.useValidation)
-		.SetEnableDebugMarkers(m_appInfo.useDebugMarkers)
-		.SetBackBufferWidth(m_appInfo.width)
-		.SetBackBufferHeight(m_appInfo.height)
-		.SetHwnd(m_hwnd)
-		.SetHinstance(m_hinst);
+	auto desc = DeviceManagerDesc{
+		.appName				= m_appInfo.name,
+		.graphicsApi			= m_appInfo.api,
+		.enableValidation		= m_appInfo.useValidation,
+		.enableDebugMarkers		= m_appInfo.useDebugMarkers,
+		.backBufferWidth		= m_appInfo.width,
+		.backBufferHeight		= m_appInfo.height,
+		.hwnd					= m_hwnd,
+		.hinstance				= m_hinst
+	};
 
 	m_deviceManager = Luna::CreateDeviceManager(desc);
 	m_deviceManager->CreateDeviceResources();
