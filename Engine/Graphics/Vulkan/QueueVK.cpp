@@ -71,7 +71,7 @@ uint64_t Queue::IncrementFence()
 	timelineInfo.signalSemaphoreValueCount = 1;
 	timelineInfo.pSignalSemaphoreValues = &m_nextFenceValue;
 
-	VkSemaphore timelineSemaphore = m_vkTimelineSemaphore->Get();
+	VkSemaphore timelineSemaphore = *m_vkTimelineSemaphore;
 
 	VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.pNext = &timelineInfo;
@@ -110,7 +110,7 @@ void Queue::WaitForFence(uint64_t fenceValue)
 
 	lock_guard<mutex> guard{ m_fenceMutex };
 
-	VkSemaphore timelineSemaphore = m_vkTimelineSemaphore->Get();
+	VkSemaphore timelineSemaphore = *m_vkTimelineSemaphore;
 
 	VkSemaphoreWaitInfo waitInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO };
 	waitInfo.semaphoreCount = 1;
@@ -128,7 +128,7 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList)
 {
 	lock_guard<mutex> guard{ m_fenceMutex };
 
-	AddSignalSemaphore(m_vkTimelineSemaphore->Get(), m_nextFenceValue);
+	AddSignalSemaphore(*m_vkTimelineSemaphore, m_nextFenceValue);
 
 	auto timelineInfo = VkTimelineSemaphoreSubmitInfo{
 		.sType						= VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO,

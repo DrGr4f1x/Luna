@@ -50,7 +50,7 @@ VkCommandBuffer CommandBufferPool::RequestCommandBuffer(uint64_t completedFenceV
 	if (commandBuffer == VK_NULL_HANDLE)
 	{
 		VkCommandBufferAllocateInfo allocInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
-		allocInfo.commandPool = m_vkCommandPool->Get();
+		allocInfo.commandPool = *m_vkCommandPool;
 		allocInfo.commandBufferCount = 1;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 
@@ -94,7 +94,7 @@ void CommandBufferPool::Destroy()
 
 	if (!m_commandBuffers.empty())
 	{
-		vkFreeCommandBuffers(m_vkCommandPool->GetDevice(), m_vkCommandPool->Get(), (uint32_t)m_commandBuffers.size(), m_commandBuffers.data());
+		vkFreeCommandBuffers(m_vkCommandPool->GetDevice(), *m_vkCommandPool, (uint32_t)m_commandBuffers.size(), m_commandBuffers.data());
 		m_commandBuffers.clear();
 	}
 

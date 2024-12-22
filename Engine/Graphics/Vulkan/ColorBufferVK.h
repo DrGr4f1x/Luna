@@ -79,8 +79,8 @@ public:
 	Color GetClearColor() const noexcept final { return m_clearColor; }
 
 	// IColorBufferVK implementation
-	VkImageView GetImageViewRTV() const noexcept final { return m_imageViewRtv->Get(); }
-	VkImageView GetImageViewSRV() const noexcept final { return m_imageViewSrv->Get(); }
+	VkImageView GetImageViewRTV() const noexcept final { return *m_imageViewRtv; }
+	VkImageView GetImageViewSRV() const noexcept final { return *m_imageViewSrv; }
 	VkDescriptorImageInfo GetSRVImageInfo() const noexcept final { return m_imageInfoSrv; }
 	VkDescriptorImageInfo GetUAVImageInfo() const noexcept final { return m_imageInfoUav; }
 

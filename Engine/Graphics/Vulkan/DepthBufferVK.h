@@ -86,9 +86,9 @@ public:
 	uint8_t GetClearStencil() const noexcept final { return m_clearStencil; }
 
 	// IDepthBufferVK implementation
-	VkImageView GetDepthStencilImageView() const noexcept final { return m_imageViewDepthStencil->Get(); }
-	VkImageView GetDepthOnlyImageView() const noexcept final { return m_imageViewDepthOnly->Get(); }
-	VkImageView GetStencilOnlyImageView() const noexcept final { return m_imageViewStencilOnly->Get(); }
+	VkImageView GetDepthStencilImageView() const noexcept final { return *m_imageViewDepthStencil; }
+	VkImageView GetDepthOnlyImageView() const noexcept final { return *m_imageViewDepthOnly; }
+	VkImageView GetStencilOnlyImageView() const noexcept final { return *m_imageViewStencilOnly; }
 	VkDescriptorImageInfo GetDepthImageInfo() const noexcept final { return m_imageInfoDepth; }
 	VkDescriptorImageInfo GetStencilImageInfo() const noexcept final { return m_imageInfoStencil; }
 

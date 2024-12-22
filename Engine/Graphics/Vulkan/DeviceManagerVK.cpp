@@ -212,13 +212,13 @@ void DeviceManager::CreateDeviceResources()
 		auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
 		assert(semaphore);
 		m_presentSemaphores.push_back(semaphore);
-		SetDebugName(m_vkDevice->Get(), semaphore->Get(), format("Present Semaphore {}", i));
+		SetDebugName(*m_vkDevice, semaphore->Get(), format("Present Semaphore {}", i));
 
 		// Create fence
 		auto fence = m_device->CreateFence(false);
 		assert(fence);
 		m_presentFences.push_back(fence);
-		SetDebugName(m_vkDevice->Get(), fence->Get(), format("Present Fence {}", i));
+		SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
 
 		// Present fence state
 		m_presentFenceState.push_back(0);
@@ -247,7 +247,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	const bool enableSwapChainSharing = queues.size() > 1;
 
 	VkSwapchainCreateInfoKHR createInfo{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	createInfo.surface = m_vkSurface->Get();
+	createInfo.surface = *m_vkSurface;
 	createInfo.minImageCount = m_desc.numSwapChainBuffers;
 	createInfo.imageFormat = m_swapChainFormat.format;
 	createInfo.imageColorSpace = m_swapChainFormat.colorSpace;
@@ -291,7 +291,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	}
 
 	VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateSwapchainKHR(m_vkDevice->Get(), &createInfo, nullptr, &swapchain)))
+	if (VK_FAILED(vkCreateSwapchainKHR(*m_vkDevice, &createInfo, nullptr, &swapchain)))
 	{
 		LogError(LogVulkan) << "Failed to create Vulkan swapchain.  Error code: " << res << endl;
 		return;
@@ -300,14 +300,14 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 	// Get swapchain images
 	uint32_t imageCount{ 0 };
-	if (VK_FAILED(vkGetSwapchainImagesKHR(m_vkDevice->Get(), m_vkSwapChain->Get(), &imageCount, nullptr)))
+	if (VK_FAILED(vkGetSwapchainImagesKHR(*m_vkDevice, *m_vkSwapChain, &imageCount, nullptr)))
 	{
 		LogError(LogVulkan) << "Failed to get swapchain image count.  Error code: " << res << endl;
 		return;
 	}
 
 	vector<VkImage> images{ imageCount };
-	if (VK_FAILED(vkGetSwapchainImagesKHR(m_vkDevice->Get(), m_vkSwapChain->Get(), &imageCount, images.data())))
+	if (VK_FAILED(vkGetSwapchainImagesKHR(*m_vkDevice, *m_vkSwapChain, &imageCount, images.data())))
 	{
 		LogError(LogVulkan) << "Failed to get swapchain images.  Error code: " << res << endl;
 		return;
@@ -370,7 +370,7 @@ void DeviceManager::InstallDebugMessenger()
 	createInfo.pfnUserCallback = DebugMessageCallback;
 
 	VkDebugUtilsMessengerEXT messenger{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateDebugUtilsMessengerEXT(m_vkInstance->Get(), &createInfo, nullptr, &messenger)))
+	if (VK_FAILED(vkCreateDebugUtilsMessengerEXT(*m_vkInstance, &createInfo, nullptr, &messenger)))
 	{
 		LogWarning(LogVulkan) << "Failed to create Vulkan debug messenger.  Error Code: " << res << endl;
 		return;
@@ -387,7 +387,7 @@ void DeviceManager::CreateSurface()
 	surfaceCreateInfo.hwnd = m_desc.hwnd;
 
 	VkSurfaceKHR vkSurface{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateWin32SurfaceKHR(m_vkInstance->Get(), &surfaceCreateInfo, nullptr, &vkSurface)))
+	if (VK_FAILED(vkCreateWin32SurfaceKHR(*m_vkInstance, &surfaceCreateInfo, nullptr, &vkSurface)))
 	{
 		LogError(LogVulkan) << "Failed to create Win32 surface.  Error code: " << res << endl;
 		return;
@@ -492,22 +492,22 @@ void DeviceManager::SelectPhysicalDevice()
 	LogInfo(LogVulkan) << "Selected physical device " << chosenAdapterIdx << endl;
 
 	// TODO
-	m_caps.ReadCaps(m_vkPhysicalDevice->Get());
+	m_caps.ReadCaps(*m_vkPhysicalDevice);
 	//if (g_graphicsDeviceOptions.logDeviceFeatures)
 	if (false)
 	{
 		m_caps.LogCaps();
 	}
 
-	m_extensionManager.InitializeDevice(m_vkPhysicalDevice->Get());
+	m_extensionManager.InitializeDevice(*m_vkPhysicalDevice);
 
 	// Get available queue family properties
 	uint32_t queueCount{ 0 };
-	vkGetPhysicalDeviceQueueFamilyProperties(m_vkPhysicalDevice->Get(), &queueCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, nullptr);
 	assert(queueCount >= 1);
 
 	m_queueFamilyProperties.resize(queueCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(m_vkPhysicalDevice->Get(), &queueCount, m_queueFamilyProperties.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, m_queueFamilyProperties.data());
 
 	GetQueueFamilyIndices();
 }
@@ -591,7 +591,7 @@ void DeviceManager::CreateDevice()
 	createInfo.pNext = m_caps.GetPhysicalDeviceFeatures2();
 
 	VkDevice device{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateDevice(m_vkPhysicalDevice->Get(), &createInfo, nullptr, &device)))
+	if (VK_FAILED(vkCreateDevice(*m_vkPhysicalDevice, &createInfo, nullptr, &device)))
 	{
 		LogError(LogVulkan) << "Failed to create Vulkan device.  Error code: " << res << endl;
 	}
@@ -602,7 +602,7 @@ void DeviceManager::CreateDevice()
 
 	// Create Luna GraphicsDevice
 	auto deviceDesc = GraphicsDeviceDesc{
-		.instance				= m_vkInstance->Get(),
+		.instance				= *m_vkInstance,
 		.physicalDevice			= m_vkPhysicalDevice.get(),
 		.device					= device,
 		.queueFamilyIndices		= { 
@@ -614,7 +614,7 @@ void DeviceManager::CreateDevice()
 		.backBufferHeight		= m_desc.backBufferHeight,
 		.numSwapChainBuffers	= m_desc.numSwapChainBuffers,
 		.swapChainFormat		= m_desc.swapChainFormat,
-		.surface				= m_vkSurface->Get(),
+		.surface				= *m_vkSurface,
 		.enableVSync			= m_desc.enableVSync,
 		.maxFramesInFlight		= m_desc.maxFramesInFlight,
 		.enableValidation		= m_desc.enableValidation,
@@ -630,7 +630,7 @@ void DeviceManager::CreateDevice()
 void DeviceManager::CreateQueue(QueueType queueType)
 {
 	VkQueue vkQueue{ VK_NULL_HANDLE };
-	vkGetDeviceQueue(m_vkDevice->Get(), m_queueFamilyIndices.graphics, 0, &vkQueue);
+	vkGetDeviceQueue(*m_vkDevice, m_queueFamilyIndices.graphics, 0, &vkQueue);
 	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_device.get(), vkQueue, queueType);
 }
 
@@ -652,7 +652,7 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 	};
 
 	auto image = Create<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
-	SetDebugName(m_vkDevice->Get(), image->Get(), name);
+	SetDebugName(*m_vkDevice, image->Get(), name);
 
 	// RTV view
 	auto imageViewDesc = ImageViewDesc{
@@ -678,8 +678,8 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 	auto imageViewSrv = m_device->CreateImageView(imageViewDesc);
 
 	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, imageViewSrv->Get(), GetImageLayout(ResourceState::ShaderResource)};
-	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, imageViewSrv->Get(), GetImageLayout(ResourceState::UnorderedAccess)};
+	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource)};
+	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess)};
 
 	auto descExt = ColorBufferDescExt{
 		.image			= image.get(),
@@ -701,7 +701,7 @@ vector<pair<AdapterInfo, VkPhysicalDevice>> DeviceManager::EnumeratePhysicalDevi
 	uint32_t gpuCount{ 0 };
 
 	// Get number of available physical devices
-	if (VK_FAILED(vkEnumeratePhysicalDevices(m_vkInstance->Get(), &gpuCount, nullptr)))
+	if (VK_FAILED(vkEnumeratePhysicalDevices(*m_vkInstance, &gpuCount, nullptr)))
 	{
 		LogError(LogVulkan) << "Failed to get physical device count.  Error code: " << res << endl;
 		return adapters;
@@ -709,7 +709,7 @@ vector<pair<AdapterInfo, VkPhysicalDevice>> DeviceManager::EnumeratePhysicalDevi
 
 	// Enumerate physical devices
 	vector<VkPhysicalDevice> physicalDevices(gpuCount);
-	if (VK_FAILED(vkEnumeratePhysicalDevices(m_vkInstance->Get(), &gpuCount, physicalDevices.data())))
+	if (VK_FAILED(vkEnumeratePhysicalDevices(*m_vkInstance, &gpuCount, physicalDevices.data())))
 	{
 		LogError(LogVulkan) << "Failed to enumerate physical devices.  Error code: " << res << endl;
 		return adapters;
@@ -771,7 +771,7 @@ int32_t DeviceManager::GetQueueFamilyIndex(VkQueueFlags queueFlags)
 		{
 			if ((properties.queueFlags & queueFlags) && ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
 			{
-				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(m_vkPhysicalDevice->Get(), index))
+				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(*m_vkPhysicalDevice, index))
 				{
 					m_queueFamilyIndices.present = index;
 				}
@@ -791,7 +791,7 @@ int32_t DeviceManager::GetQueueFamilyIndex(VkQueueFlags queueFlags)
 		{
 			if ((properties.queueFlags & queueFlags) && ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((properties.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
 			{
-				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(m_vkPhysicalDevice->Get(), index))
+				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(*m_vkPhysicalDevice, index))
 				{
 					m_queueFamilyIndices.present = index;
 				}
@@ -808,7 +808,7 @@ int32_t DeviceManager::GetQueueFamilyIndex(VkQueueFlags queueFlags)
 	{
 		if (properties.queueFlags & queueFlags)
 		{
-			if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(m_vkPhysicalDevice->Get(), index))
+			if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(*m_vkPhysicalDevice, index))
 			{
 				m_queueFamilyIndices.present = index;
 			}
