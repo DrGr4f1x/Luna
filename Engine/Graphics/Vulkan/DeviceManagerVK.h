@@ -63,6 +63,11 @@ private:
 	void GetQueueFamilyIndices();
 	int32_t GetQueueFamilyIndex(VkQueueFlags queueFlags);
 
+	Queue& GetQueue(QueueType queueType);
+	Queue& GetQueue(CommandListType commandListType);
+	void QueueWaitForSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value);
+	void QueueSignalSemaphore(QueueType queueType, VkSemaphore, uint64_t value);
+
 private:
 	DeviceManagerDesc m_desc{};
 	bool m_bIsDeveloperModeEnabled{ false };

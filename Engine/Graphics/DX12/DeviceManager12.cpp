@@ -129,21 +129,21 @@ void DeviceManager::BeginFrame()
 	// TODO Handle window resize here
 
 	// Schedule a Signal command in the queue.
-	//const UINT64 currentFenceValue = m_fenceValues[m_backBufferIndex];
-	//ThrowIfFailed(GetQueue(QueueType::Graphics).GetCommandQueue()->Signal(m_fence.get(), currentFenceValue));
+	/*const UINT64 currentFenceValue = m_fenceValues[m_backBufferIndex];
+	ThrowIfFailed(GetQueue(QueueType::Graphics).GetCommandQueue()->Signal(m_fence.get(), currentFenceValue));*/
 
 	m_backBufferIndex = m_dxSwapChain->GetCurrentBackBufferIndex();
 	
 	GetQueue(CommandListType::Direct).WaitForFence(m_fenceValues[m_backBufferIndex]);
 
-	// If the next frame is not ready to be rendered yet, wait until it is ready.
-	/*if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
-	{
-		ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_backBufferIndex], m_fenceEvent.Get()));
-		std::ignore = WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
-	}*/
+	//// If the next frame is not ready to be rendered yet, wait until it is ready.
+	//if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
+	//{
+	//	ThrowIfFailed(m_fence->SetEventOnCompletion(m_fenceValues[m_backBufferIndex], m_fenceEvent.Get()));
+	//	std::ignore = WaitForSingleObjectEx(m_fenceEvent.Get(), INFINITE, FALSE);
+	//}
 
-	// Set the fence value for the next frame.
+	//// Set the fence value for the next frame.
 	//m_fenceValues[m_backBufferIndex] = currentFenceValue + 1;
 }
 
@@ -158,7 +158,6 @@ void DeviceManager::Present()
 	m_fenceValues[m_backBufferIndex] = GetQueue(CommandListType::Direct).GetLastSubmittedFenceValue();
 
 	// Handle device removed
-	BeginFrame();
 }
 
 
@@ -364,12 +363,13 @@ ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 			wil::com_ptr<GraphicsContext> graphicsContext = Make<GraphicsContext>();
 			ret = graphicsContext.query<ICommandContext>();
 		}
-			break;
+		break;
 		case D3D12_COMMAND_LIST_TYPE_COMPUTE:
 		{
 			wil::com_ptr<ComputeContext> computeContext = Make<ComputeContext>();
 			ret = computeContext.query<ICommandContext>();
 		}
+		break;
 		} // switch
 
 		retPtr = ret.get();

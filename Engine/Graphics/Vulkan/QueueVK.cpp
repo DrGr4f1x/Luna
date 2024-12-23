@@ -146,7 +146,7 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList)
 	submitInfo.pWaitDstStageMask = m_waitDstStageMask.data();
 	submitInfo.signalSemaphoreCount = (uint32_t)m_signalSemaphores.size();
 	submitInfo.pSignalSemaphores = m_signalSemaphores.data();
-	submitInfo.commandBufferCount = 1;
+	submitInfo.commandBufferCount = cmdList ? 1 : 0;
 	submitInfo.pCommandBuffers = &cmdList;
 
 	auto res = vkQueueSubmit(m_vkQueue, 1, &submitInfo, VK_NULL_HANDLE);

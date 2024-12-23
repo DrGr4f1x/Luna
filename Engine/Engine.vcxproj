@@ -60,7 +60,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -133,7 +132,6 @@
     <ClInclude Include="LogSystem.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="StepTimer.h" />
-    <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\Math\Functions.inl" />

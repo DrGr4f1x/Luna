@@ -79,7 +79,7 @@ public:
 	ComputeContext();
 	virtual ~ComputeContext() = default;
 
-	// ICommandList implementation
+	// ICommandContext implementation
 	void SetId(const std::string& id) final { m_state.id = id; }
 	CommandListType GetType() const final { return m_state.type; }
 
@@ -113,7 +113,7 @@ public:
 	GraphicsContext();
 	virtual ~GraphicsContext() = default;
 
-	// ICommandList implementation
+	// ICommandContext implementation
 	void SetId(const std::string& id) final { m_state.id = id; }
 	CommandListType GetType() const final { return m_state.type; }
 

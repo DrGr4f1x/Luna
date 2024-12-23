@@ -14,7 +14,6 @@
 
 #include "FileSystem.h"
 #include "InputSystem.h"
-#include "Window.h"
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\CommandContext.h"
@@ -262,7 +261,7 @@ bool Application::Tick()
 
 	// Render Frame
 	{
-		//m_deviceManager->BeginFrame();
+		m_deviceManager->BeginFrame();
 		Render();
 		m_deviceManager->Present();
 	}
@@ -323,8 +322,6 @@ int Run(Application* pApplication)
 	{
 		return -1;
 	}
-
-	Window window{ pApplication };
 
 	pApplication->Run();
 

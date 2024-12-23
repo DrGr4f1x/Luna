@@ -118,11 +118,55 @@ DeviceManager::~DeviceManager()
 
 
 void DeviceManager::BeginFrame()
-{ }
+{ 
+	const auto& semaphore = m_presentSemaphores[m_presentSemaphoreIndex];
+	const auto& fence = m_presentFences[m_presentSemaphoreIndex];
+	m_presentFenceState[m_presentSemaphoreIndex] = 1;
+
+	if (VK_FAILED(vkAcquireNextImageKHR(*m_vkDevice, *m_vkSwapChain, numeric_limits<uint64_t>::max(), *semaphore, *fence, &m_swapChainIndex)))
+	{
+		LogFatal(LogVulkan) << "Failed to acquire next swapchain image in BeginFrame.  Error code: " << res << endl;
+		return;
+	}
+
+	QueueWaitForSemaphore(QueueType::Graphics, *semaphore, 0);
+}
 
 
 void DeviceManager::Present()
-{ }
+{ 
+	const auto& semaphore = m_presentSemaphores[m_presentSemaphoreIndex];
+	const auto& fence = m_presentFences[m_presentSemaphoreIndex];
+
+	QueueSignalSemaphore(QueueType::Graphics, *semaphore, 0);
+
+	// Need to submit a command list to kick Present...
+	/*auto context = BeginCommandContext("Present");
+	context->TransitionResource(GetCurrentSwapChainBuffer(), ResourceState::Present, true);
+	context->Finish();*/
+
+	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
+
+	VkSwapchainKHR swapchain = *m_vkSwapChain;
+	VkSemaphore waitSemaphore = *semaphore;
+
+	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &swapchain;
+	presentInfo.pImageIndices = &m_swapChainIndex;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &waitSemaphore;
+
+	vkQueuePresentKHR(GetQueue(QueueType::Graphics).GetVkQueue(), &presentInfo);
+
+	m_presentSemaphoreIndex = (m_presentSemaphoreIndex + 1) % m_presentSemaphores.size();
+
+	const auto& nextFence = m_presentFences[m_presentSemaphoreIndex];
+	VkFence vkFence = *nextFence;
+	vkWaitForFences(*m_vkDevice, 1, &vkFence, TRUE, numeric_limits<uint64_t>::max());
+	vkResetFences(*m_vkDevice, 1, &vkFence);
+	m_presentFenceState[m_presentSemaphoreIndex] = 0;
+}
 
 
 void DeviceManager::WaitForGpu()
@@ -678,8 +722,8 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 	auto imageViewSrv = m_device->CreateImageView(imageViewDesc);
 
 	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource)};
-	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess)};
+	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
+	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
 
 	auto descExt = ColorBufferDescExt{
 		.image			= image.get(),
@@ -820,6 +864,31 @@ int32_t DeviceManager::GetQueueFamilyIndex(VkQueueFlags queueFlags)
 
 	LogWarning(LogVulkan) << "Failed to find a matching queue family index for queue bit(s) " << VkQueueFlagsToString(queueFlags) << endl;
 	return -1;
+}
+
+
+Queue& DeviceManager::GetQueue(QueueType queueType)
+{
+	return *m_queues[(uint32_t)queueType];
+}
+
+
+Queue& DeviceManager::GetQueue(CommandListType commandListType)
+{
+	const auto queueType = CommandListTypeToQueueType(commandListType);
+	return GetQueue(queueType);
+}
+
+
+void DeviceManager::QueueWaitForSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value)
+{
+	m_queues[(uint32_t)queueType]->AddWaitSemaphore(semaphore, value);
+}
+
+
+void DeviceManager::QueueSignalSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value)
+{
+	m_queues[(uint32_t)queueType]->AddSignalSemaphore(semaphore, value);
 }
 
 

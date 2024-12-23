@@ -23,7 +23,6 @@
     <ClCompile Include="Core\Utility.cpp">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="Window.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp">
       <Filter>Graphics\DX12</Filter>
@@ -184,7 +183,6 @@
     <ClInclude Include="Core\VectorMath.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Window.h" />
     <ClInclude Include="Core\CoreEnums.h">
       <Filter>Core</Filter>
     </ClInclude>
