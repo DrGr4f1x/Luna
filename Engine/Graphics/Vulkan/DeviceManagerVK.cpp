@@ -141,7 +141,7 @@ void DeviceManager::Present()
 
 	// Kick the render complete semaphore
 	QueueSignalSemaphore(QueueType::Graphics, renderCompleteSemaphore, 0);
-	GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLasSubmittedFenceValue());
+	GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLastSubmittedFenceValue());
 	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
@@ -697,7 +697,7 @@ void DeviceManager::CreateDevice()
 	auto deviceDesc = GraphicsDeviceDesc{
 		.instance				= *m_vkInstance,
 		.physicalDevice			= m_vkPhysicalDevice.get(),
-		.device					= device,
+		.device					= m_vkDevice.get(),
 		.queueFamilyIndices		= { 
 			.graphics	= m_queueFamilyIndices.graphics,
 			.compute	= m_queueFamilyIndices.compute,

@@ -41,7 +41,7 @@ public:
 
 	uint64_t GetNextFenceValue() const noexcept { return m_nextFenceValue; }
 	uint64_t GetLastCompletedFenceValue() const noexcept { return m_lastCompletedFenceValue; }
-	uint64_t GetLasSubmittedFenceValue() const noexcept { return m_lastSubmittedFenceValue; }
+	uint64_t GetLastSubmittedFenceValue() const noexcept { return m_lastSubmittedFenceValue; }
 
 	uint64_t ExecuteCommandList(VkCommandBuffer cmdList);
 	VkCommandBuffer RequestCommandBuffer();

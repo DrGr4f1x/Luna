@@ -20,9 +20,8 @@ namespace Luna::VK
 
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
-{
-	m_vkDevice = Create<CVkDevice>(desc.physicalDevice, desc.device);
-}
+	, m_vkDevice{ desc.device }
+{}
 
 
 GraphicsDevice::~GraphicsDevice()

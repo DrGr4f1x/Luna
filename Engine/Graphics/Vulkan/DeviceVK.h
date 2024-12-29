@@ -23,7 +23,7 @@ struct GraphicsDeviceDesc
 {
 	VkInstance instance{ VK_NULL_HANDLE };
 	CVkPhysicalDevice* physicalDevice{ nullptr };
-	VkDevice device{ VK_NULL_HANDLE };
+	CVkDevice* device{ nullptr };
 
 	struct {
 		int32_t graphics{ -1 };
@@ -55,7 +55,7 @@ struct GraphicsDeviceDesc
 
 	constexpr GraphicsDeviceDesc& SetInstance(VkInstance value) noexcept { instance = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetPhysicalDevice(CVkPhysicalDevice* value) noexcept { physicalDevice = value; return *this; }
-	constexpr GraphicsDeviceDesc& SetDevice(VkDevice value) noexcept { device = value; return *this; }
+	constexpr GraphicsDeviceDesc& SetDevice(CVkDevice* value) noexcept { device = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetGraphicsQueueIndex(int32_t value) noexcept { queueFamilyIndices.graphics = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetComputeQueueIndex(int32_t value) noexcept { queueFamilyIndices.compute = value; return *this; }
 	constexpr GraphicsDeviceDesc& SetTransferQueueIndex(int32_t value) noexcept { queueFamilyIndices.transfer = value; return *this; }
