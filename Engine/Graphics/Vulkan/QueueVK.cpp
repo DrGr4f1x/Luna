@@ -125,7 +125,7 @@ void Queue::WaitForFence(uint64_t fenceValue)
 }
 
 
-uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList)
+uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence)
 {
 	lock_guard<mutex> guard{ m_fenceMutex };
 
@@ -150,7 +150,7 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList)
 	submitInfo.commandBufferCount = cmdList ? 1 : 0;
 	submitInfo.pCommandBuffers = &cmdList;
 
-	auto res = vkQueueSubmit(m_vkQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	auto res = vkQueueSubmit(m_vkQueue, 1, &submitInfo, fence);
 	assert(res == VK_SUCCESS);
 
 	ClearSemaphores();

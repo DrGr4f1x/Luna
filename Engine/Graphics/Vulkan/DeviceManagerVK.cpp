@@ -142,7 +142,7 @@ void DeviceManager::Present()
 	// Kick the render complete semaphore
 	QueueSignalSemaphore(QueueType::Graphics, renderCompleteSemaphore, 0);
 	GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLastSubmittedFenceValue());
-	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
+	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE, *m_presentFences[m_activeFrame]);
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
 

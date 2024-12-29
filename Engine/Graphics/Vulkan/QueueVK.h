@@ -43,7 +43,7 @@ public:
 	uint64_t GetLastCompletedFenceValue() const noexcept { return m_lastCompletedFenceValue; }
 	uint64_t GetLastSubmittedFenceValue() const noexcept { return m_lastSubmittedFenceValue; }
 
-	uint64_t ExecuteCommandList(VkCommandBuffer cmdList);
+	uint64_t ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence = VK_NULL_HANDLE);
 	VkCommandBuffer RequestCommandBuffer();
 	void DiscardCommandBuffer(uint64_t fenceValueForReset, VkCommandBuffer commandBuffer);
 
