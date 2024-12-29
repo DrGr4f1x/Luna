@@ -61,6 +61,18 @@ inline std::string D3DTypeToString(D3D12_DESCRIPTOR_HEAP_TYPE descriptorHeapType
 }
 
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+inline std::string D3DTypeToString(D3D12_EXECUTE_INDIRECT_TIER executeIndirectTier, bool bNumberOnly = false)
+{
+	switch (executeIndirectTier)
+	{
+	case D3D12_EXECUTE_INDIRECT_TIER_1_1:		return bNumberOnly ? "1.1" : "Tier 1.1"; break;
+	default:									return bNumberOnly ? "1.0" : "Tier 1.0"; break;
+	}
+}
+#endif
+
+
 inline std::string D3DTypeToString(D3D_FEATURE_LEVEL featureLevel, bool bNumberOnly = false)
 {
 	switch (featureLevel)
@@ -128,6 +140,18 @@ inline std::string D3DTypeToString(D3D12_RAYTRACING_TIER raytracingTier, bool bN
 	default: return s_notSupported; break;
 	}
 }
+
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 611)
+inline std::string D3DTypeToString(D3D12_RECREATE_AT_TIER recreateAtTier, bool bNumberOnly = false)
+{
+	if (recreateAtTier == D3D12_RECREATE_AT_TIER_1)
+	{
+		return bNumberOnly ? "1" : "Tier 1";
+	}
+	return s_notSupported;
+}
+#endif
 
 
 inline std::string D3DTypeToString(D3D12_RENDER_PASS_TIER renderPassTier, bool bNumberOnly = false)
@@ -201,7 +225,15 @@ inline std::string D3DTypeToString(D3D_SHADER_MODEL shaderModel, bool bNumberOnl
 	case D3D_SHADER_MODEL_6_4: return bNumberOnly ? "6.4" : "D3D_SHADER_MODEL_6_4"; break;
 	case D3D_SHADER_MODEL_6_5: return bNumberOnly ? "6.5" : "D3D_SHADER_MODEL_6_5"; break;
 	case D3D_SHADER_MODEL_6_6: return bNumberOnly ? "6.6" : "D3D_SHADER_MODEL_6_6"; break;
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
 	case D3D_SHADER_MODEL_6_7: return bNumberOnly ? "6.7" : "D3D_SHADER_MODEL_6_7"; break;
+#endif
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+	case D3D_SHADER_MODEL_6_8: return bNumberOnly ? "6.8" : "D3D_SHADER_MODEL_6_8"; break;
+#endif
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+	case D3D_SHADER_MODEL_6_9: return bNumberOnly ? "6.9" : "D3D_SHADER_MODEL_6_9"; break;
+#endif
 	default: return bNumberOnly ? "5.1" : "D3D_SHADER_MODEL_5_1"; break;
 	}
 }
@@ -270,6 +302,17 @@ inline std::string D3DTypeToString(D3D12_WAVE_MMA_TIER waveMmaTier, bool bNumber
 	return (waveMmaTier == D3D12_WAVE_MMA_TIER_1_0) ? (bNumberOnly ? "1.0" : "Tier 1.0") : s_notSupported;
 }
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+inline std::string D3DTypeToString(D3D12_WORK_GRAPHS_TIER workGraphsTier, bool bNumberOnly = false)
+{
+	if (workGraphsTier == D3D12_WORK_GRAPHS_TIER_1_0)
+	{
+		return bNumberOnly ? "1.0" : "Tier 1.0";
+	}
+	return s_notSupported;
+}
+#endif
+
 } // namespace Luna::DX12
 
 
@@ -289,11 +332,17 @@ DECLARE_STRING_FORMATTERS(D3D12_COMMAND_LIST_SUPPORT_FLAGS)
 DECLARE_STRING_FORMATTERS(D3D12_CONSERVATIVE_RASTERIZATION_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_CROSS_NODE_SHARING_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_DESCRIPTOR_HEAP_TYPE)
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+DECLARE_STRING_FORMATTERS(D3D12_EXECUTE_INDIRECT_TIER)
+#endif
 DECLARE_STRING_FORMATTERS(D3D_FEATURE_LEVEL)
 DECLARE_STRING_FORMATTERS(D3D12_MESH_SHADER_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_MESSAGE_CATEGORY);
 DECLARE_STRING_FORMATTERS(D3D12_PROGRAMMABLE_SAMPLE_POSITIONS_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_RAYTRACING_TIER)
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 611)
+DECLARE_STRING_FORMATTERS(D3D12_RECREATE_AT_TIER)
+#endif
 DECLARE_STRING_FORMATTERS(D3D12_RENDER_PASS_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_RESOURCE_BINDING_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_RESOURCE_HEAP_TIER)
@@ -306,5 +355,8 @@ DECLARE_STRING_FORMATTERS(D3D12_TRI_STATE)
 DECLARE_STRING_FORMATTERS(D3D12_VARIABLE_SHADING_RATE_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_VIEW_INSTANCING_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_WAVE_MMA_TIER)
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+DECLARE_STRING_FORMATTERS(D3D12_WORK_GRAPHS_TIER)
+#endif
 
 #undef DECLARE_STRING_FORMATTERS

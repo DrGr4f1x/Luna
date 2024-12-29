@@ -297,11 +297,11 @@ void DeviceManager::CreateWindowSizeDependentResources()
 			.Width			= newBackBufferWidth,
 			.Height			= newBackBufferHeight,
 			.Format			= dxgiFormat,
-			.SampleDesc	= { .Count = 1, .Quality = 0 },
+			.SampleDesc		= { .Count = 1, .Quality = 0 },
 			.BufferUsage	= DXGI_USAGE_RENDER_TARGET_OUTPUT,
 			.BufferCount	= backBufferCount,
 			.Scaling		= DXGI_SCALING_STRETCH,
-			.SwapEffect	= DXGI_SWAP_EFFECT_FLIP_DISCARD,
+			.SwapEffect		= DXGI_SWAP_EFFECT_FLIP_DISCARD,
 			.AlphaMode		= DXGI_ALPHA_MODE_IGNORE,
 			.Flags			= m_bIsTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0u
 		};

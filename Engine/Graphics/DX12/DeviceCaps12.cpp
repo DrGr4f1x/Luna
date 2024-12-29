@@ -36,9 +36,11 @@ void DeviceCaps::ReadBasicCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatur
 		device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &dx12Caps1, sizeof(dx12Caps1));
 		basicCaps.bSupportsWaveOps = dx12Caps1.WaveOps == TRUE;
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
 		D3D12_FEATURE_DATA_D3D12_OPTIONS9 dx12Caps9{};
 		device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS9, &dx12Caps9, sizeof(dx12Caps9));
 		basicCaps.bSupportsAtomic64 = dx12Caps9.AtomicInt64OnTypedResourceSupported == TRUE;
+#endif
 
 		m_basicCapsRead = true;
 	}
@@ -59,12 +61,49 @@ void DeviceCaps::ReadFullCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeature
 		m_validCaps[5] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps5, sizeof(caps5)));
 		m_validCaps[6] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &caps6, sizeof(caps6)));
 		m_validCaps[7] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &caps7, sizeof(caps7)));
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
 		m_validCaps[8] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS8, &caps8, sizeof(caps8)));
 		m_validCaps[9] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS9, &caps9, sizeof(caps9)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 4)
 		m_validCaps[10] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS10, &caps10, sizeof(caps10)));
 		m_validCaps[11] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS11, &caps11, sizeof(caps11)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 600)
 		m_validCaps[12] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &caps12, sizeof(caps12)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 602)
 		m_validCaps[13] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS13, &caps13, sizeof(caps13)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+		m_validCaps[14] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS14, &caps14, sizeof(caps14)));
+		m_validCaps[15] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS15, &caps15, sizeof(caps15)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 608)
+		m_validCaps[16] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &caps16, sizeof(caps16)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 609)
+		m_validCaps[17] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS17, &caps17, sizeof(caps17)));
+		m_validCaps[18] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &caps18, sizeof(caps18)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 610)
+		m_validCaps[19] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &caps19, sizeof(caps19)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 611)
+		m_validCaps[20] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS20, &caps20, sizeof(caps20)));
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+		m_validCaps[21] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &caps21, sizeof(caps21)));
+#endif
 
 		m_capsRead = true;
 	}
@@ -176,6 +215,7 @@ void DeviceCaps::LogCaps()
 		LogInfo(LogDirectX) << endl;
 	}
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
 	if (HasCaps(8))
 	{
 		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS8" << endl;
@@ -194,7 +234,9 @@ void DeviceCaps::LogCaps()
 		LogInfo(LogDirectX) << format(formatStr, "WaveMMATier:", caps9.WaveMMATier) << endl;
 		LogInfo(LogDirectX) << endl;
 	}
+#endif
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 4)
 	if (HasCaps(10))
 	{
 		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS10" << endl;
@@ -210,7 +252,9 @@ void DeviceCaps::LogCaps()
 		LogInfo(LogDirectX) << format(formatStr, "AtomicInt64OnDescriptorHeapResourceSupported:", (bool)caps11.AtomicInt64OnDescriptorHeapResourceSupported) << endl;
 		LogInfo(LogDirectX) << endl;
 	}
+#endif
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 600)
 	if (HasCaps(12))
 	{
 		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS12" << endl;
@@ -218,9 +262,10 @@ void DeviceCaps::LogCaps()
 		LogInfo(LogDirectX) << format(formatStr, "EnhancedBarriersSupported:", (bool)caps12.EnhancedBarriersSupported) << endl;
 		LogInfo(LogDirectX) << format(formatStr, "RelaxedFormatCastingSupported:", (bool)caps12.RelaxedFormatCastingSupported) << endl;
 		LogInfo(LogDirectX) << endl;
-
 	}
+#endif
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 602)
 	if (HasCaps(13))
 	{
 		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS13" << endl;
@@ -232,6 +277,93 @@ void DeviceCaps::LogCaps()
 		LogInfo(LogDirectX) << format(formatStr, "AlphaBlendFactorSupported:", (bool)caps13.AlphaBlendFactorSupported) << endl;
 		LogInfo(LogDirectX) << endl;
 	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+	if (HasCaps(14))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS14" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "AdvancedTextureOpsSupported:", (bool)caps14.AdvancedTextureOpsSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "WriteableMSAATexturesSupported:", (bool)caps14.WriteableMSAATexturesSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "IndependentFrontAndBackStencilRefMaskSupported:", (bool)caps14.IndependentFrontAndBackStencilRefMaskSupported) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+
+	if (HasCaps(15))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS15" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "TriangleFanSupported:", (bool)caps15.TriangleFanSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "DynamicIndexBufferStripCutSupported:", (bool)caps15.DynamicIndexBufferStripCutSupported) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 608)
+	if (HasCaps(16))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS16" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "DynamicDepthBiasSupported:", (bool)caps16.DynamicDepthBiasSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "GPUUploadHeapSupported:", (bool)caps16.GPUUploadHeapSupported) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 609)
+	if (HasCaps(17))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS17" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "NonNormalizedCoordinateSamplersSupported:", (bool)caps17.NonNormalizedCoordinateSamplersSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "ManualWriteTrackingResourceSupported:", (bool)caps17.ManualWriteTrackingResourceSupported) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+
+	if (HasCaps(18))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS18" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "RenderPassesValid:", (bool)caps18.RenderPassesValid) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 610)
+	if (HasCaps(19))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS19" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "MismatchingOutputDimensionsSupported:", (bool)caps19.MismatchingOutputDimensionsSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "SupportedSampleCountsWithNoOutputs:", caps19.SupportedSampleCountsWithNoOutputs) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "PointSamplingAddressesNeverRoundUp:", (bool)caps19.PointSamplingAddressesNeverRoundUp) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "RasterizerDesc2Supported:", (bool)caps19.RasterizerDesc2Supported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "NarrowQuadrilateralLinesSupported:", (bool)caps19.NarrowQuadrilateralLinesSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "AnisoFilterWithPointMipSupported:", (bool)caps19.AnisoFilterWithPointMipSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "MaxSamplerDescriptorHeapSize:", caps19.MaxSamplerDescriptorHeapSize) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "MaxSamplerDescriptorHeapSizeWithStaticSamplers:", caps19.MaxSamplerDescriptorHeapSizeWithStaticSamplers) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "MaxViewDescriptorHeapSize:", caps19.MaxViewDescriptorHeapSize) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "ComputeOnlyCustomHeapSupported:", (bool)caps19.ComputeOnlyCustomHeapSupported) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 611)
+	if (HasCaps(20))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS20" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "ComputeOnlyWriteWatchSupported:", (bool)caps20.ComputeOnlyWriteWatchSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "RecreateAtTier:", caps20.RecreateAtTier) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+	if (HasCaps(21))
+	{
+		LogInfo(LogDirectX) << "    D3D12_FEATURE_D3D12_OPTIONS21" << endl;
+		LogInfo(LogDirectX) << format(formatStr, "WorkGraphsTier:", caps21.WorkGraphsTier) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "ExecuteIndirectTier:", caps21.ExecuteIndirectTier) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "SampleCmpGradientAndBiasSupported:", (bool)caps21.SampleCmpGradientAndBiasSupported) << endl;
+		LogInfo(LogDirectX) << format(formatStr, "ExtendedCommandInfoSupported:", (bool)caps21.ExtendedCommandInfoSupported) << endl;
+		LogInfo(LogDirectX) << endl;
+	}
+#endif
 }
 
 
@@ -263,7 +395,15 @@ D3D_SHADER_MODEL DeviceCaps::GetHighestShaderModel(ID3D12Device* device)
 {
 	const D3D_SHADER_MODEL shaderModels[]
 	{
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+		D3D_SHADER_MODEL_6_9,
+#endif
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+		D3D_SHADER_MODEL_6_8,
+#endif
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
 		D3D_SHADER_MODEL_6_7,
+#endif
 		D3D_SHADER_MODEL_6_6,
 		D3D_SHADER_MODEL_6_5,
 		D3D_SHADER_MODEL_6_4,
