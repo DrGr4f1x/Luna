@@ -52,6 +52,7 @@ public:
 	void WaitForGpu() final;
 	void WaitForFence(uint64_t fenceValue);
 
+	void SetWindowSize(uint32_t width, uint32_t height) final;
 	void CreateDeviceResources() final;
 	void CreateWindowSizeDependentResources() final;
 
@@ -74,6 +75,8 @@ private:
 	void UpdateColorSpace();
 
 	wil::com_ptr<ColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex);
+	void ResizeSwapChain();
+	void ReleaseSwapChainBuffers();
 
 private:
 	DeviceManagerDesc m_desc{};

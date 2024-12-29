@@ -168,6 +168,18 @@ void DeviceManager::WaitForGpu()
 }
 
 
+void DeviceManager::SetWindowSize(uint32_t width, uint32_t height)
+{
+	if (m_desc.backBufferWidth != width || m_desc.backBufferHeight != height)
+	{
+		m_desc.backBufferWidth = width;
+		m_desc.backBufferHeight = height;
+
+		ResizeSwapChain();
+	}
+}
+
+
 void DeviceManager::CreateDeviceResources()
 {
 	// Initialize Volk
@@ -784,6 +796,18 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 	};
 
 	return Make<ColorBuffer>(desc, descExt);
+}
+
+
+void DeviceManager::ResizeSwapChain()
+{
+	WaitForGpu();
+
+	m_vkSwapChain.reset();
+	m_vkSwapChainImages.clear();
+	m_swapChainBuffers.clear();
+
+	CreateWindowSizeDependentResources();
 }
 
 

@@ -88,6 +88,8 @@ protected:
 	virtual void CreateDeviceDependentResources() {}
 	virtual void CreateWindowSizeDependentResources() {}
 
+	void UpdateWindowSize();
+
 protected:
 	ApplicationInfo m_appInfo;
 	std::string m_appNameWithApi;
@@ -97,6 +99,7 @@ protected:
 
 	bool m_bIsRunning{ false };
 	bool m_bIsVisible{ true };
+	bool m_bIsWindowFocused{ false };
 
 	// Frame timer
 	StepTimer m_timer;

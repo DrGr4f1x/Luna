@@ -182,7 +182,7 @@ void Application::Run()
 	{
 		glfwPollEvents();
 
-		// TODO: Update window size here
+		UpdateWindowSize();
 
 		m_bIsRunning = Tick();
 	}
@@ -196,6 +196,34 @@ void Application::Run()
 IColorBuffer* Application::GetColorBuffer() const
 {
 	return m_deviceManager->GetColorBuffer();
+}
+
+
+void Application::UpdateWindowSize()
+{
+	int width{ 0 };
+	int height{ 0 };
+	glfwGetWindowSize(m_pWindow, &width, &height);
+
+	if (width == 0 || height == 0)
+	{
+		m_bIsVisible = false;
+		return;
+	}
+
+	m_bIsVisible = true;
+	m_bIsWindowFocused = glfwGetWindowAttrib(m_pWindow, GLFW_FOCUSED) == 1;
+
+	if ((int)m_appInfo.width != width || (int)m_appInfo.height != height)
+	{
+		m_appInfo.width = (uint32_t)width;
+		m_appInfo.height = (uint32_t)height;
+		
+		if (m_deviceManager)
+		{
+			m_deviceManager->SetWindowSize(m_appInfo.width, m_appInfo.height);
+		}
+	}
 }
 
 
@@ -223,8 +251,8 @@ bool Application::Initialize()
 	CreateDeviceManager();
 	CreateDeviceDependentResources();
 
-	// TODO: Update window size here
-	// UpdateWindowSize();
+	UpdateWindowSize();
+
 	m_deviceManager->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 

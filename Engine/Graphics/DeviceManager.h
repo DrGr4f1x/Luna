@@ -93,6 +93,7 @@ public:
 
 	virtual void WaitForGpu() = 0;
 
+	virtual void SetWindowSize(uint32_t width, uint32_t height) = 0;
 	virtual void CreateDeviceResources() = 0;
 	virtual void CreateWindowSizeDependentResources() = 0;
 

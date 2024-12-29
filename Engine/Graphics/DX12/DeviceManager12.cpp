@@ -179,6 +179,18 @@ void DeviceManager::WaitForFence(uint64_t fenceValue)
 }
 
 
+void DeviceManager::SetWindowSize(uint32_t width, uint32_t height)
+{
+	if (m_desc.backBufferWidth != width || m_desc.backBufferHeight != height)
+	{
+		m_desc.backBufferWidth = width;
+		m_desc.backBufferHeight = height;
+
+		ResizeSwapChain();
+	}
+}
+
+
 void DeviceManager::CreateDeviceResources()
 {
 	m_dxgiRLOHelper.doReport = m_desc.enableValidation;
@@ -824,6 +836,22 @@ wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t
 
 	wil::com_ptr<ColorBuffer> handle12 = Make<ColorBuffer>(colorBufferDesc, colorBufferDescExt);
 	return handle12;
+}
+
+
+void DeviceManager::ResizeSwapChain()
+{
+	ReleaseSwapChainBuffers();
+
+	CreateWindowSizeDependentResources();
+}
+
+
+void DeviceManager::ReleaseSwapChainBuffers()
+{
+	WaitForGpu();
+
+	m_swapChainBuffers.clear();
 }
 
 
