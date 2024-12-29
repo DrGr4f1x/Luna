@@ -26,9 +26,6 @@ Queue::Queue(GraphicsDevice* device, VkQueue queue, QueueType queueType)
 	, m_lastCompletedFenceValue{ (uint64_t)queueType << 56 }
 	, m_lastSubmittedFenceValue{ (uint64_t)queueType << 56 }
 {
-	m_vkSemaphore = device->CreateSemaphoreA(VK_SEMAPHORE_TYPE_BINARY, 0);
-	assert(m_vkSemaphore);
-
 	m_vkTimelineSemaphore = device->CreateSemaphore(VK_SEMAPHORE_TYPE_TIMELINE, m_lastCompletedFenceValue);
 	assert(m_vkTimelineSemaphore);
 

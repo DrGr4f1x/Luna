@@ -57,8 +57,6 @@ private:
 	CommandBufferPool m_commandBufferPool;
 	std::mutex m_fenceMutex;
 
-	wil::com_ptr<CVkSemaphore> m_vkSemaphore;
-
 	wil::com_ptr<CVkSemaphore> m_vkTimelineSemaphore;
 	uint64_t m_nextFenceValue{ 0 };
 	uint64_t m_lastCompletedFenceValue{ 0 };
