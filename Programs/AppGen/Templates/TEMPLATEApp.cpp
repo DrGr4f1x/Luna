@@ -57,6 +57,7 @@ void TEMPLATEApp::Update()
 void TEMPLATEApp::Render()
 {
 	// Application main render loop
+	Application::Render();
 }
 
 

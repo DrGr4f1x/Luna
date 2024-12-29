@@ -20,6 +20,7 @@
 // Windows headers
 #include <windows.h>
 #include <wrl.h>
+#include <wil\com.h>
 #include <comdef.h>
 
 // Standard library headers
@@ -41,10 +42,10 @@
 #include "Core\CoreEnums.h"
 #include "Core\DWParam.h"
 #include "Core\Hash.h"
-#include "Core\IntrusivePtr.h"
-#include "Core\IObject.h"
+#include "Core\NativeObjectPtr.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "Core\RefCounted.h"
 #include "Core\Utility.h"
 #include "Core\VectorMath.h"
 #include "LogSystem.h"
