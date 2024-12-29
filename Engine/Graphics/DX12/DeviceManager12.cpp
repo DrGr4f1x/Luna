@@ -797,6 +797,7 @@ void DeviceManager::UpdateColorSpace()
 	}
 }
 
+
 wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
 {
 	wil::com_ptr<ID3D12Resource> displayPlane;

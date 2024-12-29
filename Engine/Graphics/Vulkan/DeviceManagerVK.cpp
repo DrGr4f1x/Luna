@@ -287,7 +287,7 @@ void DeviceManager::CreateDeviceResources()
 
 void DeviceManager::CreateWindowSizeDependentResources()
 { 
-	m_swapChainFormat = { FormatToVulkan(m_desc.swapChainFormat), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+	m_swapChainFormat = { FormatToVulkan(RemoveSrgb(m_desc.swapChainFormat)), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
 	VkExtent2D extent{
 		m_desc.backBufferWidth,
