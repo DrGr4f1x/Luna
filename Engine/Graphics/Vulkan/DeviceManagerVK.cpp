@@ -14,6 +14,7 @@
 
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\Vulkan\ColorBufferVK.h"
+#include "Graphics\Vulkan\CommandContextVK.h"
 #include "Graphics\Vulkan\DeviceVK.h"
 #include "Graphics\Vulkan\QueueVK.h"
 
@@ -119,58 +120,52 @@ DeviceManager::~DeviceManager()
 
 void DeviceManager::BeginFrame()
 { 
-	const auto& semaphore = m_presentSemaphores[m_presentSemaphoreIndex];
-	const auto& fence = m_presentFences[m_presentSemaphoreIndex];
-	m_presentFenceState[m_presentSemaphoreIndex] = 1;
+	VkFence waitFence = *m_presentFences[m_activeFrame];
+	vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(*m_vkDevice, 1, &waitFence);
 
-	if (VK_FAILED(vkAcquireNextImageKHR(*m_vkDevice, *m_vkSwapChain, numeric_limits<uint64_t>::max(), *semaphore, *fence, &m_swapChainIndex)))
+	VkSemaphore semaphore = *m_presentCompleteSemaphores[m_activeFrame];
+	if (VK_FAILED(vkAcquireNextImageKHR(*m_vkDevice, *m_vkSwapChain, numeric_limits<uint64_t>::max(), semaphore, VK_NULL_HANDLE, &m_swapChainIndex)))
 	{
 		LogFatal(LogVulkan) << "Failed to acquire next swapchain image in BeginFrame.  Error code: " << res << endl;
 		return;
 	}
 
-	QueueWaitForSemaphore(QueueType::Graphics, *semaphore, 0);
+	QueueWaitForSemaphore(QueueType::Graphics, semaphore, 0);
 }
 
 
 void DeviceManager::Present()
 { 
-	const auto& semaphore = m_presentSemaphores[m_presentSemaphoreIndex];
-	const auto& fence = m_presentFences[m_presentSemaphoreIndex];
+	VkSemaphore renderCompleteSemaphore = *m_renderCompleteSemaphores[m_activeFrame];
 
-	QueueSignalSemaphore(QueueType::Graphics, *semaphore, 0);
-
-	// Need to submit a command list to kick Present...
-	/*auto context = BeginCommandContext("Present");
-	context->TransitionResource(GetCurrentSwapChainBuffer(), ResourceState::Present, true);
-	context->Finish();*/
-
+	// Kick the render complete semaphore
+	QueueSignalSemaphore(QueueType::Graphics, renderCompleteSemaphore, 0);
+	GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLasSubmittedFenceValue());
 	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
-	VkSemaphore waitSemaphore = *semaphore;
 
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain;
 	presentInfo.pImageIndices = &m_swapChainIndex;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &waitSemaphore;
+	presentInfo.pWaitSemaphores = &renderCompleteSemaphore;
 
 	vkQueuePresentKHR(GetQueue(QueueType::Graphics).GetVkQueue(), &presentInfo);
 
-	m_presentSemaphoreIndex = (m_presentSemaphoreIndex + 1) % m_presentSemaphores.size();
-
-	const auto& nextFence = m_presentFences[m_presentSemaphoreIndex];
-	VkFence vkFence = *nextFence;
-	vkWaitForFences(*m_vkDevice, 1, &vkFence, TRUE, numeric_limits<uint64_t>::max());
-	vkResetFences(*m_vkDevice, 1, &vkFence);
-	m_presentFenceState[m_presentSemaphoreIndex] = 0;
+	m_activeFrame = (m_activeFrame + 1) % (m_desc.maxFramesInFlight + 1);
 }
 
 
 void DeviceManager::WaitForGpu()
-{ }
+{ 
+	for (auto& queue : m_queues)
+	{
+		queue->WaitForIdle();
+	}
+}
 
 
 void DeviceManager::CreateDeviceResources()
@@ -248,24 +243,32 @@ void DeviceManager::CreateDeviceResources()
 	CreateQueue(QueueType::Copy);
 
 	// Create the semaphores and fences for present
-	m_presentSemaphores.reserve(m_desc.maxFramesInFlight + 1);
+	m_presentCompleteSemaphores.reserve(m_desc.maxFramesInFlight + 1);
+	m_renderCompleteSemaphores.reserve(m_desc.maxFramesInFlight + 1);
 	m_presentFences.reserve(m_desc.maxFramesInFlight + 1);
 	for (uint32_t i = 0; i < m_desc.maxFramesInFlight + 1; ++i)
 	{
-		// Create semaphore
-		auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
-		assert(semaphore);
-		m_presentSemaphores.push_back(semaphore);
-		SetDebugName(*m_vkDevice, semaphore->Get(), format("Present Semaphore {}", i));
+		// Create present-complete semaphore
+		{
+			auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
+			assert(semaphore);
+			m_presentCompleteSemaphores.push_back(semaphore);
+			SetDebugName(*m_vkDevice, semaphore->Get(), format("Present Complete Semaphore {}", i));
+		}
+
+		// Create render-complete semaphore
+		{
+			auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
+			assert(semaphore);
+			m_renderCompleteSemaphores.push_back(semaphore);
+			SetDebugName(*m_vkDevice, semaphore->Get(), format("Render Complete Semaphore {}", i));
+		}
 
 		// Create fence
-		auto fence = m_device->CreateFence(false);
+		auto fence = m_device->CreateFence(true);
 		assert(fence);
 		m_presentFences.push_back(fence);
 		SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
-
-		// Present fence state
-		m_presentFenceState.push_back(0);
 	}
 }
 
@@ -372,13 +375,59 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 {
-	return nullptr;
+	lock_guard<mutex> lockGuard(m_contextAllocationMutex);
+
+	auto& availableContexts = m_availableContexts[(uint32_t)commandListType];
+
+	ICommandContext* retPtr{ nullptr };
+	wil::com_ptr<ICommandContext> ret;
+	if (availableContexts.empty())
+	{
+		switch (commandListType)
+		{
+		case CommandListType::Direct:
+		{
+			wil::com_ptr<GraphicsContext> graphicsContext = Make<GraphicsContext>();
+			ret = graphicsContext.query<ICommandContext>();
+		}
+		break;
+		case CommandListType::Compute:
+		{
+			wil::com_ptr<ComputeContext> computeContext = Make<ComputeContext>();
+			ret = computeContext.query<ICommandContext>();
+		}
+		break;
+		} // switch
+
+		retPtr = ret.get();
+		m_contextPool[(uint32_t)commandListType].emplace_back(ret);
+		retPtr->Initialize();
+	}
+	else
+	{
+		retPtr = availableContexts.front();
+		availableContexts.pop();
+		retPtr->Reset();
+	}
+
+	assert(retPtr != nullptr);
+	assert(retPtr->GetType() == commandListType);
+
+	return retPtr;
+}
+
+
+void DeviceManager::FreeContext(ICommandContext* usedContext)
+{
+	lock_guard<mutex> guard{ m_contextAllocationMutex };
+
+	m_availableContexts[(uint32_t)usedContext->GetType()].push(usedContext);
 }
 
 
 IColorBuffer* DeviceManager::GetColorBuffer() const
 {
-	return nullptr;
+	return m_swapChainBuffers[m_swapChainIndex].get();
 }
 
 

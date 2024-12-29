@@ -40,6 +40,8 @@ public:
 	}
 
 	uint64_t GetNextFenceValue() const noexcept { return m_nextFenceValue; }
+	uint64_t GetLastCompletedFenceValue() const noexcept { return m_lastCompletedFenceValue; }
+	uint64_t GetLasSubmittedFenceValue() const noexcept { return m_lastSubmittedFenceValue; }
 
 	uint64_t ExecuteCommandList(VkCommandBuffer cmdList);
 	VkCommandBuffer RequestCommandBuffer();
@@ -55,9 +57,12 @@ private:
 	CommandBufferPool m_commandBufferPool;
 	std::mutex m_fenceMutex;
 
+	wil::com_ptr<CVkSemaphore> m_vkSemaphore;
+
 	wil::com_ptr<CVkSemaphore> m_vkTimelineSemaphore;
 	uint64_t m_nextFenceValue{ 0 };
 	uint64_t m_lastCompletedFenceValue{ 0 };
+	uint64_t m_lastSubmittedFenceValue{ 0 };
 
 	std::vector<VkSemaphore> m_waitSemaphores;
 	std::vector<uint64_t> m_waitSemaphoreValues;

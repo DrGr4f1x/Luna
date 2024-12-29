@@ -37,6 +37,8 @@ public:
 	virtual void Reset() = 0;
 	virtual void Initialize() = 0;
 
+	virtual void Begin(const std::string& id) = 0;
+
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 

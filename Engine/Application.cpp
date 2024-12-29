@@ -131,15 +131,18 @@ void Application::Configure()
 
 void Application::Render()
 {
-	//auto& context = GraphicsContext::Begin("Frame");
+	//if (m_appInfo.api == GraphicsApi::D3D12)
+	{
+		auto& context = GraphicsContext::Begin("Frame");
 
-	//context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	//context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
+		context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+		context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
 
-	//// Rendering code goes here
+		// Rendering code goes here
 
-	//context.TransitionResource(GetColorBuffer(), ResourceState::Present);
-	//context.Finish();
+		context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+		context.Finish();
+	}
 }
 
 

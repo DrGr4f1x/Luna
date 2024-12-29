@@ -32,6 +32,8 @@ class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
 	, public NonCopyable
 {
+	friend struct ContextState;
+
 public:
 	DeviceManager(const DeviceManagerDesc& desc);
 	virtual ~DeviceManager();
@@ -45,6 +47,7 @@ public:
 	void CreateWindowSizeDependentResources() final;
 
 	ICommandContext* AllocateContext(CommandListType commandListType) final;
+	void FreeContext(ICommandContext* usedContext);
 
 	IColorBuffer* GetColorBuffer() const final;
 
@@ -110,10 +113,15 @@ private:
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
 
 	// Present synchronization
-	std::vector<wil::com_ptr<CVkSemaphore>> m_presentSemaphores;
+	std::vector<wil::com_ptr<CVkSemaphore>> m_presentCompleteSemaphores;
+	std::vector<wil::com_ptr<CVkSemaphore>> m_renderCompleteSemaphores;
 	std::vector<wil::com_ptr<CVkFence>> m_presentFences;
-	std::vector<uint32_t> m_presentFenceState;
-	uint32_t m_presentSemaphoreIndex{ 0 };
+	uint32_t m_activeFrame{ 0 };
+
+	// Command context handling
+	std::mutex m_contextAllocationMutex;
+	std::vector<wil::com_ptr<ICommandContext>> m_contextPool[4];
+	std::queue<ICommandContext*> m_availableContexts[4];
 };
 
 

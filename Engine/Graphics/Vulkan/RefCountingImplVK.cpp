@@ -31,10 +31,10 @@ void CVkPhysicalDevice::Destroy()
 
 void CVkDevice::Destroy()
 {
-	if (m_device)
+	/*if (m_device)
 	{
 		vkDeviceWaitIdle(m_device);
-	}
+	}*/
 	vkDestroyDevice(m_device, nullptr);
 	m_device = nullptr;
 }

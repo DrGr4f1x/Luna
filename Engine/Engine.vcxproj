@@ -42,6 +42,7 @@
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="Graphics\PixelBuffer.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
+    <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />

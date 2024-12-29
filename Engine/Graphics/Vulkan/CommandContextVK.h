@@ -11,17 +11,38 @@
 #pragma once
 
 #include "Graphics\CommandContext.h"
-#include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\Vulkan\VulkanCommon.h"
 
 using namespace Microsoft::WRL;
 
 
-namespace Luna::DX12
+namespace Luna::VK
 {
 
 // Forward declarations
 class ComputeContext;
 class GraphicsContext;
+
+
+struct TextureBarrier
+{
+	VkImage image{ VK_NULL_HANDLE };
+	VkFormat format{ VK_FORMAT_UNDEFINED };
+	VkImageAspectFlags imageAspect{ 0 };
+	ResourceState beforeState{ ResourceState::Undefined };
+	ResourceState afterState{ ResourceState::Undefined };
+	uint32_t numMips{ 1 };
+	uint32_t mipLevel{ 0 };
+	uint32_t arraySizeOrDepth{ 1 };
+	uint32_t arraySlice{ 0 };
+	bool bWholeTexture{ false };
+};
+
+
+struct BufferBarrier
+{
+	// TODO - Vulkan GPU buffer support
+};
 
 
 struct ContextState
@@ -43,8 +64,9 @@ private:
 	void Reset();
 	void Initialize();
 
+	void Begin(const std::string& id);
 	uint64_t Finish(bool bWaitForCompletion);
-	
+
 	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate);
 	void InsertUAVBarrier(IGpuImage* gpuImage, bool bFlushImmediate);
 	void FlushResourceBarriers();
@@ -54,22 +76,24 @@ private:
 
 	void BindDescriptorHeaps();
 
+	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
+
 private:
-	ID3D12GraphicsCommandList* m_commandList{ nullptr };
-	ID3D12CommandAllocator* m_currentAllocator{ nullptr };
+	VkCommandBuffer m_commandBuffer{ VK_NULL_HANDLE };
 
-	ID3D12RootSignature* m_curGraphicsRootSignature{ nullptr };
-	ID3D12RootSignature* m_curComputeRootSignature{ nullptr };
-	ID3D12PipelineState* m_curPipelineState{ nullptr };
+	bool m_bInvertedViewport{ true };
+	bool m_hasPendingDebugEvent{ false };
 
-	D3D12_RESOURCE_BARRIER m_resourceBarrierBuffer[16];
-	uint32_t m_numBarriersToFlush{ 0 };
-
-	bool m_bHasPendingDebugEvent{ false };
+	// Resource barriers
+	std::vector<TextureBarrier> m_textureBarriers;
+	std::vector<BufferBarrier> m_bufferBarriers;
+	std::vector<VkMemoryBarrier2> m_memoryBarriers;
+	std::vector<VkBufferMemoryBarrier2> m_bufferMemoryBarriers;
+	std::vector<VkImageMemoryBarrier2> m_imageMemoryBarriers;
 };
 
 
-class __declspec(uuid("54D5CC55-7AC6-4ED8-BA59-EC1264C94DE1")) ComputeContext
+class __declspec(uuid("EAA87286-6C5C-4C61-A18C-D45010F95E1E")) ComputeContext
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IComputeContext, ICommandContext>>
 	, NonCopyable
 {
@@ -90,14 +114,13 @@ public:
 
 	void Reset() final { m_state.Reset(); }
 	void Initialize() final { m_state.Initialize(); }
-	
-	void Begin(const std::string& id) final {}
 
+	void Begin(const std::string& id) final { m_state.Begin(id); }
 	uint64_t Finish(bool bWaitForCompletion = false) final;
 
-	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final 
-	{ 
-		m_state.TransitionResource(gpuImage, newState, bFlushImmediate); 
+	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final
+	{
+		m_state.TransitionResource(gpuImage, newState, bFlushImmediate);
 	}
 
 private:
@@ -105,7 +128,7 @@ private:
 };
 
 
-class __declspec(uuid("317216FB-BB09-4295-9157-6F4147C0C2B4")) GraphicsContext
+class __declspec(uuid("7038C5F8-60C1-48F5-881A-3FF19982AB4D")) GraphicsContext
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IGraphicsContext, IComputeContext, ICommandContext>>
 	, NonCopyable
 {
@@ -127,8 +150,7 @@ public:
 	void Reset() final { m_state.Reset(); }
 	void Initialize() final { m_state.Initialize(); }
 
-	void Begin(const std::string& id) final {}
-
+	void Begin(const std::string& id) final { m_state.Begin(id); }
 	uint64_t Finish(bool bWaitForCompletion = false) final;
 
 	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final
@@ -143,4 +165,4 @@ private:
 	ContextState m_state;
 };
 
-} // namespace Luna::DX12
+} // namespace Luna::VK

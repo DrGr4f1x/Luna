@@ -28,6 +28,8 @@ ICommandContext& CommandContext::Begin(const string id)
 	ICommandContext* newContext = deviceManager->AllocateContext(CommandListType::Direct);
 	newContext->SetId(id);
 
+	newContext->Begin(id);
+
 	return *newContext;
 }
 
@@ -39,6 +41,8 @@ IGraphicsContext& GraphicsContext::Begin(const string id)
 
 	ICommandContext* newContext = deviceManager->AllocateContext(CommandListType::Direct);
 	newContext->SetId(id);
+
+	newContext->Begin(id);
 
 	wil::com_ptr<IGraphicsContext> graphicsContext;
 	ThrowIfFailed(newContext->QueryInterface(IID_PPV_ARGS(&graphicsContext)));
@@ -54,6 +58,8 @@ IComputeContext& ComputeContext::Begin(const string id, bool bAsync)
 
 	ICommandContext* newContext = deviceManager->AllocateContext(bAsync ? CommandListType::Direct : CommandListType::Compute);
 	newContext->SetId(id);
+
+	newContext->Begin(id);
 
 	wil::com_ptr<IComputeContext> computeContext;
 	ThrowIfFailed(newContext->QueryInterface(IID_PPV_ARGS(&computeContext)));

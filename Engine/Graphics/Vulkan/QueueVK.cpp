@@ -24,7 +24,11 @@ Queue::Queue(GraphicsDevice* device, VkQueue queue, QueueType queueType)
 	, m_queueType{ queueType }
 	, m_nextFenceValue{ (uint64_t)queueType << 56 | 1 }
 	, m_lastCompletedFenceValue{ (uint64_t)queueType << 56 }
+	, m_lastSubmittedFenceValue{ (uint64_t)queueType << 56 }
 {
+	m_vkSemaphore = device->CreateSemaphoreA(VK_SEMAPHORE_TYPE_BINARY, 0);
+	assert(m_vkSemaphore);
+
 	m_vkTimelineSemaphore = device->CreateSemaphore(VK_SEMAPHORE_TYPE_TIMELINE, m_lastCompletedFenceValue);
 	assert(m_vkTimelineSemaphore);
 
@@ -154,7 +158,8 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList)
 
 	ClearSemaphores();
 
-	// Increment the fence value.  
+	// Increment the fence value.
+	m_lastSubmittedFenceValue = m_nextFenceValue;
 	return m_nextFenceValue++;
 }
 

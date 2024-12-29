@@ -111,6 +111,9 @@
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -311,6 +314,9 @@
     <ClInclude Include="Core\RefCounted.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\CommandContextVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -334,5 +340,8 @@
       <Filter>Core\Math</Filter>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>
