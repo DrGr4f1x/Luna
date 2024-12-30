@@ -47,7 +47,7 @@ void Queue::AddWaitSemaphore(VkSemaphore semaphore, uint64_t value)
 
 	m_waitSemaphores.push_back(semaphore);
 	m_waitSemaphoreValues.push_back(value);
-	m_waitDstStageMask.push_back(VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+	m_waitDstStageMask.push_back(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
 }
 
 
@@ -148,7 +148,7 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence)
 	submitInfo.signalSemaphoreCount = (uint32_t)m_signalSemaphores.size();
 	submitInfo.pSignalSemaphores = m_signalSemaphores.data();
 	submitInfo.commandBufferCount = cmdList ? 1 : 0;
-	submitInfo.pCommandBuffers = &cmdList;
+	submitInfo.pCommandBuffers = cmdList ? &cmdList : nullptr;
 
 	auto res = vkQueueSubmit(m_vkQueue, 1, &submitInfo, fence);
 	assert(res == VK_SUCCESS);

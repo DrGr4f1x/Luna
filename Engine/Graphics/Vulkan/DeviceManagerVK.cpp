@@ -53,9 +53,6 @@ VkBool32 DebugMessageCallback(
 	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData)
 {
-	using namespace Luna;
-	using namespace Luna::VK;
-
 	string prefix;
 
 	if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
@@ -120,9 +117,9 @@ DeviceManager::~DeviceManager()
 
 void DeviceManager::BeginFrame()
 { 
-	//VkFence waitFence = *m_presentFences[m_activeFrame];
-	//vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	//vkResetFences(*m_vkDevice, 1, &waitFence);
+	VkFence waitFence = *m_presentFences[m_activeFrame];
+	vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(*m_vkDevice, 1, &waitFence);
 
 	VkSemaphore semaphore = *m_presentCompleteSemaphores[m_presentCompleteSemaphoreIndex];
 	if (VK_FAILED(vkAcquireNextImageKHR(*m_vkDevice, *m_vkSwapChain, numeric_limits<uint64_t>::max(), semaphore, VK_NULL_HANDLE, &m_swapChainIndex)))
@@ -142,9 +139,15 @@ void DeviceManager::Present()
 	VkSemaphore renderCompleteSemaphore = *m_renderCompleteSemaphores[m_renderCompleteSemaphoreIndex];
 
 	// Kick the render complete semaphore
-	QueueSignalSemaphore(QueueType::Graphics, renderCompleteSemaphore, 0);
-	GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLastSubmittedFenceValue());
-	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
+	Queue& graphicsQueue = GetQueue(QueueType::Graphics);
+	graphicsQueue.AddSignalSemaphore(renderCompleteSemaphore, 0);
+	//graphicsQueue.WaitForFence(graphicsQueue.GetLastSubmittedFenceValue());
+	graphicsQueue.AddWaitSemaphore(graphicsQueue.GetTimelineSemaphore(), graphicsQueue.GetLastSubmittedFenceValue());
+	graphicsQueue.ExecuteCommandList(VK_NULL_HANDLE, *m_presentFences[m_activeFrame]);
+	//QueueSignalSemaphore(QueueType::Graphics, renderCompleteSemaphore, 0);
+	//QueueWaitSemaphore(QueueType::Graphics, GetQueue(QueueType::Graphics).GetTimelineSemaphore(), GetQueue(QueueType::Graphics).GetLastSubmittedFenceValue());
+	//GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLastSubmittedFenceValue());
+	//GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
 
@@ -155,9 +158,9 @@ void DeviceManager::Present()
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = &renderCompleteSemaphore;
 
-	vkQueuePresentKHR(GetQueue(QueueType::Graphics).GetVkQueue(), &presentInfo);
+	vkQueuePresentKHR(graphicsQueue.GetVkQueue(), &presentInfo);
 
-	m_activeFrame = (m_activeFrame + 1) % (m_desc.maxFramesInFlight + 1);
+	m_activeFrame = (m_activeFrame + 1) % m_presentFences.size();
 	m_renderCompleteSemaphoreIndex = (m_renderCompleteSemaphoreIndex + 1) % m_renderCompleteSemaphores.size();
 }
 
