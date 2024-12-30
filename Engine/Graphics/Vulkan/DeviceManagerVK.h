@@ -119,6 +119,8 @@ private:
 	std::vector<wil::com_ptr<CVkSemaphore>> m_renderCompleteSemaphores;
 	std::vector<wil::com_ptr<CVkFence>> m_presentFences;
 	uint32_t m_activeFrame{ 0 };
+	uint32_t m_presentCompleteSemaphoreIndex{ 0 };
+	uint32_t m_renderCompleteSemaphoreIndex{ 0 };
 
 	// Command context handling
 	std::mutex m_contextAllocationMutex;

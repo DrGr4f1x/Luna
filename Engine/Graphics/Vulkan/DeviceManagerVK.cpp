@@ -120,11 +120,11 @@ DeviceManager::~DeviceManager()
 
 void DeviceManager::BeginFrame()
 { 
-	VkFence waitFence = *m_presentFences[m_activeFrame];
-	vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	vkResetFences(*m_vkDevice, 1, &waitFence);
+	//VkFence waitFence = *m_presentFences[m_activeFrame];
+	//vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	//vkResetFences(*m_vkDevice, 1, &waitFence);
 
-	VkSemaphore semaphore = *m_presentCompleteSemaphores[m_activeFrame];
+	VkSemaphore semaphore = *m_presentCompleteSemaphores[m_presentCompleteSemaphoreIndex];
 	if (VK_FAILED(vkAcquireNextImageKHR(*m_vkDevice, *m_vkSwapChain, numeric_limits<uint64_t>::max(), semaphore, VK_NULL_HANDLE, &m_swapChainIndex)))
 	{
 		LogFatal(LogVulkan) << "Failed to acquire next swapchain image in BeginFrame.  Error code: " << res << endl;
@@ -132,17 +132,19 @@ void DeviceManager::BeginFrame()
 	}
 
 	QueueWaitForSemaphore(QueueType::Graphics, semaphore, 0);
+
+	m_presentCompleteSemaphoreIndex = (m_presentCompleteSemaphoreIndex + 1) % m_presentCompleteSemaphores.size();
 }
 
 
 void DeviceManager::Present()
 { 
-	VkSemaphore renderCompleteSemaphore = *m_renderCompleteSemaphores[m_activeFrame];
+	VkSemaphore renderCompleteSemaphore = *m_renderCompleteSemaphores[m_renderCompleteSemaphoreIndex];
 
 	// Kick the render complete semaphore
 	QueueSignalSemaphore(QueueType::Graphics, renderCompleteSemaphore, 0);
 	GetQueue(QueueType::Graphics).WaitForFence(GetQueue(QueueType::Graphics).GetLastSubmittedFenceValue());
-	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE, *m_presentFences[m_activeFrame]);
+	GetQueue(QueueType::Graphics).ExecuteCommandList(VK_NULL_HANDLE);
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
 
@@ -156,6 +158,7 @@ void DeviceManager::Present()
 	vkQueuePresentKHR(GetQueue(QueueType::Graphics).GetVkQueue(), &presentInfo);
 
 	m_activeFrame = (m_activeFrame + 1) % (m_desc.maxFramesInFlight + 1);
+	m_renderCompleteSemaphoreIndex = (m_renderCompleteSemaphoreIndex + 1) % m_renderCompleteSemaphores.size();
 }
 
 
