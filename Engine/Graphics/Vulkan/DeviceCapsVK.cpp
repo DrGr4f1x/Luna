@@ -441,6 +441,24 @@ void DeviceCaps::LogCaps()
 	LogInfo(LogVulkan) << format(formatStr4, "subgroupBroadcastDynamicId:", (bool)features12.subgroupBroadcastDynamicId) << endl;
 	LogInfo(LogVulkan) << endl;
 
+	// Vulkan 1.3 features
+	LogInfo(LogVulkan) << "    Vulkan 1.3 features" << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "robustImageAccess:", (bool)features13.robustImageAccess) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "inlineUniformBlock:", (bool)features13.inlineUniformBlock) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "descriptorBindingInlineUniformBlockUpdateAfterBind:", (bool)features13.descriptorBindingInlineUniformBlockUpdateAfterBind) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "pipelineCreationCacheControl:", (bool)features13.pipelineCreationCacheControl) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "privateData:", (bool)features13.privateData) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "shaderDemoteToHelperInvocation:", (bool)features13.shaderDemoteToHelperInvocation) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "shaderTerminateInvocation:", (bool)features13.shaderTerminateInvocation) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "subgroupSizeControl:", (bool)features13.subgroupSizeControl) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "computeFullSubgroups:", (bool)features13.computeFullSubgroups) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "synchronization2:", (bool)features13.synchronization2) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "textureCompressionASTC_HDR:", (bool)features13.textureCompressionASTC_HDR) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "shaderZeroInitializeWorkgroupMemory:", (bool)features13.shaderZeroInitializeWorkgroupMemory) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "dynamicRendering:", (bool)features13.dynamicRendering) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "shaderIntegerDotProduct:", (bool)features13.shaderIntegerDotProduct) << endl;
+	LogInfo(LogVulkan) << format(formatStr4, "maintenance4:", (bool)features13.maintenance4) << endl;
+	LogInfo(LogVulkan) << endl;
 }
 
 } // namespace Luna::VK
