@@ -600,7 +600,7 @@ void DeviceManager::SelectPhysicalDevice()
 	// TODO
 	m_caps.ReadCaps(*m_vkPhysicalDevice);
 	//if (g_graphicsDeviceOptions.logDeviceFeatures)
-	if (false)
+	if (true)
 	{
 		m_caps.LogCaps();
 	}
