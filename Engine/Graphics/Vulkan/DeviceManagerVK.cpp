@@ -381,7 +381,9 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	m_swapChainBuffers.reserve(imageCount);
 	for (uint32_t i = 0; i < imageCount; ++i)
 	{
-		m_swapChainBuffers.push_back(CreateColorBufferFromSwapChain(i));
+		ColorBuffer buffer;
+		buffer.InitializeFromSwapchain(i);
+		m_swapChainBuffers.push_back(buffer);
 	}
 }
 
@@ -438,9 +440,69 @@ void DeviceManager::FreeContext(ICommandContext* usedContext)
 }
 
 
-IColorBuffer* DeviceManager::GetColorBuffer() const
+wil::com_ptr<IPlatformData> DeviceManager::CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex)
 {
-	return m_swapChainBuffers[m_swapChainIndex].get();
+	const string name = format("Primary Swapchain Image {}", imageIndex);
+
+	// Swapchain image
+	desc = ColorBufferDesc{
+		.name = name,
+		.resourceType = ResourceType::Texture2D,
+		.width = m_desc.backBufferWidth,
+		.height = m_desc.backBufferHeight,
+		.arraySizeOrDepth = 1,
+		.numSamples = 1,
+		.format = m_desc.swapChainFormat
+	};
+
+	auto image = Create<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
+	SetDebugName(*m_vkDevice, image->Get(), name);
+
+	// RTV view
+	auto imageViewDesc = ImageViewDesc{
+		.image = image.get(),
+		.name = format("Primary Swapchain {} RTV Image View", imageIndex),
+		.resourceType = ResourceType::Texture2D,
+		.imageUsage = GpuImageUsage::RenderTarget,
+		.format = m_desc.swapChainFormat,
+		.imageAspect = ImageAspect::Color,
+		.baseMipLevel = 0,
+		.mipCount = 1,
+		.baseArraySlice = 0,
+		.arraySize = 1
+	};
+
+	auto imageViewRtv = m_device->CreateImageView(imageViewDesc);
+
+	// SRV view
+	imageViewDesc
+		.SetImageUsage(GpuImageUsage::ShaderResource)
+		.SetName(format("Primary SwapChain {} SRV Image View", imageIndex));
+
+	auto imageViewSrv = m_device->CreateImageView(imageViewDesc);
+
+	// Descriptors
+	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
+	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
+
+	initialState = ResourceState::Undefined;
+
+	auto descExt = ColorBufferDescExt{
+		.image = image.get(),
+		.imageViewRtv = imageViewRtv.get(),
+		.imageViewSrv = imageViewSrv.get(),
+		.imageInfoSrv = imageInfoSrv,
+		.imageInfoUav = imageInfoUav,
+		.usageState = initialState
+	};
+
+	return Make<ColorBufferData>(descExt);
+}
+
+
+ColorBuffer& DeviceManager::GetColorBuffer()
+{
+	return m_swapChainBuffers[m_swapChainIndex];
 }
 
 
@@ -738,65 +800,6 @@ void DeviceManager::CreateQueue(QueueType queueType)
 	VkQueue vkQueue{ VK_NULL_HANDLE };
 	vkGetDeviceQueue(*m_vkDevice, m_queueFamilyIndices.graphics, 0, &vkQueue);
 	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_device.get(), vkQueue, queueType);
-}
-
-
-
-wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
-{
-	const string name = format("Primary Swapchain Image {}", imageIndex);
-
-	// Swapchain image
-	auto desc = ColorBufferDesc{
-		.name				= name,
-		.resourceType		= ResourceType::Texture2D,
-		.width				= m_desc.backBufferWidth,
-		.height				= m_desc.backBufferHeight,
-		.arraySizeOrDepth	= 1,
-		.numSamples			= 1,
-		.format				= m_desc.swapChainFormat
-	};
-
-	auto image = Create<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
-	SetDebugName(*m_vkDevice, image->Get(), name);
-
-	// RTV view
-	auto imageViewDesc = ImageViewDesc{
-		.image				= image.get(),
-		.name				= format("Primary Swapchain {} RTV Image View", imageIndex),
-		.resourceType		= ResourceType::Texture2D,
-		.imageUsage			= GpuImageUsage::RenderTarget,
-		.format				= m_desc.swapChainFormat,
-		.imageAspect		= ImageAspect::Color,
-		.baseMipLevel		= 0,
-		.mipCount			= 1,
-		.baseArraySlice		= 0,
-		.arraySize			= 1
-	};
-
-	auto imageViewRtv = m_device->CreateImageView(imageViewDesc);
-
-	// SRV view
-	imageViewDesc
-		.SetImageUsage(GpuImageUsage::ShaderResource)
-		.SetName(format("Primary SwapChain {} SRV Image View", imageIndex));
-
-	auto imageViewSrv = m_device->CreateImageView(imageViewDesc);
-
-	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
-	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
-
-	auto descExt = ColorBufferDescExt{
-		.image			= image.get(),
-		.imageViewRtv	= imageViewRtv.get(),
-		.imageViewSrv	= imageViewSrv.get(),
-		.imageInfoSrv	= imageInfoSrv,
-		.imageInfoUav	= imageInfoUav,
-		.usageState		= ResourceState::Undefined
-	};
-
-	return Make<ColorBuffer>(desc, descExt);
 }
 
 

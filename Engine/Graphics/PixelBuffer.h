@@ -11,6 +11,8 @@
 #pragma once
 
 #include "Graphics\GpuImage.h"
+#include "Graphics\GpuResource.h"
+
 
 namespace Luna
 {
@@ -34,6 +36,34 @@ public:
 	virtual Format GetFormat() const noexcept = 0;
 	virtual uint32_t GetPlaneCount() const noexcept = 0;
 	virtual TextureDimension GetDimension() const noexcept = 0;
+};
+
+
+class PixelBuffer : public GpuResource
+{
+public:
+	PixelBuffer() noexcept;
+
+	uint64_t GetWidth() const noexcept { return m_width; }
+	uint32_t GetHeight() const noexcept { return m_height; }
+	uint32_t GetDepth() const noexcept;
+	uint32_t GetArraySize() const noexcept;
+	uint32_t GetNumMips() const noexcept { return m_numMips; }
+	uint32_t GetNumSamples() const noexcept { return m_numSamples; }
+	uint32_t GetPlaneCount() const noexcept { return m_planeCount; }
+	Format GetFormat() const noexcept { return m_format; }
+	TextureDimension GetDimension() const noexcept;
+
+	void Reset() noexcept;
+
+protected:
+	uint64_t m_width{ 0 };
+	uint32_t m_height{ 0 };
+	uint32_t m_arraySizeOrDepth{ 0 };
+	uint32_t m_numMips{ 1 };
+	uint32_t m_numSamples{ 1 };
+	uint32_t m_planeCount{ 1 };
+	Format m_format;
 };
 
 } // namespace Luna

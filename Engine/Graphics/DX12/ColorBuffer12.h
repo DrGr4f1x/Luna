@@ -51,77 +51,37 @@ struct ColorBufferDescExt
 };
 
 
-class __declspec(uuid("9F27F827-B4AA-44CA-84AE-CBE99F8F2EF4")) IColorBuffer12 : public IColorBuffer
+class __declspec(uuid("3618277B-EA60-4D37-9904-B4256F66A36A")) IColorBufferData : public IPlatformData
 {
 public:
-	virtual ~IColorBuffer12() = default;
-
+	virtual ID3D12Resource* GetResource() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept = 0;
 };
 
 
-class __declspec(uuid("FA13EEEA-C815-4D64-B0B6-7173D5C6D1E0")) ColorBuffer
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBuffer12, IColorBuffer, IPixelBuffer, IGpuImage>>
-	, NonCopyable
+class __declspec(uuid("BBBCFA80-B6CE-484F-B710-AF72B424B26E")) ColorBufferData
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IPlatformData>>
 {
 	friend class GraphicsDevice;
 
 public:
-	ColorBuffer(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt);
-
-	// IGpuImage implementation
-	ResourceState GetUsageState() const noexcept final { return m_usageState; }
-	void SetUsageState(ResourceState usageState) noexcept final { m_usageState = usageState; }
-	ResourceState GetTransitioningState() const noexcept final { return m_transitioningState; }
-	void SetTransitioningState(ResourceState transitioningState) noexcept final { m_transitioningState = transitioningState; }
-	ResourceType GetResourceType() const noexcept final { return m_resourceType; }
-	NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept final;
-
-	// IPixelBuffer implementation
-	uint64_t GetWidth() const noexcept override { return m_width; }
-	uint32_t GetHeight() const noexcept override { return m_height; }
-	uint32_t GetDepth() const noexcept override { return m_resourceType == ResourceType::Texture3D ? m_arraySizeOrDepth : 1; }
-	uint32_t GetArraySize() const noexcept override { return m_resourceType == ResourceType::Texture3D ? 1 : m_arraySizeOrDepth; }
-	uint32_t GetNumMips() const noexcept override { return m_numMips; }
-	uint32_t GetNumSamples() const noexcept override { return m_numSamples; }
-	Format GetFormat() const noexcept override { return m_format; }
-	uint32_t GetPlaneCount() const noexcept override { return m_planeCount; }
-	TextureDimension GetDimension() const noexcept override { return ResourceTypeToTextureDimension(m_resourceType); }
-
-	// IColorBuffer implementation
-	Color GetClearColor() const noexcept { return m_clearColor; }
-
-	// IColorBuffer12 implementation
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept final { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept final { return m_rtvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept final { return m_uavHandles[uavIndex]; }
+	explicit ColorBufferData(const ColorBufferDescExt& descExt);
+	
+	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept { return m_srvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept { return m_rtvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept { return m_uavHandles[uavIndex]; }
 
 private:
-	std::string m_name;
-
 	wil::com_ptr<ID3D12Resource> m_resource;
-	ResourceState m_usageState{ ResourceState::Undefined };
-	ResourceState m_transitioningState{ ResourceState::Undefined };
-	ResourceType m_resourceType{ ResourceType::Unknown };
-
-	// PixelBuffer data
-	uint64_t m_width{ 0 };
-	uint32_t m_height{ 0 };
-	uint32_t m_arraySizeOrDepth{ 0 };
-	uint32_t m_numMips{ 1 };
-	uint32_t m_numSamples{ 1 };
-	uint32_t m_planeCount{ 1 };
-	Format m_format{ Format::Unknown };
-
-	// ColorBuffer data
-	Color m_clearColor;
 
 	// Pre-constructed descriptors
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle;
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> m_uavHandles;
 };
+
 
 } // namespace Luna::DX12

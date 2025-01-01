@@ -17,8 +17,8 @@ namespace Luna
 {
 
 // Forward declarations
-class IGpuImage;
-class IColorBuffer;
+class ColorBuffer;
+class GpuResource;
 
 
 class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
@@ -42,7 +42,7 @@ public:
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
-	virtual void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 };
 
 
@@ -58,8 +58,8 @@ class __declspec(uuid("E59FD1DC-2D7E-42ED-9135-47C3CB23E399")) IGraphicsContext 
 public:
 	virtual ~IGraphicsContext() = default;
 
-	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
-	virtual void ClearColor(IColorBuffer* colorBuffer, Color clearColor) = 0;
+	virtual void ClearColor(ColorBuffer& colorBuffer) = 0;
+	virtual void ClearColor(ColorBuffer& colorBuffer, Color clearColor) = 0;
 };
 
 

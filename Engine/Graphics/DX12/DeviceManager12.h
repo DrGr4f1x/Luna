@@ -10,8 +10,8 @@
 
 #pragma once
 
+#include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
-#include "Graphics\DX12\ColorBuffer12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 using namespace Microsoft::WRL;
@@ -60,7 +60,9 @@ public:
 	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
 	void FreeContext(ICommandContext* usedContext);
 
-	IColorBuffer* GetColorBuffer() const final;
+	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
+
+	ColorBuffer& GetColorBuffer() final;
 
 	void HandleDeviceLost();
 
@@ -74,7 +76,6 @@ private:
 
 	void UpdateColorSpace();
 
-	wil::com_ptr<ColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex);
 	void ResizeSwapChain();
 	void ReleaseSwapChainBuffers();
 
@@ -95,7 +96,7 @@ private:
 
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
-	std::vector<wil::com_ptr<ColorBuffer>> m_swapChainBuffers;
+	std::vector<ColorBuffer> m_swapChainBuffers;
 	wil::com_ptr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
 

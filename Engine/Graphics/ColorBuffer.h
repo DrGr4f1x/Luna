@@ -14,6 +14,7 @@
 #include "Graphics\Formats.h"
 #include "Graphics\PixelBuffer.h"
 
+
 namespace Luna
 {
 
@@ -28,6 +29,7 @@ struct ColorBufferDesc
 	uint32_t numSamples{ 1 };
 	Format format{ Format::Unknown };
 	uint32_t numFragments{ 1 };
+	uint8_t planeCount{ 1 };
 	Color clearColor{ DirectX::Colors::Black };
 
 	ColorBufferDesc& SetName(const std::string& value) { name = value; return *this; }
@@ -40,16 +42,25 @@ struct ColorBufferDesc
 	constexpr ColorBufferDesc& SetNumSamples(uint32_t value) noexcept { numSamples = value; return *this; }
 	constexpr ColorBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
 	constexpr ColorBufferDesc& SetNumFragments(uint32_t value) noexcept { numFragments = value; return *this; }
+	constexpr ColorBufferDesc& SetPlaneCount(uint8_t value) noexcept { planeCount = value; return *this; }
 	ColorBufferDesc& SetClearColor(Color value) noexcept { clearColor = value; return *this; }
 };
 
 
-class __declspec(uuid("F49A3931-9E4F-4B90-8BFD-B912A13ED31E")) IColorBuffer : public IPixelBuffer
+class ColorBuffer : public PixelBuffer
 {
 public:
-	virtual ~IColorBuffer() = default;
+	Color GetClearColor() const noexcept { return m_clearColor; }
+	void SetClearColor(Color clearColor) noexcept { m_clearColor = clearColor; }
 
-	virtual Color GetClearColor() const noexcept = 0;
+	bool Initialize(ColorBufferDesc& desc);
+	bool InitializeFromSwapchain(uint32_t imageIndex);
+	bool IsInitialized() const noexcept { return m_bIsInitialized; }
+	void Reset();
+
+protected:
+	Color m_clearColor{ DirectX::Colors::Black };
+	bool m_bIsInitialized{ false };
 };
 
 } // namespace Luna

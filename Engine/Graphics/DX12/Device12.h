@@ -101,6 +101,9 @@ public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept;
 	virtual ~GraphicsDevice();
 
+	// GraphicsDevice implementation
+	wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) final;
+
 	void CreateResources();
 
 private:

@@ -13,6 +13,7 @@
 #include "DeviceManager12.h"
 
 #include "Graphics\GraphicsCommon.h"
+#include "Graphics\DX12\ColorBuffer12.h"
 #include "Graphics\DX12\CommandContext12.h"
 #include "Graphics\DX12\DeviceCaps12.h"
 #include "Graphics\DX12\Device12.h"
@@ -347,8 +348,9 @@ void DeviceManager::CreateWindowSizeDependentResources()
     // and create render target views for each of them.
 	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
-		auto bufferHandle = CreateColorBufferFromSwapChain(i);
-		m_swapChainBuffers.emplace_back(bufferHandle);
+		ColorBuffer buffer;
+		buffer.InitializeFromSwapchain(i);
+		m_swapChainBuffers.emplace_back(buffer);
 	}
 
 	// Reset the index to the current back buffer.
@@ -423,9 +425,54 @@ void DeviceManager::FreeContext(ICommandContext* usedContext)
 }
 
 
-IColorBuffer* DeviceManager::GetColorBuffer() const
+wil::com_ptr<IPlatformData> DeviceManager::CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex)
 {
-	return m_swapChainBuffers[m_backBufferIndex].get();
+	wil::com_ptr<ID3D12Resource> displayPlane;
+	assert_succeeded(m_dxSwapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
+
+	const string name = format("Primary SwapChain Image {}", imageIndex);
+	SetDebugName(displayPlane.get(), name);
+
+	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
+
+	desc = ColorBufferDesc{
+		.name = name,
+		.resourceType = ResourceType::Texture2D,
+		.width = resourceDesc.Width,
+		.height = resourceDesc.Height,
+		.arraySizeOrDepth = resourceDesc.DepthOrArraySize,
+		.numSamples = resourceDesc.SampleDesc.Count,
+		.format = DxgiToFormat(resourceDesc.Format)
+	};
+
+	auto d3d12Device = m_device->GetD3D12Device();
+
+	auto rtvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	d3d12Device->CreateRenderTargetView(displayPlane.get(), nullptr, rtvHandle);
+
+	auto srvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	d3d12Device->CreateShaderResourceView(displayPlane.get(), nullptr, srvHandle);
+
+	const uint8_t planeCount = m_device->GetFormatPlaneCount(resourceDesc.Format);
+	desc.planeCount = planeCount;
+	initialState = ResourceState::Present;
+
+	auto colorBufferDescExt = ColorBufferDescExt{}
+		.SetResource(displayPlane.get())
+		.SetUsageState(initialState)
+		.SetPlaneCount(planeCount)
+		.SetRtvHandle(rtvHandle)
+		.SetSrvHandle(srvHandle);
+
+	
+
+	return Make<ColorBufferData>(colorBufferDescExt);
+}
+
+
+ColorBuffer& DeviceManager::GetColorBuffer()
+{
+	return m_swapChainBuffers[m_backBufferIndex];
 }
 
 
@@ -795,48 +842,6 @@ void DeviceManager::UpdateColorSpace()
 	{
 		ThrowIfFailed(m_dxSwapChain->SetColorSpace1(colorSpace));
 	}
-}
-
-
-wil::com_ptr<ColorBuffer> DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
-{
-	wil::com_ptr<ID3D12Resource> displayPlane;
-	assert_succeeded(m_dxSwapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
-
-	const string name = format("Primary SwapChain Image {}", imageIndex);
-	SetDebugName(displayPlane.get(), name);
-
-	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
-
-	auto colorBufferDesc = ColorBufferDesc{
-		.name				= name,
-		.resourceType		= ResourceType::Texture2D,
-		.width				= resourceDesc.Width,
-		.height				= resourceDesc.Height,
-		.arraySizeOrDepth	= resourceDesc.DepthOrArraySize,
-		.numSamples			= resourceDesc.SampleDesc.Count,
-		.format				= DxgiToFormat(resourceDesc.Format)
-	};
-
-	auto d3d12Device = m_device->GetD3D12Device();
-
-	auto rtvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	d3d12Device->CreateRenderTargetView(displayPlane.get(), nullptr, rtvHandle);
-
-	auto srvHandle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	d3d12Device->CreateShaderResourceView(displayPlane.get(), nullptr, srvHandle);
-
-	const uint8_t planeCount = m_device->GetFormatPlaneCount(resourceDesc.Format);
-
-	auto colorBufferDescExt = ColorBufferDescExt{}
-		.SetResource(displayPlane.get())
-		.SetUsageState(ResourceState::Present)
-		.SetPlaneCount(planeCount)
-		.SetRtvHandle(rtvHandle)
-		.SetSrvHandle(srvHandle);
-
-	wil::com_ptr<ColorBuffer> handle12 = Make<ColorBuffer>(colorBufferDesc, colorBufferDescExt);
-	return handle12;
 }
 
 

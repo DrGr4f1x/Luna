@@ -72,6 +72,33 @@ struct GraphicsDeviceDesc
 };
 
 
+struct ImageDesc
+{
+	std::string name;
+	uint64_t width{ 0 };
+	uint32_t height{ 0 };
+	uint32_t arraySizeOrDepth{ 1 };
+	Format format{ Format::Unknown };
+	uint32_t numMips{ 1 };
+	uint32_t numSamples{ 1 };
+	ResourceType resourceType{ ResourceType::Unknown };
+	GpuImageUsage imageUsage{ GpuImageUsage::Unknown };
+	MemoryAccess memoryAccess{ MemoryAccess::Unknown };
+
+	ImageDesc& SetName(const std::string& value) { name = value; return *this; }
+	constexpr ImageDesc& SetWidth(uint64_t value) noexcept { width = value; return *this; }
+	constexpr ImageDesc& SetHeight(uint32_t value) noexcept { height = value; return *this; }
+	constexpr ImageDesc& SetArraySize(uint32_t value) noexcept { arraySizeOrDepth = value; return *this; }
+	constexpr ImageDesc& SetDepth(uint32_t value) noexcept { arraySizeOrDepth = value; return *this; }
+	constexpr ImageDesc& SetFormat(Format value) noexcept { format = value; return *this; }
+	constexpr ImageDesc& SetNumMips(uint32_t value) noexcept { numMips = value; return *this; }
+	constexpr ImageDesc& SetNumSamples(uint32_t value) noexcept { numSamples = value; return *this; }
+	constexpr ImageDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
+	constexpr ImageDesc& SetImageUsage(GpuImageUsage value) noexcept { imageUsage = value; return *this; }
+	constexpr ImageDesc& SetMemoryAccess(MemoryAccess value) noexcept { memoryAccess = value; return *this; }
+};
+
+
 struct ImageViewDesc
 {
 	CVkImage* image{ nullptr };
@@ -112,6 +139,9 @@ public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc);
 	virtual ~GraphicsDevice();
 
+	// GraphicsDevice implementation
+	wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) final;
+
 	void CreateResources();
 
 private:
@@ -119,7 +149,10 @@ private:
 	wil::com_ptr<CVkSemaphore> CreateSemaphore(VkSemaphoreType semaphoreType, uint64_t initialValue) const;
 	wil::com_ptr<CVkCommandPool> CreateCommandPool(CommandListType commandListType) const;
 	wil::com_ptr<CVmaAllocator> CreateVmaAllocator() const;
+	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& desc) const;
 	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& desc) const;
+
+	VkFormatProperties GetFormatProperties(Format format) const;
 
 private:
 	GraphicsDeviceDesc m_desc{};

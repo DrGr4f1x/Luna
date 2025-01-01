@@ -12,6 +12,7 @@
 
 #include "Device12.h"
 
+#include "ColorBuffer12.h"
 #include "DescriptorAllocator12.h"
 #include "DeviceCaps12.h"
 #include "Formats12.h"
@@ -19,6 +20,9 @@
 
 using namespace std;
 using namespace Microsoft::WRL;
+
+
+extern Luna::IGraphicsDevice* g_graphicsDevice;
 
 
 namespace Luna::DX12
@@ -52,6 +56,19 @@ void DebugMessageCallback(
 }
 
 
+D3D12_RESOURCE_FLAGS CombineResourceFlags(uint32_t fragmentCount)
+{
+	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
+
+	if (flags == D3D12_RESOURCE_FLAG_NONE && fragmentCount == 1)
+	{
+		flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	}
+
+	return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | flags;
+}
+
+
 DeviceRLDOHelper::~DeviceRLDOHelper()
 {
 	if (device && doReport)
@@ -75,6 +92,8 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept
 	m_dxDevice = m_desc.dx12Device;
 
 	SetDebugName(m_dxDevice.get(), "DX12 Device");
+
+	g_graphicsDevice = this;
 }
 
 
@@ -87,6 +106,154 @@ GraphicsDevice::~GraphicsDevice()
 		m_dxInfoQueue->UnregisterMessageCallback(m_callbackCookie);
 		m_dxInfoQueue.reset();
 	}
+
+	g_graphicsDevice = nullptr;
+}
+
+
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState)
+{
+	// Create resource
+	auto numMips = desc.numMips == 0 ? ComputeNumMips(desc.width, desc.height) : desc.numMips;
+	auto flags = CombineResourceFlags(desc.numSamples);
+
+	D3D12_RESOURCE_DESC resourceDesc{
+		.Dimension = GetResourceDimension(desc.resourceType),
+		.Alignment = 0,
+		.Width = (UINT64)desc.width,
+		.Height = (UINT)desc.height,
+		.DepthOrArraySize = (UINT16)desc.arraySizeOrDepth,
+		.MipLevels = (UINT16)numMips,
+		.Format = FormatToDxgi(desc.format).resourceFormat,
+		.SampleDesc = {.Count = desc.numSamples, .Quality = 0 },
+		.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+		.Flags = (D3D12_RESOURCE_FLAGS)flags
+	};
+
+	D3D12_CLEAR_VALUE clearValue{};
+	clearValue.Format = FormatToDxgi(desc.format).rtvFormat;
+	clearValue.Color[0] = desc.clearColor.R();
+	clearValue.Color[1] = desc.clearColor.G();
+	clearValue.Color[2] = desc.clearColor.B();
+	clearValue.Color[3] = desc.clearColor.A();
+
+	ID3D12Resource* resource{ nullptr };
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+	assert_succeeded(m_dxDevice->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
+		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&resource)));
+
+	SetDebugName(resource, desc.name);
+
+	// Create descriptors and derived views
+	assert_msg(desc.arraySizeOrDepth == 1 || numMips == 1, "We don't support auto-mips on texture arrays");
+
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+
+	DXGI_FORMAT dxgiFormat = FormatToDxgi(desc.format).resourceFormat;
+	rtvDesc.Format = dxgiFormat;
+	uavDesc.Format = GetUAVFormat(dxgiFormat);
+	srvDesc.Format = dxgiFormat;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	if (desc.arraySizeOrDepth > 1)
+	{
+		if (desc.resourceType == ResourceType::Texture3D)
+		{
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+			rtvDesc.Texture3D.MipSlice = 0;
+			rtvDesc.Texture3D.FirstWSlice = 0;
+			rtvDesc.Texture3D.WSize = (UINT)desc.arraySizeOrDepth;
+
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+			uavDesc.Texture3D.MipSlice = 0;
+			uavDesc.Texture3D.FirstWSlice = 0;
+			uavDesc.Texture3D.WSize = (UINT)desc.arraySizeOrDepth;
+
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+			srvDesc.Texture3D.MipLevels = numMips;
+			srvDesc.Texture3D.MostDetailedMip = 0;
+		}
+		else
+		{
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+			rtvDesc.Texture2DArray.MipSlice = 0;
+			rtvDesc.Texture2DArray.FirstArraySlice = 0;
+			rtvDesc.Texture2DArray.ArraySize = (UINT)desc.arraySizeOrDepth;
+
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+			uavDesc.Texture2DArray.MipSlice = 0;
+			uavDesc.Texture2DArray.FirstArraySlice = 0;
+			uavDesc.Texture2DArray.ArraySize = (UINT)desc.arraySizeOrDepth;
+
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+			srvDesc.Texture2DArray.MipLevels = numMips;
+			srvDesc.Texture2DArray.MostDetailedMip = 0;
+			srvDesc.Texture2DArray.FirstArraySlice = 0;
+			srvDesc.Texture2DArray.ArraySize = (UINT)desc.arraySizeOrDepth;
+		}
+	}
+	else if (desc.numFragments > 1)
+	{
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+	}
+	else
+	{
+		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+
+		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+		uavDesc.Texture2D.MipSlice = 0;
+
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = numMips;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+	}
+
+	auto rtvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	// Create the render target view
+	m_dxDevice->CreateRenderTargetView(resource, &rtvDesc, rtvHandle);
+
+	// Create the shader resource view
+	m_dxDevice->CreateShaderResourceView(resource, &srvDesc, srvHandle);
+
+	// Create the UAVs for each mip level (RWTexture2D)
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> uavHandles;
+	if (desc.numFragments == 1)
+	{
+		for (uint32_t i = 0; i < (uint32_t)uavHandles.size(); ++i)
+		{
+			uavHandles[i].ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+		}
+
+		for (uint32_t i = 0; i < numMips; ++i)
+		{
+			uavHandles[i] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+			m_dxDevice->CreateUnorderedAccessView(resource, nullptr, &uavDesc, uavHandles[i]);
+
+			uavDesc.Texture2D.MipSlice++;
+		}
+	}
+
+	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(desc.format).resourceFormat);
+	desc.planeCount = planeCount;
+	initialState = ResourceState::Common;
+
+	auto descExt = ColorBufferDescExt{}
+		.SetResource(resource)
+		.SetUsageState(ResourceState::Common)
+		.SetPlaneCount(planeCount)
+		.SetRtvHandle(rtvHandle)
+		.SetSrvHandle(srvHandle)
+		.SetUavHandles(uavHandles);
+
+	auto colorBufferData = Make<ColorBufferData>(descExt);
+	return colorBufferData;
 }
 
 

@@ -14,13 +14,19 @@ namespace Luna
 {
 
 // Forward declarations
+struct ColorBufferDesc;
 struct IDeviceNotify;
+class IColorBuffer;
+class IPlatformData;
+enum class ResourceState : uint32_t;
 
 
 class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown
 {
 public:
 	virtual ~IGraphicsDevice() = default;
+
+	virtual wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) = 0;
 };
 
 } // namespace Luna

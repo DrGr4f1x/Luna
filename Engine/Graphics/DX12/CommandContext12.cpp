@@ -11,6 +11,8 @@
 #include "Stdafx.h"
 
 #include "CommandContext12.h"
+
+#include "ColorBuffer12.h"
 #include "DeviceManager12.h"
 #include "Queue12.h"
 
@@ -141,9 +143,9 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 }
 
 
-void ContextState::TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate)
+void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	ResourceState oldState = gpuImage->GetUsageState();
+	ResourceState oldState = colorBuffer.GetUsageState();
 
 	if (type == CommandListType::Compute)
 	{
@@ -156,28 +158,33 @@ void ContextState::TransitionResource(IGpuImage* gpuImage, ResourceState newStat
 		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
 		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
 
+		// TODO: put a wrapper function around this
+		auto platformData = colorBuffer.GetPlatformData();
+		wil::com_ptr<IColorBufferData> colorBufferData;
+		assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
+
 		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrierDesc.Transition.pResource = gpuImage->GetNativeObject(NativeObjectType::DX12_Resource);
+		barrierDesc.Transition.pResource = colorBufferData->GetResource();
 		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
 		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
 
 		// Check to see if we already started the transition
-		if (newState == gpuImage->GetTransitioningState())
+		if (newState == colorBuffer.GetTransitioningState())
 		{
 			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
-			gpuImage->SetTransitioningState(ResourceState::Undefined);
+			colorBuffer.SetTransitioningState(ResourceState::Undefined);
 		}
 		else
 		{
 			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		}
 
-		gpuImage->SetUsageState(newState);
+		colorBuffer.SetUsageState(newState);
 	}
 	else if (newState == ResourceState::UnorderedAccess)
 	{
-		InsertUAVBarrier(gpuImage, bFlushImmediate);
+		InsertUAVBarrier(colorBuffer, bFlushImmediate);
 	}
 
 	if (bFlushImmediate || m_numBarriersToFlush == 16)
@@ -187,14 +194,18 @@ void ContextState::TransitionResource(IGpuImage* gpuImage, ResourceState newStat
 }
 
 
-void ContextState::InsertUAVBarrier(IGpuImage* gpuImage, bool bFlushImmediate)
+void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
 	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
 	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
 
+	auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
+
 	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDesc.UAV.pResource = gpuImage->GetNativeObject(NativeObjectType::DX12_Resource);
+	barrierDesc.UAV.pResource = colorBufferData->GetResource();
 
 	if (bFlushImmediate)
 	{
@@ -213,25 +224,27 @@ void ContextState::FlushResourceBarriers()
 }
 
 
-void ContextState::ClearColor(IColorBuffer* colorBuffer)
+void ContextState::ClearColor(ColorBuffer& colorBuffer)
 {
 	FlushResourceBarriers();
 
-	wil::com_ptr<IColorBuffer12> colorBuffer12;
-	ThrowIfFailed(colorBuffer->QueryInterface(IID_PPV_ARGS(&colorBuffer12)));
+	auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
 
-	m_commandList->ClearRenderTargetView(colorBuffer12->GetRTV(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(colorBufferData->GetRTV(), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
-void ContextState::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
-	wil::com_ptr<IColorBuffer12> colorBuffer12;
-	ThrowIfFailed(colorBuffer->QueryInterface(IID_PPV_ARGS(&colorBuffer12)));
+	auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
 
-	m_commandList->ClearRenderTargetView(colorBuffer12->GetRTV(), clearColor.GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(colorBufferData->GetRTV(), clearColor.GetPtr(), 0, nullptr);
 }
 
 

@@ -611,6 +611,8 @@ enum class GpuImageUsage
 	UnorderedAccess		= 0x0008,
 	CopySource			= 0x0010,
 	CopyDest			= 0x0020,
+
+	ColorBuffer			= RenderTarget | ShaderResource | UnorderedAccess | CopyDest | CopySource,
 };
 template <> struct EnableBitmaskOperators<GpuImageUsage> { static const bool enable = true; };
 
@@ -626,12 +628,14 @@ template <> struct EnableBitmaskOperators<ImageAspect> { static const bool enabl
 
 enum class MemoryAccess
 {
-	Unknown = 0,
-	GpuRead = 1 << 0,
-	GpuWrite = 1 << 1,
-	CpuRead = 1 << 2,
-	CpuWrite = 1 << 3,
-	CpuMapped = 1 << 4
+	Unknown			= 0,
+	GpuRead			= 1 << 0,
+	GpuWrite		= 1 << 1,
+	CpuRead			= 1 << 2,
+	CpuWrite		= 1 << 3,
+	CpuMapped		= 1 << 4,
+
+	GpuReadWrite	= GpuRead | GpuWrite
 };
 template <> struct EnableBitmaskOperators<MemoryAccess> { static const bool enable = true; };
 
@@ -640,6 +644,9 @@ enum class NativeObjectType : uint32_t
 {
 	// DX12
 	DX12_Resource	= 0x00010001,
+	DX12_RTV		= 0x00010002,
+	DX12_SRV		= 0x00010003,
+	DX12_UAV		= 0x00010004,
 
 	// Vulkan
 	VK_Image		= 0x00020001,

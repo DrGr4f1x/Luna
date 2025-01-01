@@ -193,7 +193,7 @@ void Application::Run()
 }
 
 
-IColorBuffer* Application::GetColorBuffer() const
+ColorBuffer& Application::GetColorBuffer() const
 {
 	return m_deviceManager->GetColorBuffer();
 }

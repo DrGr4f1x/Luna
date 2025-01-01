@@ -45,12 +45,12 @@ private:
 
 	uint64_t Finish(bool bWaitForCompletion);
 	
-	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate);
-	void InsertUAVBarrier(IGpuImage* gpuImage, bool bFlushImmediate);
+	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate);
+	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate);
 	void FlushResourceBarriers();
 
-	void ClearColor(IColorBuffer* colorBuffer);
-	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
+	void ClearColor(ColorBuffer& colorBuffer);
+	void ClearColor(ColorBuffer& colorBuffer, Color clearColor);
 
 	void BindDescriptorHeaps();
 
@@ -95,9 +95,9 @@ public:
 
 	uint64_t Finish(bool bWaitForCompletion = false) final;
 
-	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final 
+	inline void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) final 
 	{ 
-		m_state.TransitionResource(gpuImage, newState, bFlushImmediate); 
+		m_state.TransitionResource(colorBuffer, newState, bFlushImmediate);
 	}
 
 private:
@@ -131,13 +131,13 @@ public:
 
 	uint64_t Finish(bool bWaitForCompletion = false) final;
 
-	void TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate = false) final
+	inline void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) final
 	{
-		m_state.TransitionResource(gpuImage, newState, bFlushImmediate);
+		m_state.TransitionResource(colorBuffer, newState, bFlushImmediate);
 	}
 
-	void ClearColor(IColorBuffer* colorBuffer) final { m_state.ClearColor(colorBuffer); }
-	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) final { m_state.ClearColor(colorBuffer, clearColor); }
+	void ClearColor(ColorBuffer& colorBuffer) final { m_state.ClearColor(colorBuffer); }
+	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) final { m_state.ClearColor(colorBuffer, clearColor); }
 
 private:
 	ContextState m_state;

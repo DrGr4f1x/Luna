@@ -19,6 +19,7 @@ using namespace std;
 using namespace Microsoft::WRL;
 
 Luna::IDeviceManager* g_deviceManager{ nullptr };
+Luna::IGraphicsDevice* g_graphicsDevice{ nullptr };
 
 namespace
 {
@@ -116,6 +117,12 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc)
 IDeviceManager* GetDeviceManager()
 {
 	return g_deviceManager;
+}
+
+
+IGraphicsDevice* GetGraphicsDevice()
+{
+	return g_graphicsDevice;
 }
 
 } // namespace Luna

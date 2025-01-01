@@ -10,8 +10,8 @@
 
 #pragma once
 
+#include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
-
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\DeviceCapsVK.h"
 #include "Graphics\Vulkan\ExtensionManagerVK.h"
@@ -23,7 +23,6 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class ColorBuffer;
 class GraphicsDevice;
 class Queue;
 
@@ -50,7 +49,9 @@ public:
 	ICommandContext* AllocateContext(CommandListType commandListType) final;
 	void FreeContext(ICommandContext* usedContext);
 
-	IColorBuffer* GetColorBuffer() const final;
+	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
+
+	ColorBuffer& GetColorBuffer() final;
 
 private:
 	void SetRequiredInstanceLayersAndExtensions();
@@ -61,7 +62,6 @@ private:
 	void CreateDevice();
 	void CreateQueue(QueueType queueType);
 
-	wil::com_ptr<ColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex);
 	void ResizeSwapChain();
 
 	std::vector<std::pair<AdapterInfo, VkPhysicalDevice>> EnumeratePhysicalDevices();
@@ -101,7 +101,7 @@ private:
 	VkSurfaceFormatKHR m_swapChainFormat{};
 
 	// Swapchain color buffers
-	std::vector<wil::com_ptr<ColorBuffer>> m_swapChainBuffers;
+	std::vector<ColorBuffer> m_swapChainBuffers;
 
 	// Queues and queue families
 	std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;

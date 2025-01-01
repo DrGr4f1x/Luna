@@ -15,6 +15,11 @@
 namespace Luna
 {
 
+// Forward declarations
+enum class ResourceState : uint32_t;
+enum class ResourceType : uint32_t;
+
+
 class __declspec(uuid("7910A354-F69A-4A9C-9D69-816A27E68BB6")) IGpuImage : public IUnknown
 {
 public:

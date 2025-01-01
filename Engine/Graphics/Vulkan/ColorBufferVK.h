@@ -38,79 +38,34 @@ struct ColorBufferDescExt
 };
 
 
-class __declspec(uuid("584039DC-50BF-46BC-91F0-3675DE05ECE5")) IColorBufferVK : public IColorBuffer
+class __declspec(uuid("63AC7681-AE34-4F5B-9D96-DBEA9FF89CAB")) IColorBufferData : public IPlatformData
 {
 public:
-	virtual VkImageView GetImageViewRTV() const noexcept = 0;
-	virtual VkImageView GetImageViewSRV() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetSRVImageInfo() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetUAVImageInfo() const noexcept = 0;
+	virtual VkImage GetImage() const noexcept = 0;
+	virtual VkImageView GetImageViewRtv() const noexcept = 0;
+	virtual VkImageView GetImageViewSrv() const noexcept = 0;
+	virtual VkDescriptorImageInfo GetImageInfoSrv() const noexcept = 0;
+	virtual VkDescriptorImageInfo GetImageInfoUav() const noexcept = 0;
 };
 
-
-class __declspec(uuid("FCB01FE8-94C7-494D-AAC7-0DFC3B9248E7")) ColorBuffer
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferVK, IColorBuffer, IPixelBuffer, IGpuImage>>
-	, public NonCopyable
+class __declspec(uuid("23320A65-2603-49E9-B92F-7E5CE2A85BB3")) ColorBufferData
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IPlatformData>>
 {
 public:
-	ColorBuffer(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt);
-	~ColorBuffer() final = default;
+	explicit ColorBufferData(const ColorBufferDescExt& descExt);
 
-	// IGpuImage implementation
-	ResourceState GetUsageState() const noexcept final { return m_usageState; }
-	void SetUsageState(ResourceState usageState) noexcept final { m_usageState = usageState; }
-	ResourceState GetTransitioningState() const noexcept final { return m_transitioningState; }
-	void SetTransitioningState(ResourceState transitioningState) noexcept final { m_transitioningState = transitioningState; }
-	ResourceType GetResourceType() const noexcept final { return m_resourceType; }
-	NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept final;
-
-	// IPixelBuffer implementation
-	uint64_t GetWidth() const noexcept override { return m_width; }
-	uint32_t GetHeight() const noexcept override { return m_height; }
-	uint32_t GetDepth() const noexcept override { return m_resourceType == ResourceType::Texture3D ? m_arraySizeOrDepth : 1; }
-	uint32_t GetArraySize() const noexcept override { return m_resourceType == ResourceType::Texture3D ? 1 : m_arraySizeOrDepth; }
-	uint32_t GetNumMips() const noexcept override { return m_numMips; }
-	uint32_t GetNumSamples() const noexcept override { return m_numSamples; }
-	Format GetFormat() const noexcept override { return m_format; }
-	uint32_t GetPlaneCount() const noexcept override { return m_planeCount; }
-	TextureDimension GetDimension() const noexcept override { return ResourceTypeToTextureDimension(m_resourceType); }
-
-	// IColorBuffer implementation
-	Color GetClearColor() const noexcept final { return m_clearColor; }
-
-	// IColorBufferVK implementation
-	VkImageView GetImageViewRTV() const noexcept final { return *m_imageViewRtv; }
-	VkImageView GetImageViewSRV() const noexcept final { return *m_imageViewSrv; }
-	VkDescriptorImageInfo GetSRVImageInfo() const noexcept final { return m_imageInfoSrv; }
-	VkDescriptorImageInfo GetUAVImageInfo() const noexcept final { return m_imageInfoUav; }
+	VkImage GetImage() const noexcept { return *m_image; }
+	VkImageView GetImageViewRtv() const noexcept { return *m_imageViewRtv; }
+	VkImageView GetImageViewSrv() const noexcept { return *m_imageViewSrv; }
+	VkDescriptorImageInfo GetImageInfoSrv() const noexcept { return m_imageInfoSrv; }
+	VkDescriptorImageInfo GetImageInfoUav() const noexcept { return m_imageInfoUav; }
 
 private:
-	std::string m_name;
-
-	// GpuImage data
 	wil::com_ptr<CVkImage> m_image;
-	ResourceState m_usageState{ ResourceState::Undefined };
-	ResourceState m_transitioningState{ ResourceState::Undefined };
-	ResourceType m_resourceType{ ResourceType::Unknown };
-
-	// PixelBuffer data
-	uint64_t m_width{ 0 };
-	uint32_t m_height{ 0 };
-	uint32_t m_arraySizeOrDepth{ 0 };
-	uint32_t m_numMips{ 1 };
-	uint32_t m_numSamples{ 1 };
-	uint32_t m_planeCount{ 1 };
-	Format m_format{ Format::Unknown };
-
-	// ColorBuffer data
-	Color m_clearColor;
-
-	// ColorBufferVK data
 	wil::com_ptr<CVkImageView> m_imageViewRtv;
 	wil::com_ptr<CVkImageView> m_imageViewSrv;
 	VkDescriptorImageInfo m_imageInfoSrv{};
 	VkDescriptorImageInfo m_imageInfoUav{};
 };
-
 
 } // namespace Luna::VK

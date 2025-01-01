@@ -133,26 +133,29 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 }
 
 
-void ContextState::TransitionResource(IGpuImage* gpuImage, ResourceState newState, bool bFlushImmediate)
+void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	wil::com_ptr<IPixelBuffer> pixelBuffer;
-	gpuImage->QueryInterface(IID_PPV_ARGS(&pixelBuffer));
+	// TODO: put a wrapper function around this
+	auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
 
 	TextureBarrier barrier{};
-	barrier.image = gpuImage->GetNativeObject(NativeObjectType::VK_Image);
-	barrier.format = FormatToVulkan(pixelBuffer->GetFormat());
-	barrier.imageAspect = GetImageAspect(pixelBuffer->GetFormat());
-	barrier.beforeState = gpuImage->GetUsageState();
+	barrier.image = colorBufferData->GetImage();
+	barrier.format = FormatToVulkan(colorBuffer.GetFormat());
+	barrier.imageAspect = GetImageAspect(colorBuffer.GetFormat());
+	barrier.beforeState = colorBuffer.GetUsageState();
 	barrier.afterState = newState;
-	barrier.numMips = pixelBuffer->GetNumMips();
+	barrier.numMips = colorBuffer.GetNumMips();
 	barrier.mipLevel = 0;
-	barrier.arraySizeOrDepth = pixelBuffer->GetArraySize();
+	barrier.arraySizeOrDepth = colorBuffer.GetArraySize();
 	barrier.arraySlice = 0;
 	barrier.bWholeTexture = true;
 
 	m_textureBarriers.push_back(barrier);
 
-	gpuImage->SetUsageState(newState);
+	// TODO: we should probably do this after the barriers are flushed
+	colorBuffer.SetUsageState(newState);
 
 	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
 	{
@@ -161,11 +164,11 @@ void ContextState::TransitionResource(IGpuImage* gpuImage, ResourceState newStat
 }
 
 
-void ContextState::InsertUAVBarrier(IGpuImage* gpuImage, bool bFlushImmediate)
+void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
-	assert_msg(HasFlag(gpuImage->GetUsageState(), ResourceState::UnorderedAccess), "Resource must be in UnorderedAccess state to insert a UAV barrier");
+	assert_msg(HasFlag(colorBuffer.GetUsageState(), ResourceState::UnorderedAccess), "Resource must be in UnorderedAccess state to insert a UAV barrier");
 
-	TransitionResource(gpuImage, gpuImage->GetUsageState(), bFlushImmediate);
+	TransitionResource(colorBuffer, colorBuffer.GetUsageState(), bFlushImmediate);
 }
 
 
@@ -217,37 +220,15 @@ void ContextState::FlushResourceBarriers()
 }
 
 
-void ContextState::ClearColor(IColorBuffer* colorBuffer)
+void ContextState::ClearColor(ColorBuffer& colorBuffer)
 {
-	ResourceState oldState = colorBuffer->GetUsageState();
-
-	TransitionResource(colorBuffer, ResourceState::CopyDest, false);
-
-	VkClearColorValue colVal;
-	Color clearColor = colorBuffer->GetClearColor();
-	colVal.float32[0] = clearColor.R();
-	colVal.float32[1] = clearColor.G();
-	colVal.float32[2] = clearColor.B();
-	colVal.float32[3] = clearColor.A();
-
-	VkImageSubresourceRange range;
-	range.baseArrayLayer = 0;
-	range.baseMipLevel = 0;
-	range.layerCount = colorBuffer->GetArraySize();
-	range.levelCount = colorBuffer->GetNumMips();
-	range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-
-	FlushResourceBarriers();
-	VkImage image = colorBuffer->GetNativeObject(NativeObjectType::VK_Image);
-	vkCmdClearColorImage(m_commandBuffer, image, GetImageLayout(colorBuffer->GetUsageState()), &colVal, 1, &range);
-
-	TransitionResource(colorBuffer, oldState, false);
+	ClearColor(colorBuffer, colorBuffer.GetClearColor());
 }
 
 
-void ContextState::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
-	ResourceState oldState = colorBuffer->GetUsageState();
+	ResourceState oldState = colorBuffer.GetUsageState();
 
 	TransitionResource(colorBuffer, ResourceState::CopyDest, false);
 
@@ -260,13 +241,20 @@ void ContextState::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 	VkImageSubresourceRange range;
 	range.baseArrayLayer = 0;
 	range.baseMipLevel = 0;
-	range.layerCount = colorBuffer->GetArraySize();
-	range.levelCount = colorBuffer->GetNumMips();
+	range.layerCount = colorBuffer.GetArraySize();
+	range.levelCount = colorBuffer.GetNumMips();
 	range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
 	FlushResourceBarriers();
-	VkImage image = colorBuffer->GetNativeObject(NativeObjectType::VK_Image);
-	vkCmdClearColorImage(m_commandBuffer, image, GetImageLayout(colorBuffer->GetUsageState()), &colVal, 1, &range);
+
+	// TODO: put a wrapper function around this
+	auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
+
+	VkImage image = colorBufferData->GetImage();
+
+	vkCmdClearColorImage(m_commandBuffer, image, GetImageLayout(colorBuffer.GetUsageState()), &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
 }
