@@ -50,6 +50,7 @@ public:
 
 class __declspec(uuid("23320A65-2603-49E9-B92F-7E5CE2A85BB3")) ColorBufferData
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IPlatformData>>
+	, NonCopyable
 {
 public:
 	explicit ColorBufferData(const ColorBufferDescExt& descExt);

@@ -27,6 +27,7 @@
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Graphics\ColorBuffer.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
+    <ClCompile Include="Graphics\DepthBuffer.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
@@ -113,7 +114,6 @@
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
     <ClInclude Include="Graphics\Formats.h" />
-    <ClInclude Include="Graphics\GpuImage.h" />
     <ClInclude Include="Graphics\GpuResource.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
     <ClInclude Include="Graphics\GraphicsDevice.h" />

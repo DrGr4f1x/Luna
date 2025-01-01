@@ -63,6 +63,7 @@ public:
 
 class __declspec(uuid("BBBCFA80-B6CE-484F-B710-AF72B424B26E")) ColorBufferData
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IPlatformData>>
+	, NonCopyable
 {
 	friend class GraphicsDevice;
 

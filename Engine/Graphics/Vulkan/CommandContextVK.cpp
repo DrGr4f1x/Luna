@@ -12,9 +12,8 @@
 
 #include "CommandContextVK.h"
 
-#include "Graphics\GpuImage.h"
-#include "Graphics\PixelBuffer.h"
 #include "Graphics\Vulkan\ColorBufferVK.h"
+#include "Graphics\Vulkan\DepthBufferVK.h"
 #include "Graphics\Vulkan\DeviceManagerVK.h"
 #include "Graphics\Vulkan\QueueVK.h"
 

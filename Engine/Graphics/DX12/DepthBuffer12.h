@@ -48,11 +48,10 @@ struct DepthBufferDescExt
 };
 
 
-class __declspec(uuid("232C36B6-60FC-4DE6-8AD5-84769D22CDFF")) IDepthBuffer12 : public IDepthBuffer
+class __declspec(uuid("232C36B6-60FC-4DE6-8AD5-84769D22CDFF")) IDepthBufferData : public IPlatformData
 {
 public:
-	virtual ~IDepthBuffer12() = default;
-
+	virtual ID3D12Resource* GetResource() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_DepthReadOnly() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_StencilReadOnly() const noexcept = 0;
@@ -62,58 +61,24 @@ public:
 };
 
 
-class __declspec(uuid("36E0E19C-7D07-46EA-A6FE-E222A083957D")) DepthBuffer
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBuffer12, IDepthBuffer, IPixelBuffer, IGpuImage>>
+class __declspec(uuid("36E0E19C-7D07-46EA-A6FE-E222A083957D")) DepthBufferData
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBufferData, IPlatformData>>
 	, NonCopyable
 {
 public:
-	DepthBuffer(const DepthBufferDesc& desc, const DepthBufferDescExt& descExt) noexcept;
+	DepthBufferData(const DepthBufferDescExt& descExt) noexcept;
 
-	// IGpuResource implementation
-	ResourceState GetUsageState() const noexcept final { return m_usageState; }
-	void SetUsageState(ResourceState usageState) noexcept final { m_usageState = usageState; }
-	ResourceState GetTransitioningState() const noexcept final { return m_transitioningState; }
-	void SetTransitioningState(ResourceState transitioningState) noexcept final { m_transitioningState = transitioningState; }
-	ResourceType GetResourceType() const noexcept final { return m_resourceType; }
-	NativeObjectPtr GetNativeObject(NativeObjectType nativeObjectType) const noexcept final;
+	ID3D12Resource* GetResource() const noexcept final { return m_resource.get(); }
 
-	// IPixelBuffer implementation
-	uint64_t GetWidth() const noexcept final { return m_width; }
-	uint32_t GetHeight() const noexcept final { return m_height; }
-	uint32_t GetDepth() const noexcept final { return m_resourceType == ResourceType::Texture3D ? m_arraySizeOrDepth : 1; }
-	uint32_t GetArraySize() const noexcept final { return m_resourceType == ResourceType::Texture3D ? 1 : m_arraySizeOrDepth; }
-	uint32_t GetNumMips() const noexcept final { return m_numMips; }
-	uint32_t GetNumSamples() const noexcept final { return m_numSamples; }
-	Format GetFormat() const noexcept final { return m_format; }
-	uint32_t GetPlaneCount() const noexcept final { return m_planeCount; }
-	TextureDimension GetDimension() const noexcept final { return ResourceTypeToTextureDimension(m_resourceType); }
-
-	// IDepthBuffer implementation
-	float GetClearDepth() const noexcept final { return m_clearDepth; }
-	uint8_t GetClearStencil() const noexcept final { return m_clearStencil; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const noexcept final { return m_dsvHandles[0]; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_DepthReadOnly() const noexcept final { return m_dsvHandles[1]; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_StencilReadOnly() const noexcept final { return m_dsvHandles[2]; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_ReadOnly() const noexcept final { return m_dsvHandles[3]; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDepthSRV() const noexcept final { return m_depthSrvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetStencilSRV() const noexcept final { return m_stencilSrvHandle; }
 
 private:
-	std::string m_name;
-
 	wil::com_ptr<ID3D12Resource> m_resource;
-	ResourceState m_usageState{ ResourceState::Undefined };
-	ResourceState m_transitioningState{ ResourceState::Undefined };
-	ResourceType m_resourceType{ ResourceType::Unknown };
-
-	// PixelBuffer data
-	uint64_t m_width{ 0 };
-	uint32_t m_height{ 0 };
-	uint32_t m_arraySizeOrDepth{ 0 };
-	uint32_t m_numMips{ 1 };
-	uint32_t m_numSamples{ 1 };
-	uint32_t m_planeCount{ 1 };
-	Format m_format{ Format::Unknown };
-
-	// DepthBuffer data
-	float m_clearDepth{ 1.0f };
-	uint8_t m_clearStencil{ 0 };
-
-	// DepthBuffer12 data
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4> m_dsvHandles{};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_depthSrvHandle{};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_stencilSrvHandle{};

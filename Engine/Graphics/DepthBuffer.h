@@ -44,13 +44,20 @@ struct DepthBufferDesc
 };
 
 
-class __declspec(uuid("523B2690-CB80-4E81-8318-356EB24D3D2B")) IDepthBuffer : public IPixelBuffer
+class DepthBuffer : public PixelBuffer
 {
 public:
-	virtual ~IDepthBuffer() = default;
+	float GetClearDepth() const noexcept { return m_clearDepth; }
+	uint8_t GetClearStencil() const noexcept { return m_clearStencil; }
 
-	virtual float GetClearDepth() const noexcept = 0;
-	virtual uint8_t GetClearStencil() const noexcept = 0;
+	bool Initialize(DepthBufferDesc& desc);
+	bool IsInitialized() const noexcept { return m_bIsInitialized; }
+	void Reset();
+
+private:
+	float m_clearDepth{ 1.0f };
+	uint8_t m_clearStencil{ 0 };
+	bool m_bIsInitialized{ false };
 };
 
 } // namespace Luna
