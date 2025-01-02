@@ -45,40 +45,44 @@ struct BufferBarrier
 };
 
 
-struct ContextState
+class __declspec(uuid("63C5358D-F31C-43DA-90DA-8676E272BE4A")) CommandContextVK final
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
 {
-	friend class ComputeContext;
-	friend class GraphicsContext;
+public:
+	explicit CommandContextVK(CommandListType type)
+		: m_type{ type }
+	{}
 
-	~ContextState();
+	void SetId(const std::string& id) override { m_id = id; }
+	CommandListType GetType() const override { return m_type; }
 
-	std::string id;
-	CommandListType type;
+	// Debug events and markers
+	void BeginEvent(const std::string& label) override;
+	void EndEvent() override;
+	void SetMarker(const std::string& label) override;
+
+	void Reset() override;
+	void Initialize() override;
+
+	void BeginFrame() override;
+	uint64_t Finish(bool bWaitForCompletion) override;
+
+	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
+	void FlushResourceBarriers() override;
+
+	void ClearColor(ColorBuffer& colorBuffer) override;
+	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
 
 private:
-	// Debug events and markers
-	void BeginEvent(const std::string& label);
-	void EndEvent();
-	void SetMarker(const std::string& label);
-
-	void Reset();
-	void Initialize();
-
-	void Begin(const std::string& id);
-	uint64_t Finish(bool bWaitForCompletion);
-
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate);
-	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate);
-	void FlushResourceBarriers();
-
-	void ClearColor(ColorBuffer& colorBuffer);
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor);
-
-	void BindDescriptorHeaps();
+	void BindDescriptorHeaps() {}
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
 
 private:
+	std::string m_id;
+	CommandListType m_type;
+
 	VkCommandBuffer m_commandBuffer{ VK_NULL_HANDLE };
 
 	bool m_bInvertedViewport{ true };
@@ -90,79 +94,6 @@ private:
 	std::vector<VkMemoryBarrier2> m_memoryBarriers;
 	std::vector<VkBufferMemoryBarrier2> m_bufferMemoryBarriers;
 	std::vector<VkImageMemoryBarrier2> m_imageMemoryBarriers;
-};
-
-
-class __declspec(uuid("EAA87286-6C5C-4C61-A18C-D45010F95E1E")) ComputeContext
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IComputeContext, ICommandContext>>
-	, NonCopyable
-{
-	friend class DeviceManager;
-
-public:
-	ComputeContext();
-	virtual ~ComputeContext() = default;
-
-	// ICommandContext implementation
-	void SetId(const std::string& id) final { m_state.id = id; }
-	CommandListType GetType() const final { return m_state.type; }
-
-	// Debug events and markers
-	void BeginEvent(const std::string& label) final { m_state.BeginEvent(label); }
-	void EndEvent() final { m_state.EndEvent(); }
-	void SetMarker(const std::string& label) final { m_state.SetMarker(label); }
-
-	void Reset() final { m_state.Reset(); }
-	void Initialize() final { m_state.Initialize(); }
-
-	void Begin(const std::string& id) final { m_state.Begin(id); }
-	uint64_t Finish(bool bWaitForCompletion = false) final;
-
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) final
-	{
-		m_state.TransitionResource(colorBuffer, newState, bFlushImmediate);
-	}
-
-private:
-	ContextState m_state;
-};
-
-
-class __declspec(uuid("7038C5F8-60C1-48F5-881A-3FF19982AB4D")) GraphicsContext
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IGraphicsContext, IComputeContext, ICommandContext>>
-	, NonCopyable
-{
-	friend class DeviceManager;
-
-public:
-	GraphicsContext();
-	virtual ~GraphicsContext() = default;
-
-	// ICommandContext implementation
-	void SetId(const std::string& id) final { m_state.id = id; }
-	CommandListType GetType() const final { return m_state.type; }
-
-	// Debug events and markers
-	void BeginEvent(const std::string& label) final { m_state.BeginEvent(label); }
-	void EndEvent() final { m_state.EndEvent(); }
-	void SetMarker(const std::string& label) final { m_state.SetMarker(label); }
-
-	void Reset() final { m_state.Reset(); }
-	void Initialize() final { m_state.Initialize(); }
-
-	void Begin(const std::string& id) final { m_state.Begin(id); }
-	uint64_t Finish(bool bWaitForCompletion = false) final;
-
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) final
-	{
-		m_state.TransitionResource(colorBuffer, newState, bFlushImmediate);
-	}
-
-	void ClearColor(ColorBuffer& colorBuffer) final { m_state.ClearColor(colorBuffer); }
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) final { m_state.ClearColor(colorBuffer, clearColor); }
-
-private:
-	ContextState m_state;
 };
 
 } // namespace Luna::VK

@@ -20,7 +20,7 @@ namespace Luna
 // Forward declarations
 struct ColorBufferDesc;
 class ColorBuffer;
-class ICommandContext;
+class CommandContext;
 class IPlatformData;
 
 
@@ -99,7 +99,8 @@ public:
 	virtual void CreateDeviceResources() = 0;
 	virtual void CreateWindowSizeDependentResources() = 0;
 
-	virtual ICommandContext* AllocateContext(CommandListType commandListType) = 0;
+	virtual CommandContext* AllocateContext(CommandListType commandListType) = 0;
+	virtual void FreeContext(CommandContext* usedContext) = 0;
 
 	virtual wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) = 0;
 

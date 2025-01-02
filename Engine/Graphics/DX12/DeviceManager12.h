@@ -41,6 +41,7 @@ class __declspec(uuid("2B2F2AAF-4D90-45F4-8BF8-9D8136AB6FC8")) DeviceManager
 	, public NonCopyable
 {
 	friend struct ContextState;
+	friend class CommandContext12;
 
 public:
 	DeviceManager(const DeviceManagerDesc& desc);
@@ -56,9 +57,9 @@ public:
 	void CreateDeviceResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	ICommandContext* AllocateContext(CommandListType commandListType);
+	CommandContext* AllocateContext(CommandListType commandListType) final;
 	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
-	void FreeContext(ICommandContext* usedContext);
+	void FreeContext(CommandContext* usedContext) final;
 
 	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
 
@@ -118,8 +119,8 @@ private:
 
 	// Command context handling
 	std::mutex m_contextAllocationMutex;
-	std::vector<wil::com_ptr<ICommandContext>> m_contextPool[4];
-	std::queue<ICommandContext*> m_availableContexts[4];
+	std::vector<std::unique_ptr<CommandContext>> m_contextPool[4];
+	std::queue<CommandContext*> m_availableContexts[4];
 };
 
 

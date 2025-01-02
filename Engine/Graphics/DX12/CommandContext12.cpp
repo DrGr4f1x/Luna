@@ -52,16 +52,7 @@ inline ID3D12Resource* GetResource(const T& obj)
 }
 
 
-ContextState::~ContextState()
-{
-	if (m_commandList)
-	{
-		m_commandList->Release();
-		m_commandList = nullptr;
-	}
-}
-
-void ContextState::BeginEvent(const string& label)
+void CommandContext12::BeginEvent(const string& label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
 	::PIXBeginEvent(m_commandList, 0, label.c_str());
@@ -69,7 +60,7 @@ void ContextState::BeginEvent(const string& label)
 }
 
 
-void ContextState::EndEvent()
+void CommandContext12::EndEvent()
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
 	::PIXEndEvent(m_commandList);
@@ -77,7 +68,7 @@ void ContextState::EndEvent()
 }
 
 
-void ContextState::SetMarker(const string& label)
+void CommandContext12::SetMarker(const string& label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
 	::PIXSetMarker(m_commandList, 0, label.c_str());
@@ -85,12 +76,12 @@ void ContextState::SetMarker(const string& label)
 }
 
 
-void ContextState::Reset()
+void CommandContext12::Reset()
 {
 	// We only call Reset() on previously freed contexts.  The command list persists, but we must
 	// request a new allocator.
 	assert(m_commandList != nullptr && m_currentAllocator == nullptr);
-	m_currentAllocator = GetD3D12DeviceManager()->GetQueue(type).RequestAllocator();
+	m_currentAllocator = GetD3D12DeviceManager()->GetQueue(m_type).RequestAllocator();
 	m_commandList->Reset(m_currentAllocator, nullptr);
 
 	m_curGraphicsRootSignature = nullptr;
@@ -102,15 +93,15 @@ void ContextState::Reset()
 }
 
 
-void ContextState::Initialize()
+void CommandContext12::Initialize()
 {
-	GetD3D12DeviceManager()->CreateNewCommandList(type, &m_commandList, &m_currentAllocator);
+	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 }
 
 
-uint64_t ContextState::Finish(bool bWaitForCompletion)
+uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -132,7 +123,7 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 
 	auto deviceManager = GetD3D12DeviceManager();
 
-	Queue& cmdQueue = deviceManager->GetQueue(type);
+	Queue& cmdQueue = deviceManager->GetQueue(m_type);
 
 	uint64_t fenceValue = cmdQueue.ExecuteCommandList(m_commandList);
 	cmdQueue.DiscardAllocator(fenceValue, m_currentAllocator);
@@ -153,11 +144,11 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 }
 
 
-void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	ResourceState oldState = colorBuffer.GetUsageState();
 
-	if (type == CommandListType::Compute)
+	if (m_type == CommandListType::Compute)
 	{
 		assert(IsValidComputeResourceState(oldState));
 		assert(IsValidComputeResourceState(newState));
@@ -199,7 +190,7 @@ void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState ne
 }
 
 
-void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
+void CommandContext12::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
 	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
 	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
@@ -215,7 +206,7 @@ void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmedia
 }
 
 
-void ContextState::FlushResourceBarriers()
+void CommandContext12::FlushResourceBarriers()
 {
 	if (m_numBarriersToFlush > 0)
 	{
@@ -225,7 +216,7 @@ void ContextState::FlushResourceBarriers()
 }
 
 
-void ContextState::ClearColor(ColorBuffer& colorBuffer)
+void CommandContext12::ClearColor(ColorBuffer& colorBuffer)
 {
 	FlushResourceBarriers();
 
@@ -237,7 +228,7 @@ void ContextState::ClearColor(ColorBuffer& colorBuffer)
 }
 
 
-void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
+void CommandContext12::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
@@ -249,41 +240,11 @@ void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 }
 
 
-void ContextState::BindDescriptorHeaps()
+void CommandContext12::BindDescriptorHeaps()
 {
 	// TODO
 }
 
 
-ComputeContext::ComputeContext()
-{
-	m_state.type = CommandListType::Compute;
-}
-
-
-uint64_t ComputeContext::Finish(bool bWaitForCompletion)
-{
-	uint64_t fenceValue = m_state.Finish(bWaitForCompletion);
-
-	GetD3D12DeviceManager()->FreeContext(this);
-
-	return fenceValue;
-}
-
-
-GraphicsContext::GraphicsContext()
-{
-	m_state.type = CommandListType::Direct;
-}
-
-
-uint64_t GraphicsContext::Finish(bool bWaitForCompletion)
-{
-	uint64_t fenceValue = m_state.Finish(bWaitForCompletion);
-
-	GetD3D12DeviceManager()->FreeContext(this);
-
-	return fenceValue;
-}
 
 } // namespace Luna::DX12

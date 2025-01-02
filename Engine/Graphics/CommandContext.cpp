@@ -13,6 +13,7 @@
 #include "CommandContext.h"
 
 #include "GraphicsCommon.h"
+#include "DeviceManager.h"
 
 using namespace std;
 
@@ -20,51 +21,54 @@ using namespace std;
 namespace Luna
 {
 
-ICommandContext& CommandContext::Begin(const string id)
+CommandContext& CommandContext::Begin(const string id)
 {
-	auto deviceManager = GetDeviceManager();
-	assert(deviceManager != nullptr);
-
-	ICommandContext* newContext = deviceManager->AllocateContext(CommandListType::Direct);
+	CommandContext* newContext = GetDeviceManager()->AllocateContext(CommandListType::Direct);
 	newContext->SetId(id);
+	newContext->BeginFrame();
 
-	newContext->Begin(id);
+	// TODO
+#if 0
+	if (id.length() > 0)
+	{
+		EngineProfiling::BeginBlock(id, newContext);
+	}
+#endif
 
 	return *newContext;
 }
 
 
-IGraphicsContext& GraphicsContext::Begin(const string id)
+uint64_t CommandContext::Finish(bool bWaitForCompletion)
 {
-	auto deviceManager = GetDeviceManager();
-	assert(deviceManager != nullptr);
+	uint64_t fenceValue = m_contextImpl->Finish(bWaitForCompletion);
 
-	ICommandContext* newContext = deviceManager->AllocateContext(CommandListType::Direct);
-	newContext->SetId(id);
+	GetDeviceManager()->FreeContext(this);
 
-	newContext->Begin(id);
-
-	wil::com_ptr<IGraphicsContext> graphicsContext;
-	ThrowIfFailed(newContext->QueryInterface(IID_PPV_ARGS(&graphicsContext)));
-
-	return *graphicsContext;
+	return fenceValue;
 }
 
 
-IComputeContext& ComputeContext::Begin(const string id, bool bAsync)
+ComputeContext& ComputeContext::Begin(const string id, bool bAsync)
 {
-	auto deviceManager = GetDeviceManager();
-	assert(deviceManager != nullptr);
+	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Direct;
 
-	ICommandContext* newContext = deviceManager->AllocateContext(bAsync ? CommandListType::Direct : CommandListType::Compute);
-	newContext->SetId(id);
+	ComputeContext& newContext = GetDeviceManager()->AllocateContext(commandListType)->GetComputeContext();
+	newContext.SetId(id);
+	newContext.BeginFrame();
 
-	newContext->Begin(id);
+	// TODO
+#if 0
+	if (id.length() > 0)
+	{
+		EngineProfiling::BeginBlock(id, newContext);
+	}
+#endif
 
-	wil::com_ptr<IComputeContext> computeContext;
-	ThrowIfFailed(newContext->QueryInterface(IID_PPV_ARGS(&computeContext)));
+	//m_contextImpl->Begin
 
-	return *computeContext;
+	return newContext;
 }
+
 
 } // namespace Luna

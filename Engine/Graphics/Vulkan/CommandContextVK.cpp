@@ -33,10 +33,7 @@ inline VkImage GetImage(const T& obj)
 }
 
 
-ContextState::~ContextState() = default;
-
-
-void ContextState::BeginEvent(const string& label)
+void CommandContextVK::BeginEvent(const string& label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
 	VkDebugUtilsLabelEXT labelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
@@ -50,7 +47,7 @@ void ContextState::BeginEvent(const string& label)
 }
 
 
-void ContextState::EndEvent()
+void CommandContextVK::EndEvent()
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
 	vkCmdEndDebugUtilsLabelEXT(m_commandBuffer);
@@ -58,7 +55,7 @@ void ContextState::EndEvent()
 }
 
 
-void ContextState::SetMarker(const string& label)
+void CommandContextVK::SetMarker(const string& label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
 	VkDebugUtilsLabelEXT labelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
@@ -72,21 +69,23 @@ void ContextState::SetMarker(const string& label)
 }
 
 
-void ContextState::Reset()
+// TODO - Move this logic into CommandManager::AllocateContext
+void CommandContextVK::Reset()
 {
 	assert(m_commandBuffer == VK_NULL_HANDLE);
-	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(type).RequestCommandBuffer();
+	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 }
 
 
-void ContextState::Initialize()
+// TODO - Move this logic into CommandManager::AllocateContext
+void CommandContextVK::Initialize()
 {
 	assert(m_commandBuffer == VK_NULL_HANDLE);
-	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(type).RequestCommandBuffer();
+	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 }
 
 
-void ContextState::Begin(const string& id)
+void CommandContextVK::BeginFrame()
 {
 	VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	beginInfo.pNext = nullptr;
@@ -97,9 +96,9 @@ void ContextState::Begin(const string& id)
 }
 
 
-uint64_t ContextState::Finish(bool bWaitForCompletion)
+uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -123,7 +122,7 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 
 	auto deviceManager = GetVulkanDeviceManager();
 
-	auto& queue = deviceManager->GetQueue(type);
+	auto& queue = deviceManager->GetQueue(m_type);
 
 	uint64_t fenceValue = queue.ExecuteCommandList(m_commandBuffer);
 	queue.DiscardCommandBuffer(fenceValue, m_commandBuffer);
@@ -142,7 +141,7 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 }
 
 
-void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	TextureBarrier barrier{};
 	barrier.image = GetImage(colorBuffer);
@@ -168,7 +167,7 @@ void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState ne
 }
 
 
-void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
+void CommandContextVK::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
 	assert_msg(HasFlag(colorBuffer.GetUsageState(), ResourceState::UnorderedAccess), "Resource must be in UnorderedAccess state to insert a UAV barrier");
 
@@ -176,7 +175,7 @@ void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmedia
 }
 
 
-void ContextState::FlushResourceBarriers()
+void CommandContextVK::FlushResourceBarriers()
 {
 	for (const auto& barrier : m_textureBarriers)
 	{
@@ -224,13 +223,13 @@ void ContextState::FlushResourceBarriers()
 }
 
 
-void ContextState::ClearColor(ColorBuffer& colorBuffer)
+void CommandContextVK::ClearColor(ColorBuffer& colorBuffer)
 {
 	ClearColor(colorBuffer, colorBuffer.GetClearColor());
 }
 
 
-void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
+void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
 	ResourceState oldState = colorBuffer.GetUsageState();
 
@@ -254,38 +253,6 @@ void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 	vkCmdClearColorImage(m_commandBuffer, GetImage(colorBuffer), GetImageLayout(colorBuffer.GetUsageState()), &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
-}
-
-
-ComputeContext::ComputeContext()
-{
-	m_state.type = CommandListType::Compute;
-}
-
-
-uint64_t ComputeContext::Finish(bool bWaitForCompletion)
-{
-	uint64_t fenceValue = m_state.Finish(bWaitForCompletion);
-
-	GetVulkanDeviceManager()->FreeContext(this);
-
-	return fenceValue;
-}
-
-
-GraphicsContext::GraphicsContext()
-{
-	m_state.type = CommandListType::Direct;
-}
-
-
-uint64_t GraphicsContext::Finish(bool bWaitForCompletion)
-{
-	uint64_t fenceValue = m_state.Finish(bWaitForCompletion);
-
-	GetVulkanDeviceManager()->FreeContext(this);
-
-	return fenceValue;
 }
 
 } // namespace Luna::VK

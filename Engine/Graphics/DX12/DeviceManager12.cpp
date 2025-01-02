@@ -358,7 +358,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 }
 
 
-ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
+CommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 {
 	lock_guard<mutex> lockGuard(m_contextAllocationMutex);
 
@@ -366,41 +366,26 @@ ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 
 	auto& availableContexts = m_availableContexts[d3d12Type];
 
-	ICommandContext* retPtr{ nullptr };
-	wil::com_ptr<ICommandContext> ret;
+	CommandContext* ret{ nullptr };
 	if (availableContexts.empty())
 	{
-		switch (d3d12Type)
-		{
-		case D3D12_COMMAND_LIST_TYPE_DIRECT:
-		{
-			wil::com_ptr<GraphicsContext> graphicsContext = Make<GraphicsContext>();
-			ret = graphicsContext.query<ICommandContext>();
-		}
-		break;
-		case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-		{
-			wil::com_ptr<ComputeContext> computeContext = Make<ComputeContext>();
-			ret = computeContext.query<ICommandContext>();
-		}
-		break;
-		} // switch
+		wil::com_ptr<ICommandContext> contextImpl = Make<CommandContext12>(commandListType);
+		ret = new CommandContext(contextImpl.get());
 
-		retPtr = ret.get();
 		m_contextPool[d3d12Type].emplace_back(ret);
-		retPtr->Initialize();
+		ret->Initialize();
 	}
 	else
 	{
-		retPtr = availableContexts.front();
+		ret = availableContexts.front();
 		availableContexts.pop();
-		retPtr->Reset();
+		ret->Reset();
 	}
 
-	assert(retPtr != nullptr);
-	assert(retPtr->GetType() == commandListType);
+	assert(ret != nullptr);
+	assert(ret->GetType() == commandListType);
 
-	return retPtr;
+	return ret;
 }
 
 
@@ -416,7 +401,7 @@ void DeviceManager::CreateNewCommandList(CommandListType commandListType, ID3D12
 }
 
 
-void DeviceManager::FreeContext(ICommandContext* usedContext)
+void DeviceManager::FreeContext(CommandContext* usedContext)
 {
 	assert(usedContext != nullptr);
 	lock_guard<mutex> lockGuard(m_contextAllocationMutex);

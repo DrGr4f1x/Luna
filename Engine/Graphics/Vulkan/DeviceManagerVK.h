@@ -31,7 +31,7 @@ class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
 	, public NonCopyable
 {
-	friend struct ContextState;
+	friend class CommandContextVK;
 
 public:
 	DeviceManager(const DeviceManagerDesc& desc);
@@ -46,8 +46,8 @@ public:
 	void CreateDeviceResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	ICommandContext* AllocateContext(CommandListType commandListType) final;
-	void FreeContext(ICommandContext* usedContext);
+	CommandContext* AllocateContext(CommandListType commandListType) final;
+	void FreeContext(CommandContext* usedContext) final;
 
 	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
 
@@ -124,8 +124,8 @@ private:
 
 	// Command context handling
 	std::mutex m_contextAllocationMutex;
-	std::vector<wil::com_ptr<ICommandContext>> m_contextPool[4];
-	std::queue<ICommandContext*> m_availableContexts[4];
+	std::vector<std::unique_ptr<CommandContext>> m_contextPool[4];
+	std::queue<CommandContext*> m_availableContexts[4];
 };
 
 

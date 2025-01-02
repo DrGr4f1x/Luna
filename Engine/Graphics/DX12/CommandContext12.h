@@ -19,42 +19,43 @@ using namespace Microsoft::WRL;
 namespace Luna::DX12
 {
 
-// Forward declarations
-class ComputeContext;
-class GraphicsContext;
-
-
-struct ContextState
+class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
 {
-	friend class ComputeContext;
-	friend class GraphicsContext;
+public:
+	explicit CommandContext12(CommandListType type)
+		: m_type{ type }
+	{}
 
-	~ContextState();
+	void SetId(const std::string& id) override { m_id = id; }
+	CommandListType GetType() const override { return m_type; }
 
-	std::string id;
-	CommandListType type;
+	// Debug events and markers
+	void BeginEvent(const std::string & label) override;
+	void EndEvent() override;
+	void SetMarker(const std::string& label) override;
+
+	void Reset() override;
+	void Initialize() override;
+
+	void BeginFrame() override {}
+	uint64_t Finish(bool bWaitForCompletion) override;
+
+	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
+	void FlushResourceBarriers() override;
+
+	// Graphics context
+	void ClearColor(ColorBuffer& colorBuffer) override;
+	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
 
 private:
-	// Debug events and markers
-	void BeginEvent(const std::string& label);
-	void EndEvent();
-	void SetMarker(const std::string& label);
-
-	void Reset();
-	void Initialize();
-
-	uint64_t Finish(bool bWaitForCompletion);
-	
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate);
-	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate);
-	void FlushResourceBarriers();
-
-	void ClearColor(ColorBuffer& colorBuffer);
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor);
-
 	void BindDescriptorHeaps();
 
 private:
+	std::string m_id;
+	CommandListType m_type;
+
 	ID3D12GraphicsCommandList* m_commandList{ nullptr };
 	ID3D12CommandAllocator* m_currentAllocator{ nullptr };
 
@@ -68,79 +69,5 @@ private:
 	bool m_bHasPendingDebugEvent{ false };
 };
 
-
-class __declspec(uuid("54D5CC55-7AC6-4ED8-BA59-EC1264C94DE1")) ComputeContext
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IComputeContext, ICommandContext>>
-	, NonCopyable
-{
-	friend class DeviceManager;
-
-public:
-	ComputeContext();
-	virtual ~ComputeContext() = default;
-
-	// ICommandContext implementation
-	void SetId(const std::string& id) final { m_state.id = id; }
-	CommandListType GetType() const final { return m_state.type; }
-
-	// Debug events and markers
-	void BeginEvent(const std::string& label) final { m_state.BeginEvent(label); }
-	void EndEvent() final { m_state.EndEvent(); }
-	void SetMarker(const std::string& label) final { m_state.SetMarker(label); }
-
-	void Reset() final { m_state.Reset(); }
-	void Initialize() final { m_state.Initialize(); }
-	
-	void Begin(const std::string& id) final {}
-
-	uint64_t Finish(bool bWaitForCompletion = false) final;
-
-	inline void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) final 
-	{ 
-		m_state.TransitionResource(colorBuffer, newState, bFlushImmediate);
-	}
-
-private:
-	ContextState m_state;
-};
-
-
-class __declspec(uuid("317216FB-BB09-4295-9157-6F4147C0C2B4")) GraphicsContext
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IGraphicsContext, IComputeContext, ICommandContext>>
-	, NonCopyable
-{
-	friend class DeviceManager;
-
-public:
-	GraphicsContext();
-	virtual ~GraphicsContext() = default;
-
-	// ICommandContext implementation
-	void SetId(const std::string& id) final { m_state.id = id; }
-	CommandListType GetType() const final { return m_state.type; }
-
-	// Debug events and markers
-	void BeginEvent(const std::string& label) final { m_state.BeginEvent(label); }
-	void EndEvent() final { m_state.EndEvent(); }
-	void SetMarker(const std::string& label) final { m_state.SetMarker(label); }
-
-	void Reset() final { m_state.Reset(); }
-	void Initialize() final { m_state.Initialize(); }
-
-	void Begin(const std::string& id) final {}
-
-	uint64_t Finish(bool bWaitForCompletion = false) final;
-
-	inline void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) final
-	{
-		m_state.TransitionResource(colorBuffer, newState, bFlushImmediate);
-	}
-
-	void ClearColor(ColorBuffer& colorBuffer) final { m_state.ClearColor(colorBuffer); }
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) final { m_state.ClearColor(colorBuffer, clearColor); }
-
-private:
-	ContextState m_state;
-};
 
 } // namespace Luna::DX12

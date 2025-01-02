@@ -388,51 +388,36 @@ void DeviceManager::CreateWindowSizeDependentResources()
 }
 
 
-ICommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
+CommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 {
 	lock_guard<mutex> lockGuard(m_contextAllocationMutex);
 
 	auto& availableContexts = m_availableContexts[(uint32_t)commandListType];
 
-	ICommandContext* retPtr{ nullptr };
-	wil::com_ptr<ICommandContext> ret;
+	CommandContext* ret{ nullptr };
 	if (availableContexts.empty())
 	{
-		switch (commandListType)
-		{
-		case CommandListType::Direct:
-		{
-			wil::com_ptr<GraphicsContext> graphicsContext = Make<GraphicsContext>();
-			ret = graphicsContext.query<ICommandContext>();
-		}
-		break;
-		case CommandListType::Compute:
-		{
-			wil::com_ptr<ComputeContext> computeContext = Make<ComputeContext>();
-			ret = computeContext.query<ICommandContext>();
-		}
-		break;
-		} // switch
+		wil::com_ptr<ICommandContext> contextImpl = Make<CommandContextVK>(commandListType);
+		ret = new CommandContext(contextImpl.get());
 
-		retPtr = ret.get();
 		m_contextPool[(uint32_t)commandListType].emplace_back(ret);
-		retPtr->Initialize();
+		ret->Initialize();
 	}
 	else
 	{
-		retPtr = availableContexts.front();
+		ret = availableContexts.front();
 		availableContexts.pop();
-		retPtr->Reset();
+		ret->Reset();
 	}
 
-	assert(retPtr != nullptr);
-	assert(retPtr->GetType() == commandListType);
+	assert(ret != nullptr);
+	assert(ret->GetType() == commandListType);
 
-	return retPtr;
+	return ret;
 }
 
 
-void DeviceManager::FreeContext(ICommandContext* usedContext)
+void DeviceManager::FreeContext(CommandContext* usedContext)
 {
 	lock_guard<mutex> guard{ m_contextAllocationMutex };
 

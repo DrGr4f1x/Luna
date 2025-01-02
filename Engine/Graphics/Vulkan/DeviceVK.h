@@ -72,7 +72,6 @@ struct GraphicsDeviceDesc
 };
 
 
-// TODO: Get rid of this, just use the VK struct directly
 struct ImageDesc
 {
 	std::string name;
@@ -100,7 +99,6 @@ struct ImageDesc
 };
 
 
-// TODO: Get rid of this, just use the VK struct directly
 struct ImageViewDesc
 {
 	CVkImage* image{ nullptr };
