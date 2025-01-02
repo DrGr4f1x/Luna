@@ -13,6 +13,7 @@
 #include "Core\Color.h"
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\GpuResource12.h"
 
 using namespace Microsoft::WRL;
 
@@ -51,10 +52,9 @@ struct ColorBufferDescExt
 };
 
 
-class __declspec(uuid("3618277B-EA60-4D37-9904-B4256F66A36A")) IColorBufferData : public IPlatformData
+class __declspec(uuid("3618277B-EA60-4D37-9904-B4256F66A36A")) IColorBufferData : public IGpuResourceData
 {
 public:
-	virtual ID3D12Resource* GetResource() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept = 0;
@@ -62,7 +62,7 @@ public:
 
 
 class __declspec(uuid("BBBCFA80-B6CE-484F-B710-AF72B424B26E")) ColorBufferData
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IPlatformData>>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IGpuResourceData, IPlatformData>>
 	, NonCopyable
 {
 	friend class GraphicsDevice;

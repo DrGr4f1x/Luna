@@ -42,6 +42,16 @@ static bool IsValidComputeResourceState(ResourceState state)
 }
 
 
+template <class T>
+inline ID3D12Resource* GetResource(const T& obj)
+{
+	const auto platformData = obj.GetPlatformData();
+	wil::com_ptr<IGpuResourceData> gpuResourceData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuResourceData)));
+	return gpuResourceData->GetResource();
+}
+
+
 ContextState::~ContextState()
 {
 	if (m_commandList)
@@ -158,13 +168,8 @@ void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState ne
 		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
 		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
 
-		// TODO: put a wrapper function around this
-		auto platformData = colorBuffer.GetPlatformData();
-		wil::com_ptr<IColorBufferData> colorBufferData;
-		assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-
 		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrierDesc.Transition.pResource = colorBufferData->GetResource();
+		barrierDesc.Transition.pResource = GetResource(colorBuffer);
 		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
 		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
@@ -199,13 +204,9 @@ void ContextState::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmedia
 	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
 	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
 
-	auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-
 	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDesc.UAV.pResource = colorBufferData->GetResource();
+	barrierDesc.UAV.pResource = GetResource(colorBuffer);
 
 	if (bFlushImmediate)
 	{

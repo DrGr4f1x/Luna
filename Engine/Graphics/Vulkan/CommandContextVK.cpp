@@ -23,6 +23,16 @@ using namespace std;
 namespace Luna::VK
 {
 
+template <class T>
+inline VkImage GetImage(const T& obj)
+{
+	const auto platformData = obj.GetPlatformData();
+	wil::com_ptr<IGpuImageData> gpuImageData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuImageData)));
+	return gpuImageData->GetImage();
+}
+
+
 ContextState::~ContextState() = default;
 
 
@@ -134,13 +144,8 @@ uint64_t ContextState::Finish(bool bWaitForCompletion)
 
 void ContextState::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	// TODO: put a wrapper function around this
-	auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-
 	TextureBarrier barrier{};
-	barrier.image = colorBufferData->GetImage();
+	barrier.image = GetImage(colorBuffer);
 	barrier.format = FormatToVulkan(colorBuffer.GetFormat());
 	barrier.imageAspect = GetImageAspect(colorBuffer.GetFormat());
 	barrier.beforeState = colorBuffer.GetUsageState();
@@ -246,14 +251,7 @@ void ContextState::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 
 	FlushResourceBarriers();
 
-	// TODO: put a wrapper function around this
-	auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-
-	VkImage image = colorBufferData->GetImage();
-
-	vkCmdClearColorImage(m_commandBuffer, image, GetImageLayout(colorBuffer.GetUsageState()), &colVal, 1, &range);
+	vkCmdClearColorImage(m_commandBuffer, GetImage(colorBuffer), GetImageLayout(colorBuffer.GetUsageState()), &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
 }

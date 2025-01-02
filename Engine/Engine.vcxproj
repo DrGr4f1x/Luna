@@ -110,6 +110,7 @@
     <ClInclude Include="Graphics\DX12\Enums12.h" />
     <ClInclude Include="Graphics\DX12\Flags12.h" />
     <ClInclude Include="Graphics\DX12\Formats12.h" />
+    <ClInclude Include="Graphics\DX12\GpuResource12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
@@ -130,6 +131,7 @@
     <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
+    <ClInclude Include="Graphics\Vulkan\GpuImageVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
     <ClInclude Include="Graphics\Vulkan\StringsVK.h" />

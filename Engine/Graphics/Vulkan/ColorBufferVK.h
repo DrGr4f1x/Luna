@@ -12,6 +12,7 @@
 
 #include "Core\Color.h"
 #include "Graphics\ColorBuffer.h"
+#include "Graphics\Vulkan\GpuImageVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 using namespace Microsoft::WRL;
@@ -38,10 +39,9 @@ struct ColorBufferDescExt
 };
 
 
-class __declspec(uuid("63AC7681-AE34-4F5B-9D96-DBEA9FF89CAB")) IColorBufferData : public IPlatformData
+class __declspec(uuid("63AC7681-AE34-4F5B-9D96-DBEA9FF89CAB")) IColorBufferData : public IGpuImageData
 {
 public:
-	virtual VkImage GetImage() const noexcept = 0;
 	virtual VkImageView GetImageViewRtv() const noexcept = 0;
 	virtual VkImageView GetImageViewSrv() const noexcept = 0;
 	virtual VkDescriptorImageInfo GetImageInfoSrv() const noexcept = 0;
@@ -49,7 +49,7 @@ public:
 };
 
 class __declspec(uuid("23320A65-2603-49E9-B92F-7E5CE2A85BB3")) ColorBufferData
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IPlatformData>>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IGpuImageData, IPlatformData>>
 	, NonCopyable
 {
 public:
