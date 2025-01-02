@@ -167,6 +167,32 @@ void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceStat
 }
 
 
+void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	TextureBarrier barrier{};
+	barrier.image = GetImage(depthBuffer);
+	barrier.format = FormatToVulkan(depthBuffer.GetFormat());
+	barrier.imageAspect = GetImageAspect(depthBuffer.GetFormat());
+	barrier.beforeState = depthBuffer.GetUsageState();
+	barrier.afterState = newState;
+	barrier.numMips = depthBuffer.GetNumMips();
+	barrier.mipLevel = 0;
+	barrier.arraySizeOrDepth = depthBuffer.GetArraySize();
+	barrier.arraySlice = 0;
+	barrier.bWholeTexture = true;
+
+	m_textureBarriers.push_back(barrier);
+
+	// TODO: we should probably do this after the barriers are flushed
+	depthBuffer.SetUsageState(newState);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
 void CommandContextVK::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
 	assert_msg(HasFlag(colorBuffer.GetUsageState(), ResourceState::UnorderedAccess), "Resource must be in UnorderedAccess state to insert a UAV barrier");
@@ -250,9 +276,81 @@ void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 
 	FlushResourceBarriers();
 
-	vkCmdClearColorImage(m_commandBuffer, GetImage(colorBuffer), GetImageLayout(colorBuffer.GetUsageState()), &colVal, 1, &range);
+	vkCmdClearColorImage(m_commandBuffer, GetImage(colorBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
+}
+
+
+void CommandContextVK::ClearDepth(DepthBuffer& depthBuffer)
+{
+	ResourceState oldState = depthBuffer.GetUsageState();
+
+	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
+
+	VkClearDepthStencilValue depthVal;
+	depthVal.depth = depthBuffer.GetClearDepth();
+	depthVal.stencil = depthBuffer.GetClearStencil();
+
+	VkImageSubresourceRange range;
+	range.baseArrayLayer = 0;
+	range.baseMipLevel = 0;
+	range.layerCount = depthBuffer.GetArraySize();
+	range.levelCount = depthBuffer.GetNumMips();
+	range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+	FlushResourceBarriers();
+	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+
+	TransitionResource(depthBuffer, oldState, false);
+}
+
+
+void CommandContextVK::ClearStencil(DepthBuffer& depthBuffer)
+{
+	ResourceState oldState = depthBuffer.GetUsageState();
+
+	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
+
+	VkClearDepthStencilValue depthVal;
+	depthVal.depth = depthBuffer.GetClearDepth();
+	depthVal.stencil = depthBuffer.GetClearStencil();
+
+	VkImageSubresourceRange range;
+	range.baseArrayLayer = 0;
+	range.baseMipLevel = 0;
+	range.layerCount = depthBuffer.GetArraySize();
+	range.levelCount = depthBuffer.GetNumMips();
+	range.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
+
+	FlushResourceBarriers();
+	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+
+	TransitionResource(depthBuffer, oldState, false);
+}
+
+
+void CommandContextVK::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+{
+	ResourceState oldState = depthBuffer.GetUsageState();
+
+	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
+
+	VkClearDepthStencilValue depthVal;
+	depthVal.depth = depthBuffer.GetClearDepth();
+	depthVal.stencil = depthBuffer.GetClearStencil();
+
+	VkImageSubresourceRange range;
+	range.baseArrayLayer = 0;
+	range.baseMipLevel = 0;
+	range.layerCount = depthBuffer.GetArraySize();
+	range.levelCount = depthBuffer.GetNumMips();
+	range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+
+	FlushResourceBarriers();
+	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+
+	TransitionResource(depthBuffer, oldState, false);
 }
 
 } // namespace Luna::VK

@@ -19,6 +19,7 @@ namespace Luna
 // Forward declarations
 class ColorBuffer;
 class ComputeContext;
+class DepthBuffer;
 class GpuResource;
 class GraphicsContext;
 class CommandContext;
@@ -46,12 +47,16 @@ public:
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
 	virtual void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	// Graphics context
 	virtual void ClearColor(ColorBuffer& colorBuffer) = 0;
 	virtual void ClearColor(ColorBuffer& colorBuffer, Color clearColor) = 0;
+	virtual void ClearDepth(DepthBuffer& depthBuffer) = 0;
+	virtual void ClearStencil(DepthBuffer& depthBuffer) = 0;
+	virtual void ClearDepthAndStencil(DepthBuffer& depthBuffer) = 0;
 
 	// Compute context
 
@@ -94,6 +99,7 @@ public:
 	uint64_t Finish(bool bWaitForCompletion = false);
 
 	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
 
 protected:
 	void BeginFrame();
@@ -113,6 +119,9 @@ public:
 
 	void ClearColor(ColorBuffer& colorBuffer);
 	void ClearColor(ColorBuffer& colorBuffer, Color clearColor);
+	void ClearDepth(DepthBuffer& depthBuffer);
+	void ClearStencil(DepthBuffer& depthBuffer);
+	void ClearDepthAndStencil(DepthBuffer& depthBuffer);
 };
 
 
@@ -171,6 +180,12 @@ inline void CommandContext::TransitionResource(ColorBuffer& colorBuffer, Resourc
 }
 
 
+inline void CommandContext::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	m_contextImpl->TransitionResource(depthBuffer, newState, bFlushImmediate);
+}
+
+
 inline void CommandContext::BeginFrame()
 {
 	m_contextImpl->BeginFrame();
@@ -186,6 +201,24 @@ inline void GraphicsContext::ClearColor(ColorBuffer& colorBuffer)
 inline void GraphicsContext::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
 	m_contextImpl->ClearColor(colorBuffer, clearColor);
+}
+
+
+inline void GraphicsContext::ClearDepth(DepthBuffer& depthBuffer)
+{
+	m_contextImpl->ClearDepth(depthBuffer);
+}
+
+
+inline void GraphicsContext::ClearStencil(DepthBuffer& depthBuffer)
+{
+	m_contextImpl->ClearStencil(depthBuffer);
+}
+
+
+inline void GraphicsContext::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+{
+	m_contextImpl->ClearDepthAndStencil(depthBuffer);
 }
 
 } // namespace Luna

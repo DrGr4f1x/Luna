@@ -16,6 +16,16 @@
 using namespace Microsoft::WRL;
 
 
+namespace Luna
+{
+
+// Forward declarations
+class ColorBuffer;
+class DepthBuffer;
+
+} // namespace Luna
+
+
 namespace Luna::VK
 {
 
@@ -68,11 +78,15 @@ public:
 	uint64_t Finish(bool bWaitForCompletion) override;
 
 	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	void ClearColor(ColorBuffer& colorBuffer) override;
 	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
+	void ClearDepth(DepthBuffer& depthBuffer) override;
+	void ClearStencil(DepthBuffer& depthBuffer) override;
+	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
 private:
 	void BindDescriptorHeaps() {}

@@ -13,6 +13,7 @@
 #include "CommandContext12.h"
 
 #include "ColorBuffer12.h"
+#include "DepthBuffer12.h"
 #include "DeviceManager12.h"
 #include "Queue12.h"
 
@@ -49,6 +50,42 @@ inline ID3D12Resource* GetResource(const T& obj)
 	wil::com_ptr<IGpuResourceData> gpuResourceData;
 	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuResourceData)));
 	return gpuResourceData->GetResource();
+}
+
+
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const ColorBuffer& colorBuffer)
+{
+	const auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
+	return colorBufferData->GetRTV();
+}
+
+
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const ColorBuffer& colorBuffer)
+{
+	const auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
+	return colorBufferData->GetSRV();
+}
+
+
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(const ColorBuffer& colorBuffer, uint32_t index)
+{
+	const auto platformData = colorBuffer.GetPlatformData();
+	wil::com_ptr<IColorBufferData> colorBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
+	return colorBufferData->GetUAV(index);
+}
+
+
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const DepthBuffer& depthBuffer)
+{
+	const auto platformData = depthBuffer.GetPlatformData();
+	wil::com_ptr<IDepthBufferData> depthBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&depthBufferData)));
+	return depthBufferData->GetDSV();
 }
 
 
@@ -190,6 +227,52 @@ void CommandContext12::TransitionResource(ColorBuffer& colorBuffer, ResourceStat
 }
 
 
+void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	ResourceState oldState = depthBuffer.GetUsageState();
+
+	if (m_type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	if (oldState != newState)
+	{
+		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrierDesc.Transition.pResource = GetResource(depthBuffer);
+		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
+		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
+
+		// Check to see if we already started the transition
+		if (newState == depthBuffer.GetTransitioningState())
+		{
+			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+			depthBuffer.SetTransitioningState(ResourceState::Undefined);
+		}
+		else
+		{
+			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		}
+
+		depthBuffer.SetUsageState(newState);
+	}
+	else if (newState == ResourceState::UnorderedAccess)
+	{
+		InsertUAVBarrier(depthBuffer, bFlushImmediate);
+	}
+
+	if (bFlushImmediate || m_numBarriersToFlush == 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
 void CommandContext12::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
 	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
@@ -198,6 +281,22 @@ void CommandContext12::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImm
 	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrierDesc.UAV.pResource = GetResource(colorBuffer);
+
+	if (bFlushImmediate)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContext12::InsertUAVBarrier(DepthBuffer& depthBuffer, bool bFlushImmediate)
+{
+	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrierDesc.UAV.pResource = GetResource(depthBuffer);
 
 	if (bFlushImmediate)
 	{
@@ -237,6 +336,27 @@ void CommandContext12::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
 
 	m_commandList->ClearRenderTargetView(colorBufferData->GetRTV(), clearColor.GetPtr(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearDepth(DepthBuffer& depthBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearStencil(DepthBuffer& depthBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 

@@ -42,12 +42,17 @@ public:
 	uint64_t Finish(bool bWaitForCompletion) override;
 
 	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
+	void InsertUAVBarrier(DepthBuffer& depthBuffer, bool bFlushImmediate);
 	void FlushResourceBarriers() override;
 
 	// Graphics context
 	void ClearColor(ColorBuffer& colorBuffer) override;
 	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
+	void ClearDepth(DepthBuffer& depthBuffer) override;
+	void ClearStencil(DepthBuffer& depthBuffer) override;
+	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
 private:
 	void BindDescriptorHeaps();
