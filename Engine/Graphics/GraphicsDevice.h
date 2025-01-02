@@ -15,8 +15,7 @@ namespace Luna
 
 // Forward declarations
 struct ColorBufferDesc;
-struct IDeviceNotify;
-class IColorBuffer;
+struct DepthBufferDesc;
 class IPlatformData;
 enum class ResourceState : uint32_t;
 
@@ -27,6 +26,7 @@ public:
 	virtual ~IGraphicsDevice() = default;
 
 	virtual wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) = 0;
+	virtual wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) = 0;
 };
 
 } // namespace Luna

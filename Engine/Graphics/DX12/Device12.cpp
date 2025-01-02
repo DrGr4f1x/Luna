@@ -13,6 +13,7 @@
 #include "Device12.h"
 
 #include "ColorBuffer12.h"
+#include "DepthBuffer12.h"
 #include "DescriptorAllocator12.h"
 #include "DeviceCaps12.h"
 #include "Formats12.h"
@@ -254,6 +255,125 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateColorBufferData(ColorBufferDes
 
 	auto colorBufferData = Make<ColorBufferData>(descExt);
 	return colorBufferData;
+}
+
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState)
+{
+	// Create resource
+	D3D12_RESOURCE_DESC resourceDesc{
+		.Dimension			= GetResourceDimension(desc.resourceType),
+		.Alignment			= 0,
+		.Width				= (UINT64)desc.width,
+		.Height				= (UINT)desc.height,
+		.DepthOrArraySize	= (UINT16)desc.arraySizeOrDepth,
+		.MipLevels			= (UINT16)desc.numMips,
+		.Format				= FormatToDxgi(desc.format).resourceFormat,
+		.SampleDesc			= {.Count = desc.numSamples, .Quality = 0 },
+		.Layout				= D3D12_TEXTURE_LAYOUT_UNKNOWN,
+		.Flags				= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+	};
+
+	D3D12_CLEAR_VALUE clearValue{};
+	clearValue.Format = FormatToDxgi(desc.format).rtvFormat;
+	clearValue.DepthStencil.Depth = desc.clearDepth;
+	clearValue.DepthStencil.Stencil = desc.clearStencil;
+
+	ID3D12Resource* resource{ nullptr };
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+	assert_succeeded(m_dxDevice->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
+		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&resource)));
+
+	SetDebugName(resource, desc.name);
+
+	// Create descriptors and derived views
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	dsvDesc.Format = GetDSVFormat(FormatToDxgi(desc.format).resourceFormat);
+
+	if (resource->GetDesc().SampleDesc.Count == 1)
+	{
+		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.Texture2D.MipSlice = 0;
+	}
+	else
+	{
+		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+	}
+
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4> dsvHandles{};
+	for (auto& handle : dsvHandles)
+	{
+		handle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+	}
+
+	dsvHandles[0] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	dsvHandles[1] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+	m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[0]);
+
+	dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH;
+	m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[1]);
+
+	auto stencilReadFormat = GetStencilFormat(FormatToDxgi(desc.format).resourceFormat);
+	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
+	{
+		dsvHandles[2] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		dsvHandles[3] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+		m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[2]);
+
+		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+		m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[3]);
+	}
+	else
+	{
+		dsvHandles[2] = dsvHandles[0];
+		dsvHandles[3] = dsvHandles[1];
+	}
+
+
+	auto depthSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_CPU_DESCRIPTOR_HANDLE stencilSrvHandle{};
+	stencilSrvHandle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+
+	// Create the shader resource view
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = GetDepthFormat(FormatToDxgi(desc.format).resourceFormat);
+	if (dsvDesc.ViewDimension == D3D12_DSV_DIMENSION_TEXTURE2D)
+	{
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+	}
+	else
+	{
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+	}
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	m_dxDevice->CreateShaderResourceView(resource, &srvDesc, depthSrvHandle);
+
+	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
+	{
+		stencilSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		srvDesc.Format = stencilReadFormat;
+		srvDesc.Texture2D.PlaneSlice = (srvDesc.Format == DXGI_FORMAT_X32_TYPELESS_G8X24_UINT) ? 1 : 0;
+		m_dxDevice->CreateShaderResourceView(resource, &srvDesc, stencilSrvHandle);
+	}
+
+	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(desc.format).resourceFormat);
+
+	initialState = ResourceState::Common;
+
+	auto descExt = DepthBufferDescExt{}
+		.SetResource(resource)
+		.SetUsageState(ResourceState::DepthRead | ResourceState::DepthWrite)
+		.SetPlaneCount(planeCount)
+		.SetDsvHandles(dsvHandles)
+		.SetDepthSrvHandle(depthSrvHandle)
+		.SetStencilSrvHandle(stencilSrvHandle);
+
+	return Make<DepthBufferData>(descExt);
 }
 
 

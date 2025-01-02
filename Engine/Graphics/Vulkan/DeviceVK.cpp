@@ -13,6 +13,7 @@
 #include "DeviceVK.h"
 
 #include "ColorBufferVK.h"
+#include "DepthBufferVK.h"
 
 using namespace std;
 
@@ -61,16 +62,16 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateColorBufferData(ColorBufferDes
 {
 	// Create image
 	auto imageDesc = ImageDesc{
-		.name = desc.name,
-		.width = desc.width,
-		.height = desc.height,
-		.arraySizeOrDepth = desc.arraySizeOrDepth,
-		.format = desc.format,
-		.numMips = desc.numMips,
-		.numSamples = desc.numSamples,
-		.resourceType = desc.resourceType,
-		.imageUsage = GpuImageUsage::ColorBuffer,
-		.memoryAccess = MemoryAccess::GpuReadWrite
+		.name				= desc.name,
+		.width				= desc.width,
+		.height				= desc.height,
+		.arraySizeOrDepth	= desc.arraySizeOrDepth,
+		.format				= desc.format,
+		.numMips			= desc.numMips,
+		.numSamples			= desc.numSamples,
+		.resourceType		= desc.resourceType,
+		.imageUsage			= GpuImageUsage::ColorBuffer,
+		.memoryAccess		= MemoryAccess::GpuReadWrite
 	};
 
 	if (HasFlag(desc.resourceType, ResourceType::Texture3D))
@@ -95,16 +96,16 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateColorBufferData(ColorBufferDes
 
 	// Render target view
 	auto imageViewDesc = ImageViewDesc{
-		.image = image.get(),
-		.name = desc.name,
-		.resourceType = ResourceType::Texture2D,
-		.imageUsage = GpuImageUsage::RenderTarget,
-		.format = desc.format,
-		.imageAspect = ImageAspect::Color,
-		.baseMipLevel = 0,
-		.mipCount = desc.numMips,
-		.baseArraySlice = 0,
-		.arraySize = desc.arraySizeOrDepth
+		.image				= image.get(),
+		.name				= desc.name,
+		.resourceType		= ResourceType::Texture2D,
+		.imageUsage			= GpuImageUsage::RenderTarget,
+		.format				= desc.format,
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= desc.numMips,
+		.baseArraySlice		= 0,
+		.arraySize			= desc.arraySizeOrDepth
 	};
 	auto imageViewRtv = CreateImageView(imageViewDesc);
 
@@ -114,28 +115,119 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateColorBufferData(ColorBufferDes
 
 	// Descriptors
 	auto imageInfoSrv = VkDescriptorImageInfo{
-		.sampler = VK_NULL_HANDLE,
-		.imageView = *imageViewSrv,
-		.imageLayout = GetImageLayout(ResourceState::ShaderResource)
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewSrv,
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
 	};
 	auto imageInfoUav = VkDescriptorImageInfo{
-		.sampler = VK_NULL_HANDLE,
-		.imageView = *imageViewSrv,
-		.imageLayout = GetImageLayout(ResourceState::UnorderedAccess)
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewSrv,
+		.imageLayout	= GetImageLayout(ResourceState::UnorderedAccess)
 	};
 
 	auto descExt = ColorBufferDescExt{
-		.image = image.get(),
-		.imageViewRtv = imageViewRtv.get(),
-		.imageViewSrv = imageViewSrv.get(),
-		.imageInfoSrv = imageInfoSrv,
-		.imageInfoUav = imageInfoUav,
-		.usageState = ResourceState::Common
+		.image			= image.get(),
+		.imageViewRtv	= imageViewRtv.get(),
+		.imageViewSrv	= imageViewSrv.get(),
+		.imageInfoSrv	= imageInfoSrv,
+		.imageInfoUav	= imageInfoUav,
+		.usageState		= ResourceState::Common
 	};
 
 	initialState = ResourceState::Common;
 
 	return Make<ColorBufferData>(descExt);
+}
+
+
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState)
+{
+	// Create depth image
+	auto imageDesc = ImageDesc{
+		.name				= desc.name,
+		.width				= desc.width,
+		.height				= desc.height,
+		.arraySizeOrDepth	= desc.arraySizeOrDepth,
+		.format				= desc.format,
+		.numMips			= desc.numMips,
+		.numSamples			= desc.numSamples,
+		.resourceType		= desc.resourceType,
+		.imageUsage			= GpuImageUsage::DepthBuffer,
+		.memoryAccess		= MemoryAccess::GpuReadWrite
+	};
+	
+	auto image = CreateImage(imageDesc);
+
+	// Create image views and descriptors
+	const bool bHasStencil = IsStencilFormat(desc.format);
+
+	auto imageAspect = ImageAspect::Depth;
+	if (bHasStencil)
+	{
+		imageAspect |= ImageAspect::Stencil;
+	}
+
+	auto imageViewDesc = ImageViewDesc{
+		.image				= image.get(),
+		.name				= desc.name,
+		.resourceType		= ResourceType::Texture2D,
+		.imageUsage			= GpuImageUsage::DepthStencilTarget,
+		.format				= desc.format,
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= desc.numMips,
+		.baseArraySlice		= 0,
+		.arraySize			= desc.arraySizeOrDepth
+	};
+
+	auto imageViewDepthStencil = CreateImageView(imageViewDesc);
+	wil::com_ptr<CVkImageView> imageViewDepthOnly;
+	wil::com_ptr<CVkImageView> imageViewStencilOnly;
+
+	if (bHasStencil)
+	{
+		imageViewDesc
+			.SetName(format("{} Depth Image View", desc.name))
+			.SetImageAspect(ImageAspect::Depth)
+			.SetViewType(TextureSubresourceViewType::DepthOnly);
+
+		imageViewDepthOnly = CreateImageView(imageViewDesc);
+
+		imageViewDesc
+			.SetName(format("{} Stencil Image View", desc.name))
+			.SetImageAspect(ImageAspect::Stencil)
+			.SetViewType(TextureSubresourceViewType::StencilOnly);
+
+		imageViewStencilOnly = CreateImageView(imageViewDesc);
+	}
+	else
+	{
+		imageViewDepthOnly = imageViewDepthStencil;
+		imageViewStencilOnly = imageViewDepthStencil;
+	}
+
+	auto imageInfoDepth = VkDescriptorImageInfo{ 
+		.sampler		= VK_NULL_HANDLE, 
+		.imageView		= *imageViewDepthOnly, 
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource) 
+	};
+	auto imageInfoStencil = VkDescriptorImageInfo{ 
+		.sampler		= VK_NULL_HANDLE, 
+		.imageView		= *imageViewStencilOnly, 
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource) 
+	};
+
+	auto descExt = DepthBufferDescExt{
+		.image					= image.get(),
+		.imageViewDepthStencil	= imageViewDepthStencil.get(),
+		.imageViewDepthOnly		= imageViewDepthOnly.get(),
+		.imageViewStencilOnly	= imageViewStencilOnly.get(),
+		.imageInfoDepth			= imageInfoDepth,
+		.imageInfoStencil		= imageInfoStencil,
+		.usageState				= ResourceState::DepthRead | ResourceState::DepthWrite
+	};
+
+	return Make<DepthBufferData>(descExt);
 }
 
 

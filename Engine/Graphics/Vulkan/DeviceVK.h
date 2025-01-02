@@ -72,6 +72,7 @@ struct GraphicsDeviceDesc
 };
 
 
+// TODO: Get rid of this, just use the VK struct directly
 struct ImageDesc
 {
 	std::string name;
@@ -99,6 +100,7 @@ struct ImageDesc
 };
 
 
+// TODO: Get rid of this, just use the VK struct directly
 struct ImageViewDesc
 {
 	CVkImage* image{ nullptr };
@@ -141,6 +143,7 @@ public:
 
 	// GraphicsDevice implementation
 	wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) final;
+	wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) final;
 
 	void CreateResources();
 

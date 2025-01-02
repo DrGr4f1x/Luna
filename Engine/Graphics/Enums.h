@@ -613,6 +613,7 @@ enum class GpuImageUsage
 	CopyDest			= 0x0020,
 
 	ColorBuffer			= RenderTarget | ShaderResource | UnorderedAccess | CopyDest | CopySource,
+	DepthBuffer			= DepthStencilTarget | ShaderResource | CopyDest | CopySource,
 };
 template <> struct EnableBitmaskOperators<GpuImageUsage> { static const bool enable = true; };
 
