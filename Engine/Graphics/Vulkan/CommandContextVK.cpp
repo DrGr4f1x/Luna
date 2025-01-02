@@ -267,12 +267,13 @@ void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 	colVal.float32[2] = clearColor.B();
 	colVal.float32[3] = clearColor.A();
 
-	VkImageSubresourceRange range;
-	range.baseArrayLayer = 0;
-	range.baseMipLevel = 0;
-	range.layerCount = colorBuffer.GetArraySize();
-	range.levelCount = colorBuffer.GetNumMips();
-	range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	VkImageSubresourceRange range{
+		.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
+		.baseMipLevel		= 0,
+		.levelCount			= colorBuffer.GetNumMips(),
+		.baseArrayLayer		= 0,
+		.layerCount			= colorBuffer.GetArraySize()
+	};
 
 	FlushResourceBarriers();
 
@@ -284,68 +285,40 @@ void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 
 void CommandContextVK::ClearDepth(DepthBuffer& depthBuffer)
 {
-	ResourceState oldState = depthBuffer.GetUsageState();
-
-	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
-
-	VkClearDepthStencilValue depthVal;
-	depthVal.depth = depthBuffer.GetClearDepth();
-	depthVal.stencil = depthBuffer.GetClearStencil();
-
-	VkImageSubresourceRange range;
-	range.baseArrayLayer = 0;
-	range.baseMipLevel = 0;
-	range.layerCount = depthBuffer.GetArraySize();
-	range.levelCount = depthBuffer.GetNumMips();
-	range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-
-	FlushResourceBarriers();
-	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
-
-	TransitionResource(depthBuffer, oldState, false);
+	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
 void CommandContextVK::ClearStencil(DepthBuffer& depthBuffer)
 {
-	ResourceState oldState = depthBuffer.GetUsageState();
-
-	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
-
-	VkClearDepthStencilValue depthVal;
-	depthVal.depth = depthBuffer.GetClearDepth();
-	depthVal.stencil = depthBuffer.GetClearStencil();
-
-	VkImageSubresourceRange range;
-	range.baseArrayLayer = 0;
-	range.baseMipLevel = 0;
-	range.layerCount = depthBuffer.GetArraySize();
-	range.levelCount = depthBuffer.GetNumMips();
-	range.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-
-	FlushResourceBarriers();
-	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
-
-	TransitionResource(depthBuffer, oldState, false);
+	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
 void CommandContextVK::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 {
+	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+}
+
+
+void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags)
+{
 	ResourceState oldState = depthBuffer.GetUsageState();
 
 	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
 
-	VkClearDepthStencilValue depthVal;
-	depthVal.depth = depthBuffer.GetClearDepth();
-	depthVal.stencil = depthBuffer.GetClearStencil();
+	VkClearDepthStencilValue depthVal{
+		.depth		= depthBuffer.GetClearDepth(),
+		.stencil	= depthBuffer.GetClearStencil()
+	};
 
-	VkImageSubresourceRange range;
-	range.baseArrayLayer = 0;
-	range.baseMipLevel = 0;
-	range.layerCount = depthBuffer.GetArraySize();
-	range.levelCount = depthBuffer.GetNumMips();
-	range.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+	VkImageSubresourceRange range{
+		.aspectMask			= flags,
+		.baseMipLevel		= 0,
+		.levelCount			= depthBuffer.GetNumMips(),
+		.baseArrayLayer		= 0,
+		.layerCount			= depthBuffer.GetArraySize()
+	};
 
 	FlushResourceBarriers();
 	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);

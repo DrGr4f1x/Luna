@@ -158,7 +158,7 @@ void DeviceManager::Present()
 
 	m_fenceValues[m_backBufferIndex] = GetQueue(CommandListType::Direct).GetLastSubmittedFenceValue();
 
-	// Handle device removed
+	// TODO Handle device removed
 }
 
 

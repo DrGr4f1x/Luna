@@ -89,6 +89,9 @@ public:
 	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
 private:
+	// TODO Put this in namespace Internal
+	void ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags);
+
 	void BindDescriptorHeaps() {}
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
