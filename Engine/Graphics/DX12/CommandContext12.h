@@ -57,6 +57,8 @@ public:
 	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
 private:
+	void TransitionResource_Internal(GpuResource& gpuResource, ResourceState newState, bool bFlushImmediate);
+	void InsertUAVBarrier_Internal(GpuResource& gpuResource, bool bFlushImmediate);
 	void BindDescriptorHeaps();
 
 private:

@@ -193,125 +193,25 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 
 void CommandContext12::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	ResourceState oldState = colorBuffer.GetUsageState();
-
-	if (m_type == CommandListType::Compute)
-	{
-		assert(IsValidComputeResourceState(oldState));
-		assert(IsValidComputeResourceState(newState));
-	}
-
-	if (oldState != newState)
-	{
-		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
-		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
-
-		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrierDesc.Transition.pResource = GetResource(colorBuffer);
-		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
-		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
-
-		// Check to see if we already started the transition
-		if (newState == colorBuffer.GetTransitioningState())
-		{
-			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
-			colorBuffer.SetTransitioningState(ResourceState::Undefined);
-		}
-		else
-		{
-			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		}
-
-		colorBuffer.SetUsageState(newState);
-	}
-	else if (newState == ResourceState::UnorderedAccess)
-	{
-		InsertUAVBarrier(colorBuffer, bFlushImmediate);
-	}
-
-	if (bFlushImmediate || m_numBarriersToFlush == 16)
-	{
-		FlushResourceBarriers();
-	}
+	TransitionResource_Internal(static_cast<GpuResource&>(colorBuffer), newState, bFlushImmediate);
 }
 
 
 void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	ResourceState oldState = depthBuffer.GetUsageState();
-
-	if (m_type == CommandListType::Compute)
-	{
-		assert(IsValidComputeResourceState(oldState));
-		assert(IsValidComputeResourceState(newState));
-	}
-
-	if (oldState != newState)
-	{
-		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
-		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
-
-		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrierDesc.Transition.pResource = GetResource(depthBuffer);
-		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
-		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
-
-		// Check to see if we already started the transition
-		if (newState == depthBuffer.GetTransitioningState())
-		{
-			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
-			depthBuffer.SetTransitioningState(ResourceState::Undefined);
-		}
-		else
-		{
-			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		}
-
-		depthBuffer.SetUsageState(newState);
-	}
-	else if (newState == ResourceState::UnorderedAccess)
-	{
-		InsertUAVBarrier(depthBuffer, bFlushImmediate);
-	}
-
-	if (bFlushImmediate || m_numBarriersToFlush == 16)
-	{
-		FlushResourceBarriers();
-	}
+	TransitionResource_Internal(static_cast<GpuResource&>(depthBuffer), newState, bFlushImmediate);
 }
 
 
 void CommandContext12::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
-	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
-	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
-
-	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDesc.UAV.pResource = GetResource(colorBuffer);
-
-	if (bFlushImmediate)
-	{
-		FlushResourceBarriers();
-	}
+	InsertUAVBarrier_Internal(static_cast<GpuResource&>(colorBuffer), bFlushImmediate);
 }
 
 
 void CommandContext12::InsertUAVBarrier(DepthBuffer& depthBuffer, bool bFlushImmediate)
 {
-	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
-	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
-
-	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDesc.UAV.pResource = GetResource(depthBuffer);
-
-	if (bFlushImmediate)
-	{
-		FlushResourceBarriers();
-	}
+	InsertUAVBarrier_Internal(static_cast<GpuResource&>(depthBuffer), bFlushImmediate);
 }
 
 
@@ -357,6 +257,68 @@ void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 {
 	FlushResourceBarriers();
 	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::TransitionResource_Internal(GpuResource& gpuResource, ResourceState newState, bool bFlushImmediate)
+{
+	ResourceState oldState = gpuResource.GetUsageState();
+
+	if (m_type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	if (oldState != newState)
+	{
+		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrierDesc.Transition.pResource = GetResource(gpuResource);
+		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
+		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
+
+		// Check to see if we already started the transition
+		if (newState == gpuResource.GetTransitioningState())
+		{
+			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
+			gpuResource.SetTransitioningState(ResourceState::Undefined);
+		}
+		else
+		{
+			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		}
+
+		gpuResource.SetUsageState(newState);
+	}
+	else if (newState == ResourceState::UnorderedAccess)
+	{
+		InsertUAVBarrier_Internal(gpuResource, bFlushImmediate);
+	}
+
+	if (bFlushImmediate || m_numBarriersToFlush == 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContext12::InsertUAVBarrier_Internal(GpuResource& gpuResource, bool bFlushImmediate)
+{
+	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrierDesc.UAV.pResource = GetResource(gpuResource);
+
+	if (bFlushImmediate)
+	{
+		FlushResourceBarriers();
+	}
 }
 
 
