@@ -318,24 +318,14 @@ void CommandContext12::FlushResourceBarriers()
 void CommandContext12::ClearColor(ColorBuffer& colorBuffer)
 {
 	FlushResourceBarriers();
-
-	auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-
-	m_commandList->ClearRenderTargetView(colorBufferData->GetRTV(), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
 void CommandContext12::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
-
-	auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-
-	m_commandList->ClearRenderTargetView(colorBufferData->GetRTV(), clearColor.GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), clearColor.GetPtr(), 0, nullptr);
 }
 
 
