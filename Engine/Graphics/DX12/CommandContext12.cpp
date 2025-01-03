@@ -89,6 +89,16 @@ inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const DepthBuffer& depthBuffer)
 }
 
 
+CommandContext12::~CommandContext12()
+{
+	if (m_commandList != nullptr)
+	{
+		m_commandList->Release();
+		m_commandList = nullptr;
+	}
+}
+
+
 void CommandContext12::BeginEvent(const string& label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS

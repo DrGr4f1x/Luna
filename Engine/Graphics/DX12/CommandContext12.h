@@ -27,6 +27,8 @@ public:
 		: m_type{ type }
 	{}
 
+	~CommandContext12();
+
 	void SetId(const std::string& id) override { m_id = id; }
 	CommandListType GetType() const override { return m_type; }
 
