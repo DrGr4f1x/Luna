@@ -39,8 +39,10 @@
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
     <ClCompile Include="Graphics\DX12\Enums12.cpp" />
     <ClCompile Include="Graphics\DX12\Formats12.cpp" />
+    <ClCompile Include="Graphics\DX12\GpuBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
+    <ClCompile Include="Graphics\GpuBuffer.cpp" />
     <ClCompile Include="Graphics\GpuResource.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\PixelBuffer.cpp" />
@@ -54,6 +56,7 @@
     <ClCompile Include="Graphics\Vulkan\EnumsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ExtensionManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\FormatsVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\GpuBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\QueueVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VersionVK.cpp" />
@@ -110,11 +113,13 @@
     <ClInclude Include="Graphics\DX12\Enums12.h" />
     <ClInclude Include="Graphics\DX12\Flags12.h" />
     <ClInclude Include="Graphics\DX12\Formats12.h" />
+    <ClInclude Include="Graphics\DX12\GpuBuffer12.h" />
     <ClInclude Include="Graphics\DX12\GpuResource12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
     <ClInclude Include="Graphics\Formats.h" />
+    <ClInclude Include="Graphics\GpuBuffer.h" />
     <ClInclude Include="Graphics\GpuResource.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
     <ClInclude Include="Graphics\GraphicsDevice.h" />
@@ -131,6 +136,7 @@
     <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
+    <ClInclude Include="Graphics\Vulkan\GpuBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuImageVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />

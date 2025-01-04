@@ -8,19 +8,17 @@
 // Author:  David Elder
 //
 
-#pragma once
+#include "Stdafx.h"
 
-#include "Graphics\PlatformData.h"
-
+#include "GpuBuffer12.h"
 
 namespace Luna::DX12
 {
 
-class __declspec(uuid("A51DF8E6-61C4-42DE-A64F-79A9A6480528")) IGpuResourceData : public IPlatformData
+IndexBufferData::IndexBufferData(const IndexBufferDescExt& descExt)
+	: m_resource{ descExt.resource }
+	, m_ibvHandle{ descExt.ibvHandle }
 {
-public:
-	virtual ID3D12Resource* GetResource() const noexcept = 0;
-	virtual uint64_t GetGpuAddress() const noexcept = 0;
-};
+}
 
 } // namespace Luna::DX12

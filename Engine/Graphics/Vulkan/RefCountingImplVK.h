@@ -426,4 +426,37 @@ private:
 	VkImageView m_imageView{ VK_NULL_HANDLE };
 };
 
+
+class __declspec(uuid("56B8DE36-FF52-40B2-A736-CD91EE48EAD0")) CVkBuffer
+	: public RefCounted<CVkBuffer>
+	, public NonCopyable
+{
+public:
+	CVkBuffer() noexcept = default;
+	CVkBuffer(CVkDevice* device, CVmaAllocator* allocator, VkBuffer buffer, VmaAllocation allocation) noexcept
+		: m_device{ device }
+		, m_allocator{ allocator }
+		, m_buffer{ buffer }
+		, m_allocation{ allocation }
+	{}
+	~CVkBuffer()
+	{
+		Destroy();
+	}
+
+	VkBuffer Get() const noexcept { return m_buffer; }
+	operator VkBuffer() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+	VmaAllocator GetAllocator() const noexcept { return m_allocator->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	wil::com_ptr<CVmaAllocator> m_allocator;
+	VkBuffer m_buffer{ VK_NULL_HANDLE };
+	VmaAllocation m_allocation{ VK_NULL_HANDLE };
+};
+
 } // namespace Luna::VK

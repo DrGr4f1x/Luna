@@ -27,7 +27,6 @@ bool ColorBuffer::Initialize(ColorBufferDesc& desc)
 		m_platformData = device->CreateColorBufferData(desc, m_usageState);
 
 		m_name = desc.name;
-		m_usageState = ResourceState::Undefined;
 		m_transitioningState = ResourceState::Undefined;
 		m_resourceType = desc.resourceType;
 
@@ -59,7 +58,6 @@ bool ColorBuffer::InitializeFromSwapchain(uint32_t imageIndex)
 		m_platformData = deviceManager->CreateColorBufferFromSwapChain(desc, m_usageState, imageIndex);
 
 		m_name = desc.name;
-		m_usageState = ResourceState::Undefined;
 		m_transitioningState = ResourceState::Undefined;
 		m_resourceType = desc.resourceType;
 

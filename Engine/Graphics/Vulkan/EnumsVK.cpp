@@ -658,6 +658,26 @@ VkImageUsageFlags GetImageUsageFlags(GpuImageUsage usage)
 }
 
 
+VkBufferUsageFlags GetBufferUsageFlags(ResourceType resourceType)
+{
+	static const ResourceType s_genericBuffer =
+		ResourceType::ByteAddressBuffer |
+		ResourceType::IndirectArgsBuffer |
+		ResourceType::ReadbackBuffer;
+
+	VkBufferUsageFlags flags = 0;
+
+	flags |= HasFlag(resourceType, ResourceType::IndexBuffer) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
+	flags |= HasFlag(resourceType, ResourceType::VertexBuffer) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
+	flags |= HasFlag(resourceType, ResourceType::TypedBuffer) ? (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT) : 0;
+	flags |= HasFlag(resourceType, s_genericBuffer) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	flags |= HasFlag(resourceType, ResourceType::StructuredBuffer) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	flags |= HasFlag(resourceType, ResourceType::ConstantBuffer) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
+
+	return flags;
+}
+
+
 VmaAllocationCreateFlags GetMemoryFlags(MemoryAccess access)
 {
 	return HasFlag(access, MemoryAccess::CpuMapped) ? VMA_ALLOCATION_CREATE_MAPPED_BIT : 0;
@@ -785,7 +805,7 @@ static ResourceStateMapping s_resourceStateMap[] =
 	{ ResourceState::Predication,
 		VK_PIPELINE_STAGE_2_CONDITIONAL_RENDERING_BIT_EXT,
 		VK_ACCESS_2_CONDITIONAL_RENDERING_READ_BIT_EXT,
-		VK_IMAGE_LAYOUT_UNDEFINED }
+		VK_IMAGE_LAYOUT_UNDEFINED },
 };
 
 

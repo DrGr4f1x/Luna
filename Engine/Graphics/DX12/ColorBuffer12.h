@@ -70,10 +70,11 @@ class __declspec(uuid("BBBCFA80-B6CE-484F-B710-AF72B424B26E")) ColorBufferData
 public:
 	explicit ColorBufferData(const ColorBufferDescExt& descExt);
 	
-	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept { return m_rtvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept { return m_uavHandles[uavIndex]; }
+	ID3D12Resource* GetResource() const noexcept override { return m_resource.get(); }
+	uint64_t GetGpuAddress() const noexcept override { return m_resource->GetGPUVirtualAddress(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept override { return m_srvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept override { return m_rtvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept override { return m_uavHandles[uavIndex]; }
 
 private:
 	wil::com_ptr<ID3D12Resource> m_resource;

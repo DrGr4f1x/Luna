@@ -17,6 +17,7 @@
 #include "DescriptorAllocator12.h"
 #include "DeviceCaps12.h"
 #include "Formats12.h"
+#include "GpuBuffer12.h"
 #include "Queue12.h"
 
 using namespace std;
@@ -377,6 +378,39 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateDepthBufferData(DepthBufferDes
 }
 
 
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState)
+{
+	assert(desc.elementSize == 2 || desc.elementSize == 4);
+
+	ID3D12Resource* pResource = CreateGpuBuffer(desc, initialState);
+
+	uint64_t gpuAddress = pResource->GetGPUVirtualAddress();
+
+	switch (desc.resourceType)
+	{
+	case ResourceType::IndexBuffer:
+	{
+		IndexBufferDescExt indexBufferDescExt{
+			.resource		= pResource,
+			.gpuAddress		= gpuAddress,
+			.ibvHandle = {
+				.BufferLocation		= gpuAddress,
+				.SizeInBytes		= (uint32_t)desc.elementSize * (uint32_t)desc.elementCount,
+				.Format				= (desc.elementSize == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT
+			}
+		};
+		return Make<IndexBufferData>(indexBufferDescExt);
+	}
+		break;
+
+	default:
+		assert(false);
+		return nullptr;
+		break;
+	}
+}
+
+
 void GraphicsDevice::CreateResources()
 {
 	if (m_desc.enableValidation)
@@ -472,6 +506,45 @@ void GraphicsDevice::ReadCaps()
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count)
 {
 	return m_descriptorAllocators[type]->Allocate(m_dxDevice.get(), count);
+}
+
+
+ID3D12Resource* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState)
+{ 
+	initialState = ResourceState::Common;
+
+	const UINT64 bufferSize = desc.elementSize * desc.elementCount;
+
+	D3D12_RESOURCE_DESC resourceDesc{
+		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
+		.Alignment			= 0,
+		.Width				= bufferSize,
+		.Height				= 1,
+		.DepthOrArraySize	= 1,
+		.MipLevels			= 1,
+		.Format				= DXGI_FORMAT_UNKNOWN,
+		.SampleDesc			= { .Count = 1, .Quality = 0 },
+		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+		.Flags				= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+	};
+	
+	D3D12_HEAP_PROPERTIES heapProps{
+		.Type					= D3D12_HEAP_TYPE_DEFAULT,
+		.CPUPageProperty		= D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+		.MemoryPoolPreference	= D3D12_MEMORY_POOL_UNKNOWN,
+		.CreationNodeMask		= 1,
+		.VisibleNodeMask		= 1
+	};
+	
+	ID3D12Resource* pResource{ nullptr };
+	assert_succeeded(m_dxDevice->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
+		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&pResource)));
+
+#if ENABLE_D3D12_DEBUG_MARKERS
+	SetDebugName(pResource, desc.name.c_str());
+#endif
+
+	return pResource;
 }
 
 

@@ -107,4 +107,12 @@ void CVkImageView::Destroy()
 	m_imageView = VK_NULL_HANDLE;
 }
 
+
+void CVkBuffer::Destroy()
+{
+	vmaDestroyBuffer(GetAllocator(), m_buffer, m_allocation);
+	m_allocation = VK_NULL_HANDLE;
+	m_buffer = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

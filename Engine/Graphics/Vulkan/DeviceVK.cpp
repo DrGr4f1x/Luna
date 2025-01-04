@@ -14,6 +14,7 @@
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
+#include "GpuBufferVK.h"
 
 using namespace std;
 
@@ -228,6 +229,43 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateDepthBufferData(DepthBufferDes
 	};
 
 	return Make<DepthBufferData>(descExt);
+}
+
+
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState)
+{
+	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+	auto createInfo = VkBufferCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext = nullptr,
+		.size = desc.elementCount * desc.elementSize,
+		.usage = GetBufferUsageFlags(desc.resourceType) | transferFlags
+	};
+
+	VmaAllocationCreateInfo allocCreateInfo = {};
+	allocCreateInfo.flags = GetMemoryFlags(desc.memoryAccess);
+	allocCreateInfo.usage = GetMemoryUsage(desc.memoryAccess);
+
+	VkBuffer vkBuffer{ VK_NULL_HANDLE };
+	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
+
+	auto res = vmaCreateBuffer(*m_vmaAllocator, &createInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+	assert(res == VK_SUCCESS);
+
+	SetDebugName(*m_vkDevice, vkBuffer, desc.name);
+
+	auto buffer = Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), vkBuffer, vmaBufferAllocation);
+
+	auto descExt = GpuBufferDescExt{
+		.buffer = buffer.get(),
+		.bufferInfo = {
+			.buffer		= vkBuffer,
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
+		}
+	};
+	return Make<GpuBufferData>(descExt);
 }
 
 

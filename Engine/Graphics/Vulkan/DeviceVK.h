@@ -142,6 +142,7 @@ public:
 	// GraphicsDevice implementation
 	wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) final;
+	wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) final;
 
 	void CreateResources();
 

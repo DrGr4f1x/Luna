@@ -12,6 +12,7 @@
 
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\GpuResource12.h"
 
 using namespace Microsoft::WRL;
 
@@ -48,10 +49,9 @@ struct DepthBufferDescExt
 };
 
 
-class __declspec(uuid("232C36B6-60FC-4DE6-8AD5-84769D22CDFF")) IDepthBufferData : public IPlatformData
+class __declspec(uuid("232C36B6-60FC-4DE6-8AD5-84769D22CDFF")) IDepthBufferData : public IGpuResourceData
 {
 public:
-	virtual ID3D12Resource* GetResource() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_DepthReadOnly() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_StencilReadOnly() const noexcept = 0;
@@ -62,14 +62,14 @@ public:
 
 
 class __declspec(uuid("36E0E19C-7D07-46EA-A6FE-E222A083957D")) DepthBufferData
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBufferData, IPlatformData>>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBufferData, IGpuResourceData, IPlatformData>>
 	, NonCopyable
 {
 public:
 	DepthBufferData(const DepthBufferDescExt& descExt) noexcept;
 
 	ID3D12Resource* GetResource() const noexcept final { return m_resource.get(); }
-
+	uint64_t GetGpuAddress() const noexcept override { return m_resource->GetGPUVirtualAddress(); }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const noexcept final { return m_dsvHandles[0]; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_DepthReadOnly() const noexcept final { return m_dsvHandles[1]; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_StencilReadOnly() const noexcept final { return m_dsvHandles[2]; }

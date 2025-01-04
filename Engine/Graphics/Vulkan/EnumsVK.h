@@ -114,6 +114,8 @@ VkSampleCountFlagBits GetSampleCountFlags(uint32_t numSamples);
 
 VkImageUsageFlags GetImageUsageFlags(GpuImageUsage usage);
 
+VkBufferUsageFlags GetBufferUsageFlags(ResourceType resourceType);
+
 VmaAllocationCreateFlags GetMemoryFlags(MemoryAccess access);
 
 VmaMemoryUsage GetMemoryUsage(MemoryAccess access);

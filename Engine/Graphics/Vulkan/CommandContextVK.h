@@ -51,7 +51,8 @@ struct TextureBarrier
 
 struct BufferBarrier
 {
-	// TODO - Vulkan GPU buffer support
+	ResourceState beforeState{ ResourceState::Undefined };
+	ResourceState afterState{ ResourceState::Undefined };
 };
 
 

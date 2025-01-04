@@ -16,6 +16,7 @@ namespace Luna
 // Forward declarations
 struct ColorBufferDesc;
 struct DepthBufferDesc;
+struct GpuBufferDesc;
 class IPlatformData;
 enum class ResourceState : uint32_t;
 
@@ -27,6 +28,7 @@ public:
 
 	virtual wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) = 0;
 	virtual wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) = 0;
+	virtual wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) = 0;
 };
 
 } // namespace Luna
