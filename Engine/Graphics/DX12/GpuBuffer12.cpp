@@ -15,10 +15,16 @@
 namespace Luna::DX12
 {
 
-IndexBufferData::IndexBufferData(const IndexBufferDescExt& descExt)
-	: m_resource{ descExt.resource }
-	, m_ibvHandle{ descExt.ibvHandle }
-{
-}
+GpuBufferData::GpuBufferData(const GpuBufferDesc& desc, const GpuBufferDescExt& descExt)
+	: m_resource{descExt.resource}
+	, m_srvHandle{descExt.srvHandle}
+	, m_uavHandle{descExt.uavHandle}
+	, m_cbvHandle{descExt.cbvHandle}
+	, m_format{desc.format}
+	, m_bufferSize{desc.elementCount * desc.elementSize}
+	, m_elementCount{desc.elementCount}
+	, m_elementSize{desc.elementSize}
+	, m_gpuAddress{descExt.gpuAddress}
+{}
 
 } // namespace Luna::DX12

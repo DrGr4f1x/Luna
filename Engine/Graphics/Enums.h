@@ -404,13 +404,28 @@ enum class ResourceType : uint32_t
 	TypedBuffer			= 0x8000,
 	ReadbackBuffer		= 0x010000,
 
-	Texture1D_Type = Texture1D | Texture1D_Array,
-	Texture2D_Type = Texture2D | Texture2D_Array | Texture2DMS | Texture2DMS_Array,
-	TextureCube_Type = TextureCube | TextureCube_Array,
-	TextureArray_Type = Texture1D_Array | Texture2D_Array | Texture2DMS_Array | TextureCube_Array
+	Texture1D_Type		= Texture1D | Texture1D_Array,
+	Texture2D_Type		= Texture2D | Texture2D_Array | Texture2DMS | Texture2DMS_Array,
+	TextureCube_Type	= TextureCube | TextureCube_Array,
+	TextureArray_Type	= Texture1D_Array | Texture2D_Array | Texture2DMS_Array | TextureCube_Array,
+
+	Texture_Type		= Texture1D_Type | Texture2D_Type | TextureCube_Type | Texture3D,
+	Buffer_Type			= IndexBuffer | VertexBuffer | ConstantBuffer | ByteAddressBuffer | IndirectArgsBuffer | StructuredBuffer |
+						  TypedBuffer | ReadbackBuffer,
 };
 template <> struct EnableBitmaskOperators<ResourceType> { static const bool enable = true; };
 
+
+inline bool IsTextureType(ResourceType resourceType)
+{
+	return HasAnyFlag(resourceType, ResourceType::Texture_Type);
+}
+
+
+inline bool IsBufferType(ResourceType resourceType)
+{
+	return HasAnyFlag(resourceType, ResourceType::Buffer_Type);
+}
 
 enum class TextureDimension : uint8_t
 {

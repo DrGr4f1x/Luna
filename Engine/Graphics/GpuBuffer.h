@@ -21,8 +21,9 @@ namespace Luna
 struct GpuBufferDesc
 {
 	std::string name;
-	ResourceType resourceType;
-	MemoryAccess memoryAccess;
+	ResourceType resourceType{ ResourceType::Unknown };
+	MemoryAccess memoryAccess{ MemoryAccess::Unknown };
+	Format format{ Format::Unknown };
 	size_t elementCount{ 0 };
 	size_t elementSize{ 0 };
 	const void* initialData{ nullptr };
@@ -30,6 +31,7 @@ struct GpuBufferDesc
 	GpuBufferDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr GpuBufferDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
 	constexpr GpuBufferDesc& SetMemoryAccess(MemoryAccess value) noexcept { memoryAccess = value; return *this; }
+	constexpr GpuBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
 	constexpr GpuBufferDesc& SetElementCount(size_t value) noexcept { elementCount = value; return *this; }
 	constexpr GpuBufferDesc& SetElementSize(size_t value) noexcept { elementSize = value; return *this; }
 	constexpr GpuBufferDesc& SetInitialData(const void* data) { initialData = data; return *this; }
@@ -63,9 +65,20 @@ protected:
 class IndexBuffer : public GpuBuffer
 {
 public:
-	IndexBuffer();
+	IndexBuffer() noexcept
+		: GpuBuffer(ResourceType::IndexBuffer)
+	{}
 
 	bool IsIndex16Bit() const noexcept { return (m_elementSize == 2); }
+};
+
+
+class VertexBuffer : public GpuBuffer
+{
+public:
+	VertexBuffer() noexcept
+		: GpuBuffer(ResourceType::VertexBuffer)
+	{}
 };
 
 } // namespace Luna

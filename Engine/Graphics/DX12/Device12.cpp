@@ -386,28 +386,12 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& d
 
 	uint64_t gpuAddress = pResource->GetGPUVirtualAddress();
 
-	switch (desc.resourceType)
-	{
-	case ResourceType::IndexBuffer:
-	{
-		IndexBufferDescExt indexBufferDescExt{
-			.resource		= pResource,
-			.gpuAddress		= gpuAddress,
-			.ibvHandle = {
-				.BufferLocation		= gpuAddress,
-				.SizeInBytes		= (uint32_t)desc.elementSize * (uint32_t)desc.elementCount,
-				.Format				= (desc.elementSize == 2) ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT
-			}
-		};
-		return Make<IndexBufferData>(indexBufferDescExt);
-	}
-		break;
+	GpuBufferDescExt descExt{
+		.resource		= pResource,
+		.gpuAddress		= gpuAddress
+	};
 
-	default:
-		assert(false);
-		return nullptr;
-		break;
-	}
+	return Make<GpuBufferData>(desc, descExt);
 }
 
 

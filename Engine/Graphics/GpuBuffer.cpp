@@ -27,6 +27,12 @@ void GpuBuffer::Reset()
 
 bool GpuBuffer::Initialize(GpuBufferDesc& desc)
 {
+	// Validate description
+	assert(IsBufferType(desc.resourceType));
+	assert(desc.memoryAccess != MemoryAccess::Unknown);
+	assert(desc.elementCount > 0);
+	assert(desc.elementSize > 0);
+
 	Reset();
 	
 	if (auto device = GetGraphicsDevice())
@@ -52,10 +58,5 @@ bool GpuBuffer::Initialize(GpuBufferDesc& desc)
 
 	return m_bIsInitialized;
 }
-
-
-IndexBuffer::IndexBuffer()
-	: GpuBuffer{ResourceType::IndexBuffer}
-{}
 
 } // namespace Luna
