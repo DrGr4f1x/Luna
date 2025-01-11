@@ -48,4 +48,11 @@ private:
 
 	// Uniform buffer block object
 	Luna::ConstantBuffer m_constantBuffer;
+
+	// Vertex shader constants
+	struct
+	{
+		Math::Matrix4 viewProjectionMatrix;
+		Math::Matrix4 modelMatrix;
+	} m_vsConstants;
 };

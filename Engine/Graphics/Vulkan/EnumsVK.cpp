@@ -708,148 +708,73 @@ VmaMemoryUsage GetMemoryUsage(MemoryAccess access)
 }
 
 
-static ResourceStateMapping s_resourceStateMap[] =
+VkImageLayout GetImageLayout(ResourceState resourceState)
 {
-	{ ResourceState::Common,
-		VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT,
-		VK_ACCESS_2_NONE,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::ConstantBuffer,
-		VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-		VK_ACCESS_2_UNIFORM_READ_BIT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::VertexBuffer,
-		VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT,
-		VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::IndexBuffer,
-		VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT,
-		VK_ACCESS_2_INDEX_READ_BIT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::IndirectArgument,
-		VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT,
-		VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::ShaderResource,
-		VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-		VK_ACCESS_2_SHADER_READ_BIT,
-		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL },
-	{ ResourceState::UnorderedAccess,
-		VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-		VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT,
-		VK_IMAGE_LAYOUT_GENERAL },
-	{ ResourceState::RenderTarget,
-		VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-		VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
-	{ ResourceState::DepthWrite,
-		VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-		VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL },
-	{ ResourceState::DepthRead,
-		VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT,
-		VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-		VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL	},
-	{ ResourceState::StreamOut,
-		VK_PIPELINE_STAGE_2_TRANSFORM_FEEDBACK_BIT_EXT,
-		VK_ACCESS_2_TRANSFORM_FEEDBACK_WRITE_BIT_EXT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::CopyDest,
-		VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-		VK_ACCESS_2_TRANSFER_WRITE_BIT,
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL },
-	{ ResourceState::CopySource,
-		VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-		VK_ACCESS_2_TRANSFER_READ_BIT,
-		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL },
-	{ ResourceState::ResolveDest,
-		VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-		VK_ACCESS_2_TRANSFER_WRITE_BIT,
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL },
-	{ ResourceState::ResolveSource,
-		VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-		VK_ACCESS_2_TRANSFER_READ_BIT,
-		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL },
-	{ ResourceState::Present,
-		VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
-		VK_ACCESS_2_MEMORY_READ_BIT,
-		VK_IMAGE_LAYOUT_PRESENT_SRC_KHR },
-	{ ResourceState::AccelStructRead,
-		VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT,
-		VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::AccelStructRead,
-		VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-		VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::AccelStructBuildInput,
-		VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-		VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::AccelStructBuildInput,
-		VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR,
-		VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::ShadingRateSurface,
-		VK_PIPELINE_STAGE_2_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR,
-		VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR,
-		VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR },
-	{ ResourceState::OpacityMicromapWrite,
-		VK_PIPELINE_STAGE_2_MICROMAP_BUILD_BIT_EXT,
-		VK_ACCESS_2_MICROMAP_WRITE_BIT_EXT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::OpacityMicromapBuildInput,
-		VK_PIPELINE_STAGE_2_MICROMAP_BUILD_BIT_EXT,
-		VK_ACCESS_2_SHADER_READ_BIT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-	{ ResourceState::Predication,
-		VK_PIPELINE_STAGE_2_CONDITIONAL_RENDERING_BIT_EXT,
-		VK_ACCESS_2_CONDITIONAL_RENDERING_READ_BIT_EXT,
-		VK_IMAGE_LAYOUT_UNDEFINED },
-};
+	using enum ResourceState;
 
+	if (HasAnyFlag(resourceState, Common | UnorderedAccess)) return VK_IMAGE_LAYOUT_GENERAL;
+	if (HasFlag(resourceState, RenderTarget)) return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	if (HasAnyFlag(resourceState, DepthRead | DepthWrite)) return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	if (HasFlag(resourceState, ShaderResource)) return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	if (HasAnyFlag(resourceState, CopyDest | ResolveDest)) return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	if (HasAnyFlag(resourceState, CopySource | ResolveSource | GenericRead)) return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+	if (HasFlag(resourceState, Present)) return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	if (HasFlag(resourceState, ShadingRateSurface)) return VK_IMAGE_LAYOUT_FRAGMENT_SHADING_RATE_ATTACHMENT_OPTIMAL_KHR;
 
-ResourceStateMapping GetResourceStateMapping(ResourceState resourceState)
-{
-	ResourceStateMapping result{};
-
-	constexpr uint32_t numStateBits = sizeof(s_resourceStateMap) / sizeof(s_resourceStateMap[0]);
-
-	uint32_t stateTemp = (uint32_t)resourceState;
-	uint32_t bitIndex = 0;
-
-	while (stateTemp != 0 && bitIndex < numStateBits)
-	{
-		uint32_t bit = (1 << bitIndex);
-
-		if (stateTemp & bit)
-		{
-			const ResourceStateMapping& mapping = s_resourceStateMap[bitIndex];
-
-			assert((uint32_t)mapping.state == bit);
-			assert(result.imageLayout == VK_IMAGE_LAYOUT_UNDEFINED || mapping.imageLayout == VK_IMAGE_LAYOUT_UNDEFINED || result.imageLayout == mapping.imageLayout);
-
-			result.state |= mapping.state;
-			result.accessFlags |= mapping.accessFlags;
-			result.stageFlags |= mapping.stageFlags;
-			if (mapping.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED)
-			{
-				result.imageLayout = mapping.imageLayout;
-			}
-			stateTemp &= ~bit;
-		}
-		++bitIndex;
-	}
-
-	assert(result.state == resourceState);
-
-	return result;
+	return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
 
-VkImageLayout GetImageLayout(ResourceState resourceState)
+VkAccessFlagBits2 GetAccessMask(ResourceState resourceState)
 {
-	return GetResourceStateMapping(resourceState).imageLayout;
+	using enum ResourceState;
+
+	VkAccessFlagBits2 bits{};
+
+	bits |= HasFlag(resourceState, ConstantBuffer) ? VK_ACCESS_2_UNIFORM_READ_BIT : 0;
+	bits |= HasFlag(resourceState, VertexBuffer) ? VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT : 0;
+	bits |= HasFlag(resourceState, IndexBuffer) ? VK_ACCESS_2_INDEX_READ_BIT : 0;
+	bits |= HasFlag(resourceState, IndirectArgument) ? VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT : 0;
+	bits |= HasFlag(resourceState, ShaderResource) ? VK_ACCESS_2_SHADER_READ_BIT : 0;
+	bits |= HasFlag(resourceState, UnorderedAccess) ? (VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT) : 0;
+	bits |= HasFlag(resourceState, RenderTarget) ? (VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT) : 0;
+	bits |= HasFlag(resourceState, DepthWrite) ? (VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT) : 0;
+	bits |= HasFlag(resourceState, DepthRead) ? VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT : 0;
+	bits |= HasFlag(resourceState, StreamOut) ? VK_ACCESS_2_TRANSFORM_FEEDBACK_WRITE_BIT_EXT : 0;
+	bits |= HasAnyFlag(resourceState, CopyDest | ResolveDest) ? VK_ACCESS_2_TRANSFER_WRITE_BIT : 0;
+	bits |= HasAnyFlag(resourceState, CopySource | ResolveSource | GenericRead) ? VK_ACCESS_2_TRANSFER_READ_BIT : 0;
+	bits |= HasFlag(resourceState, Present) ? VK_ACCESS_2_MEMORY_READ_BIT : 0;
+	bits |= HasAnyFlag(resourceState, AccelStructRead | AccelStructBuildInput | AccelStructBuildBlas) ? VK_ACCESS_2_ACCELERATION_STRUCTURE_READ_BIT_KHR : 0;
+	bits |= HasFlag(resourceState, AccelStructWrite) ? VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_KHR : 0;
+	bits |= HasFlag(resourceState, ShadingRateSurface) ? VK_ACCESS_2_FRAGMENT_SHADING_RATE_ATTACHMENT_READ_BIT_KHR : 0;
+	bits |= HasFlag(resourceState, OpacityMicromapWrite) ? VK_ACCESS_2_MICROMAP_WRITE_BIT_EXT : 0;
+	bits |= HasFlag(resourceState, OpacityMicromapBuildInput) ? VK_ACCESS_2_SHADER_READ_BIT : 0;
+	bits |= HasFlag(resourceState, Predication) ? VK_ACCESS_2_CONDITIONAL_RENDERING_READ_BIT_EXT : 0;
+
+	return bits;
+}
+
+VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState)
+{
+	using enum ResourceState;
+
+	VkPipelineStageFlagBits2 bits{};
+
+	bits |= HasFlag(resourceState, Common) ? VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT : 0;
+	bits |= HasFlag(resourceState, ConstantBuffer | ShaderResource | UnorderedAccess | Present) ? VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT : 0;
+	bits |= HasAnyFlag(resourceState, VertexBuffer | IndexBuffer) ? VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT : 0;
+	bits |= HasFlag(resourceState, IndirectArgument) ? VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT : 0;
+	bits |= HasFlag(resourceState, RenderTarget) ? VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT : 0;
+	bits |= HasAnyFlag(resourceState, DepthRead | DepthWrite) ? (VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT) : 0;
+	bits |= HasFlag(resourceState, StreamOut) ? VK_PIPELINE_STAGE_2_TRANSFORM_FEEDBACK_BIT_EXT : 0;
+	bits |= HasAnyFlag(resourceState, CopySource | CopyDest | ResolveSource | ResolveDest | GenericRead) ? VK_PIPELINE_STAGE_2_TRANSFER_BIT : 0;
+	bits |= HasFlag(resourceState, AccelStructRead) ? (VK_PIPELINE_STAGE_2_RAY_TRACING_SHADER_BIT_KHR | VK_PIPELINE_STAGE_2_COMPUTE_SHADER_BIT) : 0;
+	bits |= HasAnyFlag(resourceState, AccelStructWrite | AccelStructBuildInput | AccelStructBuildBlas) ? VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_BUILD_BIT_KHR : 0;
+	bits |= HasFlag(resourceState, ShadingRateSurface) ? VK_PIPELINE_STAGE_2_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR : 0;
+	bits |= HasAnyFlag(resourceState, OpacityMicromapWrite | OpacityMicromapBuildInput) ? VK_PIPELINE_STAGE_2_MICROMAP_BUILD_BIT_EXT : 0;
+	bits |= HasFlag(resourceState, Predication) ? VK_PIPELINE_STAGE_2_CONDITIONAL_RENDERING_BIT_EXT : 0;
+
+	return bits;
 }
 
 } // Minimumnamespace Luna::VK

@@ -70,26 +70,6 @@ struct VkTextureFilterMapping
 	VkBool32 isComparisonEnabled;
 };
 
-
-struct ResourceStateMapping
-{
-	ResourceStateMapping() noexcept = default;
-
-	ResourceStateMapping(ResourceState state, VkPipelineStageFlags2 stageFlags, VkAccessFlags2 accessFlags, VkImageLayout imageLayout) noexcept
-		: state{ state }
-		, stageFlags{ stageFlags }
-		, accessFlags{ accessFlags }
-		, imageLayout{ imageLayout }
-	{
-	}
-
-	ResourceState state;
-	VkPipelineStageFlags2 stageFlags;
-	VkAccessFlags2 accessFlags;
-	VkImageLayout imageLayout;
-};
-
-
 VkTextureFilterMapping TextureFilterToVulkan(TextureFilter textureFilter);
 
 VkSamplerAddressMode TextureAddressToVulkan(TextureAddress textureAddress);
@@ -120,8 +100,10 @@ VmaAllocationCreateFlags GetMemoryFlags(MemoryAccess access);
 
 VmaMemoryUsage GetMemoryUsage(MemoryAccess access);
 
-ResourceStateMapping GetResourceStateMapping(ResourceState resourceState);
+VkImageLayout GetImageLayout(ResourceState resourceState);
 
-VkImageLayout GetImageLayout(ResourceState state);
+VkAccessFlagBits2 GetAccessMask(ResourceState resourceState);
+
+VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState);
 
 } // namespace Luna::VK

@@ -238,11 +238,6 @@ void CommandContextVK::FlushResourceBarriers()
 {
 	for (const auto& barrier : m_textureBarriers)
 	{
-		ResourceStateMapping before = GetResourceStateMapping(barrier.beforeState);
-		ResourceStateMapping after = GetResourceStateMapping(barrier.afterState);
-
-		assert(after.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED);
-
 		VkImageSubresourceRange subresourceRange{};
 		subresourceRange.aspectMask = barrier.imageAspect;
 		subresourceRange.baseArrayLayer = barrier.arraySlice;
@@ -251,12 +246,12 @@ void CommandContextVK::FlushResourceBarriers()
 		subresourceRange.levelCount = barrier.numMips;
 
 		VkImageMemoryBarrier2 vkBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-		vkBarrier.srcAccessMask = before.accessFlags;
-		vkBarrier.dstAccessMask = after.accessFlags;
-		vkBarrier.srcStageMask = before.stageFlags;
-		vkBarrier.dstStageMask = after.stageFlags;
-		vkBarrier.oldLayout = before.imageLayout;
-		vkBarrier.newLayout = after.imageLayout;
+		vkBarrier.srcAccessMask = GetAccessMask(barrier.beforeState);
+		vkBarrier.dstAccessMask = GetAccessMask(barrier.afterState);
+		vkBarrier.srcStageMask = GetPipelineStage(barrier.beforeState);
+		vkBarrier.dstStageMask = GetPipelineStage(barrier.afterState);
+		vkBarrier.oldLayout = GetImageLayout(barrier.beforeState);
+		vkBarrier.newLayout = GetImageLayout(barrier.afterState);
 		vkBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		vkBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		vkBarrier.image = barrier.image;
@@ -267,16 +262,11 @@ void CommandContextVK::FlushResourceBarriers()
 
 	for (const auto& barrier : m_bufferBarriers)
 	{
-		ResourceStateMapping before = GetResourceStateMapping(barrier.beforeState);
-		ResourceStateMapping after = GetResourceStateMapping(barrier.afterState);
-
-		assert(after.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED);
-
 		VkBufferMemoryBarrier2 vkBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2 };
-		vkBarrier.srcAccessMask = before.accessFlags;
-		vkBarrier.dstAccessMask = after.accessFlags;
-		vkBarrier.srcStageMask = before.stageFlags;
-		vkBarrier.dstStageMask = after.stageFlags;
+		vkBarrier.srcAccessMask = GetAccessMask(barrier.beforeState);
+		vkBarrier.dstAccessMask = GetAccessMask(barrier.afterState);
+		vkBarrier.srcStageMask = GetPipelineStage(barrier.beforeState);
+		vkBarrier.dstStageMask = GetPipelineStage(barrier.afterState);
 		vkBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		vkBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		vkBarrier.buffer = barrier.buffer;

@@ -29,6 +29,10 @@ void GpuBuffer::Reset()
 bool GpuBuffer::Initialize(GpuBufferDesc& desc)
 {
 	// Validate description
+	if (desc.resourceType == ResourceType::Unknown)
+	{
+		desc.resourceType = m_resourceType;
+	}
 	assert(IsBufferType(desc.resourceType));
 	assert(desc.memoryAccess != MemoryAccess::Unknown);
 	assert(desc.elementCount > 0);

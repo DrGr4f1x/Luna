@@ -95,6 +95,7 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept
 
 	m_dxgiFactory = m_desc.dxgiFactory;
 	m_dxDevice = m_desc.dx12Device;
+	m_d3d12maAllocator = m_desc.d3d12maAllocator;
 
 	SetDebugName(m_dxDevice.get(), "DX12 Device");
 
@@ -385,8 +386,6 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateDepthBufferData(DepthBufferDes
 
 wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState)
 {
-	assert(desc.elementSize == 2 || desc.elementSize == 4);
-
 	D3D12MA::Allocation* pAllocation = CreateGpuBuffer(desc, initialState);
 	ID3D12Resource* pResource = pAllocation->GetResource();
 
@@ -631,7 +630,7 @@ D3D12MA::Allocation* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, Resour
 	HRESULT hr = m_d3d12maAllocator->CreateResource(
 		&allocationDesc,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		D3D12_RESOURCE_STATE_COMMON,
 		NULL,
 		&pAllocation,
 		IID_NULL, NULL);
@@ -662,7 +661,7 @@ D3D12MA::Allocation* GraphicsDevice::CreateStagingBuffer(const void* initialData
 	HRESULT hr = GetD3D12GraphicsDevice()->GetAllocator()->CreateResource(
 		&allocationDesc,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		D3D12_RESOURCE_STATE_COMMON,
 		nullptr,
 		&pAllocation,
 		IID_NULL, nullptr);
@@ -671,7 +670,7 @@ D3D12MA::Allocation* GraphicsDevice::CreateStagingBuffer(const void* initialData
 	void* mappedPtr{ nullptr };
 	assert_succeeded(resource->Map(0, nullptr, &mappedPtr));
 
-	SIMDMemCopy(mappedPtr, initialData, numBytes);
+	memcpy(mappedPtr, initialData, numBytes);
 
 	resource->Unmap(0, nullptr);
 

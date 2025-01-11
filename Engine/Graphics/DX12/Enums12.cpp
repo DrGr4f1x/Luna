@@ -531,6 +531,7 @@ D3D12_RESOURCE_STATES ResourceStateToDX12(ResourceState resourceState)
 	result |= HasFlag(resourceState, ShadingRateSurface) ? D3D12_RESOURCE_STATE_SHADING_RATE_SOURCE : 0;
 	result |= HasFlag(resourceState, OpacityMicromapBuildInput) ? D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE : 0;
 	result |= HasFlag(resourceState, OpacityMicromapWrite) ? D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE : 0;
+	result |= HasFlag(resourceState, GenericRead) ? D3D12_RESOURCE_STATE_GENERIC_READ : 0;
 
 	return (D3D12_RESOURCE_STATES)result;
 }

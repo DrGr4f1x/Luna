@@ -13,6 +13,7 @@
 #include "TriangleApp.h"
 
 using namespace Luna;
+using namespace std;
 
 
 TriangleApp::TriangleApp(uint32_t width, uint32_t height)
@@ -37,7 +38,44 @@ void TriangleApp::Configure()
 
 void TriangleApp::Startup()
 {
-	// Application initialization, after device creation
+	// Setup vertices
+	vector<Vertex> vertexData =
+	{
+		{ { -1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ {  0.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+	};
+
+	GpuBufferDesc vertexBufferDesc{
+		.name			= "Vertex Buffer",
+		.memoryAccess	= MemoryAccess::GpuReadWrite,
+		.elementCount	= vertexData.size(),
+		.elementSize	= sizeof(Vertex),
+		.initialData	= vertexData.data()
+	};
+	assert(m_vertexBuffer.Initialize(vertexBufferDesc));
+
+	// Setup indices
+	vector<uint32_t> indexData = { 0, 1, 2 };
+	GpuBufferDesc indexBufferDesc{
+		.name			= "Index Buffer",
+		.memoryAccess	= MemoryAccess::GpuReadWrite,
+		.elementCount	= indexData.size(),
+		.elementSize	= sizeof(uint32_t),
+		.initialData	= indexData.data()
+	};
+	assert(m_indexBuffer.Initialize(indexBufferDesc));
+
+	// Setup constant buffer
+	GpuBufferDesc constantBufferDesc{
+		.name			= "VS Constant Buffer",
+		.memoryAccess	= MemoryAccess::GpuReadWrite,
+		.elementCount	= 1,
+		.elementSize	= sizeof(m_vsConstants),
+		.initialData	= &m_vsConstants
+	};
+	assert(m_constantBuffer.Initialize(constantBufferDesc));
+	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
 }
 
 

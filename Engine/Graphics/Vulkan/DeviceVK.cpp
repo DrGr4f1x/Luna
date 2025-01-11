@@ -478,7 +478,7 @@ wil::com_ptr<CVkBuffer> GraphicsDevice::CreateStagingBuffer(const void* initialD
 	auto allocator = GetVulkanGraphicsDevice()->GetAllocator();
 	vmaCreateBuffer(allocator, &stagingBufferInfo, &stagingAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingAllocInfo);
 
-	SIMDMemCopy(stagingAllocInfo.pMappedData, initialData, numBytes);
+	memcpy(stagingAllocInfo.pMappedData, initialData, numBytes);
 
 	return Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), stagingBuffer, stagingBufferAlloc);
 }

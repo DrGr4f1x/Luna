@@ -360,8 +360,7 @@ enum class ResourceState : uint32_t
 	OpacityMicromapWrite		= 0x00200000,
 	OpacityMicromapBuildInput	= 0x00400000,
 	Predication					= 0x00800000,
-
-	GenericRead					= (((((ConstantBuffer | VertexBuffer) | IndexBuffer) | ShaderResource) | IndirectArgument) | CopySource)
+	GenericRead					= 0x01000000
 };
 
 template <> struct EnableBitmaskOperators<ResourceState> { static const bool enable = true; };
