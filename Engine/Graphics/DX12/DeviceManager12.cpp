@@ -627,7 +627,7 @@ void DeviceManager::CreateDevice()
 #endif
 
 	// Create D3D12 Memory Allocator
-	D3D12MA::Allocator* d3d12maAllocator{ nullptr };
+	wil::com_ptr<D3D12MA::Allocator> d3d12maAllocator;
 	auto allocatorDesc = D3D12MA::ALLOCATOR_DESC{
 		.Flags					= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED | D3D12MA::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED,
 		.pDevice				= device.get(),
@@ -642,7 +642,7 @@ void DeviceManager::CreateDevice()
 	auto deviceDesc = GraphicsDeviceDesc{
 		.dxgiFactory				= m_dxgiFactory.get(),
 		.dx12Device					= device.get(),
-		.d3d12maAllocator			= d3d12maAllocator,
+		.d3d12maAllocator			= d3d12maAllocator.get(),
 		.backBufferWidth			= m_desc.backBufferWidth,
 		.backBufferHeight			= m_desc.backBufferHeight,
 		.numSwapChainBuffers		= m_desc.numSwapChainBuffers,

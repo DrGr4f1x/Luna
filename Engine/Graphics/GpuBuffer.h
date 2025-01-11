@@ -70,6 +70,7 @@ public:
 	IndexBuffer() noexcept
 		: GpuBuffer(ResourceType::IndexBuffer)
 	{}
+	~IndexBuffer() override;
 
 	bool IsIndex16Bit() const noexcept { return (m_elementSize == 2); }
 };
@@ -81,6 +82,7 @@ public:
 	VertexBuffer() noexcept
 		: GpuBuffer(ResourceType::VertexBuffer)
 	{}
+	~VertexBuffer() override;
 };
 
 
@@ -90,6 +92,7 @@ public:
 	ConstantBuffer() noexcept
 		: GpuBuffer(ResourceType::ConstantBuffer)
 	{}
+	~ConstantBuffer() override;
 };
 
 

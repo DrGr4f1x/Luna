@@ -25,6 +25,7 @@ class GpuResource
 {
 public:
 	GpuResource() noexcept;
+	virtual ~GpuResource() = default;
 
 	const std::string& GetName() const { return m_name; }
 

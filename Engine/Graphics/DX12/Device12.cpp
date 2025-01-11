@@ -386,14 +386,14 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateDepthBufferData(DepthBufferDes
 
 wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState)
 {
-	D3D12MA::Allocation* pAllocation = CreateGpuBuffer(desc, initialState);
-	ID3D12Resource* pResource = pAllocation->GetResource();
+	wil::com_ptr<D3D12MA::Allocation> allocation = CreateGpuBuffer(desc, initialState);
+	ID3D12Resource* pResource = allocation->GetResource();
 
 	uint64_t gpuAddress = pResource->GetGPUVirtualAddress();
 
 	GpuBufferDescExt descExt{
 		.resource		= pResource,
-		.allocation		= pAllocation,
+		.allocation		= allocation.get(),
 		.gpuAddress		= gpuAddress
 	};
 
@@ -597,7 +597,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::AllocateDescriptor(D3D12_DESCRIPTOR_
 }
 
 
-D3D12MA::Allocation* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState)
+wil::com_ptr<D3D12MA::Allocation> GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState)
 { 
 	initialState = ResourceState::GenericRead;
 
@@ -626,20 +626,20 @@ D3D12MA::Allocation* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, Resour
 		.HeapType = heapType
 	};
 
-	D3D12MA::Allocation* pAllocation{ nullptr };
+	wil::com_ptr<D3D12MA::Allocation> allocation;
 	HRESULT hr = m_d3d12maAllocator->CreateResource(
 		&allocationDesc,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		NULL,
-		&pAllocation,
+		&allocation,
 		IID_NULL, NULL);
 
-	return pAllocation;
+	return allocation;
 }
 
 
-D3D12MA::Allocation* GraphicsDevice::CreateStagingBuffer(const void* initialData, size_t numBytes) const
+wil::com_ptr<D3D12MA::Allocation> GraphicsDevice::CreateStagingBuffer(const void* initialData, size_t numBytes) const
 {
 	// Create an upload buffer
 	auto resourceDesc = D3D12_RESOURCE_DESC{
@@ -657,16 +657,16 @@ D3D12MA::Allocation* GraphicsDevice::CreateStagingBuffer(const void* initialData
 
 	auto allocationDesc = D3D12MA::ALLOCATION_DESC{	.HeapType = D3D12_HEAP_TYPE_UPLOAD };
 
-	D3D12MA::Allocation* pAllocation{ nullptr };
+	wil::com_ptr<D3D12MA::Allocation> allocation;
 	HRESULT hr = GetD3D12GraphicsDevice()->GetAllocator()->CreateResource(
 		&allocationDesc,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		nullptr,
-		&pAllocation,
+		&allocation,
 		IID_NULL, nullptr);
 
-	auto resource = pAllocation->GetResource();
+	auto resource = allocation->GetResource();
 	void* mappedPtr{ nullptr };
 	assert_succeeded(resource->Map(0, nullptr, &mappedPtr));
 
@@ -674,7 +674,7 @@ D3D12MA::Allocation* GraphicsDevice::CreateStagingBuffer(const void* initialData
 
 	resource->Unmap(0, nullptr);
 
-	return pAllocation;
+	return allocation;
 }
 
 

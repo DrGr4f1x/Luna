@@ -270,14 +270,14 @@ void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 
 void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
-	D3D12MA::Allocation* stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
+	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
 	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 	m_commandList->CopyBufferRegion(GetResource(destBuffer), offset, stagingAllocation->GetResource(), 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
-	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation);
+	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
 }
 
 

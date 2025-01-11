@@ -15,6 +15,8 @@
 #include "CommandContext.h"
 #include "GraphicsCommon.h"
 
+using namespace std;
+
 
 namespace Luna
 {
@@ -62,6 +64,24 @@ bool GpuBuffer::Initialize(GpuBufferDesc& desc)
 	}
 
 	return m_bIsInitialized;
+}
+
+
+VertexBuffer::~VertexBuffer()
+{
+	LogInfo(LogGraphics) << "Destroying VertexBuffer" << endl;
+}
+
+
+IndexBuffer::~IndexBuffer()
+{
+	LogInfo(LogGraphics) << "Destroying IndexBuffer" << endl;
+}
+
+
+ConstantBuffer::~ConstantBuffer()
+{
+	LogInfo(LogGraphics) << "Destroying ConstantBuffer" << endl;
 }
 
 

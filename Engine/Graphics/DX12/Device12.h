@@ -119,8 +119,8 @@ private:
 	void ReadCaps();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
-	D3D12MA::Allocation* CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState);
-	D3D12MA::Allocation* CreateStagingBuffer(const void* initialData, size_t numBytes) const;
+	wil::com_ptr<D3D12MA::Allocation> CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState);
+	wil::com_ptr<D3D12MA::Allocation> CreateStagingBuffer(const void* initialData, size_t numBytes) const;
 
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
@@ -129,11 +129,11 @@ private:
 	GraphicsDeviceDesc m_desc{};
 
 	// DirectX 12 objects
-	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
 	wil::com_ptr<ID3D12Device> m_dxDevice;
-	wil::com_ptr<D3D12MA::Allocator> m_d3d12maAllocator;
 	DeviceRLDOHelper m_deviceRLDOHelper;
+	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
 	wil::com_ptr<ID3D12InfoQueue1> m_dxInfoQueue;
+	wil::com_ptr<D3D12MA::Allocator> m_d3d12maAllocator;
 	DWORD m_callbackCookie{ 0 };
 
 	// Descriptor allocators
