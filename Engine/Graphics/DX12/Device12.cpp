@@ -636,10 +636,6 @@ D3D12MA::Allocation* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, Resour
 		&pAllocation,
 		IID_NULL, NULL);
 
-#if ENABLE_D3D12_DEBUG_MARKERS
-	SetDebugName(pAllocation, desc.name.c_str());
-#endif
-
 	return pAllocation;
 }
 

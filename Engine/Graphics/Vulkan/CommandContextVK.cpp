@@ -385,34 +385,17 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, V
 
 void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
-	VkBufferCreateInfo stagingBufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	stagingBufferInfo.size = numBytes;
-	stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	stagingBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	VmaAllocationCreateInfo stagingAllocCreateInfo = {};
-	stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-	stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-	VkBuffer stagingBuffer = VK_NULL_HANDLE;
-	VmaAllocation stagingBufferAlloc = VK_NULL_HANDLE;
-	VmaAllocationInfo stagingAllocInfo = {};
-
-	auto allocator = GetVulkanGraphicsDevice()->GetAllocator();
-	vmaCreateBuffer(allocator, &stagingBufferInfo, &stagingAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingAllocInfo);
-
-	SIMDMemCopy(stagingAllocInfo.pMappedData, bufferData, numBytes);
+	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, stagingBuffer, GetBuffer(destBuffer), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, GetBuffer(destBuffer), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
-	wil::com_ptr<CVkBuffer> buffer = GetVulkanGraphicsDevice()->CreateBuffer(stagingBuffer, stagingBufferAlloc);
-	GetVulkanDeviceManager()->ReleaseBuffer(buffer.get());
+	GetVulkanDeviceManager()->ReleaseBuffer(stagingBuffer.get());
 }
 
 } // namespace Luna::VK

@@ -157,7 +157,7 @@ private:
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& desc) const;
 	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& desc) const;
 	
-	wil::com_ptr<CVkBuffer> CreateBuffer(VkBuffer buffer, VmaAllocation allocation) const;
+	wil::com_ptr<CVkBuffer> CreateStagingBuffer(const void* initialData, size_t numBytes) const;
 
 	VkFormatProperties GetFormatProperties(Format format) const;
 

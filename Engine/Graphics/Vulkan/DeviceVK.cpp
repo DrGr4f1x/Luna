@@ -456,9 +456,31 @@ wil::com_ptr<CVkImageView> GraphicsDevice::CreateImageView(const ImageViewDesc& 
 }
 
 
-wil::com_ptr<CVkBuffer> GraphicsDevice::CreateBuffer(VkBuffer buffer, VmaAllocation allocation) const
+wil::com_ptr<CVkBuffer> GraphicsDevice::CreateStagingBuffer(const void* initialData, size_t numBytes) const
 {
-	return Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), buffer, allocation);
+	VkBufferCreateInfo stagingBufferInfo{ 
+		.sType			= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO ,
+		.pNext			= nullptr,
+		.size			= numBytes,
+		.usage			= VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		.sharingMode	= VK_SHARING_MODE_EXCLUSIVE
+	};
+
+	VmaAllocationCreateInfo stagingAllocCreateInfo{
+		.flags	= VMA_ALLOCATION_CREATE_MAPPED_BIT,
+		.usage	= VMA_MEMORY_USAGE_CPU_ONLY
+	};
+	
+	VkBuffer stagingBuffer{ VK_NULL_HANDLE };
+	VmaAllocation stagingBufferAlloc{ VK_NULL_HANDLE };
+	VmaAllocationInfo stagingAllocInfo{};
+
+	auto allocator = GetVulkanGraphicsDevice()->GetAllocator();
+	vmaCreateBuffer(allocator, &stagingBufferInfo, &stagingAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingAllocInfo);
+
+	SIMDMemCopy(stagingAllocInfo.pMappedData, initialData, numBytes);
+
+	return Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), stagingBuffer, stagingBufferAlloc);
 }
 
 
