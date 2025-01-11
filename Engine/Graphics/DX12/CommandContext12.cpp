@@ -270,47 +270,14 @@ void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 
 void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
-	// Create an upload buffer
-	auto resourceDesc = D3D12_RESOURCE_DESC{
-		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
-		.Alignment			= 0,
-		.Width				= numBytes,
-		.Height				= 1,
-		.DepthOrArraySize	= 1,
-		.MipLevels			= 1,
-		.Format				= DXGI_FORMAT_UNKNOWN,
-		.SampleDesc			= {.Count = 1, .Quality = 0 },
-		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		.Flags				= D3D12_RESOURCE_FLAG_NONE
-	};
-
-	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
-		.HeapType = D3D12_HEAP_TYPE_UPLOAD
-	};
-
-	D3D12MA::Allocation* pAllocation{ nullptr };
-	HRESULT hr = GetD3D12GraphicsDevice()->GetAllocator()->CreateResource(
-		&allocationDesc,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		NULL,
-		&pAllocation,
-		IID_NULL, NULL);
-
-	auto resource = pAllocation->GetResource();
-	void* mappedPtr{ nullptr };
-	assert_succeeded(resource->Map(0, NULL, &mappedPtr));
-
-	SIMDMemCopy(mappedPtr, bufferData, numBytes);
-
-	resource->Unmap(0, NULL);
+	D3D12MA::Allocation* stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
 	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(GetResource(destBuffer), offset, resource, 0, numBytes);
+	m_commandList->CopyBufferRegion(GetResource(destBuffer), offset, stagingAllocation->GetResource(), 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
-	GetD3D12DeviceManager()->ReleaseAllocation(pAllocation);
+	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation);
 }
 
 
