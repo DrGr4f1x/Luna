@@ -119,6 +119,12 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 
 DeviceManager::~DeviceManager()
 {
+	WaitForGpu();
+
+	// Flush pending deferred resources here
+	ReleaseDeferredResources();
+	assert(m_deferredResources.empty());
+
 	extern Luna::IDeviceManager* g_deviceManager;
 	g_deviceManager = nullptr;
 	g_d3d12DeviceManager = nullptr;
@@ -157,6 +163,8 @@ void DeviceManager::Present()
 	m_dxSwapChain->Present(vsync, presentFlags);
 
 	m_fenceValues[m_backBufferIndex] = GetQueue(CommandListType::Direct).GetLastSubmittedFenceValue();
+
+	ReleaseDeferredResources();
 
 	// TODO Handle device removed
 }
@@ -502,6 +510,23 @@ void DeviceManager::HandleDeviceLost()
 	}*/
 }
 
+void DeviceManager::ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation)
+{
+	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
+
+	DeferredReleaseResource deferredResource{ nextFence, resource, allocation };
+	m_deferredResources.emplace_back(deferredResource);
+}
+
+
+void DeviceManager::ReleaseAllocation(D3D12MA::Allocation* allocation)
+{
+	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
+
+	DeferredReleaseResource deferredResource{ nextFence, nullptr, allocation };
+	m_deferredResources.emplace_back(deferredResource);
+}
+
 
 void DeviceManager::CreateDevice()
 {
@@ -572,9 +597,8 @@ void DeviceManager::CreateDevice()
 	wil::com_ptr<ID3D12Device> device;
 	if (chosenAdapterIdx == warpAdapterIdx)
 	{
-		wil::com_ptr<IDXGIAdapter> tempAdapter;
-		assert_succeeded(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&tempAdapter)));
-		assert_succeeded(D3D12CreateDevice(tempAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&m_dxgiAdapter)));
+		assert_succeeded(D3D12CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		m_bIsWarpAdapter = true;
 
@@ -582,9 +606,8 @@ void DeviceManager::CreateDevice()
 	}
 	else
 	{
-		wil::com_ptr<IDXGIAdapter> tempAdapter;
-		assert_succeeded(m_dxgiFactory->EnumAdapters((UINT)chosenAdapterIdx, &tempAdapter));
-		assert_succeeded(D3D12CreateDevice(tempAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(m_dxgiFactory->EnumAdapters((UINT)chosenAdapterIdx, &m_dxgiAdapter));
+		assert_succeeded(D3D12CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		LogInfo(LogDirectX) << "Selected D3D12 adapter " << chosenAdapterIdx << endl;
 	}
@@ -603,10 +626,23 @@ void DeviceManager::CreateDevice()
 	}
 #endif
 
+	// Create D3D12 Memory Allocator
+	D3D12MA::Allocator* d3d12maAllocator{ nullptr };
+	auto allocatorDesc = D3D12MA::ALLOCATOR_DESC{
+		.Flags					= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED | D3D12MA::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED,
+		.pDevice				= device.get(),
+		.PreferredBlockSize		= 0,
+		.pAllocationCallbacks	= nullptr,
+		.pAdapter				= m_dxgiAdapter.get()
+	};
+	assert_succeeded(D3D12MA::CreateAllocator(&allocatorDesc, &d3d12maAllocator));
+
+
 	// Create Luna GraphicsDevice
 	auto deviceDesc = GraphicsDeviceDesc{
 		.dxgiFactory				= m_dxgiFactory.get(),
 		.dx12Device					= device.get(),
+		.d3d12maAllocator			= d3d12maAllocator,
 		.backBufferWidth			= m_desc.backBufferWidth,
 		.backBufferHeight			= m_desc.backBufferHeight,
 		.numSwapChainBuffers		= m_desc.numSwapChainBuffers,
@@ -843,6 +879,23 @@ void DeviceManager::ReleaseSwapChainBuffers()
 	WaitForGpu();
 
 	m_swapChainBuffers.clear();
+}
+
+
+void DeviceManager::ReleaseDeferredResources()
+{
+	auto resourceIt = m_deferredResources.begin();
+	while (resourceIt != m_deferredResources.end())
+	{
+		if (GetQueue(QueueType::Graphics).IsFenceComplete(resourceIt->fenceValue))
+		{
+			resourceIt = m_deferredResources.erase(resourceIt);
+		}
+		else
+		{
+			++resourceIt;
+		}
+	}
 }
 
 

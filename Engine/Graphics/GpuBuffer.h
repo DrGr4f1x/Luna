@@ -27,6 +27,7 @@ struct GpuBufferDesc
 	size_t elementCount{ 0 };
 	size_t elementSize{ 0 };
 	const void* initialData{ nullptr };
+	bool bAllowUnorderedAccess{ false };
 
 	GpuBufferDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr GpuBufferDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
@@ -34,7 +35,8 @@ struct GpuBufferDesc
 	constexpr GpuBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
 	constexpr GpuBufferDesc& SetElementCount(size_t value) noexcept { elementCount = value; return *this; }
 	constexpr GpuBufferDesc& SetElementSize(size_t value) noexcept { elementSize = value; return *this; }
-	constexpr GpuBufferDesc& SetInitialData(const void* data) { initialData = data; return *this; }
+	constexpr GpuBufferDesc& SetInitialData(const void* data) noexcept { initialData = data; return *this; }
+	constexpr GpuBufferDesc& SetAllowUnorderedAccess(bool value) noexcept { bAllowUnorderedAccess = value; return *this; }
 };
 
 
@@ -78,6 +80,63 @@ class VertexBuffer : public GpuBuffer
 public:
 	VertexBuffer() noexcept
 		: GpuBuffer(ResourceType::VertexBuffer)
+	{}
+};
+
+
+class ConstantBuffer : public GpuBuffer
+{
+public:
+	ConstantBuffer() noexcept
+		: GpuBuffer(ResourceType::ConstantBuffer)
+	{}
+};
+
+
+class ByteAddressBuffer : public GpuBuffer
+{
+public:
+	ByteAddressBuffer() noexcept
+		: GpuBuffer(ResourceType::ByteAddressBuffer)
+	{}
+
+protected:
+	explicit ByteAddressBuffer(ResourceType resourceType) noexcept
+		: GpuBuffer(resourceType)
+	{}
+};
+
+
+class IndirectArgsBuffer : public ByteAddressBuffer
+{
+public:
+	IndirectArgsBuffer() noexcept
+		: ByteAddressBuffer(ResourceType::IndirectArgsBuffer)
+	{}
+};
+
+
+class StructuredBuffer : public GpuBuffer
+{
+public:
+	StructuredBuffer() noexcept
+		: GpuBuffer(ResourceType::StructuredBuffer)
+	{}
+
+	bool Initialize(GpuBufferDesc& desc);
+
+	ByteAddressBuffer& GetCounterBuffer() { return m_counterBuffer; }
+
+private:
+	ByteAddressBuffer m_counterBuffer;
+};
+
+
+class TypedBuffer : public GpuBuffer
+{
+public:
+	TypedBuffer() noexcept
+		: GpuBuffer(ResourceType::TypedBuffer)
 	{}
 };
 

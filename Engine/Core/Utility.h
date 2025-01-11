@@ -129,6 +129,11 @@ Utility::Printf( msg "\n", ##__VA_ARGS__ );
 
 #define BreakIfFailed( hr ) if (FAILED(hr)) __debugbreak()
 
+
+void SIMDMemCopy(void* __restrict dest, const void* __restrict source, size_t numQuadwords);
+void SIMDMemFill(void* __restrict dest, __m128 fillVector, size_t numQuadwords);
+
+
 // Smart pointer helpers
 struct HandleCloser
 {

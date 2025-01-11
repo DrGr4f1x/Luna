@@ -12,6 +12,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Apps\Test\Test.vcxp
 		{FFE87DCB-69B8-4549-8D06-A681A29EF1D8} = {FFE87DCB-69B8-4549-8D06-A681A29EF1D8}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Triangle", "Apps\Triangle\Triangle.vcxproj", "{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,11 +33,18 @@ Global
 		{C1E41B8F-C86D-4F8E-B660-484FC82A5B20}.Profile|x64.Build.0 = Profile|x64
 		{C1E41B8F-C86D-4F8E-B660-484FC82A5B20}.Release|x64.ActiveCfg = Release|x64
 		{C1E41B8F-C86D-4F8E-B660-484FC82A5B20}.Release|x64.Build.0 = Release|x64
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}.Debug|x64.ActiveCfg = Debug|x64
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}.Debug|x64.Build.0 = Debug|x64
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}.Profile|x64.ActiveCfg = Profile|x64
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}.Profile|x64.Build.0 = Profile|x64
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}.Release|x64.ActiveCfg = Release|x64
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C1E41B8F-C86D-4F8E-B660-484FC82A5B20} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
+		{AA4007AF-44CB-4D24-BB11-1E7AAFD21795} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 	EndGlobalSection
 EndGlobal

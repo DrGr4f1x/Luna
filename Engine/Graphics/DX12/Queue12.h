@@ -34,7 +34,8 @@ public:
 	void DiscardAllocator(uint64_t fenceValueForReset, ID3D12CommandAllocator* allocator);
 
 	uint64_t IncrementFence();
-	uint64_t GetLastSubmittedFenceValue() const { return m_lastSubmittedFenceValue; }
+	uint64_t GetLastSubmittedFenceValue() const noexcept { return m_lastSubmittedFenceValue; }
+	uint64_t GetNextFenceValue() const noexcept { return m_nextFenceValue; }
 	bool IsFenceComplete(uint64_t fenceValue);
 	void WaitForFence(uint64_t fenceValue);
 	void WaitForGpu()

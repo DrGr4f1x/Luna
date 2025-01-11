@@ -22,6 +22,7 @@ namespace Luna
 // Forward declarations
 class ColorBuffer;
 class DepthBuffer;
+class GpuBuffer;
 
 } // namespace Luna
 
@@ -51,8 +52,10 @@ struct TextureBarrier
 
 struct BufferBarrier
 {
+	VkBuffer buffer{ VK_NULL_HANDLE };
 	ResourceState beforeState{ ResourceState::Undefined };
 	ResourceState afterState{ ResourceState::Undefined };
+	size_t size{ 0 };
 };
 
 
@@ -80,6 +83,7 @@ public:
 
 	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
@@ -90,8 +94,8 @@ public:
 	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
 private:
-	// TODO Put this in namespace Internal
 	void ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags);
+	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
 	void BindDescriptorHeaps() {}
 

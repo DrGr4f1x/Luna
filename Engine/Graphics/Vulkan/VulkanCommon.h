@@ -84,4 +84,6 @@ constexpr bool operator==(const VkImageSubresourceRange& a, const VkImageSubreso
 		a.levelCount == b.levelCount;
 }
 
+class GraphicsDevice* GetVulkanGraphicsDevice();
+
 } // namespace Luna::VK

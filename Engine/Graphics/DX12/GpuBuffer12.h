@@ -23,15 +23,15 @@ namespace Luna::DX12
 struct GpuBufferDescExt
 {
 	ID3D12Resource* resource{ nullptr };
+	D3D12MA::Allocation* allocation{ nullptr };
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
 	D3D12_CPU_DESCRIPTOR_HANDLE uavHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle{};
 	uint64_t gpuAddress{ 0 };
 
 	constexpr GpuBufferDescExt& SetResource(ID3D12Resource* value) noexcept { resource = value; return *this; }
+	constexpr GpuBufferDescExt& SetAllocation(D3D12MA::Allocation* value) noexcept { allocation = value; return *this; }
 	constexpr GpuBufferDescExt& SetSrvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { srvHandle = value; return *this; }
 	constexpr GpuBufferDescExt& SetUavHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { uavHandle = value; return *this; }
-	constexpr GpuBufferDescExt& SetCbvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { cbvHandle = value; return *this; }
 	constexpr GpuBufferDescExt& SetGpuAddress(uint64_t value) noexcept { gpuAddress = value; return *this; }
 };
 
@@ -41,7 +41,6 @@ class __declspec(uuid("9138A2AC-37DF-4B04-91B7-293B8134CCCF")) IGpuBufferData : 
 public:
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept = 0;
 	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetUAV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetCBV() const noexcept = 0;
 
 	virtual D3D12_VERTEX_BUFFER_VIEW VertexBufferView(size_t offset, uint32_t size, uint32_t stride) const noexcept = 0;
 	virtual D3D12_VERTEX_BUFFER_VIEW VertexBufferView(size_t baseVertexIndex) const noexcept = 0;
@@ -62,8 +61,7 @@ public:
 	uint64_t GetGpuAddress() const noexcept override { return m_gpuAddress; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept override { return m_srvHandle; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV() const noexcept override { return m_uavHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCBV() const noexcept override { return m_cbvHandle; }
-
+	
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView(size_t offset, uint32_t size, uint32_t stride) const noexcept override;
 	D3D12_VERTEX_BUFFER_VIEW VertexBufferView(size_t baseVertexIndex) const noexcept override
 	{
@@ -81,9 +79,9 @@ public:
 
 protected:
 	wil::com_ptr<ID3D12Resource> m_resource;
+	wil::com_ptr<D3D12MA::Allocation> m_allocation;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle{};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_uavHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_cbvHandle{};
 
 	Format m_format{ Format::Unknown };
 

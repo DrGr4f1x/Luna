@@ -53,6 +53,9 @@ public:
 
 	ColorBuffer& GetColorBuffer() final;
 
+	void ReleaseImage(CVkImage* image);
+	void ReleaseBuffer(CVkBuffer* buffer);
+
 private:
 	void SetRequiredInstanceLayersAndExtensions();
 	void InstallDebugMessenger();
@@ -72,6 +75,8 @@ private:
 	Queue& GetQueue(CommandListType commandListType);
 	void QueueWaitForSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value);
 	void QueueSignalSemaphore(QueueType queueType, VkSemaphore, uint64_t value);
+
+	void ReleaseDeferredResources();
 
 private:
 	DeviceManagerDesc m_desc{};
@@ -126,6 +131,15 @@ private:
 	std::mutex m_contextAllocationMutex;
 	std::vector<std::unique_ptr<CommandContext>> m_contextPool[4];
 	std::queue<CommandContext*> m_availableContexts[4];
+
+	// Deferred resource release
+	struct DeferredReleaseResource
+	{
+		uint64_t fenceValue;
+		wil::com_ptr<CVkImage> image;
+		wil::com_ptr<CVkBuffer> buffer;
+	};
+	std::list<DeferredReleaseResource> m_deferredResources;
 };
 
 

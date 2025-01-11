@@ -670,7 +670,7 @@ VkBufferUsageFlags GetBufferUsageFlags(ResourceType resourceType)
 	flags |= HasFlag(resourceType, ResourceType::IndexBuffer) ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0;
 	flags |= HasFlag(resourceType, ResourceType::VertexBuffer) ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0;
 	flags |= HasFlag(resourceType, ResourceType::TypedBuffer) ? (VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT) : 0;
-	flags |= HasFlag(resourceType, s_genericBuffer) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
+	flags |= HasAnyFlag(resourceType, s_genericBuffer) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
 	flags |= HasFlag(resourceType, ResourceType::StructuredBuffer) ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT : 0;
 	flags |= HasFlag(resourceType, ResourceType::ConstantBuffer) ? VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT : 0;
 

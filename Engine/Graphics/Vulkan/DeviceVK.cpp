@@ -24,6 +24,9 @@ extern Luna::IGraphicsDevice* g_graphicsDevice;
 namespace Luna::VK
 {
 
+GraphicsDevice* g_vulkanGraphicsDevice = nullptr;
+
+
 // TODO - Move this elsewhere?
 bool QueryLinearTilingFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags)
 {
@@ -48,6 +51,7 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	, m_vkDevice{ desc.device }
 {
 	g_graphicsDevice = this;
+	g_vulkanGraphicsDevice = this;
 }
 
 
@@ -56,6 +60,7 @@ GraphicsDevice::~GraphicsDevice()
 	LogInfo(LogVulkan) << "Destroying Vulkan device." << endl;
 
 	g_graphicsDevice = nullptr;
+	g_vulkanGraphicsDevice = nullptr;
 }
 
 
@@ -237,10 +242,10 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& d
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
 	auto createInfo = VkBufferCreateInfo{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.pNext = nullptr,
-		.size = desc.elementCount * desc.elementSize,
-		.usage = GetBufferUsageFlags(desc.resourceType) | transferFlags
+		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext	= nullptr,
+		.size	= desc.elementCount * desc.elementSize,
+		.usage	= GetBufferUsageFlags(desc.resourceType) | transferFlags
 	};
 
 	VmaAllocationCreateInfo allocCreateInfo = {};
@@ -258,8 +263,8 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& d
 	auto buffer = Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), vkBuffer, vmaBufferAllocation);
 
 	auto descExt = GpuBufferDescExt{
-		.buffer = buffer.get(),
-		.bufferInfo = {
+		.buffer			= buffer.get(),
+		.bufferInfo		= {
 			.buffer		= vkBuffer,
 			.offset		= 0,
 			.range		= VK_WHOLE_SIZE
@@ -451,6 +456,12 @@ wil::com_ptr<CVkImageView> GraphicsDevice::CreateImageView(const ImageViewDesc& 
 }
 
 
+wil::com_ptr<CVkBuffer> GraphicsDevice::CreateBuffer(VkBuffer buffer, VmaAllocation allocation) const
+{
+	return Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), buffer, allocation);
+}
+
+
 VkFormatProperties GraphicsDevice::GetFormatProperties(Format format) const
 {
 	VkFormat vkFormat = static_cast<VkFormat>(format);
@@ -459,6 +470,12 @@ VkFormatProperties GraphicsDevice::GetFormatProperties(Format format) const
 	vkGetPhysicalDeviceFormatProperties(m_vkDevice->GetPhysicalDevice(), vkFormat, &properties);
 
 	return properties;
+}
+
+
+GraphicsDevice* GetVulkanGraphicsDevice()
+{
+	return g_vulkanGraphicsDevice;
 }
 
 } // namespace Luna::VK

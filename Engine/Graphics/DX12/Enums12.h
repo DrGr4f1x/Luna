@@ -62,4 +62,6 @@ D3D12_SRV_DIMENSION GetSRVDimension(ResourceType resourceType);
 
 D3D12_RESOURCE_DIMENSION GetResourceDimension(ResourceType resourceType);
 
+D3D12_HEAP_TYPE GetHeapType(MemoryAccess memoryAccess);
+
 } // namespace Luna::DX12

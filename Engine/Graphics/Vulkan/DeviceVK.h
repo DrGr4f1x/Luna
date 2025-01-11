@@ -131,7 +131,7 @@ class __declspec(uuid("402B61AE-0C51-46D3-B0EC-A2911B380181")) GraphicsDevice
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IGraphicsDevice>
 	, public NonCopyable
 {
-	//friend class CommandContext;
+	friend class CommandContextVK;
 	friend class DeviceManager;
 	friend class Queue;
 
@@ -147,12 +147,17 @@ public:
 	void CreateResources();
 
 private:
+	VkDevice GetDevice() noexcept { return *m_vkDevice; }
+	VmaAllocator GetAllocator() noexcept { return *m_vmaAllocator; }
+
 	wil::com_ptr<CVkFence> CreateFence(bool bSignalled) const;
 	wil::com_ptr<CVkSemaphore> CreateSemaphore(VkSemaphoreType semaphoreType, uint64_t initialValue) const;
 	wil::com_ptr<CVkCommandPool> CreateCommandPool(CommandListType commandListType) const;
 	wil::com_ptr<CVmaAllocator> CreateVmaAllocator() const;
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& desc) const;
 	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& desc) const;
+	
+	wil::com_ptr<CVkBuffer> CreateBuffer(VkBuffer buffer, VmaAllocation allocation) const;
 
 	VkFormatProperties GetFormatProperties(Format format) const;
 

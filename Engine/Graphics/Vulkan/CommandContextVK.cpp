@@ -14,7 +14,9 @@
 
 #include "Graphics\Vulkan\ColorBufferVK.h"
 #include "Graphics\Vulkan\DepthBufferVK.h"
+#include "Graphics\Vulkan\DeviceVK.h"
 #include "Graphics\Vulkan\DeviceManagerVK.h"
+#include "Graphics\Vulkan\GpuBufferVK.h"
 #include "Graphics\Vulkan\QueueVK.h"
 
 using namespace std;
@@ -30,6 +32,15 @@ inline VkImage GetImage(const T& obj)
 	wil::com_ptr<IGpuImageData> gpuImageData;
 	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuImageData)));
 	return gpuImageData->GetImage();
+}
+
+
+inline VkBuffer GetBuffer(const GpuBuffer& gpuBuffer)
+{
+	const auto platformData = gpuBuffer.GetPlatformData();
+	wil::com_ptr<IGpuBufferData> gpuBufferData;
+	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuBufferData)));
+	return gpuBufferData->GetBuffer();
 }
 
 
@@ -143,17 +154,18 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 
 void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	TextureBarrier barrier{};
-	barrier.image = GetImage(colorBuffer);
-	barrier.format = FormatToVulkan(colorBuffer.GetFormat());
-	barrier.imageAspect = GetImageAspect(colorBuffer.GetFormat());
-	barrier.beforeState = colorBuffer.GetUsageState();
-	barrier.afterState = newState;
-	barrier.numMips = colorBuffer.GetNumMips();
-	barrier.mipLevel = 0;
-	barrier.arraySizeOrDepth = colorBuffer.GetArraySize();
-	barrier.arraySlice = 0;
-	barrier.bWholeTexture = true;
+	auto barrier = TextureBarrier{
+		.image				= GetImage(colorBuffer),
+		.format				= FormatToVulkan(colorBuffer.GetFormat()),
+		.imageAspect		= GetImageAspect(colorBuffer.GetFormat()),
+		.beforeState		= colorBuffer.GetUsageState(),
+		.afterState			= newState,
+		.numMips			= colorBuffer.GetNumMips(),
+		.mipLevel			= 0,
+		.arraySizeOrDepth	= colorBuffer.GetArraySize(),
+		.arraySlice			= 0,
+		.bWholeTexture		= true
+	};
 
 	m_textureBarriers.push_back(barrier);
 
@@ -169,22 +181,43 @@ void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceStat
 
 void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	TextureBarrier barrier{};
-	barrier.image = GetImage(depthBuffer);
-	barrier.format = FormatToVulkan(depthBuffer.GetFormat());
-	barrier.imageAspect = GetImageAspect(depthBuffer.GetFormat());
-	barrier.beforeState = depthBuffer.GetUsageState();
-	barrier.afterState = newState;
-	barrier.numMips = depthBuffer.GetNumMips();
-	barrier.mipLevel = 0;
-	barrier.arraySizeOrDepth = depthBuffer.GetArraySize();
-	barrier.arraySlice = 0;
-	barrier.bWholeTexture = true;
+	auto barrier = TextureBarrier{
+		.image				= GetImage(depthBuffer),
+		.format				= FormatToVulkan(depthBuffer.GetFormat()),
+		.imageAspect		= GetImageAspect(depthBuffer.GetFormat()),
+		.beforeState		= depthBuffer.GetUsageState(),
+		.afterState			= newState,
+		.numMips			= depthBuffer.GetNumMips(),
+		.mipLevel			= 0,
+		.arraySizeOrDepth	= depthBuffer.GetArraySize(),
+		.arraySlice			= 0,
+		.bWholeTexture		= true
+	};
 
 	m_textureBarriers.push_back(barrier);
 
 	// TODO: we should probably do this after the barriers are flushed
 	depthBuffer.SetUsageState(newState);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContextVK::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	auto barrier = BufferBarrier{
+		.buffer = GetBuffer(gpuBuffer),
+		.beforeState = gpuBuffer.GetUsageState(),
+		.afterState = newState,
+		.size = gpuBuffer.GetSize()
+	};
+
+	m_bufferBarriers.push_back(barrier);
+
+	gpuBuffer.SetUsageState(newState);
 
 	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
 	{
@@ -230,22 +263,45 @@ void CommandContextVK::FlushResourceBarriers()
 		vkBarrier.subresourceRange = subresourceRange;
 
 		m_imageMemoryBarriers.push_back(vkBarrier);
+	}	
+
+	for (const auto& barrier : m_bufferBarriers)
+	{
+		ResourceStateMapping before = GetResourceStateMapping(barrier.beforeState);
+		ResourceStateMapping after = GetResourceStateMapping(barrier.afterState);
+
+		assert(after.imageLayout != VK_IMAGE_LAYOUT_UNDEFINED);
+
+		VkBufferMemoryBarrier2 vkBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2 };
+		vkBarrier.srcAccessMask = before.accessFlags;
+		vkBarrier.dstAccessMask = after.accessFlags;
+		vkBarrier.srcStageMask = before.stageFlags;
+		vkBarrier.dstStageMask = after.stageFlags;
+		vkBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		vkBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		vkBarrier.buffer = barrier.buffer;
+		vkBarrier.offset = 0;
+		vkBarrier.size = barrier.size;
+
+		m_bufferMemoryBarriers.push_back(vkBarrier);
 	}
 
-	if (!m_imageMemoryBarriers.empty())
+	if (!m_imageMemoryBarriers.empty() || !m_bufferMemoryBarriers.empty())
 	{
 		VkDependencyInfo dependencyInfo{ VK_STRUCTURE_TYPE_DEPENDENCY_INFO };
 		dependencyInfo.imageMemoryBarrierCount = (uint32_t)m_imageMemoryBarriers.size();
 		dependencyInfo.pImageMemoryBarriers = m_imageMemoryBarriers.data();
+		dependencyInfo.bufferMemoryBarrierCount = (uint32_t)m_bufferMemoryBarriers.size();
+		dependencyInfo.pBufferMemoryBarriers = m_bufferMemoryBarriers.data();
 
 		vkCmdPipelineBarrier2(m_commandBuffer, &dependencyInfo);
 
 		m_imageMemoryBarriers.clear();
+		m_bufferMemoryBarriers.clear();
 	}
 
 	m_textureBarriers.clear();
-
-	// TODO - Vulkan GPU buffer support
+	m_bufferBarriers.clear();
 }
 
 
@@ -324,6 +380,39 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, V
 	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
 
 	TransitionResource(depthBuffer, oldState, false);
+}
+
+
+void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+{
+	VkBufferCreateInfo stagingBufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	stagingBufferInfo.size = numBytes;
+	stagingBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	stagingBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VmaAllocationCreateInfo stagingAllocCreateInfo = {};
+	stagingAllocCreateInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+	stagingAllocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	VkBuffer stagingBuffer = VK_NULL_HANDLE;
+	VmaAllocation stagingBufferAlloc = VK_NULL_HANDLE;
+	VmaAllocationInfo stagingAllocInfo = {};
+
+	auto allocator = GetVulkanGraphicsDevice()->GetAllocator();
+	vmaCreateBuffer(allocator, &stagingBufferInfo, &stagingAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingAllocInfo);
+
+	SIMDMemCopy(stagingAllocInfo.pMappedData, bufferData, numBytes);
+
+	// Copy from the upload buffer to the destination buffer
+	TransitionResource(destBuffer, ResourceState::CopyDest, true);
+
+	VkBufferCopy copyRegion{ .size = numBytes };
+	vkCmdCopyBuffer(m_commandBuffer, stagingBuffer, GetBuffer(destBuffer), 1, &copyRegion);
+
+	TransitionResource(destBuffer, ResourceState::GenericRead, true);
+
+	wil::com_ptr<CVkBuffer> buffer = GetVulkanGraphicsDevice()->CreateBuffer(stagingBuffer, stagingBufferAlloc);
+	GetVulkanDeviceManager()->ReleaseBuffer(buffer.get());
 }
 
 } // namespace Luna::VK

@@ -12,6 +12,7 @@
 
 #include "GpuBuffer.h"
 
+#include "CommandContext.h"
 #include "GraphicsCommon.h"
 
 
@@ -51,12 +52,24 @@ bool GpuBuffer::Initialize(GpuBufferDesc& desc)
 	m_bIsInitialized = m_platformData != nullptr;
 
 	// TODO
-	/*if (IsInitialized() && desc.initialData)
+	if (IsInitialized() && desc.initialData)
 	{
 		CommandContext::InitializeBuffer(*this, desc.initialData, GetSize());
-	}*/
+	}
 
 	return m_bIsInitialized;
+}
+
+
+bool StructuredBuffer::Initialize(GpuBufferDesc& desc)
+{
+	GpuBufferDesc counterBufferDesc{
+		.name			= std::format("{} Counter Buffer", desc.name),
+		.elementCount	= 1,
+		.elementSize	= 4
+	};
+
+	return GpuBuffer::Initialize(desc) && m_counterBuffer.Initialize(counterBufferDesc);
 }
 
 } // namespace Luna

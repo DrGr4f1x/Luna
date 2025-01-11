@@ -49,6 +49,16 @@ uint64_t CommandContext::Finish(bool bWaitForCompletion)
 }
 
 
+void CommandContext::InitializeBuffer(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+{
+	CommandContext& initContext = CommandContext::Begin();
+
+	initContext.m_contextImpl->InitializeBuffer_Internal(destBuffer, bufferData, numBytes, offset);
+
+	initContext.Finish(true);
+}
+
+
 ComputeContext& ComputeContext::Begin(const string id, bool bAsync)
 {
 	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Direct;

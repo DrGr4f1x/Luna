@@ -20,6 +20,7 @@ namespace Luna
 class ColorBuffer;
 class ComputeContext;
 class DepthBuffer;
+class GpuBuffer;
 class GpuResource;
 class GraphicsContext;
 class CommandContext;
@@ -27,6 +28,8 @@ class CommandContext;
 
 class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
 {
+	friend class CommandContext;
+
 public:
 	virtual ~ICommandContext() = default;
 
@@ -48,6 +51,7 @@ public:
 
 	virtual void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
@@ -59,7 +63,9 @@ public:
 	virtual void ClearDepthAndStencil(DepthBuffer& depthBuffer) = 0;
 
 	// Compute context
-
+	
+protected:
+	virtual void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
 };
 
 
@@ -95,13 +101,15 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
+	static void InitializeBuffer(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
+
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
 
 	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 
-protected:
 	void BeginFrame();
 
 protected:
@@ -183,6 +191,12 @@ inline void CommandContext::TransitionResource(ColorBuffer& colorBuffer, Resourc
 inline void CommandContext::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(depthBuffer, newState, bFlushImmediate);
+}
+
+
+inline void CommandContext::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
 }
 
 

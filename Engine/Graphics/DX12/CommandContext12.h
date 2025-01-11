@@ -45,6 +45,7 @@ public:
 
 	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
 	void InsertUAVBarrier(DepthBuffer& depthBuffer, bool bFlushImmediate);
 	void FlushResourceBarriers() override;
@@ -55,6 +56,9 @@ public:
 	void ClearDepth(DepthBuffer& depthBuffer) override;
 	void ClearStencil(DepthBuffer& depthBuffer) override;
 	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
+
+protected:
+	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
 private:
 	void TransitionResource_Internal(GpuResource& gpuResource, ResourceState newState, bool bFlushImmediate);

@@ -44,6 +44,7 @@ struct GraphicsDeviceDesc
 {
 	IDXGIFactory4* dxgiFactory{ nullptr };
 	ID3D12Device* dx12Device{ nullptr };
+	D3D12MA::Allocator* d3d12maAllocator{ nullptr };
 
 	uint32_t backBufferWidth{ 0 };
 	uint32_t backBufferHeight{ 0 };
@@ -95,7 +96,9 @@ class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IGraphicsDevice>
 	, public NonCopyable
 {
+	friend class CommandContext12;
 	friend class DeviceManager;
+	friend class GpuBufferData;
 
 public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept;
@@ -110,12 +113,13 @@ public:
 
 private:
 	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }
+	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
 
 	void InstallDebugCallback();
 	void ReadCaps();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
-	ID3D12Resource* CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState);
+	D3D12MA::Allocation* CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState);
 
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
@@ -126,6 +130,7 @@ private:
 	// DirectX 12 objects
 	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
 	wil::com_ptr<ID3D12Device> m_dxDevice;
+	wil::com_ptr<D3D12MA::Allocator> m_d3d12maAllocator;
 	DeviceRLDOHelper m_deviceRLDOHelper;
 	wil::com_ptr<ID3D12InfoQueue1> m_dxInfoQueue;
 	DWORD m_callbackCookie{ 0 };

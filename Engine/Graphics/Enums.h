@@ -360,6 +360,8 @@ enum class ResourceState : uint32_t
 	OpacityMicromapWrite		= 0x00200000,
 	OpacityMicromapBuildInput	= 0x00400000,
 	Predication					= 0x00800000,
+
+	GenericRead					= (((((ConstantBuffer | VertexBuffer) | IndexBuffer) | ShaderResource) | IndirectArgument) | CopySource)
 };
 
 template <> struct EnableBitmaskOperators<ResourceState> { static const bool enable = true; };
@@ -411,7 +413,8 @@ enum class ResourceType : uint32_t
 
 	Texture_Type		= Texture1D_Type | Texture2D_Type | TextureCube_Type | Texture3D,
 	Buffer_Type			= IndexBuffer | VertexBuffer | ConstantBuffer | ByteAddressBuffer | IndirectArgsBuffer | StructuredBuffer |
-						  TypedBuffer | ReadbackBuffer,
+							TypedBuffer | ReadbackBuffer,
+	UnorderedAccess_Type = ByteAddressBuffer | IndirectArgsBuffer | StructuredBuffer | TypedBuffer,
 };
 template <> struct EnableBitmaskOperators<ResourceType> { static const bool enable = true; };
 
@@ -425,6 +428,12 @@ inline bool IsTextureType(ResourceType resourceType)
 inline bool IsBufferType(ResourceType resourceType)
 {
 	return HasAnyFlag(resourceType, ResourceType::Buffer_Type);
+}
+
+
+inline bool IsUnorderedAccessType(ResourceType resourceType)
+{
+	return HasAnyFlag(resourceType, ResourceType::UnorderedAccess_Type);
 }
 
 enum class TextureDimension : uint8_t

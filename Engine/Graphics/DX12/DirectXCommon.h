@@ -36,6 +36,9 @@
 #define D3D12_GPU_VIRTUAL_ADDRESS_NULL      ((D3D12_GPU_VIRTUAL_ADDRESS)0)
 #define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN   ((D3D12_GPU_VIRTUAL_ADDRESS)-1)
 
+#define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED 1
+#include "D3D12MemAlloc.h"
+
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\DX12\Enums12.h"
 #include "Graphics\DX12\Formats12.h"
@@ -45,9 +48,15 @@
 namespace Luna::DX12
 {
 
+// Forward declarations
+class GraphicsDevice;
+
+
 void SetDebugName(IDXGIObject* object, const std::string& name);
 void SetDebugName(ID3D12Object* object, const std::string& name);
 
+
+GraphicsDevice* GetD3D12GraphicsDevice();
 
 // DirectX 12 related log categories
 inline LogCategory LogDirectX{ "LogDirectX" };

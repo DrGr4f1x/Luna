@@ -67,6 +67,9 @@ public:
 
 	void HandleDeviceLost();
 
+	void ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation = nullptr);
+	void ReleaseAllocation(D3D12MA::Allocation* allocation);
+
 private:
 	void CreateDevice();
 	std::vector<AdapterInfo> EnumerateAdapters();
@@ -79,6 +82,7 @@ private:
 
 	void ResizeSwapChain();
 	void ReleaseSwapChainBuffers();
+	void ReleaseDeferredResources();
 
 private:
 	DeviceManagerDesc m_desc{};
@@ -91,6 +95,7 @@ private:
 	D3D_SHADER_MODEL m_bestShaderModel{ D3D_SHADER_MODEL_6_7 };
 
 	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
+	wil::com_ptr<IDXGIAdapter> m_dxgiAdapter;
 
 	// Luna objects
 	wil::com_ptr<GraphicsDevice> m_device;
@@ -121,6 +126,15 @@ private:
 	std::mutex m_contextAllocationMutex;
 	std::vector<std::unique_ptr<CommandContext>> m_contextPool[4];
 	std::queue<CommandContext*> m_availableContexts[4];
+
+	// Deferred resource release
+	struct DeferredReleaseResource
+	{
+		uint64_t fenceValue;
+		wil::com_ptr<ID3D12Resource> resource;
+		wil::com_ptr<D3D12MA::Allocation> allocation;
+	};
+	std::list<DeferredReleaseResource> m_deferredResources;
 };
 
 

@@ -30,6 +30,9 @@ extern Luna::IGraphicsDevice* g_graphicsDevice;
 namespace Luna::DX12
 {
 
+GraphicsDevice* g_d3d12GraphicsDevice{ nullptr };
+
+
 void DebugMessageCallback(
 	D3D12_MESSAGE_CATEGORY category,
 	D3D12_MESSAGE_SEVERITY severity,
@@ -96,6 +99,7 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept
 	SetDebugName(m_dxDevice.get(), "DX12 Device");
 
 	g_graphicsDevice = this;
+	g_d3d12GraphicsDevice = this;
 }
 
 
@@ -109,6 +113,7 @@ GraphicsDevice::~GraphicsDevice()
 		m_dxInfoQueue.reset();
 	}
 
+	g_d3d12GraphicsDevice = nullptr;
 	g_graphicsDevice = nullptr;
 }
 
@@ -382,14 +387,114 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& d
 {
 	assert(desc.elementSize == 2 || desc.elementSize == 4);
 
-	ID3D12Resource* pResource = CreateGpuBuffer(desc, initialState);
+	D3D12MA::Allocation* pAllocation = CreateGpuBuffer(desc, initialState);
+	ID3D12Resource* pResource = pAllocation->GetResource();
 
 	uint64_t gpuAddress = pResource->GetGPUVirtualAddress();
 
 	GpuBufferDescExt descExt{
 		.resource		= pResource,
+		.allocation		= pAllocation,
 		.gpuAddress		= gpuAddress
 	};
+
+	const size_t bufferSize = desc.elementCount * desc.elementSize;
+
+	if (desc.resourceType == ResourceType::ByteAddressBuffer || desc.resourceType == ResourceType::IndirectArgsBuffer)
+	{
+		auto srvDesc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+			.Format						= DXGI_FORMAT_R32_TYPELESS,
+			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
+			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+			.Buffer	= {
+				.NumElements	= (uint32_t)bufferSize / 4,
+				.Flags			= D3D12_BUFFER_SRV_FLAG_RAW
+			}
+		};
+
+		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+
+		auto uavDesc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+			.Format			= DXGI_FORMAT_R32_TYPELESS,
+			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
+			.Buffer	= {
+				.NumElements	= (uint32_t)bufferSize / 4,
+				.Flags			= D3D12_BUFFER_UAV_FLAG_RAW
+			}
+		};
+		
+		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+
+		descExt.SetSrvHandle(srvHandle);
+		descExt.SetUavHandle(uavHandle);
+	}
+
+	if (desc.resourceType == ResourceType::StructuredBuffer)
+	{
+		auto srvDesc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+			.Format						= DXGI_FORMAT_UNKNOWN,
+			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
+			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+			.Buffer	= {
+				.NumElements			= (uint32_t)desc.elementCount,
+				.StructureByteStride	= (uint32_t)desc.elementSize,
+				.Flags					= D3D12_BUFFER_SRV_FLAG_NONE
+			}
+		};
+
+		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+
+		auto uavDesc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+			.Format			= DXGI_FORMAT_UNKNOWN,
+			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
+			.Buffer = {
+				.NumElements			= (uint32_t)desc.elementCount,
+				.StructureByteStride	= (uint32_t)desc.elementSize,
+				.CounterOffsetInBytes	= 0,
+				.Flags					= D3D12_BUFFER_UAV_FLAG_NONE
+			}
+		};
+
+		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+
+		descExt.SetSrvHandle(srvHandle);
+		descExt.SetUavHandle(uavHandle);
+	}
+
+	if (desc.resourceType == ResourceType::TypedBuffer)
+	{
+		auto srvDesc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+			.Format						= FormatToDxgi(desc.format).resourceFormat,
+			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
+			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+			.Buffer = {
+				.NumElements	= (uint32_t)desc.elementCount,
+				.Flags			= D3D12_BUFFER_SRV_FLAG_NONE
+			}
+		};
+
+		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+
+		auto uavDesc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+			.Format			= FormatToDxgi(desc.format).resourceFormat,
+			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
+			.Buffer = {
+				.NumElements	= (uint32_t)desc.elementCount,
+				.Flags			= D3D12_BUFFER_UAV_FLAG_NONE
+			}
+		};
+
+		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+
+		descExt.SetSrvHandle(srvHandle);
+		descExt.SetUavHandle(uavHandle);
+	}
 
 	return Make<GpuBufferData>(desc, descExt);
 }
@@ -493,11 +598,17 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDevice::AllocateDescriptor(D3D12_DESCRIPTOR_
 }
 
 
-ID3D12Resource* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState)
+D3D12MA::Allocation* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState)
 { 
-	initialState = ResourceState::Common;
+	initialState = ResourceState::GenericRead;
 
 	const UINT64 bufferSize = desc.elementSize * desc.elementCount;
+
+	D3D12_HEAP_TYPE heapType = GetHeapType(desc.memoryAccess);
+	D3D12_RESOURCE_FLAGS flags = (desc.bAllowUnorderedAccess || IsUnorderedAccessType(desc.resourceType)) 
+		? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS 
+		: D3D12_RESOURCE_FLAG_NONE;
+
 
 	D3D12_RESOURCE_DESC resourceDesc{
 		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
@@ -506,29 +617,30 @@ ID3D12Resource* GraphicsDevice::CreateGpuBuffer(GpuBufferDesc& desc, ResourceSta
 		.Height				= 1,
 		.DepthOrArraySize	= 1,
 		.MipLevels			= 1,
-		.Format				= DXGI_FORMAT_UNKNOWN,
+		.Format				= FormatToDxgi(desc.format).resourceFormat,
 		.SampleDesc			= { .Count = 1, .Quality = 0 },
 		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		.Flags				= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+		.Flags				= flags
 	};
 	
-	D3D12_HEAP_PROPERTIES heapProps{
-		.Type					= D3D12_HEAP_TYPE_DEFAULT,
-		.CPUPageProperty		= D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
-		.MemoryPoolPreference	= D3D12_MEMORY_POOL_UNKNOWN,
-		.CreationNodeMask		= 1,
-		.VisibleNodeMask		= 1
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
+		.HeapType = heapType
 	};
-	
-	ID3D12Resource* pResource{ nullptr };
-	assert_succeeded(m_dxDevice->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
-		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&pResource)));
+
+	D3D12MA::Allocation* pAllocation{ nullptr };
+	HRESULT hr = m_d3d12maAllocator->CreateResource(
+		&allocationDesc,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		NULL,
+		&pAllocation,
+		IID_NULL, NULL);
 
 #if ENABLE_D3D12_DEBUG_MARKERS
-	SetDebugName(pResource, desc.name.c_str());
+	SetDebugName(pAllocation, desc.name.c_str());
 #endif
 
-	return pResource;
+	return pAllocation;
 }
 
 
@@ -556,6 +668,12 @@ uint8_t GraphicsDevice::GetFormatPlaneCount(DXGI_FORMAT format)
 	}
 
 	return planeCount;
+}
+
+
+GraphicsDevice* GetD3D12GraphicsDevice()
+{
+	return g_d3d12GraphicsDevice;
 }
 
 } // namespace Luna::DX12

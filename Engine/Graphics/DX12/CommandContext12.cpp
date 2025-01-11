@@ -14,7 +14,9 @@
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
+#include "Device12.h"
 #include "DeviceManager12.h"
+#include "GpuBuffer12.h"
 #include "Queue12.h"
 
 #if ENABLE_D3D12_DEBUG_MARKERS
@@ -203,6 +205,12 @@ void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceStat
 }
 
 
+void CommandContext12::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	TransitionResource_Internal(static_cast<GpuResource&>(gpuBuffer), newState, bFlushImmediate);
+}
+
+
 void CommandContext12::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
 {
 	InsertUAVBarrier_Internal(static_cast<GpuResource&>(colorBuffer), bFlushImmediate);
@@ -257,6 +265,52 @@ void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 {
 	FlushResourceBarriers();
 	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+{ 
+	// Create an upload buffer
+	auto resourceDesc = D3D12_RESOURCE_DESC{
+		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
+		.Alignment			= 0,
+		.Width				= numBytes,
+		.Height				= 1,
+		.DepthOrArraySize	= 1,
+		.MipLevels			= 1,
+		.Format				= DXGI_FORMAT_UNKNOWN,
+		.SampleDesc			= {.Count = 1, .Quality = 0 },
+		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+		.Flags				= D3D12_RESOURCE_FLAG_NONE
+	};
+
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
+		.HeapType = D3D12_HEAP_TYPE_UPLOAD
+	};
+
+	D3D12MA::Allocation* pAllocation{ nullptr };
+	HRESULT hr = GetD3D12GraphicsDevice()->GetAllocator()->CreateResource(
+		&allocationDesc,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		NULL,
+		&pAllocation,
+		IID_NULL, NULL);
+
+	auto resource = pAllocation->GetResource();
+	void* mappedPtr{ nullptr };
+	assert_succeeded(resource->Map(0, NULL, &mappedPtr));
+
+	SIMDMemCopy(mappedPtr, bufferData, numBytes);
+
+	resource->Unmap(0, NULL);
+
+	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
+	TransitionResource(destBuffer, ResourceState::CopyDest, true);
+	m_commandList->CopyBufferRegion(GetResource(destBuffer), offset, resource, 0, numBytes);
+	TransitionResource(destBuffer, ResourceState::GenericRead, true);
+
+	GetD3D12DeviceManager()->ReleaseAllocation(pAllocation);
 }
 
 

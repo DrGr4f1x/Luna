@@ -109,6 +109,12 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 
 DeviceManager::~DeviceManager()
 {
+	WaitForGpu();
+
+	// Flush pending deferred resources here
+	ReleaseDeferredResources();
+	assert(m_deferredResources.empty());
+
 	extern Luna::IDeviceManager* g_deviceManager;
 	g_deviceManager = nullptr;
 	g_vulkanDeviceManager = nullptr;
@@ -157,6 +163,8 @@ void DeviceManager::Present()
 
 	m_activeFrame = (m_activeFrame + 1) % m_presentFences.size();
 	m_renderCompleteSemaphoreIndex = (m_renderCompleteSemaphoreIndex + 1) % m_renderCompleteSemaphores.size();
+
+	ReleaseDeferredResources();
 }
 
 
@@ -488,6 +496,24 @@ wil::com_ptr<IPlatformData> DeviceManager::CreateColorBufferFromSwapChain(ColorB
 ColorBuffer& DeviceManager::GetColorBuffer()
 {
 	return m_swapChainBuffers[m_swapChainIndex];
+}
+
+
+void DeviceManager::ReleaseImage(CVkImage* image)
+{
+	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
+
+	DeferredReleaseResource resource{ nextFence, image, nullptr };
+	m_deferredResources.emplace_back(resource);
+}
+
+
+void DeviceManager::ReleaseBuffer(CVkBuffer* buffer)
+{
+	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
+
+	DeferredReleaseResource resource{ nextFence, nullptr, buffer };
+	m_deferredResources.emplace_back(resource);
 }
 
 
@@ -951,6 +977,23 @@ void DeviceManager::QueueWaitForSemaphore(QueueType queueType, VkSemaphore semap
 void DeviceManager::QueueSignalSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value)
 {
 	m_queues[(uint32_t)queueType]->AddSignalSemaphore(semaphore, value);
+}
+
+
+void DeviceManager::ReleaseDeferredResources()
+{
+	auto resourceIt = m_deferredResources.begin();
+	while (resourceIt != m_deferredResources.end())
+	{
+		if (GetQueue(QueueType::Graphics).IsFenceComplete(resourceIt->fenceValue))
+		{
+			resourceIt = m_deferredResources.erase(resourceIt);
+		}
+		else
+		{
+			++resourceIt;
+		}
+	}
 }
 
 
