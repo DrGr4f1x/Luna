@@ -12,6 +12,8 @@
 
 #include "TriangleApp.h"
 
+#include "Graphics\RootSignature.h"
+
 using namespace Luna;
 using namespace std;
 
@@ -76,6 +78,8 @@ void TriangleApp::Startup()
 	};
 	assert(m_constantBuffer.Initialize(constantBufferDesc));
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
+
+	InitRootSignature();
 }
 
 
@@ -108,4 +112,16 @@ void TriangleApp::CreateDeviceDependentResources()
 void TriangleApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+}
+
+
+void TriangleApp::InitRootSignature()
+{
+	auto rootSignatureDesc = RootSignatureDesc{
+		.name				= "Root Sig",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
+		.rootParameters		= { { RootParameter::RootCBV(0, ShaderStage::Vertex) } }
+	};
+
+	m_rootSignature.Initialize(rootSignatureDesc);
 }

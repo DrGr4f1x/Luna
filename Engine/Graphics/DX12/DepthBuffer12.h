@@ -66,7 +66,7 @@ class __declspec(uuid("36E0E19C-7D07-46EA-A6FE-E222A083957D")) DepthBufferData
 	, NonCopyable
 {
 public:
-	DepthBufferData(const DepthBufferDescExt& descExt) noexcept;
+	explicit DepthBufferData(const DepthBufferDescExt& descExt) noexcept;
 
 	ID3D12Resource* GetResource() const noexcept final { return m_resource.get(); }
 	uint64_t GetGpuAddress() const noexcept override { return m_resource->GetGPUVirtualAddress(); }

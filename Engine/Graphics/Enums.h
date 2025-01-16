@@ -211,17 +211,23 @@ enum class ShaderStage : uint16_t
 template <> struct EnableBitmaskOperators<ShaderStage> { static const bool enable = true; };
 
 
-enum class DescriptorType
+enum class DescriptorType : uint8_t
 {
-	CBV,
-	DynamicCBV,
-	Sampler,
+	None,
+	ConstantBuffer,
+	DynamicConstantBuffer,
 	TextureSRV,
-	TypedBufferSRV,
-	StructuredBufferSRV,
 	TextureUAV,
+	TypedBufferSRV,
 	TypedBufferUAV,
-	StructuredBufferUAV
+	StructuredBufferSRV,
+	StructuredBufferUAV,
+	RawBufferSRV,
+	RawBufferUAV,
+	Sampler,
+	RayTracingAccelStruct,
+	PushConstants,
+	SamplerFeedbackTextureUAV
 };
 
 
@@ -376,11 +382,12 @@ enum class QueryType : uint8_t
 
 enum class RootParameterType : uint8_t
 {
-	Invalid,
-	DescriptorTable,
+	Unknown,
 	RootConstants,
 	RootCBV,
-	DynamicRootCBV
+	RootSRV,
+	RootUAV,
+	Table
 };
 
 

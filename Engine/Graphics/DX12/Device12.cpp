@@ -19,12 +19,15 @@
 #include "Formats12.h"
 #include "GpuBuffer12.h"
 #include "Queue12.h"
+#include "RootSignature12.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
 
 
 extern Luna::IGraphicsDevice* g_graphicsDevice;
+
+static constexpr uint32_t c_MaxVolatileConstantBuffersPerLayout = 6;
 
 
 namespace Luna::DX12
@@ -71,6 +74,60 @@ D3D12_RESOURCE_FLAGS CombineResourceFlags(uint32_t fragmentCount)
 	}
 
 	return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | flags;
+}
+
+
+DescriptorType GetNormalizedDescriptorType(DescriptorType descriptorType)
+{
+	using enum DescriptorType;
+
+	switch (descriptorType)
+	{
+	case StructuredBufferUAV:
+	case RawBufferUAV:
+		return TypedBufferUAV;
+		break;
+
+	case StructuredBufferSRV:
+	case RawBufferSRV:
+		return TypedBufferSRV;
+
+	default:
+		return descriptorType;
+		break;
+	}
+}
+
+
+bool AreDescriptorTypesCompatible(DescriptorType a, DescriptorType b)
+{
+	using enum DescriptorType;
+
+	if (a == b)
+	{
+		return true;
+	}
+
+	a = GetNormalizedDescriptorType(a);
+	b = GetNormalizedDescriptorType(b);
+
+	if ((a == TypedBufferSRV && b == TextureSRV) ||
+		(b == TypedBufferSRV && a == TextureSRV) ||
+		(a == TypedBufferSRV && b == RayTracingAccelStruct) ||
+		(a == TextureSRV && b == RayTracingAccelStruct) ||
+		(b == TypedBufferSRV && a == RayTracingAccelStruct) ||
+		(b == TextureSRV && a == RayTracingAccelStruct))
+	{
+		return true;
+	}
+
+	if ((a == TypedBufferUAV && b == TextureUAV) ||
+		(b == TypedBufferUAV && a == TextureUAV))
+	{
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -496,6 +553,180 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateGpuBufferData(GpuBufferDesc& d
 	}
 
 	return Make<GpuBufferData>(desc, descExt);
+}
+
+
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateRootSignatureData(RootSignatureDesc& desc)
+{
+	std::vector<D3D12_ROOT_PARAMETER1> d3d12RootParameters;
+	
+	auto exitGuard = sg::make_scope_guard([&]()
+		{
+			for (auto& param : d3d12RootParameters)
+			{
+				if (param.DescriptorTable.NumDescriptorRanges > 0)
+				{
+					delete[] param.DescriptorTable.pDescriptorRanges;
+				}
+			}
+		});
+
+	// Build merged list of root parameters
+	std::vector<RootParameter> rootParameters;
+	for (const auto& rootParameterSet : desc.rootParameters)
+	{
+		rootParameters.insert(rootParameters.end(), rootParameterSet.begin(), rootParameterSet.end());
+	}
+
+	// Build DX12 root parameter descriptions
+	for (const auto& rootParameter : rootParameters)
+	{
+		if (rootParameter.parameterType == RootParameterType::RootConstants)
+		{
+			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
+			param.Constants.Num32BitValues = rootParameter.num32BitConstants;
+			param.Constants.RegisterSpace = rootParameter.registerSpace;
+			param.Constants.ShaderRegister = rootParameter.startRegister;
+		}
+		else if (rootParameter.parameterType == RootParameterType::RootCBV ||
+			rootParameter.parameterType == RootParameterType::RootSRV ||
+			rootParameter.parameterType == RootParameterType::RootUAV)
+		{
+			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
+			param.ParameterType = RootParameterTypeToDX12(rootParameter.parameterType);
+			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
+			param.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC;
+			param.Descriptor.RegisterSpace = rootParameter.registerSpace;
+			param.Descriptor.ShaderRegister = rootParameter.startRegister;
+		}
+		else if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
+			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
+			
+			const uint32_t numRanges = (uint32_t)rootParameter.table.size();
+			param.DescriptorTable.NumDescriptorRanges = numRanges;
+			D3D12_DESCRIPTOR_RANGE1* pRanges = new D3D12_DESCRIPTOR_RANGE1[numRanges];
+			for (uint32_t i = 0; i < numRanges; ++i)
+			{
+				D3D12_DESCRIPTOR_RANGE1& d3d12Range = pRanges[i];
+				const DescriptorRange& range = rootParameter.table[i];
+				d3d12Range.RangeType = DescriptorTypeToDX12(range.descriptorType);
+				d3d12Range.NumDescriptors = range.numDescriptors;
+				d3d12Range.BaseShaderRegister = range.startRegister;
+				d3d12Range.RegisterSpace = rootParameter.registerSpace;
+				d3d12Range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			}
+			param.DescriptorTable.pDescriptorRanges = pRanges;
+		}
+	}
+
+	auto rootSignatureDesc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC{
+		.Version = D3D_ROOT_SIGNATURE_VERSION_1_1,
+		.Desc_1_1 = {
+			.NumParameters		= (uint32_t)d3d12RootParameters.size(),
+			.pParameters		= d3d12RootParameters.data(),
+			.NumStaticSamplers	= 0,
+			.pStaticSamplers	= nullptr,
+			.Flags				= RootSignatureFlagsToDX12(desc.flags)
+		}
+	};
+
+	uint32_t descriptorTableBitmap{ 0 };
+	uint32_t samplerTableBitmap{ 0 };
+	std::vector<uint32_t> descriptorTableSize;
+	descriptorTableSize.reserve(16);
+
+	// Calculate hash
+	size_t hashCode = Utility::HashState(&rootSignatureDesc.Version);
+	hashCode = Utility::HashState(&rootSignatureDesc.Desc_1_1.Flags, 1, hashCode);
+
+	for (uint32_t param = 0; param < rootSignatureDesc.Desc_1_1.NumParameters; ++param)
+	{
+		const D3D12_ROOT_PARAMETER1& rootParam = rootSignatureDesc.Desc_1_1.pParameters[param];
+		descriptorTableSize.push_back(0);
+
+		if (rootParam.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
+		{
+			assert(rootParam.DescriptorTable.pDescriptorRanges != nullptr);
+
+			hashCode = Utility::HashState(rootParam.DescriptorTable.pDescriptorRanges,
+				rootParam.DescriptorTable.NumDescriptorRanges, hashCode);
+
+			// We keep track of sampler descriptor tables separately from CBV_SRV_UAV descriptor tables
+			if (rootParam.DescriptorTable.pDescriptorRanges->RangeType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+			{
+				samplerTableBitmap |= (1 << param);
+			}
+			else
+			{
+				descriptorTableBitmap |= (1 << param);
+			}
+
+			for (uint32_t tableRange = 0; tableRange < rootParam.DescriptorTable.NumDescriptorRanges; ++tableRange)
+			{
+				descriptorTableSize[param] += rootParam.DescriptorTable.pDescriptorRanges[tableRange].NumDescriptors;
+			}
+		}
+		else
+		{
+			hashCode = Utility::HashState(&rootParam, 1, hashCode);
+		}
+	}
+
+	ID3D12RootSignature** ppRootSignature{ nullptr };
+	ID3D12RootSignature* pRootSignature{ nullptr };
+	bool firstCompile = false;
+	{
+		lock_guard<mutex> CS(m_rootSignatureMutex);
+		auto iter = m_rootSignatureHashMap.find(hashCode);
+
+		// Reserve space so the next inquiry will find that someone got here first.
+		if (iter == m_rootSignatureHashMap.end())
+		{
+			ppRootSignature = m_rootSignatureHashMap[hashCode].addressof();
+			firstCompile = true;
+		}
+		else 
+		{
+			ppRootSignature = iter->second.addressof();
+		}
+	}
+
+	if (firstCompile)
+	{
+		wil::com_ptr<ID3DBlob> pOutBlob, pErrorBlob;
+
+		assert_succeeded(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &pOutBlob, &pErrorBlob));
+
+		assert_succeeded(m_dxDevice->CreateRootSignature(0, pOutBlob->GetBufferPointer(), pOutBlob->GetBufferSize(),
+			IID_PPV_ARGS(&pRootSignature)));
+
+		SetDebugName(pRootSignature, desc.name);
+
+		m_rootSignatureHashMap[hashCode].attach(pRootSignature);
+		assert(*ppRootSignature == pRootSignature);
+	}
+	else
+	{
+		while (*ppRootSignature == nullptr)
+		{
+			this_thread::yield();
+		}
+		pRootSignature = *ppRootSignature;
+	}
+
+	RootSignatureDescExt rootSignatureDescExt{
+		.rootSignature			= pRootSignature,
+		.descriptorTableBitmap	= descriptorTableBitmap,
+		.samplerTableBitmap		= samplerTableBitmap,
+		.descriptorTableSize	= descriptorTableSize
+	};
+
+	return Make<RootSignatureData>(rootSignatureDescExt);
 }
 
 

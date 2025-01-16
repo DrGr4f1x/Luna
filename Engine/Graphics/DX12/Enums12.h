@@ -46,6 +46,8 @@ D3D12_DESCRIPTOR_RANGE_TYPE DescriptorTypeToDX12(DescriptorType descriptorType);
 
 D3D12_ROOT_SIGNATURE_FLAGS RootSignatureFlagsToDX12(RootSignatureFlags rootSignatureFlags);
 
+D3D12_ROOT_PARAMETER_TYPE RootParameterTypeToDX12(RootParameterType rootParameterType);
+
 D3D12_FILTER TextureFilterToDX12(TextureFilter textureFilter);
 
 D3D12_TEXTURE_ADDRESS_MODE TextureAddressToDX12(TextureAddress textureAddress);

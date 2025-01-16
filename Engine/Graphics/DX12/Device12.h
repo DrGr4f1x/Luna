@@ -108,6 +108,7 @@ public:
 	wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) final;
+	wil::com_ptr<IPlatformData> CreateRootSignatureData(RootSignatureDesc& desc) final;
 
 	void CreateResources();
 
@@ -144,6 +145,10 @@ private:
 
 	// Format properties
 	std::unordered_map<DXGI_FORMAT, uint8_t> m_dxgiFormatPlaneCounts;
+
+	// Root signatures
+	std::mutex m_rootSignatureMutex;
+	std::map<size_t, wil::com_ptr<ID3D12RootSignature>> m_rootSignatureHashMap;
 };
 
 } // namespace Luna::DX12

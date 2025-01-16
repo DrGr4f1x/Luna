@@ -12,6 +12,7 @@
 
 #include "Application.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\RootSignature.h"
 
 
 class TriangleApp final : public Luna::Application
@@ -31,6 +32,9 @@ public:
 protected:
 	void CreateDeviceDependentResources() override;
 	void CreateWindowSizeDependentResources() override;
+
+private:
+	void InitRootSignature();
 
 private:
 	// Vertex layout used in this example
@@ -55,4 +59,7 @@ private:
 		Math::Matrix4 viewProjectionMatrix;
 		Math::Matrix4 modelMatrix;
 	} m_vsConstants;
+
+	 // Root signature
+	Luna::RootSignature m_rootSignature;
 };

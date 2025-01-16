@@ -366,23 +366,30 @@ D3D12_DESCRIPTOR_RANGE_TYPE DescriptorTypeToDX12(DescriptorType type)
 
 	switch (type)
 	{
-	case CBV:
-	case DynamicCBV:
+	case ConstantBuffer:
 		return D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 		break;
+
 	case Sampler:
 		return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 		break;
+
 	case TextureSRV:
 	case TypedBufferSRV:
 	case StructuredBufferSRV:
+	case RawBufferSRV:
+	case RayTracingAccelStruct:
 		return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		break;
+
 	case TextureUAV:
 	case TypedBufferUAV:
 	case StructuredBufferUAV:
+	case RawBufferUAV:
+	case SamplerFeedbackTextureUAV:
 		return D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 		break;
+
 	default:
 		assert(false);
 		return D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -409,6 +416,19 @@ D3D12_ROOT_SIGNATURE_FLAGS RootSignatureFlagsToDX12(RootSignatureFlags rootSigna
 	result |= HasFlag(rootSignatureFlags, SamplerHeapDirectlyIndexed) ? D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED : 0;
 
 	return (D3D12_ROOT_SIGNATURE_FLAGS)result;
+}
+
+
+D3D12_ROOT_PARAMETER_TYPE RootParameterTypeToDX12(RootParameterType rootParameterType)
+{
+	switch (rootParameterType)
+	{
+	case RootParameterType::RootConstants:	return D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS; break;
+	case RootParameterType::RootCBV:		return D3D12_ROOT_PARAMETER_TYPE_CBV; break;
+	case RootParameterType::RootSRV:		return D3D12_ROOT_PARAMETER_TYPE_SRV; break;
+	case RootParameterType::RootUAV:		return D3D12_ROOT_PARAMETER_TYPE_UAV; break;
+	default:								return D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE; break;
+	}
 }
 
 

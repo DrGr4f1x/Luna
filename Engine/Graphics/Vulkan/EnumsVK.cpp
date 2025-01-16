@@ -346,15 +346,20 @@ VkDescriptorType DescriptorTypeToVulkan(DescriptorType descriptorType)
 
 	switch (descriptorType)
 	{
-	case CBV:					return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; break;
-	case DynamicCBV:			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; break;
-	case Sampler:				return VK_DESCRIPTOR_TYPE_SAMPLER; break;
-	case TextureSRV:			return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE; break;
-	case StructuredBufferSRV:	return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; break;
-	case StructuredBufferUAV:	return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; break;
-	case TextureUAV:			return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE; break;
-	case TypedBufferSRV:		return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER; break;
-	case TypedBufferUAV:		return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER; break;
+	case ConstantBuffer:				return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; break;
+	case DynamicConstantBuffer:			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; break;
+	case Sampler:						return VK_DESCRIPTOR_TYPE_SAMPLER; break;
+	case TextureSRV:					return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE; break;
+	case TextureUAV:					return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE; break;
+	case StructuredBufferSRV:			return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; break;
+	case StructuredBufferUAV:			return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; break;
+	case RawBufferSRV:					return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; break;
+	case RawBufferUAV:					return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER; break;
+	case TypedBufferSRV:				return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER; break;
+	case TypedBufferUAV:				return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER; break;
+	case RayTracingAccelStruct:			return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR; break;
+	case PushConstants:					return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; break;
+	case SamplerFeedbackTextureUAV:		return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE; break;
 	default:
 		assert(false);
 		return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;

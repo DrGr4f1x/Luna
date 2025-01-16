@@ -143,6 +143,7 @@ public:
 	wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) final;
+	wil::com_ptr<IPlatformData> CreateRootSignatureData(RootSignatureDesc& desc) final;
 
 	void CreateResources();
 
@@ -168,6 +169,10 @@ private:
 
 	// VmaAllocator
 	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
+
+	// Root signatures
+	std::mutex m_pipelineLayoutMutex;
+	std::map<size_t, wil::com_ptr<CVkPipelineLayout>> m_pipelineLayoutHashMap;
 };
 
 } // namespace Luna::VK

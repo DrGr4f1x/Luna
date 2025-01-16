@@ -459,4 +459,60 @@ private:
 	VmaAllocation m_allocation{ VK_NULL_HANDLE };
 };
 
+
+class __declspec(uuid("69336CFB-EC2C-4D6D-AA13-C3EB3BEA4592")) CVkDescriptorSetLayout
+	: public RefCounted<CVkDescriptorSetLayout>
+	, public NonCopyable
+{
+public:
+	CVkDescriptorSetLayout() noexcept = default;
+	CVkDescriptorSetLayout(CVkDevice* device, VkDescriptorSetLayout descriptorSetLayout) noexcept
+		: m_device{ device }
+		, m_descriptorSetLayout{ descriptorSetLayout }
+	{}
+	~CVkDescriptorSetLayout()
+	{
+		Destroy();
+	}
+
+	VkDescriptorSetLayout Get() const noexcept { return m_descriptorSetLayout; }
+	operator VkDescriptorSetLayout() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkDescriptorSetLayout m_descriptorSetLayout{ VK_NULL_HANDLE };
+};
+
+
+class __declspec(uuid("789884E6-D174-4398-B552-A28AF8F20152")) CVkPipelineLayout
+	: public RefCounted<CVkPipelineLayout>
+	, public NonCopyable
+{
+public:
+	CVkPipelineLayout() noexcept = default;
+	CVkPipelineLayout(CVkDevice* device, VkPipelineLayout pipelineLayout)
+		: m_device{ device }
+		, m_pipelineLayout{ pipelineLayout }
+	{}
+	~CVkPipelineLayout()
+	{
+		Destroy();
+	}
+
+	VkPipelineLayout Get() const noexcept { return m_pipelineLayout; }
+	operator VkPipelineLayout() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkPipelineLayout m_pipelineLayout{ VK_NULL_HANDLE };
+};
+
 } // namespace Luna::VK

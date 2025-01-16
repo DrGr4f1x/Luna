@@ -33,6 +33,7 @@
     <ClCompile Include="Graphics\ColorBuffer.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
     <ClCompile Include="Graphics\DepthBuffer.cpp" />
+    <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
@@ -52,6 +53,8 @@
     <ClCompile Include="Graphics\GpuResource.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\PixelBuffer.cpp" />
+    <ClCompile Include="Graphics\RootSignature.cpp" />
+    <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
@@ -108,6 +111,7 @@
     <ClInclude Include="Graphics\CommandContext.h" />
     <ClInclude Include="Graphics\DepthBuffer.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
+    <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
     <ClInclude Include="Graphics\DX12\CommandContext12.h" />
@@ -133,6 +137,8 @@
     <ClInclude Include="Graphics\GraphicsDevice.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
     <ClInclude Include="Graphics\PlatformData.h" />
+    <ClInclude Include="Graphics\RootSignature.h" />
+    <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
@@ -227,7 +233,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\scope_guard;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -247,7 +253,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\scope_guard;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -268,7 +274,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\scope_guard;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

@@ -115,4 +115,18 @@ void CVkBuffer::Destroy()
 	m_buffer = VK_NULL_HANDLE;
 }
 
+
+void CVkDescriptorSetLayout::Destroy()
+{
+	vkDestroyDescriptorSetLayout(GetDevice(), m_descriptorSetLayout, nullptr);
+	m_descriptorSetLayout = VK_NULL_HANDLE;
+}
+
+
+void CVkPipelineLayout::Destroy()
+{
+	vkDestroyPipelineLayout(GetDevice(), m_pipelineLayout, nullptr);
+	m_pipelineLayout = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

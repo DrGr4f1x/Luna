@@ -1,5 +1,5 @@
-[submodule "External\\glfw"]
-	path = External\\glfw
+[submodule "External/glfw"]
+	path = External/glfw
 	url = https://github.com/glfw/glfw
 [submodule "External/VulkanMemoryAllocator"]
 	path = External/VulkanMemoryAllocator
@@ -7,3 +7,9 @@
 [submodule "External/D3D12MemoryAllocator"]
 	path = External/D3D12MemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator
+[submodule "Engine/External/scope_guard"]
+	path = External/scope_guard
+	url = https://github.com/ricab/scope_guard
+[submodule "External/scope_guard"]
+	path = External/scope_guard
+	url = https://github.com/ricab/scope_guard

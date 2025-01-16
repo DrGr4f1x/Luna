@@ -141,6 +141,15 @@
     <ClCompile Include="..\External\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
       <Filter>External\D3D12MemoryAllocator</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\RootSignature12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\RootSignature.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -367,6 +376,15 @@
     </ClInclude>
     <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
       <Filter>External\D3D12MemoryAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\RootSignature12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\RootSignature.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
