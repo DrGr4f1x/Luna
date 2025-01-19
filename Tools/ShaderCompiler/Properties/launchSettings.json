@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ShaderCompiler": {
+      "commandName": "Project",
+      "commandLineArgs": "--config D:/Depot/Luna/Apps/Triangle/Shaders/shaders.cfg --out D:/Luna/Apps/Triangle/Data/Shaders/DXIL --platform DXIL --binary --outputExt .bin --shaderModel 6_5"
+    }
+  }
+}
