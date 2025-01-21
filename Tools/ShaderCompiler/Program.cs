@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -11,15 +12,32 @@ using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace ShaderCompiler
 {
+    enum Platform
+    {
+        DXBC,
+        DXIL,
+        SPIRV
+    }
+
+    public static class Globals
+    {
+        public static volatile bool Terminate = false;
+        public static int OriginalTaskCount = 0;
+        public static int ProcessedTaskCount = 0;
+        public static int FailedTaskCount = 0;
+    }
+
     class Options
     {
         #region Required options
-        public string? Platform { get; set; }
-        public FileInfo? ConfigFile { get; set; }
-        public DirectoryInfo? Out { get; set; }
+        public string? PlatformName { get; set; } = "";
+        public string? ConfigFile { get; set; } = "";
+        public string? OutputDir { get; set; } = "";
         public bool Binary { get; set; } = false;
         public bool Header { get; set; } = false;
         public bool BinaryBlob { get; set; } = false;
@@ -28,7 +46,7 @@ namespace ShaderCompiler
 
         #region Compiler settings
         public string? ShaderModel { get; set; } = "6_5";
-        public int Optimization { get; set; } = 3;
+        public uint OptimizationLevel { get; set; } = 3;
         public bool WarningsAreErrors { get; set; } = false;
         public bool AllResourcesBound { get; set; } = false;
         public bool PDB { get; set; } = false;
@@ -36,19 +54,20 @@ namespace ShaderCompiler
         public bool StripReflection { get; set; } = false;
         public bool MatrixRowMajor { get; set; } = false;
         public bool Hlsl2021 { get; set; } = false;
-        public string? VulkanMemoryLayout { get; set; }
-        public string[]? CompilerOptions { get; set; }
+        public string? VulkanMemoryLayout { get; set; } = "";
+        public string[]? CompilerOptions { get; set; } = Array.Empty<string>();
         #endregion
 
         #region Defines and includes
-        public DirectoryInfo[]? IncludeDirs { get; set; }
-        public string[]? Defines { get; set; }
+        public string[]? IncludeDirs { get; set; } = Array.Empty<string>();
+        public string[]? Defines { get; set; } = Array.Empty<string>();
         #endregion
 
         #region Other options
         public bool Force { get; set; } = false;
-        public DirectoryInfo? SourceDir { get; set; }
-        public FileInfo[]? RelaxedIncludes { get; set; }
+        public string? SourceDir { get; set; } = "";
+        public string? Compiler { get; set; } = "";
+        public string[]? RelaxedIncludes { get; set; } = Array.Empty<string>();
         public string? OutputExt { get; set; }
         public bool Serial { get; set; } = false;
         public bool Flatten { get; set; } = false;
@@ -59,7 +78,7 @@ namespace ShaderCompiler
 
         #region SPIRV options
         public string? VulkanVersion { get; set; } = "1.3";
-        public string[]? SpirvExt { get; set; }
+        public string[]? SpirvExt { get; set; } = Array.Empty<string>();
         public int SRegShift { get; set; } = 100;
         public int TRegShift { get; set; } = 200;
         public int BRegShift { get; set; } = 300;
@@ -67,25 +86,212 @@ namespace ShaderCompiler
         public bool NoRegShifts { get; set; } = false;
         #endregion
 
+        public Platform Platform { get; set; }
+        public string Self { get; set; }
+
+        public bool IsBlob {  get { return BinaryBlob || HeaderBlob; } }
+
+        public bool Parse(string[] args)
+        {
+            Self = args[0];
+
+            #region Required options
+            var platformOpt = new Option<string>("--platform", "DXBC, DXIL, or SPIRV").FromAmong("DXBC", "DXIL", "SPIRV");
+            platformOpt.IsRequired = true;
+            platformOpt.AddAlias("-p");
+
+            var configFileOpt = new Option<string>("--config", "Configuration file with the list of shaders to compile");
+            configFileOpt.IsRequired = true;
+            configFileOpt.AddAlias("-c");
+
+            var outputDirOpt = new Option<string>("--out", "Output directory");
+            outputDirOpt.IsRequired = true;
+            outputDirOpt.AddAlias("-o");
+
+            var binaryOpt = new Option<bool>("--binary", "Output binary files");
+            binaryOpt.AddAlias("-b");
+
+            var headerOpt = new Option<bool>("--header", "Output header files");
+            headerOpt.AddAlias("-h");
+
+            var binaryBlobOpt = new Option<bool>("--binaryBlob", "Output binary blob files");
+            binaryBlobOpt.AddAlias("-B");
+
+            var headerBlobOpt = new Option<bool>("--headerBlob", "Output header blob files");
+            headerBlobOpt.AddAlias("-H");
+            #endregion
+
+            #region Compiler options
+            var shaderModelOpt = new Option<string>("--shaderModel", "Shader model for DXIL/SPIRV");
+            shaderModelOpt.AddAlias("-m");
+
+            var optimizationOpt = new Option<uint>("--optimization", "Optimization level 03 (default = 3, disabled = 0)");
+            optimizationOpt.AddAlias("-O");
+
+            var warningsAreErrorsOpt = new Option<bool>("--WX", "Maps to '-WX' DXC/FXC option: warnings are errors");
+            var allResourcesBoundOpt = new Option<bool>("--allResourcesBound", "MAps to -all_resources_bound DXC/FXC option: all resources bound");
+            var pdbOpt = new Option<bool>("--PDB", "Output PDB files in 'out/PDB' folder");
+            var embedPDBOpt = new Option<bool>("--embedPDB", "Embed PDB with shader binary");
+            var stripReflectionOpt = new Option<bool>("--stripReflection", "Maps to '-Qstrip_reflect' DXC/FXC option: strip reflection information from a shader binary");
+            var matrixRowMajorOpt = new Option<bool>("--matrixRowMajor", "Maps to '-Zpr' DXC/FXC option: pack matrices in row-major order");
+            var hlsl2021Opt = new Option<bool>("--hlsl2021", "Maps to '-HV 2021' DXC option: enable HLSL 2021 standard");
+            var vulkanMemoryLayoutOpt = new Option<string>("--vulkanMemoryLayout", "Maps to '-fvk-use-<VALUE>-layout' DXC options: dx, gl, scalar");
+
+            var compilerOptionsOpt = new Option<string[]>("--compilerOptions", "Custom command line options for the compiler, separated by spaces");
+            compilerOptionsOpt.AddAlias("-X");
+            #endregion
+
+            #region Defines and includes
+            var includeOpt = new Option<string[]>("--include", "Include directory(s)");
+            includeOpt.AddAlias("-I");
+
+            var defineOpt = new Option<string[]>("--define", "Macro definition(s) in forms 'M=value' or 'M'");
+            defineOpt.AddAlias("-D");
+            #endregion
+
+            #region Other options
+            var forceOpt = new Option<bool>("--force", "Treat all source files as modified");
+            forceOpt.AddAlias("-f");
+
+            var sourceDirOpt = new Option<string>("--sourceDir", "Source code directory");
+            var compilerOpt = new Option<string>("--compiler", "Path to a DXC or FXC executable");
+            var relaxedIncludeOpt = new Option<string[]>("--relaxedInclude", "Include file(s) not invoking re-compilation");
+            var outputExtOpt = new Option<string>("--outputExt", "Extension for output files, default is one of .dxbc, .dxil, or .spirv");
+            var serialOpt = new Option<bool>("--serial", "Disable multi-threading");
+            var flattenOpt = new Option<bool>("--flatten", "Flatten source directory structure in the output directory");
+            var continueOnErrorOpt = new Option<bool>("--continue", "Continue compilation if an error occurred");
+            var verboseOpt = new Option<bool>("--verbose", "Print commands before they are executed");
+            var retryCountOpt = new Option<int>("--retryCount", "Retry count for compilation task sub-process failures");
+            #endregion
+
+            #region SPIRV options
+            var vulkanVersionOpt = new Option<string>("--vulkanVersion", "Vulkan environment version, maps t0 '-fspv-target-env' (default  = 1.3)");
+            var spirvExtOpt = new Option<string[]>("--spirvExt", "Maps to -fspv-extension' option: add SPIR-V extension permitted to use");
+            var sRegShiftOpt = new Option<int>("--sRegShift", "SPIRV: register shift for sampler (s#) resources");
+            var tRegShiftOpt = new Option<int>("--tRegShift", "SPIRV: register shift for texture (t#) resources");
+            var bRegShiftOpt = new Option<int>("--bRegShift", "SPIRV: register shift for constant (b#) resources");
+            var uRegShiftOpt = new Option<int>("--uRegShift", "SPIRV: register shift for UAV (u#) resources");
+            var noRegShiftsOpt = new Option<bool>("--noRegShifts", "Don't specify any register shifts for the compiler");
+            #endregion
+
+            // Setup root command
+            var rootCommand = new RootCommand("ShaderCompiler");
+            rootCommand.AddOption(platformOpt);
+            rootCommand.AddOption(configFileOpt);
+            rootCommand.AddOption(outputDirOpt);
+            rootCommand.AddOption(binaryOpt);
+            rootCommand.AddOption(headerOpt);
+            rootCommand.AddOption(binaryBlobOpt);
+            rootCommand.AddOption(headerBlobOpt);
+
+            rootCommand.AddOption(shaderModelOpt);
+            rootCommand.AddOption(optimizationOpt);
+            rootCommand.AddOption(warningsAreErrorsOpt);
+            rootCommand.AddOption(allResourcesBoundOpt);
+            rootCommand.AddOption(pdbOpt);
+            rootCommand.AddOption(embedPDBOpt);
+            rootCommand.AddOption(stripReflectionOpt);
+            rootCommand.AddOption(matrixRowMajorOpt);
+            rootCommand.AddOption(hlsl2021Opt);
+            rootCommand.AddOption(vulkanMemoryLayoutOpt);
+            rootCommand.AddOption(compilerOptionsOpt);
+
+            rootCommand.AddOption(includeOpt);
+            rootCommand.AddOption(defineOpt);
+
+            rootCommand.AddOption(forceOpt);
+            rootCommand.AddOption(sourceDirOpt);
+            rootCommand.AddOption(compilerOpt);
+            rootCommand.AddOption(relaxedIncludeOpt);
+            rootCommand.AddOption(outputExtOpt);
+            rootCommand.AddOption(serialOpt);
+            rootCommand.AddOption(flattenOpt);
+            rootCommand.AddOption(continueOnErrorOpt);
+            rootCommand.AddOption(verboseOpt);
+            rootCommand.AddOption(retryCountOpt);
+
+            rootCommand.AddOption(vulkanVersionOpt);
+            rootCommand.AddOption(spirvExtOpt);
+            rootCommand.AddOption(sRegShiftOpt);
+            rootCommand.AddOption(tRegShiftOpt);
+            rootCommand.AddOption(bRegShiftOpt);
+            rootCommand.AddOption(uRegShiftOpt);
+            rootCommand.AddOption(noRegShiftsOpt);
+
+            rootCommand.SetHandler(async (context) =>
+            {
+                // Required options
+                PlatformName = context.ParseResult.GetValueForOption(platformOpt);
+                ConfigFile = context.ParseResult.GetValueForOption(configFileOpt);
+                OutputDir = context.ParseResult.GetValueForOption(outputDirOpt);
+                Binary = context.ParseResult.GetValueForOption(binaryOpt);
+                Header = context.ParseResult.GetValueForOption(headerOpt);
+                BinaryBlob = context.ParseResult.GetValueForOption(binaryBlobOpt);
+                HeaderBlob = context.ParseResult.GetValueForOption(headerBlobOpt);
+
+                // Compiler options
+                ShaderModel = context.ParseResult.GetValueForOption(shaderModelOpt);
+                OptimizationLevel = context.ParseResult.GetValueForOption(optimizationOpt);
+                WarningsAreErrors = context.ParseResult.GetValueForOption(warningsAreErrorsOpt);
+                AllResourcesBound = context.ParseResult.GetValueForOption(allResourcesBoundOpt);
+                PDB = context.ParseResult.GetValueForOption(pdbOpt);
+                EmbedPDB = context.ParseResult.GetValueForOption(embedPDBOpt);
+                StripReflection = context.ParseResult.GetValueForOption(stripReflectionOpt);
+                MatrixRowMajor = context.ParseResult.GetValueForOption(matrixRowMajorOpt);
+                Hlsl2021 = context.ParseResult.GetValueForOption(hlsl2021Opt);
+                VulkanMemoryLayout = context.ParseResult.GetValueForOption(vulkanMemoryLayoutOpt);
+                CompilerOptions = context.ParseResult.GetValueForOption(compilerOptionsOpt);
+
+                // Defines and includes
+                IncludeDirs = context.ParseResult.GetValueForOption(includeOpt);
+                Defines = context.ParseResult.GetValueForOption(defineOpt);
+
+                // Other options
+                Force = context.ParseResult.GetValueForOption(forceOpt);
+                SourceDir = context.ParseResult.GetValueForOption(sourceDirOpt);
+                Compiler = context.ParseResult.GetValueForOption(compilerOpt);
+                RelaxedIncludes = context.ParseResult.GetValueForOption(relaxedIncludeOpt);
+                OutputExt = context.ParseResult.GetValueForOption(outputExtOpt);
+                Serial = context.ParseResult.GetValueForOption(serialOpt);
+                Flatten = context.ParseResult.GetValueForOption(flattenOpt);
+                Continue = context.ParseResult.GetValueForOption(continueOnErrorOpt);
+                Verbose = context.ParseResult.GetValueForOption(verboseOpt);
+                RetryCount = context.ParseResult.GetValueForOption(retryCountOpt);
+
+                // SPIRV options
+                VulkanVersion = context.ParseResult.GetValueForOption(vulkanVersionOpt);
+                SpirvExt = context.ParseResult.GetValueForOption(spirvExtOpt);
+                SRegShift = context.ParseResult.GetValueForOption(sRegShiftOpt);
+                TRegShift = context.ParseResult.GetValueForOption(tRegShiftOpt);
+                BRegShift = context.ParseResult.GetValueForOption(bRegShiftOpt);
+                URegShift = context.ParseResult.GetValueForOption(uRegShiftOpt);
+                NoRegShifts = context.ParseResult.GetValueForOption(noRegShiftsOpt);
+            });
+
+            rootCommand.Invoke(args);
+
+            return Validate();
+        }
+
         public bool Validate()
         {
             // Check that the config file exists
-            if (ConfigFile != null && !ConfigFile.Exists)
+            if ((ConfigFile is not null) && !File.Exists(ConfigFile))
             {
-                System.Console.Error.WriteLine("ERROR: Config file {0} does not exist!", ConfigFile.FullName);
+                System.Console.Error.WriteLine("ERROR: Config file {0} does not exist!", ConfigFile);
                 return false;
             }
 
             // Create output directory if it does not exist
-            if (Out != null && !Out.Exists)
+            if ((OutputDir is not null) && !Directory.Exists(OutputDir))
             {
                 try
                 {
-                    Out.Create();
+                    Directory.CreateDirectory(OutputDir);
                 }
                 catch (IOException ex)
                 {
-                    System.Console.Error.WriteLine("ERROR: Could not create output directory {0}!  Exception: {1}.", Out.FullName, ex.Message);
+                    System.Console.Error.WriteLine("ERROR: Could not create output directory {0}!  Exception: {1}.", OutputDir, ex.Message);
                     return false;
                 }
             }
@@ -95,6 +301,32 @@ namespace ShaderCompiler
             {
                 System.Console.Error.WriteLine("ERROR: One of 'binary', 'header', 'binaryBlob', or 'headerBlob' must be set!");
                 return false;
+            }
+
+            // Check compiler
+            if((Compiler is not null) && !File.Exists(Compiler))
+            {
+                System.Console.Error.WriteLine("ERROR: Compiler {0} does not exist!", Compiler);
+                return false;
+            }
+
+            // Get platform
+            if (PlatformName == "DXBC")
+                Platform = Platform.DXBC;
+            else if (PlatformName == "DXIL")
+                Platform = Platform.DXIL;
+            else if (PlatformName == "SPIRV")
+                Platform = Platform.SPIRV;
+            else
+            {
+                System.Console.Error.WriteLine("ERROR: Unknown platform {0}", PlatformName);
+                return false;
+            }
+
+            // Fixup output extension
+            if ((OutputExt is not null) && !OutputExt.StartsWith("."))
+            {
+                OutputExt = "." + OutputExt;
             }
 
             return true;
@@ -111,23 +343,29 @@ namespace ShaderCompiler
 
     class CompileJob
     {
-        public List<string> Defines { get; set; }
+        public string[] Defines { get; set; }
         public string Source { get; set; }
         public string EntryPoint { get; set; }
         public string Profile { get; set; }
         public string OutputFileWithoutExt { get; set; }
         public string CombinedDefines { get; set; }
-        public int OptimizationLevel { get; set; } = 3;
+        public uint OptimizationLevel { get; set; } = 3;
+    }
+
+    class BlobEntry
+    {
+        public string PermutationFileWithoutExt { get; set; } = "";
+        public string CombinedDefines { get; set; } = "";
     }
 
     class ConfigLine
     {
         public string Source { get; set; } = "";
-        public string[]? Defines { get; set; }
+        public string[]? Defines { get; set; } = Array.Empty<string>();
         public string? Entry { get; set; } = "main";
-        public string? Profile { get; set; } = null;
-        public string? OutputDir { get; set; } = null;
-        public string? OutputSuffix { get; set; } = null;
+        public string? Profile { get; set; } = "";
+        public string? OutputDir { get; set; } = "";
+        public string? OutputSuffix { get; set; } = "";
         public uint OptimizationLevel { get; set; } = 0xFFFFFFFF;
 
         public bool Parse(string[] args)
@@ -185,19 +423,56 @@ namespace ShaderCompiler
         }
     }
 
+
+    class CompileErrorHandler
+    {
+        private string m_shaderCompError = "";
+        private string m_shaderCompOutput = "";
+
+        public string Error { get { return m_shaderCompError; } }
+        public string Output { get { return m_shaderCompOutput; } }
+
+        public void StdErrorHandler(object sender, DataReceivedEventArgs args)
+        {
+            string? message = args.Data;
+
+            if (message is null)
+                return;
+            if (message.Length > 0)
+            {
+                m_shaderCompError += message + "\n";
+            }
+        }
+
+        public void StdOutputHandler(object sender, DataReceivedEventArgs args)
+        {
+            string? message = args.Data;
+
+            if (message is null)
+                return;
+            if (message.Length > 0)
+            {
+                m_shaderCompOutput += message + "\n";
+            }
+        }
+    }
+
     class Compiler
     {
-        private FileInfo? m_vulkanDxcCompiler = null;
-        private FileInfo? m_windowsDxcCompiler = null;
-        private FileInfo? m_windowsFxcCompiler = null;
+        private string? m_vulkanDxcCompiler = null;
+        private string? m_windowsDxcCompiler = null;
+        private string? m_windowsFxcCompiler = null;
 
-        public FileInfo Self { get; set; }
+        private Dictionary<string, DateTime> m_hierarchicalUpdateTimes = new();
+        private Dictionary<string, List<BlobEntry>> m_shaderBlobs = new();
+        private Regex m_includePattern = new("\\s*#include\\s+[\"<]([^>\"]+)[>\"].*");
+        private ConcurrentQueue<CompileJob> m_jobQueue = new();
+        private Mutex m_progressMutex = new();
         public Options Options { get; set; }
 
-        public Compiler(FileInfo self, Options options)
+        public Compiler(Options options)
         {
-            this.Self = self;
-            this.Options = options;
+              this.Options = options;
 
             FindVulkanDxcCompiler();
             FindWindowsCompilers();
@@ -206,9 +481,9 @@ namespace ShaderCompiler
         public void FindVulkanDxcCompiler()
         {
             string? vulkanSdkPath = System.Environment.GetEnvironmentVariable("VULKAN_SDK");
-            if (vulkanSdkPath != null)
+            if (vulkanSdkPath is not null)
             {
-                m_vulkanDxcCompiler = new FileInfo(vulkanSdkPath + "\\Bin\\dxc.exe");
+                m_vulkanDxcCompiler = Path.Combine(vulkanSdkPath, "Bin\\dxc.exe");
             }
         }
 
@@ -252,31 +527,29 @@ namespace ShaderCompiler
                         foreach (var dir in searchDirectories)
                         {
                             if (bFoundDxc && bFoundFxc)
-                            {
                                 break;
-
-                            }
 
                             var x64Dir = new DirectoryInfo(dir.FullName + "\\x64");
                             if (!x64Dir.Exists)
-                            {
                                 continue;
-                            }
 
                             var files = x64Dir.GetFiles("*.exe");
                             foreach (var fi in files)
                             {
                                 if (!bFoundDxc && fi.Name == "dxc.exe")
                                 {
-                                    m_windowsDxcCompiler = fi;
+                                    m_windowsDxcCompiler = fi.FullName;
                                     bFoundDxc = true;
                                 }
 
                                 if (!bFoundFxc && fi.Name == "fxc.exe")
                                 {
-                                    m_windowsFxcCompiler = fi;
+                                    m_windowsFxcCompiler = fi.FullName;
                                     bFoundFxc = true;
                                 }
+
+                                if (bFoundDxc && bFoundFxc)
+                                    break;
                             }
                         }
                     }
@@ -290,27 +563,27 @@ namespace ShaderCompiler
 
         public void PrintStatus()
         {
-            if (m_vulkanDxcCompiler is not null && m_vulkanDxcCompiler.Exists)
+            if (m_vulkanDxcCompiler is not null && File.Exists(m_vulkanDxcCompiler))
             {
-                System.Console.WriteLine("Vulkan SDK dxc compiler: {0}", m_vulkanDxcCompiler.FullName);
+                System.Console.WriteLine("Vulkan SDK dxc compiler: {0}", m_vulkanDxcCompiler);
             }
             else
             {
                 System.Console.WriteLine("Vulkan SDK dxc compiler not found!");
             }
 
-            if (m_windowsDxcCompiler is not null && m_windowsDxcCompiler.Exists)
+            if (m_windowsDxcCompiler is not null && File.Exists(m_windowsDxcCompiler))
             {
-                System.Console.WriteLine("Windows SDK dxc compiler: {0}", m_windowsDxcCompiler.FullName);
+                System.Console.WriteLine("Windows SDK dxc compiler: {0}", m_windowsDxcCompiler);
             }
             else
             {
                 System.Console.WriteLine("Windows SDK dxc compiler not found!");
             }
 
-            if (m_windowsFxcCompiler is not null && m_windowsFxcCompiler.Exists)
+            if (m_windowsFxcCompiler is not null && File.Exists(m_windowsFxcCompiler))
             {
-                System.Console.WriteLine("Windows SDK fxc compiler: {0}", m_windowsFxcCompiler.FullName);
+                System.Console.WriteLine("Windows SDK fxc compiler: {0}", m_windowsFxcCompiler);
             }
             else
             {
@@ -318,11 +591,106 @@ namespace ShaderCompiler
             }
         }
 
+        public string GetOutputExtension()
+        {
+            if (Options.OutputExt is not null)
+            {
+                return Options.OutputExt;
+            }
+            else
+            {
+                return GetDefaultExtension(Options.Platform);
+            }
+        }
+
+        public string? GetCompiler()
+        {
+            if (Options.Compiler is not null)
+            {
+                return Options.Compiler;
+            }
+
+            switch (Options.Platform)
+            {
+                case Platform.DXBC:
+                    return m_windowsFxcCompiler;
+
+                case Platform.DXIL:
+                    return m_windowsDxcCompiler;
+
+                case Platform.SPIRV:
+                    return m_vulkanDxcCompiler;
+            }
+
+            return null;
+        }
+
+        public bool ValidateCompiler()
+        {
+            string? compiler = GetCompiler();
+            if (compiler is not null && File.Exists(compiler))
+                return true;
+            return false;
+        }
+
         public static T Max<T>(T first, T second)
         {
             if (Comparer<T>.Default.Compare(first, second) > 0)
                 return first;
             return second;
+        }
+
+
+        public static T Min<T>(T first, T second)
+        {
+            if (Comparer<T>.Default.Compare(first, second) < 0)
+                return first;
+            return second;
+        }
+
+        public static string EscapePath(string path)
+        {
+            if (path.Contains(' '))
+            {
+                return "\"" + path + "\"";
+            }
+            return path;
+        }
+
+        public static string GetShaderName(string path, Platform platform)
+        {
+            string name = path;
+            name.Replace('.', '_');
+            name += "_" + GetDefaultExtension(platform).Substring(1);
+
+            return "g_" + name;
+        }
+
+        public static string GetDefaultExtension(Platform platform)
+        {
+            switch(platform)
+            {
+                case Platform.DXBC:
+                    return ".dbxc";
+
+                case Platform.DXIL:
+                    return ".dxil";
+
+                default:
+                    return ".spirv";
+            }
+        }
+
+        public static string GetParentPath(string filename)
+        {
+            for (int i = filename.Length - 1; i >= 0; --i)
+            {
+                if (filename[i] == '/' || filename[i] == '\\')
+                {
+                    return filename.Substring(0, i);
+                }
+            }
+            return "";
         }
 
         public string TrimConfigLine(string line)
@@ -339,6 +707,121 @@ namespace ShaderCompiler
             return line;
         }
 
+        public bool GetHierarchicalUpdateTime(string file, LinkedList<string> callStack, out DateTime outTime)
+        {
+            DateTime value;
+            if (m_hierarchicalUpdateTimes.TryGetValue(file, out value))
+            {
+                outTime = value;
+                return true;
+            }
+
+            FileInfo fi = new(file);
+            try
+            {
+                var streamReader = fi.OpenText();
+
+                callStack.AddFirst(file);
+                string path = System.IO.Directory.GetParent(file).FullName;
+                DateTime hierarchicalUpdateTime = File.GetLastWriteTime(file);
+
+                string? line;
+                while ((line = streamReader.ReadLine()) is not null)
+                {
+                    string includeName = "";
+                    bool bHasMatch = false;
+                    foreach (Match match in m_includePattern.Matches(line))
+                    {
+                        includeName = match.Groups[1].Value;
+                        bHasMatch = true;
+                        break;
+                    }
+
+                    if (!bHasMatch)
+                        continue;
+                    
+
+                     bool bFoundRelaxedInclude = false;
+                    if (Options.RelaxedIncludes is not null)
+                    {
+                        foreach(var relaxedInclude in Options.RelaxedIncludes)
+                        {
+                            if (relaxedInclude == includeName)
+                            {
+                                bFoundRelaxedInclude = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (bFoundRelaxedInclude)
+                        continue;
+
+                    bool isFound = false;
+                    string includeFile = Path.Combine(path, includeName);
+                    if (File.Exists(includeFile))
+                    {
+                        isFound = true;
+                    }
+                    else
+                    {
+                        if (Options.IncludeDirs is not null)
+                        {
+                            foreach (var includePath in Options.IncludeDirs)
+                            {
+                                includeFile = Path.Combine(includePath, includeName);
+                                if (File.Exists(includeFile))
+                                {
+                                    isFound = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!isFound)
+                    {
+                        System.Console.Error.WriteLine("ERROR: Can't find include file {0}, included in:", includeName);
+                        foreach (var item in callStack)
+                        {
+                            System.Console.Error.WriteLine("\t{0}", item);
+                        }
+
+                        outTime = DateTime.MinValue;
+                        return false;
+                    }
+
+                    DateTime dependencyTime;
+                    if (!GetHierarchicalUpdateTime(includeFile, callStack, out dependencyTime))
+                    {
+                        outTime = DateTime.MinValue;
+                        return false;
+                    }
+
+                    hierarchicalUpdateTime = Max<DateTime>(dependencyTime, hierarchicalUpdateTime);
+                }
+
+                callStack.RemoveFirst();
+
+                m_hierarchicalUpdateTimes[file] = hierarchicalUpdateTime;
+                outTime = hierarchicalUpdateTime;
+
+                return true;
+
+            }
+            catch 
+            {
+                System.Console.Error.WriteLine("ERROR: Can't open file {0}, included in:", file);
+                foreach(var item in callStack)
+                {
+                    System.Console.Error.WriteLine("\t{0}", item);
+                }
+
+                outTime = DateTime.MinValue;
+                return false;
+            }
+        }
+
         public bool ProcessConfigLine(int lineIndex, string line, DateTime configTime)
         {
             System.Console.WriteLine("ProcessConfigLine {0}: {1}", lineIndex, line);
@@ -348,7 +831,223 @@ namespace ShaderCompiler
             var configLine = new ConfigLine();
             if (!configLine.Parse(args))
             {
+                System.Console.Error.WriteLine("{0} ({1},0): ERROR: Can't parse config line!", Options.ConfigFile, lineIndex + 1);
                 return false;
+            }
+
+            // DXBC: skip unsupported profiles
+            if(Options.Platform == Platform.DXBC && (configLine.Profile == "lib" || configLine.Profile == "ms" || configLine.Profile == "as"))
+            {
+                return true;
+            }
+
+            // Concatenate define strings, i.e. to get something like: "A=1 B=0 C"
+            string combinedDefines = "";
+            if (configLine.Defines is not null)
+            {
+                int curDef = 0;
+                foreach (var def in configLine.Defines)
+                {
+                    combinedDefines += def;
+                    if (curDef != configLine.Defines.Length - 1)
+                    {
+                        combinedDefines += " ";
+                    }
+                    ++curDef;
+                }
+            }
+
+            // Compiled shader name
+            var shaderName = configLine.Source;
+            while(shaderName.StartsWith("."))
+            {
+                shaderName = shaderName.Substring(1);
+                if (shaderName.StartsWith("/") || shaderName.StartsWith("\\"))
+                {
+                    shaderName = shaderName.Substring(1);
+                }
+            }
+            shaderName = Path.ChangeExtension(shaderName, null);
+            if (Options.Flatten || (configLine.OutputDir is not null))
+            {
+                shaderName = Path.GetFileName(shaderName);
+            }
+            if (configLine.Entry != "main")
+            {
+                shaderName += "_" + configLine.Entry;
+            }
+            if (configLine.OutputSuffix is not null)
+            {
+                shaderName += configLine.OutputSuffix;
+            }
+
+            // Compiled permutation name
+            string permutationName = shaderName;
+            if ((configLine.Defines is not null) && (configLine.Defines.Length > 0))
+            {
+                int permutationHash = combinedDefines.GetHashCode();
+                permutationName += "_" + permutationHash.ToString("X8");
+            }
+
+            // Output directory
+            string outputDirectory = Options.OutputDir is not null ? Options.OutputDir : "";
+            if (configLine.OutputDir is not null)
+            {
+                outputDirectory = Path.Combine(outputDirectory, configLine.OutputDir);
+            }
+
+            // Create intermediate output directories
+            bool force = Options.Force;
+            string parentPath = GetParentPath(shaderName);
+            string endPath = outputDirectory;
+            if (parentPath.Length > 0)
+            {
+                endPath = Path.Combine(outputDirectory, parentPath);
+            }
+            if (Options.PDB)
+            {
+                endPath = Path.Combine(endPath, "PDB");
+            }
+            if (endPath.Length > 0)
+            {
+                var endPathDir = new DirectoryInfo(endPath);
+                if (!endPathDir.Exists)
+                {
+                    endPathDir.Create();
+                    force = true;
+                }
+            }
+
+            // Early out if no changes detected
+            DateTime zero = new DateTime();
+            DateTime outputTime = new DateTime();
+
+            // Binary/header - non-blob
+            {
+                string outputFilename = Path.Combine(outputDirectory, permutationName);
+                outputFilename += GetOutputExtension();
+                var outputFI = new FileInfo(outputFilename);
+
+                System.Console.WriteLine("Output filename: {0}", outputFilename);
+
+                if (Options.Binary)
+                {
+                    force |= !outputFI.Exists;
+                    if (!force)
+                    {
+                        outputTime = outputFI.LastWriteTime;
+                    }
+                    else
+                    {
+                        outputTime = Min<DateTime>(outputTime, outputFI.LastWriteTime);
+                    }
+                }
+
+                outputFilename += ".h";
+                outputFI = new FileInfo(outputFilename);
+
+                if (Options.Header)
+                {
+                    force |= !outputFI.Exists;
+                    if (!force)
+                    {
+                        outputTime = outputFI.LastWriteTime;
+                    }
+                    else
+                    {
+                        outputTime = Min<DateTime>(outputTime, outputFI.LastWriteTime);
+                    }
+                }
+            }
+
+            // Binary/header - blob
+            {
+                string outputFilename = Path.Combine(outputDirectory, shaderName);
+                outputFilename += GetOutputExtension();
+                var outputFI = new FileInfo(outputFilename);
+
+                if (Options.BinaryBlob)
+                {
+                    force |= !outputFI.Exists;
+                    if (!force)
+                    {
+                        outputTime = outputFI.LastWriteTime;
+                    }
+                    else
+                    {
+                        outputTime = Min<DateTime>(outputTime, outputFI.LastWriteTime);
+                    }
+                }
+
+                outputFilename += ".h";
+                outputFI = new FileInfo(outputFilename);
+
+                if (Options.HeaderBlob)
+                {
+                    force |= !outputFI.Exists;
+                    if (!force)
+                    {
+                        outputTime = outputFI.LastWriteTime;
+                    }
+                    else
+                    {
+                        outputTime = Min<DateTime>(outputTime, outputFI.LastWriteTime);
+                    }
+                }
+            }
+
+            if (!force)
+            {
+                var callStack = new LinkedList<string>();
+                DateTime sourceTime;
+                string configParentPath = GetParentPath(Options.ConfigFile);
+                string sourceDir = Options.SourceDir is not null ? Options.SourceDir : "";
+                string configSource = configLine.Source;
+                string sourceFile = Path.Combine(Path.Combine(configParentPath, sourceDir), configSource);
+                if (!GetHierarchicalUpdateTime(sourceFile, callStack, out sourceTime))
+                {
+                    return false;
+                }
+
+                sourceTime = Max<DateTime>(sourceTime, configTime);
+                if (outputTime > sourceTime)
+                {
+                    return true;
+                }
+            }
+
+            // Prepare a compile job
+            string outputFileWithoutExt = Path.Combine(outputDirectory, permutationName);
+            uint optimizationLevel = configLine.OptimizationLevel == 0xFFFFFFFF ? Options.OptimizationLevel : configLine.OptimizationLevel;
+            optimizationLevel = Math.Min(optimizationLevel, 3u);
+
+            var compileJob = new CompileJob();
+            compileJob.Source = configLine.Source;
+            compileJob.EntryPoint = configLine.Entry;
+            compileJob.Profile = configLine.Profile;
+            compileJob.CombinedDefines = combinedDefines;
+            compileJob.OutputFileWithoutExt = outputFileWithoutExt;
+            compileJob.Defines = configLine.Defines;
+            compileJob.OptimizationLevel = optimizationLevel;
+            m_jobQueue.Enqueue(compileJob);
+
+            Globals.OriginalTaskCount += 1;
+
+            // Gather blobs
+            if (Options.IsBlob)
+            {
+                string blobName = Path.Combine(outputDirectory, shaderName);
+                List<BlobEntry>? blobEntries;
+                if (!m_shaderBlobs.TryGetValue(blobName, out blobEntries))
+                {
+                    blobEntries = new List<BlobEntry>();
+                    m_shaderBlobs[blobName] = blobEntries;
+                }
+
+                BlobEntry entry = new BlobEntry();
+                entry.PermutationFileWithoutExt = outputFileWithoutExt;
+                entry.CombinedDefines = combinedDefines;
+                blobEntries.Add(entry);
             }
 
             return true;
@@ -365,7 +1064,7 @@ namespace ShaderCompiler
             int closing = line.IndexOf('}', opening);
             if (closing == -1)
             {
-                System.Console.WriteLine("{0} ({1},0): ERROR: Missing '}'!", Options.ConfigFile.FullName, lineIndex + 1);
+                System.Console.WriteLine("{0} ({1},0): ERROR: Missing '}'!", Options.ConfigFile, lineIndex + 1);
                 return false;
             }
 
@@ -396,19 +1095,19 @@ namespace ShaderCompiler
 
         public bool GatherShaderPermutations()
         {
-            var configTime = Options.ConfigFile.LastWriteTime;
-            configTime = Max<DateTime>(Self.LastWriteTime, configTime);
+            var configTime = File.GetLastWriteTime(Options.ConfigFile);
+            configTime = Max<DateTime>(File.GetLastWriteTime(Options.Self), configTime);
 
-            var configStream = Options.ConfigFile.OpenText();
+            var configStream = File.OpenText(Options.ConfigFile);
             List<bool> blocks = new List<bool>();
             blocks.Add(true);
 
             char[] b = new char[1024];
             int lineIndex = 0;
 
-            while (configStream.Peek() >= 0)
+            string? line;
+            while ((line = configStream.ReadLine()) is not null)
             {
-                string line = configStream.ReadLine();
                 line = TrimConfigLine(line);
 
                 // Skip an empty or commented line
@@ -426,7 +1125,7 @@ namespace ShaderCompiler
                     string define = line.Substring(pos);
                     define.Trim();
 
-                    bool state = blocks.LastOrDefault(false) && Array.Exists(Options.Defines, item => item == define);
+                    bool state = blocks.LastOrDefault(false) && ((Options.Defines is not null) && Array.Exists(Options.Defines, item => item == define));
 
                     blocks.Add(state);
                 }
@@ -442,7 +1141,7 @@ namespace ShaderCompiler
                 {
                     if (blocks.Count == 1)
                     {
-                        System.Console.WriteLine("{0} ({1},0) ERROR: unexpected '#endif'!", Options.ConfigFile.FullName, lineIndex + 1);
+                        System.Console.WriteLine("{0} ({1},0) ERROR: unexpected '#endif'!", Options.ConfigFile, lineIndex + 1);
                     }
                     else
                     {
@@ -453,7 +1152,7 @@ namespace ShaderCompiler
                 {
                     if (blocks.Count < 2)
                     {
-                        System.Console.WriteLine("{0} ({1},0) ERROR: unexpected '#else'!", Options.ConfigFile.FullName, lineIndex + 1);
+                        System.Console.WriteLine("{0} ({1},0) ERROR: unexpected '#else'!", Options.ConfigFile, lineIndex + 1);
                     }
                     else if (blocks[blocks.Count - 2])
                     {
@@ -473,209 +1172,301 @@ namespace ShaderCompiler
 
             return true;
         }
+
+        public void UpdateProgress(CompileJob job, bool success, string outputMsg, string errorMsg)
+        {
+            m_progressMutex.WaitOne();
+
+            if (success)
+            {
+                float progress = (float)(++Globals.ProcessedTaskCount) / (float)Globals.OriginalTaskCount;
+
+                if (outputMsg.Length > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("[{0,5:P1}] {1} {2} {{{3}}} {{{4}}}\n{5}", progress, Options.PlatformName, job.Source, job.EntryPoint, job.CombinedDefines, outputMsg);
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("[{0,5:P1}]", progress);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.Write(" {0}", Options.PlatformName);
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.Write(" {0}", job.Source);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                    Console.Write(" {{{0}}}", job.EntryPoint);
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(" {{{0}}}", job.CombinedDefines);
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("[ FAIL ] {1} {2} {{{3}}} {{{4}}}\n{5}", Options.PlatformName, job.Source, job.EntryPoint, job.CombinedDefines, errorMsg);
+
+                Globals.FailedTaskCount++;
+                if (!Options.Continue)
+                    Globals.Terminate = true;
+            }
+
+            Console.ResetColor();
+
+            m_progressMutex.ReleaseMutex();
+        }
+
+        public void Compile()
+        {
+            string[] optimizationLevelRemap = { " -Od", " -O1", " -O2", " -O3" };
+
+            while (!Globals.Terminate)
+            {
+                CompileJob? job;
+                if (!m_jobQueue.TryDequeue(out job))
+                {
+                    return;
+                }
+
+                bool convertBinaryOutputToHeader = false;
+                string outputFile = job.OutputFileWithoutExt + GetOutputExtension();
+
+                // Build the command line
+                string compilerExe = "";
+                string commandArgs = "";
+                {
+                    compilerExe = GetCompiler();
+                    commandArgs += " -nologo";
+
+                    // Output file
+                    if (Options.Binary || Options.BinaryBlob || (Options.HeaderBlob && job.CombinedDefines.Length > 0))
+                    {
+                        commandArgs += " -Fo " + EscapePath(outputFile);
+                    }
+                    if (Options.Header || (Options.HeaderBlob && job.CombinedDefines.Length == 0))
+                    {
+                        string name = GetShaderName(job.OutputFileWithoutExt, Options.Platform);
+                        commandArgs += " -Fh " + EscapePath(outputFile) + ".h";
+                        commandArgs += " -Vh " + name;
+                    }
+
+                    // Profile
+                    string profile = job.Profile + "_";
+                    if (Options.Platform == Platform.DXBC)
+                        profile += "5_0";
+                    else
+                        profile += Options.ShaderModel;
+                    commandArgs += " -T " + profile;
+
+                    // Entry point
+                    commandArgs += " -E " + job.EntryPoint;
+
+                    // Defines
+                    foreach (var define in job.Defines)
+                        commandArgs += " -D " + define;
+                    if (Options.Defines is not null)
+                    {
+                        foreach (var define in Options.Defines)
+                            commandArgs += " -D " + define;
+                    }
+
+                    // Include directories
+                    if (Options.IncludeDirs is not null)
+                    {
+                        foreach (var dir in Options.IncludeDirs)
+                            commandArgs += " -I " + dir;
+                    }
+
+                    // Args
+                    commandArgs += optimizationLevelRemap[job.OptimizationLevel];
+
+                    if (Options.ShaderModel is not null)
+                    {
+                        int shaderModelIndex = 10 * (Options.ShaderModel[0] - '0') + (Options.ShaderModel[2] - '0');
+                        if (Options.Platform != Platform.DXBC && shaderModelIndex >= 62)
+                            commandArgs += " -enable-16bit-types";
+                    }
+
+                    if (Options.WarningsAreErrors)
+                        commandArgs += " -WX";
+
+                    if (Options.AllResourcesBound)
+                        commandArgs += " -all_resources_bound";
+
+                    if (Options.MatrixRowMajor)
+                        commandArgs += " -Zpr";
+
+                    if (Options.Hlsl2021)
+                        commandArgs += " -HV 2021";
+
+                    if (Options.PDB || Options.EmbedPDB)
+                        commandArgs += " -Zi -Zsb";
+
+                    if (Options.EmbedPDB)
+                        commandArgs += " -Qembed_debug";
+
+                    if (Options.Platform == Platform.SPIRV)
+                    {
+                        commandArgs += " -spirv";
+
+                        commandArgs += " -fspv-target-env=vulkan" + Options.VulkanVersion;
+
+                        if (Options.VulkanMemoryLayout is not null)
+                            commandArgs += " -fvk-use" + Options.VulkanMemoryLayout + "-layout";
+
+                        if (Options.SpirvExt is not null)
+                        {
+                            foreach (var ext in Options.SpirvExt)
+                                commandArgs += " -fspv-extension=" + ext;
+                        }
+
+                        if (!Options.NoRegShifts)
+                        {
+                            for (uint space = 0; space < 8; ++space)
+                            {
+                                commandArgs += " -vk-s-shift " + Options.SRegShift + " " + space.ToString();
+                                commandArgs += " -vk-t-shift " + Options.TRegShift + " " + space.ToString();
+                                commandArgs += " -vk-b-shift " + Options.BRegShift + " " + space.ToString();
+                                commandArgs += " -vk-u-shift " + Options.URegShift + " " + space.ToString();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Options.StripReflection)
+                            commandArgs += " -Qstrip_reflect";
+
+                        if (Options.PDB)
+                        {
+                            string pdbPath = Path.Combine(System.IO.Directory.GetParent(outputFile).FullName, "PDB");
+                            commandArgs += " -Fd " + EscapePath(pdbPath + "/");
+                        }
+                    }
+
+                    // Custom options
+                    if (Options.CompilerOptions is not null)
+                    {
+                        foreach (var opt in Options.CompilerOptions)
+                            commandArgs += " " + opt;
+                    }
+
+                    // Source file
+                    string sourceDir = Options.SourceDir is not null ? Options.SourceDir : "";
+                    string sourceFile = Path.Combine(Path.Combine(System.IO.Directory.GetParent(Options.ConfigFile).FullName, sourceDir), job.Source);
+                    commandArgs += " " + EscapePath(sourceFile);
+                }
+                
+                // Debug output
+                if (Options.Verbose)
+                    System.Console.WriteLine("{0} {1}", compilerExe, commandArgs);
+
+                // Compile the shader
+                var errorHandler = new CompileErrorHandler();
+
+                var location = new Uri(Assembly.GetEntryAssembly().GetName().CodeBase);
+                var fileInfo = new FileInfo(location.AbsolutePath).Directory;
+                Directory.SetCurrentDirectory(fileInfo.FullName);
+
+                ProcessStartInfo processInfo = new ProcessStartInfo(compilerExe);
+                processInfo.CreateNoWindow = true;
+                processInfo.WorkingDirectory = fileInfo.FullName;
+                processInfo.Arguments = commandArgs;
+                processInfo.RedirectStandardError = true;
+                processInfo.RedirectStandardOutput = true;
+                processInfo.UseShellExecute = false;
+
+                var process = new System.Diagnostics.Process();
+                process.StartInfo.CreateNoWindow = true;
+                process.StartInfo.WorkingDirectory = fileInfo.FullName;
+                process.StartInfo.Arguments = commandArgs;
+                process.StartInfo.RedirectStandardError = true;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.FileName = compilerExe;
+
+                process.ErrorDataReceived += errorHandler.StdErrorHandler;
+                process.OutputDataReceived += errorHandler.StdOutputHandler;
+
+                process.Start();
+
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
+
+                process.WaitForExit();
+                bool success = process.ExitCode == 0;
+
+                // Update progress
+                UpdateProgress(job, success, errorHandler.Output, errorHandler.Error);
+            }
+        }
+
+        public void ProcessCompileJobs()
+        {
+            List<Thread> threads = new List<Thread>();
+            int numThreads = Options.Serial ? 1 : Environment.ProcessorCount;
+
+            for (int i = 0; i < numThreads; ++i)
+            {
+                Thread newThread = new Thread(new ThreadStart(this.Compile));
+                newThread.IsBackground = true;
+                threads.Add(newThread);
+                newThread.Start();
+            }
+
+            for (int i = 0; i < numThreads; ++i)
+            {
+                threads[i].Join();
+            }
+        }
+
+        public void ProcessBlobs()
+        {
+
+        }
     }
 
     internal class Program
     {
-        static async Task<int> Run(FileInfo self, Options options)
+        protected static void CancelHandler(object sender, ConsoleCancelEventArgs args)
         {
-            if (!options.Validate())
-            {
-                return -1;
-            }
+            Globals.Terminate = true;
 
-            var compiler = new Compiler(self, options);
-            compiler.PrintStatus();
-
-            compiler.GatherShaderPermutations();
-
-            return 0;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Aborting...");
+            Console.ResetColor();
         }
 
-        
-
-        static async Task<int> Main(string[] args)
+        static int Main(string[] args)
         {
-            int returnCode = 0;
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
 
-            #region Required options
-            var platformOpt = new Option<string>("--platform", "DXIL or SPIRV").FromAmong("DXIL", "SPIRV");
-            platformOpt.IsRequired = true;
-            platformOpt.AddAlias("-p");
+            string commandLine = string.Join(' ', args);
+            System.Console.WriteLine("CommandLine: {0}", commandLine);
 
-            var configFileOpt = new Option<FileInfo>("--config", "Configuration file with the list of shaders to compile");
-            configFileOpt.IsRequired = true;
-            configFileOpt.AddAlias("-c");
-
-            var outputDirOpt = new Option<DirectoryInfo>("--out", "Output directory");
-            outputDirOpt.IsRequired = true;
-            outputDirOpt.AddAlias("-o");
-
-            var binaryOpt = new Option<bool>("--binary", "Output binary files");
-            binaryOpt.AddAlias("-b");
-
-            var headerOpt = new Option<bool>("--header", "Output header files");
-            headerOpt.AddAlias("-h");
-
-            var binaryBlobOpt = new Option<bool>("--binaryBlob", "Output binary blob files");
-            binaryBlobOpt.AddAlias("-B");
-
-            var headerBlobOpt = new Option<bool>("--headerBlob", "Output header blob files");
-            headerBlobOpt.AddAlias("-H");
-            #endregion
-
-            #region Compiler options
-            var shaderModelOpt = new Option<string>("--shaderModel", "Shader model for DXIL/SPIRV");
-            shaderModelOpt.AddAlias("-m");
-
-            var optimizationOpt = new Option<int>("--optimization", "Optimization level 03 (default = 3, disabled = 0)");
-            optimizationOpt.AddAlias("-O");
-
-            var warningsAreErrorsOpt = new Option<bool>("--WX", "Maps to '-WX' DXC/FXC option: warnings are errors");
-            var allResourcesBoundOpt = new Option<bool>("--allResourcesBound", "MAps to -all_resources_bound DXC/FXC option: all resources bound");
-            var pdbOpt = new Option<bool>("--PDB", "Output PDB files in 'out/PDB' folder");
-            var embedPDBOpt = new Option<bool>("--embedPDB", "Embed PDB with shader binary");
-            var stripReflectionOpt = new Option<bool>("--stripReflection", "Maps to '-Qstrip_reflect' DXC/FXC option: strip reflection information from a shader binary");
-            var matrixRowMajorOpt = new Option<bool>("--matrixRowMajor", "Maps to '-Zpr' DXC/FXC option: pack matrices in row-major order");
-            var hlsl2021Opt = new Option<bool>("--hlsl2021", "Maps to '-HV 2021' DXC option: enable HLSL 2021 standard");
-            var vulkanMemoryLayoutOpt = new Option<string>("--vulkanMemoryLayout", "Maps to '-fvk-use-<VALUE>-layout' DXC options: dx, gl, scalar");
-
-            var compilerOptionsOpt = new Option<string[]>("--compilerOptions", "Custom command line options for the compiler, separated by spaces");
-            compilerOptionsOpt.AddAlias("-X");
-            #endregion
-
-            #region Defines and includes
-            var includeOpt = new Option<DirectoryInfo[]>("--include", "Include directory(s)");
-            includeOpt.AddAlias("-I");
-
-            var defineOpt = new Option<string[]>("--define", "Macro definition(s) in forms 'M=value' or 'M'");
-            defineOpt.AddAlias("-D");
-            #endregion
-
-            #region Other options
-            var forceOpt = new Option<bool>("--force", "Treat all source files as modified");
-            forceOpt.AddAlias("-f");
-
-            var sourceDirOpt = new Option<DirectoryInfo>("--sourceDir", "Source code directory");
-            var relaxedIncludeOpt = new Option<FileInfo[]>("--relaxedInclude", "Include file(s) not invoking re-compilation");
-            var outputExtOpt = new Option<string>("--outputExt", "Extension for output files, default is one of .dxil or .spirv");
-            var serialOpt = new Option<bool>("--serial", "Disable multi-threading");
-            var flattenOpt = new Option<bool>("--flatten", "Flatten source directory structure in the output directory");
-            var continueOnErrorOpt = new Option<bool>("--continue", "Continue compilation if an error occurred");
-            var verboseOpt = new Option<bool>("--verbose", "Print commands before they are executed");
-            var retryCountOpt = new Option<int>("--retryCount", "Retry count for compilation task sub-process failures");
-            #endregion
-
-            #region SPIRV options
-            var vulkanVersionOpt = new Option<string>("--vulkanVersion", "Vulkan environment version, maps t0 '-fspv-target-env' (default  = 1.3)");
-            var spirvExtOpt = new Option<string[]>("--spirvExt", "Maps to -fspv-extension' option: add SPIR-V extension permitted to use");
-            var sRegShiftOpt = new Option<int>("--sRegShift", "SPIRV: register shift for sampler (s#) resources");
-            var tRegShiftOpt = new Option<int>("--tRegShift", "SPIRV: register shift for texture (t#) resources");
-            var bRegShiftOpt = new Option<int>("--bRegShift", "SPIRV: register shift for constant (b#) resources");
-            var uRegShiftOpt = new Option<int>("--uRegShift", "SPIRV: register shift for UAV (u#) resources");
-            var noRegShiftsOpt = new Option<bool>("--noRegShifts", "Don't specify any register shifts for the compiler");
-            #endregion
-
-            // Setup root command
-            var rootCommand = new RootCommand("ShaderCompiler");
-            rootCommand.AddOption(platformOpt);
-            rootCommand.AddOption(configFileOpt);
-            rootCommand.AddOption(outputDirOpt);
-            rootCommand.AddOption(binaryOpt);
-            rootCommand.AddOption(headerOpt);
-            rootCommand.AddOption(binaryBlobOpt);
-            rootCommand.AddOption(headerBlobOpt);
-
-            rootCommand.AddOption(shaderModelOpt);
-            rootCommand.AddOption(optimizationOpt);
-            rootCommand.AddOption(warningsAreErrorsOpt);
-            rootCommand.AddOption(allResourcesBoundOpt);
-            rootCommand.AddOption(pdbOpt);
-            rootCommand.AddOption(embedPDBOpt);
-            rootCommand.AddOption(stripReflectionOpt);
-            rootCommand.AddOption(matrixRowMajorOpt);
-            rootCommand.AddOption(hlsl2021Opt);
-            rootCommand.AddOption(vulkanMemoryLayoutOpt);
-            rootCommand.AddOption(compilerOptionsOpt);
-
-            rootCommand.AddOption(includeOpt);
-            rootCommand.AddOption(defineOpt);
-
-            rootCommand.AddOption(forceOpt);
-            rootCommand.AddOption(sourceDirOpt);
-            rootCommand.AddOption(relaxedIncludeOpt);
-            rootCommand.AddOption(outputExtOpt);
-            rootCommand.AddOption(serialOpt);
-            rootCommand.AddOption(flattenOpt);
-            rootCommand.AddOption(continueOnErrorOpt);
-            rootCommand.AddOption(verboseOpt);
-            rootCommand.AddOption(retryCountOpt);
-
-            rootCommand.AddOption(vulkanVersionOpt);
-            rootCommand.AddOption(spirvExtOpt);
-            rootCommand.AddOption(sRegShiftOpt);
-            rootCommand.AddOption(tRegShiftOpt);
-            rootCommand.AddOption(bRegShiftOpt);
-            rootCommand.AddOption(uRegShiftOpt);
-            rootCommand.AddOption(noRegShiftsOpt);
-
-            var options = new Options();
-            var self = new FileInfo(args[0]);
-
-            rootCommand.SetHandler(async (context) =>
+            Options options = new Options();
+            if (!options.Parse(args))
             {
-                // Required options
-                options.Platform = context.ParseResult.GetValueForOption(platformOpt);
-                options.ConfigFile = context.ParseResult.GetValueForOption(configFileOpt);
-                options.Out = context.ParseResult.GetValueForOption(outputDirOpt);
-                options.Binary = context.ParseResult.GetValueForOption(binaryOpt);
-                options.Header = context.ParseResult.GetValueForOption(headerOpt);
-                options.BinaryBlob = context.ParseResult.GetValueForOption(binaryBlobOpt);
-                options.HeaderBlob = context.ParseResult.GetValueForOption(headerBlobOpt);
+                return 1;
+            }
 
-                // Compiler options
-                options.ShaderModel = context.ParseResult.GetValueForOption(shaderModelOpt);
-                options.Optimization = context.ParseResult.GetValueForOption(optimizationOpt);
-                options.WarningsAreErrors = context.ParseResult.GetValueForOption(warningsAreErrorsOpt);
-                options.AllResourcesBound = context.ParseResult.GetValueForOption(allResourcesBoundOpt);
-                options.PDB = context.ParseResult.GetValueForOption(pdbOpt);
-                options.EmbedPDB = context.ParseResult.GetValueForOption(embedPDBOpt);
-                options.StripReflection = context.ParseResult.GetValueForOption(stripReflectionOpt);
-                options.MatrixRowMajor = context.ParseResult.GetValueForOption(matrixRowMajorOpt);
-                options.Hlsl2021 = context.ParseResult.GetValueForOption(hlsl2021Opt);
-                options.VulkanMemoryLayout = context.ParseResult.GetValueForOption(vulkanMemoryLayoutOpt);
-                options.CompilerOptions = context.ParseResult.GetValueForOption(compilerOptionsOpt);
+            Compiler compiler = new Compiler(options);
+            compiler.PrintStatus();
 
-                // Defines and includes
-                options.IncludeDirs = context.ParseResult.GetValueForOption(includeOpt);
-                options.Defines = context.ParseResult.GetValueForOption(defineOpt);
+            if (!compiler.ValidateCompiler())
+            {
+                System.Console.Error.WriteLine("ERROR: No valid shader compiler executable found!");
+                return 1;
+            }
 
-                // Other options
-                options.Force = context.ParseResult.GetValueForOption(forceOpt);
-                options.SourceDir = context.ParseResult.GetValueForOption(sourceDirOpt);
-                options.RelaxedIncludes = context.ParseResult.GetValueForOption(relaxedIncludeOpt);
-                options.OutputExt = context.ParseResult.GetValueForOption(outputExtOpt);
-                options.Serial = context.ParseResult.GetValueForOption(serialOpt);
-                options.Flatten = context.ParseResult.GetValueForOption(flattenOpt);
-                options.Continue = context.ParseResult.GetValueForOption(continueOnErrorOpt);
-                options.Verbose = context.ParseResult.GetValueForOption(verboseOpt);
-                options.RetryCount = context.ParseResult.GetValueForOption(retryCountOpt);
+            compiler.GatherShaderPermutations();
+            compiler.ProcessCompileJobs();
 
-                // SPIRV options
-                options.VulkanVersion = context.ParseResult.GetValueForOption(vulkanVersionOpt);
-                options.SpirvExt = context.ParseResult.GetValueForOption(spirvExtOpt);
-                options.SRegShift = context.ParseResult.GetValueForOption(sRegShiftOpt);
-                options.TRegShift = context.ParseResult.GetValueForOption(tRegShiftOpt);
-                options.BRegShift = context.ParseResult.GetValueForOption(bRegShiftOpt);
-                options.URegShift = context.ParseResult.GetValueForOption(uRegShiftOpt);
-                options.NoRegShifts = context.ParseResult.GetValueForOption(noRegShiftsOpt);
+            // If a fatal error or terminate request happened, don't proceed with blob building
+            if (Globals.Terminate)
+                return 1;
 
-                returnCode = await Run(self, options);
-            });
+            compiler.ProcessBlobs();
 
-            await rootCommand.InvokeAsync(args);
-
-            return returnCode;
+            return (Globals.Terminate || Globals.FailedTaskCount > 0) ? 1 : 0;
         }
     }
 }
