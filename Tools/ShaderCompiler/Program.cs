@@ -24,14 +24,6 @@ namespace ShaderCompiler
         SPIRV
     }
 
-    public static class Globals
-    {
-        public static volatile bool Terminate = false;
-        public static int OriginalTaskCount = 0;
-        public static int ProcessedTaskCount = 0;
-        public static int FailedTaskCount = 0;
-    }
-
     class Options
     {
         #region Required options
@@ -1173,6 +1165,23 @@ namespace ShaderCompiler
             return true;
         }
 
+        public bool CreateBlob(string blobName, List<BlobEntry> entries, bool useTextOutput)
+        {
+            return true;
+        }
+
+        public void RemoveIntermediateBlobFiles(List<BlobEntry> blobEntries)
+        {
+            foreach (var entry in blobEntries)
+            {
+                string filename = entry.PermutationFileWithoutExt + GetOutputExtension();
+                if (File.Exists(filename))
+                {
+                    File.Delete(filename);
+                }
+            }
+        }
+
         public void UpdateProgress(CompileJob job, bool success, string outputMsg, string errorMsg)
         {
             m_progressMutex.WaitOne();
@@ -1203,7 +1212,7 @@ namespace ShaderCompiler
             else
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("[ FAIL ] {1} {2} {{{3}}} {{{4}}}\n{5}", Options.PlatformName, job.Source, job.EntryPoint, job.CombinedDefines, errorMsg);
+                Console.WriteLine("[ FAIL ] {0} {1} {{{2}}} {{{3}}}\n{4}", Options.PlatformName, job.Source, job.EntryPoint, job.CombinedDefines, errorMsg);
 
                 Globals.FailedTaskCount++;
                 if (!Options.Continue)
@@ -1323,10 +1332,10 @@ namespace ShaderCompiler
                         {
                             for (uint space = 0; space < 8; ++space)
                             {
-                                commandArgs += " -vk-s-shift " + Options.SRegShift + " " + space.ToString();
-                                commandArgs += " -vk-t-shift " + Options.TRegShift + " " + space.ToString();
-                                commandArgs += " -vk-b-shift " + Options.BRegShift + " " + space.ToString();
-                                commandArgs += " -vk-u-shift " + Options.URegShift + " " + space.ToString();
+                                commandArgs += " -fvk-s-shift " + Options.SRegShift + " " + space.ToString();
+                                commandArgs += " -fvk-t-shift " + Options.TRegShift + " " + space.ToString();
+                                commandArgs += " -fvk-b-shift " + Options.BRegShift + " " + space.ToString();
+                                commandArgs += " -fvk-u-shift " + Options.URegShift + " " + space.ToString();
                             }
                         }
                     }
@@ -1418,9 +1427,63 @@ namespace ShaderCompiler
             }
         }
 
-        public void ProcessBlobs()
+        public int ProcessBlobs()
         {
+            foreach (var kvp in m_shaderBlobs)
+            {
+                var blobName = kvp.Key;
+                var blobEntries = kvp.Value;
 
+                // If a blob would contain one entry with no defines, just skip it.
+                // The individual file's output name is the same as the blob, and we're done.
+                if (blobEntries.Count == 1 && blobEntries[0].CombinedDefines.Length == 0)
+                    continue;
+
+                // Validate that the blob doesn't contain any shaders with empty defines.
+                // In such cases, that individual shader's output file is the same as the blob output file,
+                // which doesn't work.  We could detect this condition earlier and work around it by renaming the shader output file,
+                // if necessary.
+                bool invalidEntry = false;
+                foreach (var entry in blobEntries)
+                {
+                    if (entry.CombinedDefines.Length == 0)
+                    {
+                        string blobBaseName = Path.GetFileNameWithoutExtension(blobName);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("ERROR: Cannot create a blob for shader {0} where some permutation(s) have no definitions!", blobBaseName);
+                        Console.ResetColor();
+                        invalidEntry = true;
+                        break;
+                    }
+                }
+
+                if (invalidEntry)
+                {
+                    if (Options.Continue)
+                        continue;
+                    return 1;
+                }
+
+                if (Options.BinaryBlob)
+                {
+                    bool result = CreateBlob(blobName, blobEntries, false);
+                    if (!result && !Options.Continue)
+                        return 1;
+                }
+
+                if (Options.HeaderBlob)
+                {
+                    bool result = CreateBlob(blobName, blobEntries, true);
+                    if (!result && !Options.Continue)
+                        return 1;
+                }
+
+                if (!Options.Binary)
+                {
+                    RemoveIntermediateBlobFiles(blobEntries);
+                }
+            }
+            return 0;
         }
     }
 
@@ -1464,9 +1527,9 @@ namespace ShaderCompiler
             if (Globals.Terminate)
                 return 1;
 
-            compiler.ProcessBlobs();
+            int ret = compiler.ProcessBlobs();
 
-            return (Globals.Terminate || Globals.FailedTaskCount > 0) ? 1 : 0;
+            return (Globals.Terminate || Globals.FailedTaskCount > 0) ? 1 : ret;
         }
     }
 }

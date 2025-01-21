@@ -3,3 +3,5 @@ D:\Depot\Luna\Engine\Bin\Profile\D3D12\D3D12Core.dll
 D:\Depot\Luna\Engine\Bin\Profile\D3D12\D3D12Core.pdb
 D:\Depot\Luna\Engine\Bin\Profile\D3D12\D3D12SDKLayers.dll
 D:\Depot\Luna\Engine\Bin\Profile\D3D12\D3D12SDKLayers.pdb
+D:\Depot\Luna\Engine\Bin\Profile\D3D12\DirectSR.dll
+D:\Depot\Luna\Engine\Bin\Profile\D3D12\DirectSR.pdb

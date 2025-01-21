@@ -98,6 +98,7 @@ StyleCopReport.xml
 *.pidb
 *.svclog
 *.scc
+*.FileListAbsolute.*
 
 # Chutzpah Test files
 _Chutzpah*
@@ -402,3 +403,6 @@ FodyWeavers.xsd
 *.dxil
 *.spirv
 *.dxbc
+*.bin
+/Engine/Intermediate
+/Engine/Intermediate/Profile
