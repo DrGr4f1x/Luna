@@ -404,5 +404,3 @@ FodyWeavers.xsd
 *.spirv
 *.dxbc
 *.bin
-/Engine/Intermediate
-/Engine/Intermediate/Profile
