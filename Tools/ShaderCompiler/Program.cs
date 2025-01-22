@@ -12,6 +12,8 @@ using System.IO;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -81,7 +83,7 @@ namespace ShaderCompiler
         public Platform Platform { get; set; }
         public string Self { get; set; }
 
-        public bool IsBlob {  get { return BinaryBlob || HeaderBlob; } }
+        public bool IsBlob { get { return BinaryBlob || HeaderBlob; } }
 
         public bool Parse(string[] args)
         {
@@ -296,7 +298,7 @@ namespace ShaderCompiler
             }
 
             // Check compiler
-            if((Compiler is not null) && !File.Exists(Compiler))
+            if ((Compiler is not null) && !File.Exists(Compiler))
             {
                 System.Console.Error.WriteLine("ERROR: Compiler {0} does not exist!", Compiler);
                 return false;
@@ -325,8 +327,8 @@ namespace ShaderCompiler
         }
     }
 
-    class DirectoryComparer : IComparer 
-    { 
+    class DirectoryComparer : IComparer
+    {
         public int Compare(Object x, Object y)
         {
             return (new CaseInsensitiveComparer()).Compare(((DirectoryInfo)y).FullName, ((DirectoryInfo)x).FullName);
@@ -391,7 +393,7 @@ namespace ShaderCompiler
             this.Source = args[0];
             string[] trimmedArgs = new string[args.Length - 1];
             Array.Copy(args, 1, trimmedArgs, 0, args.Length - 1);
-            
+
             command.SetHandler(async (context) =>
             {
                 // Required options
@@ -414,7 +416,6 @@ namespace ShaderCompiler
             return true;
         }
     }
-
 
     class CompileErrorHandler
     {
@@ -447,6 +448,102 @@ namespace ShaderCompiler
                 m_shaderCompOutput += message + "\n";
             }
         }
+    }
+
+    class DataWriter
+    {
+        private FileStream? m_fileStream;
+        private bool m_textMode;
+        private int m_lineLength = 129;
+        private bool m_isFileOpen = false;
+
+        public bool IsFileOpen { get { return m_isFileOpen; } }
+
+        public DataWriter(string file, bool textMode)
+        {
+            m_textMode = textMode;
+            try
+            {
+                m_fileStream = File.OpenWrite(file);
+                m_isFileOpen = true;
+            }
+            catch
+            {
+                m_isFileOpen = false;
+            }
+
+        }
+
+        public void WriteTextProlog(string shaderName)
+        {
+            string prolog = string.Format("const uint8_t {0}[] = {{", shaderName);
+            WriteString(prolog);
+        }
+
+        public void WriteTextEpilog()
+        {
+            string epilog = "\n}};\n";
+            WriteString(epilog);
+        }
+
+        public bool WriteDataAsBinary(byte[] data)
+        {
+            if (m_fileStream is null) return false;
+
+            if (data.Length == 0)
+                return true;
+
+            try
+            {
+                m_fileStream.Write(data, 0, data.Length);
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool WriteDataAsText(byte[] data)
+        {
+            for (uint i = 0; i < data.Length; ++i)
+            {
+                byte value = data[i];
+
+                if (m_lineLength > 128)
+                {
+                    WriteString("\n    ");
+                    m_lineLength = 0;
+                }
+
+                string str = string.Format("{0}, ", value);
+                WriteString(str);
+
+                if (value < 10)
+                    m_lineLength += 3;
+                else if (value < 100)
+                    m_lineLength += 4;
+                else
+                    m_lineLength += 5;
+            }
+
+            return true;
+        }
+
+        private void WriteString(string str)
+        {
+            if (m_fileStream is null) return;
+
+            byte[] data = Encoding.UTF8.GetBytes(str);
+            m_fileStream.Write(data, 0, data.Length);
+        }
+    }
+
+    struct ShaderBlobEntry
+    {
+        public uint permutationSize;
+        public uint dataSize;
     }
 
     class Compiler
@@ -1165,8 +1262,111 @@ namespace ShaderCompiler
             return true;
         }
 
+        private bool WriteFileHeader(Func<byte[], bool> writeData)
+        {
+            string blobSignature = "NVSP";
+            byte[] data = Encoding.UTF8.GetBytes(blobSignature);
+            return writeData(data);
+        }
+
+        private bool WritePermutation(Func<byte[], bool> writeData, string permutationKey, byte[] data)
+        {
+            byte[] permData = Encoding.UTF8.GetBytes(permutationKey);
+
+            ShaderBlobEntry entry;
+            entry.permutationSize = (uint)permData.Length;
+            entry.dataSize = (uint)data.Length;
+
+            int entryDataSize = Marshal.SizeOf(entry);
+            byte[] entryData = new byte[entryDataSize];
+            IntPtr ptr = IntPtr.Zero;
+            try
+            {
+                ptr = Marshal.AllocHGlobal(entryDataSize);
+                Marshal.StructureToPtr(entryData, ptr, true);
+                Marshal.Copy(ptr, entryData, 0, entryDataSize);
+            }
+            finally 
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+
+            bool success = writeData(entryData);
+            success &= writeData(permData);
+            success &= writeData(data);
+
+            return success;
+        }
+
         public bool CreateBlob(string blobName, List<BlobEntry> entries, bool useTextOutput)
         {
+            string outputFile = blobName;
+            outputFile += GetOutputExtension();
+            if (useTextOutput)
+                outputFile += ".h";
+
+            DataWriter writer = new DataWriter(outputFile, useTextOutput);
+            if (!writer.IsFileOpen)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("ERROR: Can't open output file '{0}'!", outputFile);
+                Console.ResetColor();
+
+                return false;
+            }
+
+            if (useTextOutput)
+            {
+                string name = GetShaderName(blobName, Options.Platform);
+                writer.WriteTextProlog(name);
+            }
+
+            Func<byte[], bool> textCallback = (data) => writer.WriteDataAsText(data);
+            Func<byte[], bool> binaryCallback = (data) => writer.WriteDataAsBinary(data);
+            var dataCallback = useTextOutput ? textCallback : binaryCallback;
+
+            // Write blob header
+            if (!WriteFileHeader(dataCallback))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("ERROR: Failed to write into output file '{0}'!", outputFile);
+                Console.ResetColor();
+
+                return false;
+            }
+
+            bool success = true;
+
+            // Write individual permutations
+            foreach (var entry in entries)
+            {
+                // Open compiled permutation file
+                string file = entry.PermutationFileWithoutExt + GetOutputExtension();
+                byte[] data;
+                try
+                {
+                    data = File.ReadAllBytes(file);
+                    if (!WritePermutation(dataCallback, entry.CombinedDefines, data))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Error.WriteLine("ERROR: Failed to write a shader permutation into '{0}'!", outputFile);
+                        Console.ResetColor();
+
+                        success = false;
+                    }
+                }
+                catch
+                {
+                    success = false;
+                }
+
+                if (!success)
+                    break;
+            }
+
+            if (useTextOutput)
+                writer.WriteTextEpilog();
+
             return true;
         }
 
@@ -1236,7 +1436,6 @@ namespace ShaderCompiler
                     return;
                 }
 
-                bool convertBinaryOutputToHeader = false;
                 string outputFile = job.OutputFileWithoutExt + GetOutputExtension();
 
                 // Build the command line
