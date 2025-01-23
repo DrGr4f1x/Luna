@@ -173,4 +173,11 @@
     <Error Condition="!Exists('..\..\packages\glfw.3.4.0\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\glfw.3.4.0\build\native\glfw.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
+  <Target Name="LunaBuildShaders" BeforeTargets="PrepareForBuild">
+    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data/Shaders/DXIL --platform DXIL --binary --shaderModel 6_5 --verbose" LogStandardErrorAsError="true" />
+    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2 --verbose" LogStandardErrorAsError="true" />
+  </Target>
+  <Target Name="LunaDeleteShaders" AfterTargets="Clean">
+    <RemoveDir Directories="$(ProjectDir)Data/Shaders" />
+  </Target>
 </Project>

@@ -337,12 +337,12 @@ namespace ShaderCompiler
 
     class CompileJob
     {
-        public string[] Defines { get; set; }
-        public string Source { get; set; }
-        public string EntryPoint { get; set; }
-        public string Profile { get; set; }
-        public string OutputFileWithoutExt { get; set; }
-        public string CombinedDefines { get; set; }
+        public string[]? Defines { get; set; }
+        public string? Source { get; set; }
+        public string? EntryPoint { get; set; }
+        public string? Profile { get; set; }
+        public string? OutputFileWithoutExt { get; set; }
+        public string? CombinedDefines { get; set; }
         public uint OptimizationLevel { get; set; } = 3;
     }
 
@@ -646,37 +646,9 @@ namespace ShaderCompiler
             }
             else
             {
-                System.Console.WriteLine("Could not find expected registry key {0}", installedRootsPath);
-            }
-        }
-
-        public void PrintStatus()
-        {
-            if (m_vulkanDxcCompiler is not null && File.Exists(m_vulkanDxcCompiler))
-            {
-                System.Console.WriteLine("Vulkan SDK dxc compiler: {0}", m_vulkanDxcCompiler);
-            }
-            else
-            {
-                System.Console.WriteLine("Vulkan SDK dxc compiler not found!");
-            }
-
-            if (m_windowsDxcCompiler is not null && File.Exists(m_windowsDxcCompiler))
-            {
-                System.Console.WriteLine("Windows SDK dxc compiler: {0}", m_windowsDxcCompiler);
-            }
-            else
-            {
-                System.Console.WriteLine("Windows SDK dxc compiler not found!");
-            }
-
-            if (m_windowsFxcCompiler is not null && File.Exists(m_windowsFxcCompiler))
-            {
-                System.Console.WriteLine("Windows SDK fxc compiler: {0}", m_windowsFxcCompiler);
-            }
-            else
-            {
-                System.Console.WriteLine("Windows SDK fxc compiler not found!");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("Could not find expected registry key {0}", installedRootsPath);
+                Console.ResetColor();
             }
         }
 
@@ -870,11 +842,13 @@ namespace ShaderCompiler
 
                     if (!isFound)
                     {
-                        System.Console.Error.WriteLine("ERROR: Can't find include file {0}, included in:", includeName);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Error.WriteLine("ERROR: Can't find include file {0}, included in:", includeName);
                         foreach (var item in callStack)
                         {
-                            System.Console.Error.WriteLine("\t{0}", item);
+                            Console.Error.WriteLine("\t{0}", item);
                         }
+                        Console.ResetColor();
 
                         outTime = DateTime.MinValue;
                         return false;
@@ -900,11 +874,13 @@ namespace ShaderCompiler
             }
             catch 
             {
-                System.Console.Error.WriteLine("ERROR: Can't open file {0}, included in:", file);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("ERROR: Can't open file {0}, included in:", file);
                 foreach(var item in callStack)
                 {
-                    System.Console.Error.WriteLine("\t{0}", item);
+                    Console.Error.WriteLine("\t{0}", item);
                 }
+                Console.ResetColor();
 
                 outTime = DateTime.MinValue;
                 return false;
@@ -913,14 +889,14 @@ namespace ShaderCompiler
 
         public bool ProcessConfigLine(int lineIndex, string line, DateTime configTime)
         {
-            System.Console.WriteLine("ProcessConfigLine {0}: {1}", lineIndex, line);
-
             string[] args = line.Split(' ');
 
             var configLine = new ConfigLine();
             if (!configLine.Parse(args))
             {
-                System.Console.Error.WriteLine("{0} ({1},0): ERROR: Can't parse config line!", Options.ConfigFile, lineIndex + 1);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("{0} ({1},0): ERROR: Can't parse config line!", Options.ConfigFile, lineIndex + 1);
+                Console.ResetColor();
                 return false;
             }
 
@@ -1016,8 +992,6 @@ namespace ShaderCompiler
                 string outputFilename = Path.Combine(outputDirectory, permutationName);
                 outputFilename += GetOutputExtension();
                 var outputFI = new FileInfo(outputFilename);
-
-                System.Console.WriteLine("Output filename: {0}", outputFilename);
 
                 if (Options.Binary)
                 {
@@ -1153,7 +1127,10 @@ namespace ShaderCompiler
             int closing = line.IndexOf('}', opening);
             if (closing == -1)
             {
-                System.Console.WriteLine("{0} ({1},0): ERROR: Missing '}'!", Options.ConfigFile, lineIndex + 1);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("{0} ({1},0): ERROR: Missing '}'!", Options.ConfigFile, lineIndex + 1);
+                Console.ResetColor();
+
                 return false;
             }
 
@@ -1439,18 +1416,18 @@ namespace ShaderCompiler
                 string outputFile = job.OutputFileWithoutExt + GetOutputExtension();
 
                 // Build the command line
-                string compilerExe = "";
+                string? compilerExe = "";
                 string commandArgs = "";
                 {
                     compilerExe = GetCompiler();
                     commandArgs += " -nologo";
 
                     // Output file
-                    if (Options.Binary || Options.BinaryBlob || (Options.HeaderBlob && job.CombinedDefines.Length > 0))
+                    if (Options.Binary || Options.BinaryBlob || (Options.HeaderBlob && (job.CombinedDefines is not null) && job.CombinedDefines.Length > 0))
                     {
                         commandArgs += " -Fo " + EscapePath(outputFile);
                     }
-                    if (Options.Header || (Options.HeaderBlob && job.CombinedDefines.Length == 0))
+                    if (Options.Header || (Options.HeaderBlob && ((job.CombinedDefines is null) || job.CombinedDefines.Length == 0)))
                     {
                         string name = GetShaderName(job.OutputFileWithoutExt, Options.Platform);
                         commandArgs += " -Fh " + EscapePath(outputFile) + ".h";
@@ -1701,9 +1678,6 @@ namespace ShaderCompiler
         {
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelHandler);
 
-            string commandLine = string.Join(' ', args);
-            System.Console.WriteLine("CommandLine: {0}", commandLine);
-
             Options options = new Options();
             if (!options.Parse(args))
             {
@@ -1711,11 +1685,13 @@ namespace ShaderCompiler
             }
 
             Compiler compiler = new Compiler(options);
-            compiler.PrintStatus();
-
+ 
             if (!compiler.ValidateCompiler())
             {
-                System.Console.Error.WriteLine("ERROR: No valid shader compiler executable found!");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine("ERROR: No valid shader compiler executable found!");
+                Console.ResetColor();
+
                 return 1;
             }
 

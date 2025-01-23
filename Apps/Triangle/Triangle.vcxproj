@@ -155,26 +155,6 @@
     <Link>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
-    <PreBuildEvent>
-      <Command>setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Debug/net8.0/ShaderCompiler.exe --config $(ProjectDir)Shaders/shaders.cfg --out $(ProjectDir)Data/Shaders/DXIL --platform DXIL --binary --shaderModel 6_5
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Debug/net8.0/ShaderCompiler.exe --config $(ProjectDir)Shaders/shaders.cfg --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -186,26 +166,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-    <PreBuildEvent>
-      <Command>setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config $(ProjectDir)Shaders/shaders.cfg --out $(ProjectDir)Data/Shaders/DXIL --platform DXIL --binary --shaderModel 6_5
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config $(ProjectDir)Shaders/shaders.cfg --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <ClCompile>
@@ -217,26 +177,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
-    <PreBuildEvent>
-      <Command>setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config $(ProjectDir)Shaders/shaders.cfg --out $(ProjectDir)Data/Shaders/DXIL --platform DXIL --binary --shaderModel 6_5
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd
-setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config $(ProjectDir)Shaders/shaders.cfg --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
@@ -251,5 +191,12 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <Error Condition="!Exists('..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets'))" />
     <Error Condition="!Exists('..\..\packages\glfw.3.4.0\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\glfw.3.4.0\build\native\glfw.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+  </Target>
+  <Target Name="LunaBuildShaders" BeforeTargets="PrepareForBuild">
+    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data/Shaders/DXIL --platform DXIL --binary --shaderModel 6_5 --verbose" LogStandardErrorAsError="true" />
+    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2 --verbose" LogStandardErrorAsError="true" />
+  </Target>
+  <Target Name="LunaDeleteShaders" AfterTargets="Clean">
+    <RemoveDir Directories="$(ProjectDir)Data/Shaders" />
   </Target>
 </Project>
