@@ -162,6 +162,13 @@
     <ClCompile Include="Graphics\InputLayout.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="BinaryReader.cpp" />
+    <ClCompile Include="Graphics\Shader.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\Shader12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -409,6 +416,13 @@
     </ClInclude>
     <ClInclude Include="Graphics\InputLayout.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="BinaryReader.h" />
+    <ClInclude Include="Graphics\Shader.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\Shader12.h">
+      <Filter>Graphics\DX12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "PipelineState.h"
+#include "Shader.h"
 
 #include "GraphicsCommon.h"
 
@@ -18,14 +18,29 @@
 namespace Luna
 {
 
-bool GraphicsPSO::Initialize(GraphicsPSODesc& desc)
+bool Shader::Initialize(const ShaderDesc& desc)
 {
-	if (auto device = GetGraphicsDevice())
-	{
-		m_platformData = device->CreateGraphicsPSOData(desc);
-	}
+	return false;
+}
 
-	return m_platformData != nullptr;
+
+const std::byte* Shader::GetByteCode() const
+{
+	if (m_shaderData)
+	{
+		return m_shaderData->GetByteCode();
+	}
+	return nullptr;
+}
+
+
+size_t Shader::GetByteCodeSize() const
+{
+	if (m_shaderData)
+	{
+		return m_shaderData->GetByteCodeSize();
+	}
+	return 0;
 }
 
 } // namespace Luna

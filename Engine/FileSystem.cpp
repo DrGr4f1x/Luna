@@ -119,9 +119,9 @@ void FileSystem::AddSearchPath(const string& searchPathStr, bool appendPath)
 
 	filesystem::path fullSearchPath = m_rootPath / searchPath;
 
+	// Ignore paths that do not exist
 	if (!filesystem::exists(fullSearchPath))
 	{
-		assert_msg(false, "Path %s is not a valid path beneath root.", fullSearchPath.c_str());
 		return;
 	}
 

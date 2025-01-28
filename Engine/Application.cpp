@@ -126,7 +126,11 @@ int Application::ProcessCommandLine(int argc, char* argv[])
 
 
 void Application::Configure()
-{ }
+{ 
+	// Setup file system
+	SetDefaultRootPath();
+	SetDefaultSearchPaths();
+}
 
 
 void Application::Render()
@@ -196,6 +200,35 @@ void Application::Run()
 ColorBuffer& Application::GetColorBuffer() const
 {
 	return m_deviceManager->GetColorBuffer();
+}
+
+
+void Application::SetDefaultRootPath()
+{
+	if (m_fileSystem)
+	{
+		m_fileSystem->SetDefaultRootPath();
+	}
+}
+
+
+void Application::SetDefaultSearchPaths()
+{
+	if (m_fileSystem)
+	{
+		m_fileSystem->AddSearchPath("Data");
+		m_fileSystem->AddSearchPath("Data\\Shaders");
+		m_fileSystem->AddSearchPath("Data\\Shaders\\DXIL");
+		m_fileSystem->AddSearchPath("Data\\Shaders\\SPIRV");
+		m_fileSystem->AddSearchPath("Data\\Shaders\\DXBC");
+		m_fileSystem->AddSearchPath("..\\Data");
+		m_fileSystem->AddSearchPath("..\\Data\\Shaders");
+		m_fileSystem->AddSearchPath("..\\Data\\Shaders\\DXIL");
+		m_fileSystem->AddSearchPath("..\\Data\\Shaders\\SPIRV");
+		m_fileSystem->AddSearchPath("..\\Data\\Shaders\\DXBC");
+		m_fileSystem->AddSearchPath("..\\Data\\Textures");
+		m_fileSystem->AddSearchPath("..\\Data\\Models");
+	}
 }
 
 

@@ -211,6 +211,49 @@ enum class ShaderStage : uint16_t
 template <> struct EnableBitmaskOperators<ShaderStage> { static const bool enable = true; };
 
 
+enum class ShaderType : uint8_t
+{
+	None = 0,
+	Compute,
+	Vertex,
+	Hull,
+	Domain,
+	Geometry,
+	Pixel,
+	Amplification,
+	Mesh,
+	RayGeneration,
+	AnyHit,
+	ClosestHit,
+	Miss,
+	Intersection,
+	Callable
+};
+
+inline ShaderStage ShaderTypeToShaderStage(ShaderType shaderType)
+{
+	switch (shaderType)
+	{
+	case ShaderType::Compute:			return ShaderStage::Compute;
+	case ShaderType::Vertex:			return ShaderStage::Vertex;
+	case ShaderType::Hull:				return ShaderStage::Hull;
+	case ShaderType::Domain:			return ShaderStage::Domain;
+	case ShaderType::Geometry:			return ShaderStage::Geometry;
+	case ShaderType::Pixel:				return ShaderStage::Pixel;
+	case ShaderType::Amplification:		return ShaderStage::Amplification;
+	case ShaderType::Mesh:				return ShaderStage::Mesh;
+	case ShaderType::RayGeneration:		return ShaderStage::RayGeneration;
+	case ShaderType::AnyHit:			return ShaderStage::AnyHit;
+	case ShaderType::ClosestHit:		return ShaderStage::ClosestHit;
+	case ShaderType::Miss:				return ShaderStage::Miss;
+	case ShaderType::Intersection:		return ShaderStage::Intersection;
+	case ShaderType::Callable:			return ShaderStage::Callable;
+
+	default: return ShaderStage::None;
+	}
+}
+
+
 enum class DescriptorType : uint8_t
 {
 	None,
@@ -674,16 +717,23 @@ template <> struct EnableBitmaskOperators<MemoryAccess> { static const bool enab
 enum class NativeObjectType : uint32_t
 {
 	// DX12
-	DX12_Resource	= 0x00010001,
-	DX12_RTV		= 0x00010002,
-	DX12_SRV		= 0x00010003,
-	DX12_UAV		= 0x00010004,
+	DX12_Resource				= 0x00010001,
+	DX12_RTV					= 0x00010002,
+	DX12_SRV					= 0x00010003,
+	DX12_UAV					= 0x00010004,
+	DX12_GpuVirtualAddress		= 0x00010005,
+	DX12_DSV					= 0x00010006,
+	DX12_DSV_ReadOnly			= 0x00010007,
+	DX12_DSV_DepthReadOnly		= 0x00010008,
+	DX12_DSV_StencilReadOnly	= 0x00010009,
+	DX12_SRV_Depth				= 0x0001000A,
+	DX12_SRV_Stencil			= 0x0001000B,
 
 	// Vulkan
-	VK_Image		= 0x00020001,
-	VK_Buffer		= 0x00020002,
-	VK_FrameBuffer	= 0x00020003,
-	VK_RenderPass	= 0x00020004,
+	VK_Image				= 0x00020001,
+	VK_Buffer				= 0x00020002,
+	VK_FrameBuffer			= 0x00020003,
+	VK_RenderPass			= 0x00020004,
 };
 
 } // namespace Luna

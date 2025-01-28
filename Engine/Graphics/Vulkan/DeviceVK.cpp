@@ -12,9 +12,14 @@
 
 #include "DeviceVK.h"
 
+#include "FileSystem.h"
+
+#include "Graphics\Shader.h"
+
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
 #include "GpuBufferVK.h"
+#include "PipelineStateVK.h"
 #include "RootSignatureVK.h"
 
 using namespace std;
@@ -44,6 +49,30 @@ bool QueryOptimalTilingFeature(VkFormatProperties properties, VkFormatFeatureFla
 bool QueryBufferFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags)
 {
 	return (properties.bufferFeatures & flags) != 0;
+}
+
+
+pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
+{
+	auto fileSystem = GetFileSystem();
+
+	string shaderFileWithExtension = shaderFilename;
+	bool exists = false;
+
+	// See if the filename already has an extension
+	string extension = fileSystem->GetFileExtension(shaderFilename);
+	if (!extension.empty())
+	{
+		exists = fileSystem->Exists(shaderFileWithExtension);
+	}
+	else
+	{
+		// Try .spirv extension
+		shaderFileWithExtension = shaderFilename + ".spirv";
+		exists = fileSystem->Exists(shaderFileWithExtension);
+	}
+
+	return make_pair(shaderFileWithExtension, exists);
 }
 
 
@@ -497,6 +526,365 @@ wil::com_ptr<IPlatformData> GraphicsDevice::CreateRootSignatureData(RootSignatur
 	};
 
 	return Make<RootSignatureData>(rootSignatureDescExt);
+}
+
+
+wil::com_ptr<IPlatformData> GraphicsDevice::CreateGraphicsPSOData(GraphicsPSODesc& desc)
+{
+	vector<VkDynamicState> dynamicStates{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+
+	// Blend state
+	VkPipelineColorBlendStateCreateInfo blendStateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0
+	};
+	
+	array<VkPipelineColorBlendAttachmentState, 8> blendAttachments;
+
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		const auto& rt = desc.blendState.renderTargetBlend[i];
+		blendAttachments[i].blendEnable = rt.blendEnable ? VK_TRUE : VK_FALSE;
+		blendAttachments[i].srcColorBlendFactor = BlendToVulkan(rt.srcBlend);
+		blendAttachments[i].dstColorBlendFactor = BlendToVulkan(rt.dstBlend);
+		blendAttachments[i].colorBlendOp = BlendOpToVulkan(rt.blendOp);
+		blendAttachments[i].srcAlphaBlendFactor = BlendToVulkan(rt.srcBlendAlpha);
+		blendAttachments[i].dstAlphaBlendFactor = BlendToVulkan(rt.dstBlendAlpha);
+		blendAttachments[i].alphaBlendOp = BlendOpToVulkan(rt.blendOpAlpha);
+		blendAttachments[i].colorWriteMask = ColorWriteToVulkan(rt.writeMask);
+
+		// First render target with logic op enabled gets to set the state
+		if (rt.logicOpEnable && (VK_FALSE == blendStateInfo.logicOpEnable))
+		{
+			blendStateInfo.logicOpEnable = VK_TRUE;
+			blendStateInfo.logicOp = static_cast<VkLogicOp>(rt.logicOp);
+		}
+	}
+	blendStateInfo.attachmentCount = (uint32_t)desc.rtvFormats.size();
+	blendStateInfo.pAttachments = blendAttachments.data();
+
+	// Multisample state
+	VkPipelineMultisampleStateCreateInfo multisampleInfo{ 
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.rasterizationSamples	= GetSampleCountFlags(desc.msaaCount),
+		.sampleShadingEnable	= VK_FALSE,
+		.minSampleShading		= 0.0f,
+		.pSampleMask			= nullptr,
+		.alphaToCoverageEnable	= desc.blendState.alphaToCoverageEnable ? VK_TRUE : VK_FALSE,
+		.alphaToOneEnable		= VK_FALSE,
+	};
+	
+	// Rasterizer state
+	VkPipelineRasterizationStateCreateInfo rasterizerInfo{ 
+		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+		.pNext						= nullptr,
+		.flags						= 0,
+		.depthClampEnable			= VK_FALSE,
+		.rasterizerDiscardEnable	= VK_FALSE,
+		.polygonMode				= FillModeToVulkan(desc.rasterizerState.fillMode),
+		.cullMode					= CullModeToVulkan(desc.rasterizerState.cullMode),
+		.frontFace					= desc.rasterizerState.frontCounterClockwise ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE,
+		.depthBiasEnable			= (desc.rasterizerState.depthBias != 0 || desc.rasterizerState.slopeScaledDepthBias != 0.0f) ? VK_TRUE : VK_FALSE,
+		.depthBiasConstantFactor	= *reinterpret_cast<const float*>(&desc.rasterizerState.depthBias),
+		.depthBiasSlopeFactor		= desc.rasterizerState.slopeScaledDepthBias,
+		.lineWidth					= 1.0f
+	};
+	
+	// Depth-stencil state
+	// TODO: Use dynamic state for: stencil read/write masks and stencil ref
+	// TODO: Figure out how to handle depth bounds test (for DX12)
+	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.depthTestEnable		= desc.depthStencilState.depthEnable ? VK_TRUE : VK_FALSE,
+		.depthWriteEnable		= (desc.depthStencilState.depthWriteMask == DepthWrite::All) ? VK_TRUE : VK_FALSE,
+		.depthCompareOp			= ComparisonFuncToVulkan(desc.depthStencilState.depthFunc),
+		.depthBoundsTestEnable	= VK_FALSE,
+		.stencilTestEnable		= desc.depthStencilState.stencilEnable ? VK_TRUE : VK_FALSE,
+		.front = {
+			.failOp			= StencilOpToVulkan(desc.depthStencilState.frontFace.stencilFailOp),
+			.passOp			= StencilOpToVulkan(desc.depthStencilState.frontFace.stencilPassOp),
+			.depthFailOp	= StencilOpToVulkan(desc.depthStencilState.frontFace.stencilDepthFailOp),
+			.compareOp		= ComparisonFuncToVulkan(desc.depthStencilState.frontFace.stencilFunc),
+			.compareMask	= desc.depthStencilState.stencilReadMask,
+			.writeMask		= desc.depthStencilState.stencilWriteMask,
+			.reference		= 0
+		},
+		.back = {
+			.failOp			= StencilOpToVulkan(desc.depthStencilState.backFace.stencilFailOp),
+			.passOp			= StencilOpToVulkan(desc.depthStencilState.backFace.stencilPassOp),
+			.depthFailOp	= StencilOpToVulkan(desc.depthStencilState.backFace.stencilDepthFailOp),
+			.compareOp		= ComparisonFuncToVulkan(desc.depthStencilState.backFace.stencilFunc),
+			.compareMask	= desc.depthStencilState.stencilReadMask,
+			.writeMask		= desc.depthStencilState.stencilWriteMask,
+			.reference		= 0
+		},
+		.minDepthBounds			= 0.0f,
+		.maxDepthBounds			= 1.0f
+	};
+	
+	// Primitive topology & primitive restart
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{ 
+		.sType						= VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+		.pNext						= nullptr,
+		.flags						= 0,
+		.topology					= PrimitiveTopologyToVulkan(desc.topology),
+		.primitiveRestartEnable		= (desc.indexBufferStripCut == IndexBufferStripCutValue::Disabled) ? VK_FALSE : VK_TRUE
+	};
+	
+	VkPipelineTessellationStateCreateInfo tessellationInfo { 
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.patchControlPoints		= GetControlPointCount(desc.topology)
+	};
+	
+	// Input layout
+	const uint32_t numStreams = (uint32_t)desc.vertexStreams.size();
+	vector<VkVertexInputBindingDescription> vertexInputBindings(numStreams);
+	for (uint32_t i = 0; i < numStreams; ++i)
+	{
+		vertexInputBindings[i].binding = desc.vertexStreams[i].inputSlot;
+		vertexInputBindings[i].inputRate = InputClassificationToVulkan(desc.vertexStreams[i].inputClassification);
+		vertexInputBindings[i].stride = desc.vertexStreams[i].stride;
+	}
+
+	const uint32_t numAttributes = (uint32_t)desc.vertexElements.size();
+	vector<VkVertexInputAttributeDescription> vertexAttributes(numAttributes);
+	for (uint32_t i = 0; i < numAttributes; ++i)
+	{
+		vertexAttributes[i].binding = desc.vertexElements[i].inputSlot;
+		vertexAttributes[i].location = i;
+		vertexAttributes[i].format = FormatToVulkan(desc.vertexElements[i].format);
+		vertexAttributes[i].offset = desc.vertexElements[i].alignedByteOffset;
+	}
+
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{ 
+		.sType								= VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.pNext								= nullptr,
+		.flags								= 0,
+		.vertexBindingDescriptionCount		= (uint32_t)vertexInputBindings.size(),
+		.pVertexBindingDescriptions			= vertexInputBindings.data(),
+		.vertexAttributeDescriptionCount	= (uint32_t)vertexAttributes.size(),
+		.pVertexAttributeDescriptions		= vertexAttributes.data()
+	};
+	
+	// TODO: Shaders
+	
+
+	return nullptr;
+}
+
+
+ColorBufferHandle GraphicsDevice::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
+{
+	// Create image
+	ImageDesc imageDesc{
+		.name				= colorBufferDesc.name,
+		.width				= colorBufferDesc.width,
+		.height				= colorBufferDesc.height,
+		.arraySizeOrDepth	= colorBufferDesc.arraySizeOrDepth,
+		.format				= colorBufferDesc.format,
+		.numMips			= colorBufferDesc.numMips,
+		.numSamples			= colorBufferDesc.numSamples,
+		.resourceType		= colorBufferDesc.resourceType,
+		.imageUsage			= GpuImageUsage::ColorBuffer,
+		.memoryAccess		= MemoryAccess::GpuReadWrite
+	};
+
+	if (HasFlag(colorBufferDesc.resourceType, ResourceType::Texture3D))
+	{
+		imageDesc.SetNumMips(1);
+		imageDesc.SetDepth(colorBufferDesc.arraySizeOrDepth);
+	}
+	else if (HasAnyFlag(colorBufferDesc.resourceType, ResourceType::Texture2D_Type))
+	{
+		if (HasAnyFlag(colorBufferDesc.resourceType, ResourceType::TextureArray_Type))
+		{
+			imageDesc.SetResourceType(colorBufferDesc.numSamples == 1 ? ResourceType::Texture2D_Array : ResourceType::Texture2DMS_Array);
+			imageDesc.SetArraySize(colorBufferDesc.arraySizeOrDepth);
+		}
+		else
+		{
+			imageDesc.SetResourceType(colorBufferDesc.numSamples == 1 ? ResourceType::Texture2D : ResourceType::Texture2DMS_Array);
+		}
+	}
+
+	auto image = CreateImage(imageDesc);
+
+	// Render target view
+	ImageViewDesc imageViewDesc{
+		.image				= image.get(),
+		.name				= colorBufferDesc.name,
+		.resourceType		= ResourceType::Texture2D,
+		.imageUsage			= GpuImageUsage::RenderTarget,
+		.format				= colorBufferDesc.format,
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= colorBufferDesc.numMips,
+		.baseArraySlice		= 0,
+		.arraySize			= colorBufferDesc.arraySizeOrDepth
+	};
+	auto imageViewRtv = CreateImageView(imageViewDesc);
+
+	// Shader resource view
+	imageViewDesc.SetImageUsage(GpuImageUsage::ShaderResource);
+	auto imageViewSrv = CreateImageView(imageViewDesc);
+
+	// Descriptors
+	VkDescriptorImageInfo imageInfoSrv{
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewSrv,
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
+	};
+	VkDescriptorImageInfo imageInfoUav{
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewSrv,
+		.imageLayout	= GetImageLayout(ResourceState::UnorderedAccess)
+	};
+
+	ColorBufferDescExt colorBufferDescExt{
+		.image			= image.get(),
+		.imageViewRtv	= imageViewRtv.get(),
+		.imageViewSrv	= imageViewSrv.get(),
+		.imageInfoSrv	= imageInfoSrv,
+		.imageInfoUav	= imageInfoUav,
+		.usageState		= ResourceState::Common
+	};
+
+	return Make<ColorBufferVK>(colorBufferDesc, colorBufferDescExt);
+}
+
+
+DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
+{
+	// Create depth image
+	ImageDesc imageDesc{
+		.name				= depthBufferDesc.name,
+		.width				= depthBufferDesc.width,
+		.height				= depthBufferDesc.height,
+		.arraySizeOrDepth	= depthBufferDesc.arraySizeOrDepth,
+		.format				= depthBufferDesc.format,
+		.numMips			= depthBufferDesc.numMips,
+		.numSamples			= depthBufferDesc.numSamples,
+		.resourceType		= depthBufferDesc.resourceType,
+		.imageUsage			= GpuImageUsage::DepthBuffer,
+		.memoryAccess		= MemoryAccess::GpuReadWrite
+	};
+
+	auto image = CreateImage(imageDesc);
+
+	// Create image views and descriptors
+	const bool bHasStencil = IsStencilFormat(depthBufferDesc.format);
+
+	auto imageAspect = ImageAspect::Depth;
+	if (bHasStencil)
+	{
+		imageAspect |= ImageAspect::Stencil;
+	}
+
+	ImageViewDesc imageViewDesc{
+		.image				= image.get(),
+		.name				= depthBufferDesc.name,
+		.resourceType		= ResourceType::Texture2D,
+		.imageUsage			= GpuImageUsage::DepthStencilTarget,
+		.format				= depthBufferDesc.format,
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= depthBufferDesc.numMips,
+		.baseArraySlice		= 0,
+		.arraySize			= depthBufferDesc.arraySizeOrDepth
+	};
+
+	auto imageViewDepthStencil = CreateImageView(imageViewDesc);
+	wil::com_ptr<CVkImageView> imageViewDepthOnly;
+	wil::com_ptr<CVkImageView> imageViewStencilOnly;
+
+	if (bHasStencil)
+	{
+		imageViewDesc
+			.SetName(format("{} Depth Image View", depthBufferDesc.name))
+			.SetImageAspect(ImageAspect::Depth)
+			.SetViewType(TextureSubresourceViewType::DepthOnly);
+
+		imageViewDepthOnly = CreateImageView(imageViewDesc);
+
+		imageViewDesc
+			.SetName(format("{} Stencil Image View", depthBufferDesc.name))
+			.SetImageAspect(ImageAspect::Stencil)
+			.SetViewType(TextureSubresourceViewType::StencilOnly);
+
+		imageViewStencilOnly = CreateImageView(imageViewDesc);
+	}
+	else
+	{
+		imageViewDepthOnly = imageViewDepthStencil;
+		imageViewStencilOnly = imageViewDepthStencil;
+	}
+
+	auto imageInfoDepth = VkDescriptorImageInfo{
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewDepthOnly,
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
+	};
+	auto imageInfoStencil = VkDescriptorImageInfo{
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewStencilOnly,
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
+	};
+
+	DepthBufferDescExt depthBufferDescExt{
+		.image					= image.get(),
+		.imageViewDepthStencil	= imageViewDepthStencil.get(),
+		.imageViewDepthOnly		= imageViewDepthOnly.get(),
+		.imageViewStencilOnly	= imageViewStencilOnly.get(),
+		.imageInfoDepth			= imageInfoDepth,
+		.imageInfoStencil		= imageInfoStencil,
+		.usageState				= ResourceState::DepthRead | ResourceState::DepthWrite
+	};
+
+	return Make<DepthBufferVK>(depthBufferDesc, depthBufferDescExt);
+}
+
+
+GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+{
+	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.pNext	= nullptr,
+		.size	= gpuBufferDesc.elementCount * gpuBufferDesc.elementSize,
+		.usage	= GetBufferUsageFlags(gpuBufferDesc.resourceType) | transferFlags
+	};
+
+	VmaAllocationCreateInfo allocCreateInfo = {};
+	allocCreateInfo.flags = GetMemoryFlags(gpuBufferDesc.memoryAccess);
+	allocCreateInfo.usage = GetMemoryUsage(gpuBufferDesc.memoryAccess);
+
+	VkBuffer vkBuffer{ VK_NULL_HANDLE };
+	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
+
+	auto res = vmaCreateBuffer(*m_vmaAllocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+	assert(res == VK_SUCCESS);
+
+	SetDebugName(*m_vkDevice, vkBuffer, gpuBufferDesc.name);
+
+	auto buffer = Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), vkBuffer, vmaBufferAllocation);
+
+	GpuBufferDescExt gpuBufferDescExt{
+		.buffer = buffer.get(),
+		.bufferInfo = {
+			.buffer = vkBuffer,
+			.offset = 0,
+			.range = VK_WHOLE_SIZE
+		}
+	};
+	return Make<GpuBufferVK>(gpuBufferDesc, gpuBufferDescExt);
 }
 
 

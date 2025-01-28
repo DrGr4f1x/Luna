@@ -27,7 +27,44 @@ GpuBufferData::GpuBufferData(const GpuBufferDesc& desc, const GpuBufferDescExt& 
 	, m_bufferSize{ desc.elementCount * desc.elementSize }
 	, m_elementCount{ desc.elementCount }
 	, m_elementSize{ desc.elementSize }
-	, m_gpuAddress{ descExt.gpuAddress }
 {}
+
+
+GpuBuffer12::GpuBuffer12(const GpuBufferDesc& gpuBufferDesc, const GpuBufferDescExt& gpuBufferDescExt)
+	: m_name{ gpuBufferDesc.name }
+	, m_resourceType{ gpuBufferDesc.resourceType }
+	, m_usageState{ gpuBufferDescExt.usageState }
+	, m_elementCount{ gpuBufferDesc.elementCount }
+	, m_elementSize{ gpuBufferDesc.elementSize }
+	, m_resource{ gpuBufferDescExt.resource }
+	, m_allocation{ gpuBufferDescExt.allocation }
+	, m_srvHandle{ gpuBufferDescExt.srvHandle }
+	, m_uavHandle{ gpuBufferDescExt.uavHandle }
+{}
+
+
+NativeObjectPtr GpuBuffer12::GetNativeObject(NativeObjectType type, uint32_t index) const noexcept
+{
+	using enum NativeObjectType;
+
+	switch (type)
+	{
+	case DX12_Resource:
+		return NativeObjectPtr(m_resource.get());
+
+	case DX12_SRV:
+		return NativeObjectPtr(m_srvHandle.ptr);
+
+	case DX12_UAV:
+		return NativeObjectPtr(m_uavHandle.ptr);
+
+	case DX12_GpuVirtualAddress:
+		return NativeObjectPtr(m_resource->GetGPUVirtualAddress());
+
+	default:
+		assert(false);
+		return nullptr;
+	}
+}
 
 } // namespace Luna::DX12

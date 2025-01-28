@@ -281,7 +281,7 @@ class RootSignature
 public:
 	bool Initialize(RootSignatureDesc& desc);
 
-	IPlatformData* GetPlatformData() noexcept { return m_platformData.get(); }
+	IPlatformData* GetPlatformData() const noexcept { return m_platformData.get(); }
 
 private:
 	wil::com_ptr<IPlatformData> m_platformData;

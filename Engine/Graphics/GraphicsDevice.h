@@ -10,6 +10,11 @@
 
 #pragma once
 
+#include "Graphics\ColorBuffer.h"
+#include "Graphics\DepthBuffer.h"
+#include "Graphics\GpuBuffer.h"
+
+
 namespace Luna
 {
 
@@ -17,8 +22,12 @@ namespace Luna
 struct ColorBufferDesc;
 struct DepthBufferDesc;
 struct GpuBufferDesc;
+struct GraphicsPSODesc;
 struct RootSignatureDesc;
+struct ShaderDesc;
+class IColorBuffer;
 class IPlatformData;
+class IShaderData;
 enum class ResourceState : uint32_t;
 
 
@@ -31,6 +40,11 @@ public:
 	virtual wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) = 0;
 	virtual wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) = 0;
 	virtual wil::com_ptr<IPlatformData> CreateRootSignatureData(RootSignatureDesc& desc) = 0;
+	virtual wil::com_ptr<IPlatformData> CreateGraphicsPSOData(GraphicsPSODesc& desc) = 0;
+
+	virtual ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
+	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
+	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 };
 
 } // namespace Luna

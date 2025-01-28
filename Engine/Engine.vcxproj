@@ -22,6 +22,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="BinaryReader.cpp" />
     <ClCompile Include="Core\Color.cpp" />
     <ClCompile Include="Core\FlagStringMap.cpp" />
     <ClCompile Include="Core\Hash.cpp" />
@@ -49,6 +50,7 @@
     <ClCompile Include="Graphics\DX12\GpuBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
+    <ClCompile Include="Graphics\DX12\Shader12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GpuBuffer.cpp" />
     <ClCompile Include="Graphics\GpuResource.cpp" />
@@ -57,6 +59,7 @@
     <ClCompile Include="Graphics\PipelineState.cpp" />
     <ClCompile Include="Graphics\PixelBuffer.cpp" />
     <ClCompile Include="Graphics\RootSignature.cpp" />
+    <ClCompile Include="Graphics\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
@@ -85,6 +88,7 @@
   <ItemGroup>
     <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
     <ClInclude Include="Application.h" />
+    <ClInclude Include="BinaryReader.h" />
     <ClInclude Include="Core\BitmaskEnum.h" />
     <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\Containers.h" />
@@ -133,6 +137,7 @@
     <ClInclude Include="Graphics\DX12\GpuResource12.h" />
     <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
+    <ClInclude Include="Graphics\DX12\Shader12.h" />
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
     <ClInclude Include="Graphics\Formats.h" />
@@ -145,6 +150,7 @@
     <ClInclude Include="Graphics\PixelBuffer.h" />
     <ClInclude Include="Graphics\PlatformData.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
+    <ClInclude Include="Graphics\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />

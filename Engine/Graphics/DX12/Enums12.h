@@ -40,6 +40,8 @@ D3D12_PRIMITIVE_TOPOLOGY PrimitiveTopologyToDX12(PrimitiveTopology primitiveTopo
 
 D3D12_PRIMITIVE_TOPOLOGY_TYPE PrimitiveTopologyToPrimitiveTopologyTypeDX12(PrimitiveTopology primitiveTopology);
 
+D3D12_INPUT_CLASSIFICATION InputClassificationToDX12(InputClassification inputClassification);
+
 D3D12_SHADER_VISIBILITY ShaderStageToDX12(ShaderStage shaderStage);
 
 D3D12_DESCRIPTOR_RANGE_TYPE DescriptorTypeToDX12(DescriptorType descriptorType);

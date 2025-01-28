@@ -493,6 +493,64 @@ wil::com_ptr<IPlatformData> DeviceManager::CreateColorBufferFromSwapChain(ColorB
 }
 
 
+ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIndex)
+{
+	const string name = format("Primary Swapchain Image {}", imageIndex);
+
+	// Swapchain image
+	ColorBufferDesc colorBufferDesc{
+		.name				= name,
+		.resourceType		= ResourceType::Texture2D,
+		.width				= m_desc.backBufferWidth,
+		.height				= m_desc.backBufferHeight,
+		.arraySizeOrDepth	= 1,
+		.numSamples			= 1,
+		.format				= m_desc.swapChainFormat
+	};
+
+	auto image = Create<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
+	SetDebugName(*m_vkDevice, image->Get(), name);
+
+	// RTV view
+	ImageViewDesc imageViewDesc{
+		.image				= image.get(),
+		.name				= format("Primary Swapchain {} RTV Image View", imageIndex),
+		.resourceType		= ResourceType::Texture2D,
+		.imageUsage			= GpuImageUsage::RenderTarget,
+		.format				= m_desc.swapChainFormat,
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= 1,
+		.baseArraySlice		= 0,
+		.arraySize			= 1
+	};
+
+	auto imageViewRtv = m_device->CreateImageView(imageViewDesc);
+
+	// SRV view
+	imageViewDesc
+		.SetImageUsage(GpuImageUsage::ShaderResource)
+		.SetName(format("Primary SwapChain {} SRV Image View", imageIndex));
+
+	auto imageViewSrv = m_device->CreateImageView(imageViewDesc);
+
+	// Descriptors
+	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
+	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
+
+	ColorBufferDescExt colorBufferDescExt{
+		.image			= image.get(),
+		.imageViewRtv	= imageViewRtv.get(),
+		.imageViewSrv	= imageViewSrv.get(),
+		.imageInfoSrv	= imageInfoSrv,
+		.imageInfoUav	= imageInfoUav,
+		.usageState		= ResourceState::Undefined
+	};
+
+	return Make<ColorBufferVK>(colorBufferDesc, colorBufferDescExt);
+}
+
+
 ColorBuffer& DeviceManager::GetColorBuffer()
 {
 	return m_swapChainBuffers[m_swapChainIndex];

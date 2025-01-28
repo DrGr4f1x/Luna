@@ -144,6 +144,11 @@ public:
 	wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateRootSignatureData(RootSignatureDesc& desc) final;
+	wil::com_ptr<IPlatformData> CreateGraphicsPSOData(GraphicsPSODesc& desc) final;
+
+	ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
+	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
+	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
 	void CreateResources();
 

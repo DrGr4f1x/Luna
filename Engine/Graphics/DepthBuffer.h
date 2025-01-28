@@ -60,4 +60,14 @@ private:
 	bool m_bIsInitialized{ false };
 };
 
+
+class __declspec(uuid("6F7CB4D1-353E-4F29-A9EB-31A662587331")) IDepthBuffer : public IPixelBuffer
+{
+public:
+	virtual float GetClearDepth() const noexcept = 0;
+	virtual uint8_t GetClearStencil() const noexcept = 0;
+};
+
+using DepthBufferHandle = wil::com_ptr<IDepthBuffer>;
+
 } // namespace Luna

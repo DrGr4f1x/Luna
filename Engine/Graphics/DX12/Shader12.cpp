@@ -10,14 +10,14 @@
 
 #include "Stdafx.h"
 
-#include "PipelineState12.h"
-
+#include "Shader12.h"
 
 namespace Luna::DX12
 {
 
-GraphicsPSOData::GraphicsPSOData(const GraphicsPSODescExt& descExt)
-	: m_pipelineState{ descExt.pipelineState }
+ShaderData::ShaderData(ShaderDescExt& descExt)
+	: m_byteCode{ std::move(descExt.byteCode) }
+	, m_byteCodeSize{ descExt.byteCodeSize }
 {}
 
 } // namespace Luna::DX12

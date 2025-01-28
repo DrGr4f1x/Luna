@@ -50,6 +50,7 @@ public:
 	void FreeContext(CommandContext* usedContext) final;
 
 	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
+	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex);
 
 	ColorBuffer& GetColorBuffer() final;
 

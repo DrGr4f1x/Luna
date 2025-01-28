@@ -143,4 +143,16 @@ public:
 	{}
 };
 
+
+class __declspec(uuid("0647BE9E-5C85-49E3-B4D1-0DBAB5ED1C06")) IGpuBuffer : public IGpuResource
+{
+public:
+	virtual size_t GetSize() const noexcept = 0;
+	virtual size_t GetElementCount() const noexcept = 0;
+	virtual size_t GetElementSize() const noexcept = 0;
+};
+
+using GpuBufferHandle = wil::com_ptr<IGpuBuffer>;
+
+
 } // namespace Luna

@@ -85,6 +85,10 @@ public:
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 protected:
+	// Filesystem default configuration
+	void SetDefaultRootPath();
+	void SetDefaultSearchPaths();
+
 	virtual void CreateDeviceDependentResources() {}
 	virtual void CreateWindowSizeDependentResources() {}
 

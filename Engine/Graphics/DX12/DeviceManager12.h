@@ -21,7 +21,6 @@ namespace Luna::DX12
 {
 
 // Forward declarations
-struct ContextState;
 struct DeviceCaps;
 class GraphicsDevice;
 class Queue;
@@ -40,7 +39,6 @@ class __declspec(uuid("2B2F2AAF-4D90-45F4-8BF8-9D8136AB6FC8")) DeviceManager
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
 	, public NonCopyable
 {
-	friend struct ContextState;
 	friend class CommandContext12;
 
 public:
@@ -62,6 +60,7 @@ public:
 	void FreeContext(CommandContext* usedContext) final;
 
 	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
+	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex);
 
 	ColorBuffer& GetColorBuffer() final;
 
@@ -103,6 +102,7 @@ private:
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
 	std::vector<ColorBuffer> m_swapChainBuffers;
+	std::vector<ColorBufferHandle> m_swapChainBuffers2;
 	wil::com_ptr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
 

@@ -339,6 +339,19 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE PrimitiveTopologyToPrimitiveTopologyTypeDX12(Primi
 }
 
 
+D3D12_INPUT_CLASSIFICATION InputClassificationToDX12(InputClassification inputClassification)
+{
+	switch (inputClassification)
+	{
+	case InputClassification::PerInstanceData:
+		return D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+
+	default:
+		return D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+	}
+}
+
+
 D3D12_SHADER_VISIBILITY ShaderStageToDX12(ShaderStage shaderStage)
 {
 	using enum ShaderStage;

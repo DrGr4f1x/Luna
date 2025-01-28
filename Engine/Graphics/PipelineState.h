@@ -12,6 +12,9 @@
 
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
+#include "Graphics\InputLayout.h"
+#include "Graphics\PlatformData.h"
+#include "Graphics\RootSignature.h"
 
 
 namespace Luna
@@ -66,7 +69,7 @@ struct RasterizerStateDesc
 	bool frontCounterClockwise{ false };
 	int depthBias{ 0 };
 	float slopeScaledDepthBias{ 0.0f };
-	float depthClampBias{ 0.0f };
+	float depthBiasClamp{ 0.0f };
 	bool depthClipEnable{ true };
 	bool multisampleEnable{ false };
 	bool antialiasedLineEnable{ false };
@@ -78,7 +81,7 @@ struct RasterizerStateDesc
 	constexpr RasterizerStateDesc& SetFrontCounterClockwise(bool value) noexcept { frontCounterClockwise = value; return *this; }
 	constexpr RasterizerStateDesc& SetDepthBias(int value) noexcept { depthBias = value; return *this; }
 	constexpr RasterizerStateDesc& SetSlopeScaledDepthBias(float value) noexcept { slopeScaledDepthBias = value; return *this; }
-	constexpr RasterizerStateDesc& SetDepthClampBias(float value) noexcept { depthClampBias = value; return *this; }
+	constexpr RasterizerStateDesc& SetDepthBiasClamp(float value) noexcept { depthBiasClamp = value; return *this; }
 	constexpr RasterizerStateDesc& SetDepthClipEnable(bool value) noexcept { depthClipEnable = value; return *this; }
 	constexpr RasterizerStateDesc& SetMultisampleEnable(bool value) noexcept { multisampleEnable = value; return *this; }
 	constexpr RasterizerStateDesc& SetAntialiasedLineEnable(bool value) noexcept { antialiasedLineEnable = value; return *this; }
@@ -120,6 +123,66 @@ struct DepthStencilStateDesc
 	constexpr DepthStencilStateDesc& SetStencilWriteMask(uint8_t value) noexcept { stencilWriteMask = value; return *this; }
 	DepthStencilStateDesc& SetFrontFace(StencilOpDesc value) noexcept { frontFace = value; return *this; }
 	DepthStencilStateDesc& SetBackFace(StencilOpDesc value) noexcept { backFace = value; return *this; }
+};
+
+
+struct GraphicsPSODesc
+{
+	std::string name;
+
+	BlendStateDesc blendState;
+	DepthStencilStateDesc depthStencilState;
+	RasterizerStateDesc rasterizerState;
+
+	uint32_t sampleMask{ 0xFFFFFFFF };
+	std::vector<Format> rtvFormats;
+	Format dsvFormat;
+	uint32_t msaaCount;
+	bool sampleRateShading{ false };
+
+	PrimitiveTopology topology;
+	IndexBufferStripCutValue indexBufferStripCut{ IndexBufferStripCutValue::Disabled };
+
+	std::string vertexShader;
+	std::string pixelShader;
+	std::string geometryShader;
+	std::string hullShader;
+	std::string domainShader;
+
+	std::vector<VertexStreamDesc> vertexStreams;
+	std::vector<VertexElementDesc> vertexElements;
+
+	RootSignature rootSignature;
+
+	GraphicsPSODesc& SetName(const std::string& value) { name = value; return *this; }
+	GraphicsPSODesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
+	GraphicsPSODesc& SetDepthStencilState(const DepthStencilStateDesc& value) noexcept { depthStencilState = value; return *this; }
+	GraphicsPSODesc& SetRasterizerState(const RasterizerStateDesc& value) noexcept { rasterizerState = value; return *this; }
+	constexpr GraphicsPSODesc& SetSampleMask(uint32_t value) noexcept { sampleMask = value; return *this; }
+	GraphicsPSODesc& SetRtvFormats(const std::vector<Format>& value) { rtvFormats = value; return *this; }
+	constexpr GraphicsPSODesc& SetDsvFormat(Format value) noexcept { dsvFormat = value; return *this; }
+	constexpr GraphicsPSODesc& SetMsaaCount(uint32_t value) noexcept { msaaCount = value; return *this; }
+	constexpr GraphicsPSODesc& SetSampleRateShading(bool value) noexcept { sampleRateShading = value; return *this; }
+	constexpr GraphicsPSODesc& SetTopology(PrimitiveTopology value) noexcept { topology = value; return *this; }
+	constexpr GraphicsPSODesc& SetIndexBufferStripCut(IndexBufferStripCutValue value) noexcept { indexBufferStripCut = value; return *this; }
+	GraphicsPSODesc& SetVertexShader(const std::string& value) { vertexShader = value; return *this; }
+	GraphicsPSODesc& SetPixelShader(const std::string& value) { pixelShader = value; return *this; }
+	GraphicsPSODesc& SetGeometryShader(const std::string& value) { geometryShader = value; return *this; }
+	GraphicsPSODesc& SetHullShader(const std::string& value) { hullShader = value; return *this; }
+	GraphicsPSODesc& SetDomainShader(const std::string& value) { domainShader = value; return *this; }
+	GraphicsPSODesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
+	GraphicsPSODesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
+	GraphicsPSODesc& SetRootSignature(const RootSignature& value) { rootSignature = value; return *this; }
+};
+
+
+class GraphicsPSO
+{
+public:
+	bool Initialize(GraphicsPSODesc& desc);
+
+private:
+	wil::com_ptr<IPlatformData> m_platformData;
 };
 
 } // namespace

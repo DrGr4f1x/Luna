@@ -48,4 +48,21 @@ protected:
 	Format m_format;
 };
 
+
+class __declspec(uuid("1E794589-C1F0-40DE-9CFE-45696525E863")) IPixelBuffer : public IGpuResource
+{
+public:
+	virtual uint64_t GetWidth() const noexcept = 0;
+	virtual uint32_t GetHeight() const noexcept = 0;
+	virtual uint32_t GetDepth() const noexcept = 0;
+	virtual uint32_t GetArraySize() const noexcept = 0;
+	virtual uint32_t GetNumMips() const noexcept = 0;
+	virtual uint32_t GetNumSamples() const noexcept = 0;
+	virtual uint32_t GetPlaneCount() const noexcept = 0;
+	virtual Format GetFormat() const noexcept = 0;
+	virtual TextureDimension GetDimension() const noexcept = 0;
+};
+
+using PixelBufferHandle = wil::com_ptr<IPixelBuffer>;
+
 } // namespace Luna

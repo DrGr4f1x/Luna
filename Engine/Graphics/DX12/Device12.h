@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\GraphicsDevice.h"
+#include "Graphics\Shader.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 using namespace Microsoft::WRL;
@@ -109,6 +110,11 @@ public:
 	wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) final;
 	wil::com_ptr<IPlatformData> CreateRootSignatureData(RootSignatureDesc& desc) final;
+	wil::com_ptr<IPlatformData> CreateGraphicsPSOData(GraphicsPSODesc& desc) final;
+
+	ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
+	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
+	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
 	void CreateResources();
 
@@ -120,7 +126,7 @@ private:
 	void ReadCaps();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
-	wil::com_ptr<D3D12MA::Allocation> CreateGpuBuffer(GpuBufferDesc& desc, ResourceState& initialState);
+	wil::com_ptr<D3D12MA::Allocation> CreateGpuBuffer(const GpuBufferDesc& desc, ResourceState& initialState);
 	wil::com_ptr<D3D12MA::Allocation> CreateStagingBuffer(const void* initialData, size_t numBytes) const;
 
 	// Texture formats
@@ -149,6 +155,14 @@ private:
 	// Root signatures
 	std::mutex m_rootSignatureMutex;
 	std::map<size_t, wil::com_ptr<ID3D12RootSignature>> m_rootSignatureHashMap;
+
+	// Pipeline states
+	std::mutex m_pipelineStateMutex;
+	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
+
+	// Shaders
+	std::mutex m_shaderMutex;
+	std::map<size_t, wil::com_ptr<IShaderData>> m_shaderMap;
 };
 
 } // namespace Luna::DX12

@@ -63,4 +63,14 @@ protected:
 	bool m_bIsInitialized{ false };
 };
 
+
+class __declspec(uuid("DA01EF5A-F28E-4B50-83DD-98D93211CEF2")) IColorBuffer : public IPixelBuffer
+{
+public:
+	virtual Color GetClearColor() const noexcept = 0;
+	virtual void SetClearColor(Color clearColor) noexcept = 0;
+};
+
+using ColorBufferHandle = wil::com_ptr<IColorBuffer>;
+
 } // namespace Luna
