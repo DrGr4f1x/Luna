@@ -45,13 +45,13 @@ private:
 	};
 
 	// Vertex buffer and attributes
-	Luna::VertexBuffer m_vertexBuffer;
+	Luna::GpuBufferHandle m_vertexBuffer;
 
 	// Index buffer
-	Luna::IndexBuffer m_indexBuffer;
+	Luna::GpuBufferHandle m_indexBuffer;
 
 	// Uniform buffer block object
-	Luna::ConstantBuffer m_constantBuffer;
+	Luna::GpuBufferHandle m_constantBuffer;
 
 	// Vertex shader constants
 	struct

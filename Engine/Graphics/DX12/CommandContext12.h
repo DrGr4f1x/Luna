@@ -43,26 +43,21 @@ public:
 	void BeginFrame() override {}
 	uint64_t Finish(bool bWaitForCompletion) override;
 
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
-	void InsertUAVBarrier(DepthBuffer& depthBuffer, bool bFlushImmediate);
+	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate) override;
+	void InsertUAVBarrier(IGpuResource* colorBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	// Graphics context
-	void ClearColor(ColorBuffer& colorBuffer) override;
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
-	void ClearDepth(DepthBuffer& depthBuffer) override;
-	void ClearStencil(DepthBuffer& depthBuffer) override;
-	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
+	void ClearDepth(IDepthBuffer* depthBuffer) override;
+	void ClearStencil(IDepthBuffer* depthBuffer) override;
+	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
 protected:
-	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
 private:
-	void TransitionResource_Internal(GpuResource& gpuResource, ResourceState newState, bool bFlushImmediate);
-	void InsertUAVBarrier_Internal(GpuResource& gpuResource, bool bFlushImmediate);
 	void BindDescriptorHeaps();
 
 private:

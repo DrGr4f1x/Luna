@@ -20,12 +20,7 @@ namespace Luna
 
 bool GraphicsPSO::Initialize(GraphicsPSODesc& desc)
 {
-	if (auto device = GetGraphicsDevice())
-	{
-		m_platformData = device->CreateGraphicsPSOData(desc);
-	}
-
-	return m_platformData != nullptr;
+	return false;
 }
 
 } // namespace Luna

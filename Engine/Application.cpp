@@ -135,18 +135,15 @@ void Application::Configure()
 
 void Application::Render()
 {
-	//if (m_appInfo.api == GraphicsApi::D3D12)
-	{
-		auto& context = GraphicsContext::Begin("Frame");
+	auto& context = GraphicsContext::Begin("Frame");
 
-		context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-		context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
 
-		// Rendering code goes here
+	// Rendering code goes here
 
-		context.TransitionResource(GetColorBuffer(), ResourceState::Present);
-		context.Finish();
-	}
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.Finish();
 }
 
 
@@ -197,7 +194,7 @@ void Application::Run()
 }
 
 
-ColorBuffer& Application::GetColorBuffer() const
+IColorBuffer* Application::GetColorBuffer() const
 {
 	return m_deviceManager->GetColorBuffer();
 }

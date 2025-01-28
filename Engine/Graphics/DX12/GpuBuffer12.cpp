@@ -18,18 +18,6 @@
 namespace Luna::DX12
 {
 
-GpuBufferData::GpuBufferData(const GpuBufferDesc& desc, const GpuBufferDescExt& descExt)
-	: m_resource{ descExt.resource }
-	, m_allocation{ descExt.allocation }
-	, m_srvHandle{ descExt.srvHandle }
-	, m_uavHandle{ descExt.uavHandle }
-	, m_format{ desc.format }
-	, m_bufferSize{ desc.elementCount * desc.elementSize }
-	, m_elementCount{ desc.elementCount }
-	, m_elementSize{ desc.elementSize }
-{}
-
-
 GpuBuffer12::GpuBuffer12(const GpuBufferDesc& gpuBufferDesc, const GpuBufferDescExt& gpuBufferDescExt)
 	: m_name{ gpuBufferDesc.name }
 	, m_resourceType{ gpuBufferDesc.resourceType }

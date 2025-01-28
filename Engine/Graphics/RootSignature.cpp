@@ -12,8 +12,6 @@
 
 #include "RootSignature.h"
 
-#include "GraphicsCommon.h"
-
 
 namespace Luna
 {

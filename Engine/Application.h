@@ -23,7 +23,7 @@ namespace Luna
 
 // Forward declarations
 class FileSystem;
-class ColorBuffer;
+class IColorBuffer;
 class InputSystem;
 class LogSystem;
 enum class GraphicsApi;
@@ -80,7 +80,7 @@ public:
 
 	void Run();
 
-	ColorBuffer& GetColorBuffer() const;
+	IColorBuffer* GetColorBuffer() const;
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 

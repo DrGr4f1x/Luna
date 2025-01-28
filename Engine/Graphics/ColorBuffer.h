@@ -47,23 +47,6 @@ struct ColorBufferDesc
 };
 
 
-class ColorBuffer : public PixelBuffer
-{
-public:
-	Color GetClearColor() const noexcept { return m_clearColor; }
-	void SetClearColor(Color clearColor) noexcept { m_clearColor = clearColor; }
-
-	bool Initialize(ColorBufferDesc& desc);
-	bool InitializeFromSwapchain(uint32_t imageIndex);
-	bool IsInitialized() const noexcept { return m_bIsInitialized; }
-	void Reset();
-
-protected:
-	Color m_clearColor{ DirectX::Colors::Black };
-	bool m_bIsInitialized{ false };
-};
-
-
 class __declspec(uuid("DA01EF5A-F28E-4B50-83DD-98D93211CEF2")) IColorBuffer : public IPixelBuffer
 {
 public:

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Graphics\ColorBuffer.h"
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 
@@ -18,10 +19,7 @@ namespace Luna
 {
 
 // Forward declarations
-struct ColorBufferDesc;
-class ColorBuffer;
 class CommandContext;
-class IPlatformData;
 
 
 struct DeviceManagerDesc
@@ -102,9 +100,9 @@ public:
 	virtual CommandContext* AllocateContext(CommandListType commandListType) = 0;
 	virtual void FreeContext(CommandContext* usedContext) = 0;
 
-	virtual wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) = 0;
+	virtual ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex) = 0;
 
-	virtual ColorBuffer& GetColorBuffer() = 0;
+	virtual IColorBuffer* GetColorBuffer() = 0;
 };
 
 } // namespace Luna

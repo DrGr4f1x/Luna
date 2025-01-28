@@ -22,34 +22,6 @@ enum class ResourceState : uint32_t;
 enum class ResourceType : uint32_t;
 
 
-class GpuResource
-{
-public:
-	GpuResource() noexcept;
-	virtual ~GpuResource() = default;
-
-	const std::string& GetName() const { return m_name; }
-
-	IPlatformData* GetPlatformData() const noexcept { return m_platformData.get(); }
-
-	ResourceState GetUsageState() const noexcept;
-	void SetUsageState(ResourceState usageState) noexcept;
-	ResourceState GetTransitioningState() const noexcept;
-	void SetTransitioningState(ResourceState transitioningState) noexcept;
-	ResourceType GetResourceType() const noexcept;
-
-	void Reset() noexcept;
-
-protected:
-	std::string m_name;
-
-	wil::com_ptr<IPlatformData> m_platformData;
-	ResourceState m_usageState;
-	ResourceState m_transitioningState;
-	ResourceType m_resourceType;
-};
-
-
 class __declspec(uuid("D1269B10-4D09-4FDD-AB9B-1FDC9EE928E0")) IGpuResource : public IUnknown
 {
 public:

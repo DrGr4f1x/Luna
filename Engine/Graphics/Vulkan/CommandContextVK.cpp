@@ -25,25 +25,6 @@ using namespace std;
 namespace Luna::VK
 {
 
-template <class T>
-inline VkImage GetImage(const T& obj)
-{
-	const auto platformData = obj.GetPlatformData();
-	wil::com_ptr<IGpuImageData> gpuImageData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuImageData)));
-	return gpuImageData->GetImage();
-}
-
-
-inline VkBuffer GetBuffer(const GpuBuffer& gpuBuffer)
-{
-	const auto platformData = gpuBuffer.GetPlatformData();
-	wil::com_ptr<IGpuBufferData> gpuBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuBufferData)));
-	return gpuBufferData->GetBuffer();
-}
-
-
 void CommandContextVK::BeginEvent(const string& label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
@@ -152,85 +133,68 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
 {
-	auto barrier = TextureBarrier{
-		.image				= GetImage(colorBuffer),
-		.format				= FormatToVulkan(colorBuffer.GetFormat()),
-		.imageAspect		= GetImageAspect(colorBuffer.GetFormat()),
-		.beforeState		= colorBuffer.GetUsageState(),
-		.afterState			= newState,
-		.numMips			= colorBuffer.GetNumMips(),
-		.mipLevel			= 0,
-		.arraySizeOrDepth	= colorBuffer.GetArraySize(),
-		.arraySlice			= 0,
-		.bWholeTexture		= true
-	};
+	auto resourceType = gpuResource->GetResourceType();
+	
+	bool didInsertBarrier = false;
 
-	m_textureBarriers.push_back(barrier);
-
-	// TODO: we should probably do this after the barriers are flushed
-	colorBuffer.SetUsageState(newState);
-
-	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	if (IsTextureResource(resourceType))
 	{
-		FlushResourceBarriers();
+		PixelBufferHandle pixelBuffer;
+		gpuResource->QueryInterface(IID_PPV_ARGS(&pixelBuffer));
+		assert(pixelBuffer);
+
+		TextureBarrier barrier{
+			.image				= gpuResource->GetNativeObject(NativeObjectType::VK_Image),
+			.format				= FormatToVulkan(pixelBuffer->GetFormat()),
+			.imageAspect		= GetImageAspect(pixelBuffer->GetFormat()),
+			.beforeState		= gpuResource->GetUsageState(),
+			.afterState			= newState,
+			.numMips			= pixelBuffer->GetNumMips(),
+			.mipLevel			= 0,
+			.arraySizeOrDepth	= pixelBuffer->GetArraySize(),
+			.arraySlice			= 0,
+			.bWholeTexture		= true
+		};
+
+		m_textureBarriers.push_back(barrier);
+
+		didInsertBarrier = true;
+	}
+	else if (IsBufferResource(resourceType))
+	{
+		GpuBufferHandle gpuBuffer;
+		gpuResource->QueryInterface(IID_PPV_ARGS(&gpuBuffer));
+		assert(gpuBuffer);
+
+		BufferBarrier barrier{
+			.buffer			= gpuResource->GetNativeObject(NativeObjectType::VK_Buffer),
+			.beforeState	= gpuResource->GetUsageState(),
+			.afterState		= newState,
+			.size			= gpuBuffer->GetSize()
+		};
+
+		m_bufferBarriers.push_back(barrier);
+	}
+	
+	if (didInsertBarrier)
+	{
+		gpuResource->SetUsageState(newState);
+
+		if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+		{
+			FlushResourceBarriers();
+		}
 	}
 }
 
 
-void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate)
 {
-	auto barrier = TextureBarrier{
-		.image				= GetImage(depthBuffer),
-		.format				= FormatToVulkan(depthBuffer.GetFormat()),
-		.imageAspect		= GetImageAspect(depthBuffer.GetFormat()),
-		.beforeState		= depthBuffer.GetUsageState(),
-		.afterState			= newState,
-		.numMips			= depthBuffer.GetNumMips(),
-		.mipLevel			= 0,
-		.arraySizeOrDepth	= depthBuffer.GetArraySize(),
-		.arraySlice			= 0,
-		.bWholeTexture		= true
-	};
+	assert_msg(HasFlag(gpuResource->GetUsageState(), ResourceState::UnorderedAccess), "Resource must be in UnorderedAccess state to insert a UAV barrier");
 
-	m_textureBarriers.push_back(barrier);
-
-	// TODO: we should probably do this after the barriers are flushed
-	depthBuffer.SetUsageState(newState);
-
-	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
-	{
-		FlushResourceBarriers();
-	}
-}
-
-
-void CommandContextVK::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
-{
-	auto barrier = BufferBarrier{
-		.buffer = GetBuffer(gpuBuffer),
-		.beforeState = gpuBuffer.GetUsageState(),
-		.afterState = newState,
-		.size = gpuBuffer.GetSize()
-	};
-
-	m_bufferBarriers.push_back(barrier);
-
-	gpuBuffer.SetUsageState(newState);
-
-	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
-	{
-		FlushResourceBarriers();
-	}
-}
-
-
-void CommandContextVK::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
-{
-	assert_msg(HasFlag(colorBuffer.GetUsageState(), ResourceState::UnorderedAccess), "Resource must be in UnorderedAccess state to insert a UAV barrier");
-
-	TransitionResource(colorBuffer, colorBuffer.GetUsageState(), bFlushImmediate);
+	TransitionResource(gpuResource, gpuResource->GetUsageState(), bFlushImmediate);
 }
 
 
@@ -295,15 +259,15 @@ void CommandContextVK::FlushResourceBarriers()
 }
 
 
-void CommandContextVK::ClearColor(ColorBuffer& colorBuffer)
+void CommandContextVK::ClearColor(IColorBuffer* colorBuffer)
 {
-	ClearColor(colorBuffer, colorBuffer.GetClearColor());
+	ClearColor(colorBuffer, colorBuffer->GetClearColor());
 }
 
 
-void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
+void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
-	ResourceState oldState = colorBuffer.GetUsageState();
+	ResourceState oldState = colorBuffer->GetUsageState();
 
 	TransitionResource(colorBuffer, ResourceState::CopyDest, false);
 
@@ -316,64 +280,64 @@ void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 	VkImageSubresourceRange range{
 		.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
 		.baseMipLevel		= 0,
-		.levelCount			= colorBuffer.GetNumMips(),
+		.levelCount			= colorBuffer->GetNumMips(),
 		.baseArrayLayer		= 0,
-		.layerCount			= colorBuffer.GetArraySize()
+		.layerCount			= colorBuffer->GetArraySize()
 	};
 
 	FlushResourceBarriers();
 
-	vkCmdClearColorImage(m_commandBuffer, GetImage(colorBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
+	vkCmdClearColorImage(m_commandBuffer, colorBuffer->GetNativeObject(NativeObjectType::VK_Image), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
 }
 
 
-void CommandContextVK::ClearDepth(DepthBuffer& depthBuffer)
+void CommandContextVK::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
-void CommandContextVK::ClearStencil(DepthBuffer& depthBuffer)
+void CommandContextVK::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+void CommandContextVK::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags)
+void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags)
 {
-	ResourceState oldState = depthBuffer.GetUsageState();
+	ResourceState oldState = depthBuffer->GetUsageState();
 
 	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
 
 	VkClearDepthStencilValue depthVal{
-		.depth		= depthBuffer.GetClearDepth(),
-		.stencil	= depthBuffer.GetClearStencil()
+		.depth		= depthBuffer->GetClearDepth(),
+		.stencil	= depthBuffer->GetClearStencil()
 	};
 
 	VkImageSubresourceRange range{
 		.aspectMask			= flags,
 		.baseMipLevel		= 0,
-		.levelCount			= depthBuffer.GetNumMips(),
+		.levelCount			= depthBuffer->GetNumMips(),
 		.baseArrayLayer		= 0,
-		.layerCount			= depthBuffer.GetArraySize()
+		.layerCount			= depthBuffer->GetArraySize()
 	};
 
 	FlushResourceBarriers();
-	vkCmdClearDepthStencilImage(m_commandBuffer, GetImage(depthBuffer), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+	vkCmdClearDepthStencilImage(m_commandBuffer, depthBuffer->GetNativeObject(NativeObjectType::VK_Image), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
 
 	TransitionResource(depthBuffer, oldState, false);
 }
 
 
-void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
@@ -381,7 +345,7 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, GetBuffer(destBuffer), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, destBuffer->GetNativeObject(NativeObjectType::VK_Buffer), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 

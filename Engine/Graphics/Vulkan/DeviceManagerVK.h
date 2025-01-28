@@ -49,10 +49,9 @@ public:
 	CommandContext* AllocateContext(CommandListType commandListType) final;
 	void FreeContext(CommandContext* usedContext) final;
 
-	wil::com_ptr<IPlatformData> CreateColorBufferFromSwapChain(ColorBufferDesc& desc, ResourceState& initialState, uint32_t imageIndex) final;
-	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex);
+	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex) final;
 
-	ColorBuffer& GetColorBuffer() final;
+	IColorBuffer* GetColorBuffer() final;
 
 	void ReleaseImage(CVkImage* image);
 	void ReleaseBuffer(CVkBuffer* buffer);
@@ -107,7 +106,7 @@ private:
 	VkSurfaceFormatKHR m_swapChainFormat{};
 
 	// Swapchain color buffers
-	std::vector<ColorBuffer> m_swapChainBuffers;
+	std::vector<ColorBufferHandle> m_swapChainBuffers;
 
 	// Queues and queue families
 	std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;

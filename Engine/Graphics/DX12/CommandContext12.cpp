@@ -45,49 +45,17 @@ static bool IsValidComputeResourceState(ResourceState state)
 }
 
 
-template <class T>
-inline ID3D12Resource* GetResource(const T& obj)
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const IColorBuffer* colorBuffer)
 {
-	const auto platformData = obj.GetPlatformData();
-	wil::com_ptr<IGpuResourceData> gpuResourceData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&gpuResourceData)));
-	return gpuResourceData->GetResource();
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{ .ptr = colorBuffer->GetNativeObject(NativeObjectType::DX12_RTV).integer };
+	return rtvHandle;
 }
 
 
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const ColorBuffer& colorBuffer)
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const IDepthBuffer* depthBuffer)
 {
-	const auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-	return colorBufferData->GetRTV();
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const ColorBuffer& colorBuffer)
-{
-	const auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-	return colorBufferData->GetSRV();
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(const ColorBuffer& colorBuffer, uint32_t index)
-{
-	const auto platformData = colorBuffer.GetPlatformData();
-	wil::com_ptr<IColorBufferData> colorBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&colorBufferData)));
-	return colorBufferData->GetUAV(index);
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const DepthBuffer& depthBuffer)
-{
-	const auto platformData = depthBuffer.GetPlatformData();
-	wil::com_ptr<IDepthBufferData> depthBufferData;
-	assert_succeeded(platformData->QueryInterface(IID_PPV_ARGS(&depthBufferData)));
-	return depthBufferData->GetDSV();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV).integer };
+	return dsvHandle;
 }
 
 
@@ -193,97 +161,9 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContext12::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
 {
-	TransitionResource_Internal(static_cast<GpuResource&>(colorBuffer), newState, bFlushImmediate);
-}
-
-
-void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
-{
-	TransitionResource_Internal(static_cast<GpuResource&>(depthBuffer), newState, bFlushImmediate);
-}
-
-
-void CommandContext12::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
-{
-	TransitionResource_Internal(static_cast<GpuResource&>(gpuBuffer), newState, bFlushImmediate);
-}
-
-
-void CommandContext12::InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate)
-{
-	InsertUAVBarrier_Internal(static_cast<GpuResource&>(colorBuffer), bFlushImmediate);
-}
-
-
-void CommandContext12::InsertUAVBarrier(DepthBuffer& depthBuffer, bool bFlushImmediate)
-{
-	InsertUAVBarrier_Internal(static_cast<GpuResource&>(depthBuffer), bFlushImmediate);
-}
-
-
-void CommandContext12::FlushResourceBarriers()
-{
-	if (m_numBarriersToFlush > 0)
-	{
-		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
-		m_numBarriersToFlush = 0;
-	}
-}
-
-
-void CommandContext12::ClearColor(ColorBuffer& colorBuffer)
-{
-	FlushResourceBarriers();
-	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
-}
-
-
-void CommandContext12::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
-{
-	FlushResourceBarriers();
-	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), clearColor.GetPtr(), 0, nullptr);
-}
-
-
-void CommandContext12::ClearDepth(DepthBuffer& depthBuffer)
-{
-	FlushResourceBarriers();
-	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
-}
-
-
-void CommandContext12::ClearStencil(DepthBuffer& depthBuffer)
-{
-	FlushResourceBarriers();
-	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
-}
-
-
-void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
-{
-	FlushResourceBarriers();
-	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
-}
-
-
-void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
-{ 
-	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
-
-	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
-	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(GetResource(destBuffer), offset, stagingAllocation->GetResource(), 0, numBytes);
-	TransitionResource(destBuffer, ResourceState::GenericRead, true);
-
-	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
-}
-
-
-void CommandContext12::TransitionResource_Internal(GpuResource& gpuResource, ResourceState newState, bool bFlushImmediate)
-{
-	ResourceState oldState = gpuResource.GetUsageState();
+	ResourceState oldState = gpuResource->GetUsageState();
 
 	if (m_type == CommandListType::Compute)
 	{
@@ -297,27 +177,27 @@ void CommandContext12::TransitionResource_Internal(GpuResource& gpuResource, Res
 		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
 
 		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrierDesc.Transition.pResource = GetResource(gpuResource);
+		barrierDesc.Transition.pResource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
 		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
 		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
 
 		// Check to see if we already started the transition
-		if (newState == gpuResource.GetTransitioningState())
+		if (newState == gpuResource->GetTransitioningState())
 		{
 			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
-			gpuResource.SetTransitioningState(ResourceState::Undefined);
+			gpuResource->SetTransitioningState(ResourceState::Undefined);
 		}
 		else
 		{
 			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		}
 
-		gpuResource.SetUsageState(newState);
+		gpuResource->SetUsageState(newState);
 	}
 	else if (newState == ResourceState::UnorderedAccess)
 	{
-		InsertUAVBarrier_Internal(gpuResource, bFlushImmediate);
+		InsertUAVBarrier(gpuResource, bFlushImmediate);
 	}
 
 	if (bFlushImmediate || m_numBarriersToFlush == 16)
@@ -327,14 +207,14 @@ void CommandContext12::TransitionResource_Internal(GpuResource& gpuResource, Res
 }
 
 
-void CommandContext12::InsertUAVBarrier_Internal(GpuResource& gpuResource, bool bFlushImmediate)
+void CommandContext12::InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate)
 {
 	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
 	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
 
 	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDesc.UAV.pResource = GetResource(gpuResource);
+	barrierDesc.UAV.pResource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
 
 	if (bFlushImmediate)
 	{
@@ -343,11 +223,67 @@ void CommandContext12::InsertUAVBarrier_Internal(GpuResource& gpuResource, bool 
 }
 
 
+void CommandContext12::FlushResourceBarriers()
+{
+	if (m_numBarriersToFlush > 0)
+	{
+		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
+		m_numBarriersToFlush = 0;
+	}
+}
+
+
+void CommandContext12::ClearColor(IColorBuffer* colorBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), clearColor.GetPtr(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearDepth(IDepthBuffer* depthBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearStencil(IDepthBuffer* depthBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
+{
+	FlushResourceBarriers();
+	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+}
+
+
+void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+{ 
+	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
+
+	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
+	TransitionResource(destBuffer, ResourceState::CopyDest, true);
+	m_commandList->CopyBufferRegion(destBuffer->GetNativeObject(NativeObjectType::DX12_Resource), offset, stagingAllocation->GetResource(), 0, numBytes);
+	TransitionResource(destBuffer, ResourceState::GenericRead, true);
+
+	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
+}
+
+
 void CommandContext12::BindDescriptorHeaps()
 {
 	// TODO
 }
-
-
 
 } // namespace Luna::DX12

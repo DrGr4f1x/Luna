@@ -12,26 +12,8 @@
 
 #include "DepthBuffer.h"
 
-#include "GraphicsCommon.h"
-
 
 namespace Luna
 {
-
-bool DepthBuffer::Initialize(DepthBufferDesc& desc)
-{
-	m_bIsInitialized = true;
-	return m_bIsInitialized;
-}
-
-
-void DepthBuffer::Reset()
-{
-	m_bIsInitialized = false;
-	m_clearDepth = 1.0f;
-	m_clearStencil = 0;
-
-	PixelBuffer::Reset();
-}
 
 } // namespace Luna

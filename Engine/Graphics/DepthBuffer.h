@@ -44,23 +44,6 @@ struct DepthBufferDesc
 };
 
 
-class DepthBuffer : public PixelBuffer
-{
-public:
-	float GetClearDepth() const noexcept { return m_clearDepth; }
-	uint8_t GetClearStencil() const noexcept { return m_clearStencil; }
-
-	bool Initialize(DepthBufferDesc& desc);
-	bool IsInitialized() const noexcept { return m_bIsInitialized; }
-	void Reset();
-
-private:
-	float m_clearDepth{ 1.0f };
-	uint8_t m_clearStencil{ 0 };
-	bool m_bIsInitialized{ false };
-};
-
-
 class __declspec(uuid("6F7CB4D1-353E-4F29-A9EB-31A662587331")) IDepthBuffer : public IPixelBuffer
 {
 public:

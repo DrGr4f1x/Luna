@@ -20,9 +20,9 @@ namespace Luna
 {
 
 // Forward declarations
-class ColorBuffer;
-class DepthBuffer;
-class GpuBuffer;
+class IColorBuffer;
+class IDepthBuffer;
+class IGpuBuffer;
 
 } // namespace Luna
 
@@ -81,21 +81,19 @@ public:
 	void BeginFrame() override;
 	uint64_t Finish(bool bWaitForCompletion) override;
 
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) override;
+	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate) override;
+	void InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
-	void ClearColor(ColorBuffer& colorBuffer) override;
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
-	void ClearDepth(DepthBuffer& depthBuffer) override;
-	void ClearStencil(DepthBuffer& depthBuffer) override;
-	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
+	void ClearDepth(IDepthBuffer* depthBuffer) override;
+	void ClearStencil(IDepthBuffer* depthBuffer) override;
+	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
 private:
-	void ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags);
-	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
+	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
 	void BindDescriptorHeaps() {}
 

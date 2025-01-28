@@ -12,8 +12,6 @@
 
 #include "TriangleApp.h"
 
-#include "Graphics\RootSignature.h"
-
 using namespace Luna;
 using namespace std;
 
@@ -40,6 +38,8 @@ void TriangleApp::Configure()
 
 void TriangleApp::Startup()
 {
+	auto graphicsDevice = GetGraphicsDevice();
+
 	// Setup vertices
 	vector<Vertex> vertexData =
 	{
@@ -50,33 +50,36 @@ void TriangleApp::Startup()
 
 	GpuBufferDesc vertexBufferDesc{
 		.name			= "Vertex Buffer",
+		.resourceType	= ResourceType::VertexBuffer,
 		.memoryAccess	= MemoryAccess::GpuReadWrite,
 		.elementCount	= vertexData.size(),
 		.elementSize	= sizeof(Vertex),
 		.initialData	= vertexData.data()
 	};
-	assert(m_vertexBuffer.Initialize(vertexBufferDesc));
+	m_vertexBuffer = graphicsDevice->CreateGpuBuffer(vertexBufferDesc);
 
 	// Setup indices
 	vector<uint32_t> indexData = { 0, 1, 2 };
 	GpuBufferDesc indexBufferDesc{
 		.name			= "Index Buffer",
+		.resourceType	= ResourceType::IndexBuffer,
 		.memoryAccess	= MemoryAccess::GpuReadWrite,
 		.elementCount	= indexData.size(),
 		.elementSize	= sizeof(uint32_t),
 		.initialData	= indexData.data()
 	};
-	assert(m_indexBuffer.Initialize(indexBufferDesc));
+	m_indexBuffer = graphicsDevice->CreateGpuBuffer(indexBufferDesc);
 
 	// Setup constant buffer
 	GpuBufferDesc constantBufferDesc{
 		.name			= "VS Constant Buffer",
+		.resourceType	= ResourceType::ConstantBuffer,
 		.memoryAccess	= MemoryAccess::GpuReadWrite,
 		.elementCount	= 1,
 		.elementSize	= sizeof(m_vsConstants),
 		.initialData	= &m_vsConstants
 	};
-	assert(m_constantBuffer.Initialize(constantBufferDesc));
+	m_constantBuffer = graphicsDevice->CreateGpuBuffer(constantBufferDesc);
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
 
 	InitRootSignature();

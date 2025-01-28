@@ -17,13 +17,14 @@ namespace Luna
 {
 
 // Forward declarations
-class ColorBuffer;
-class ComputeContext;
-class DepthBuffer;
-class GpuBuffer;
-class GpuResource;
-class GraphicsContext;
 class CommandContext;
+class ComputeContext;
+class GraphicsContext;
+
+class IColorBuffer;
+class IDepthBuffer;
+class IGpuBuffer;
+class IGpuResource;
 
 
 class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
@@ -49,23 +50,21 @@ public:
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
-	virtual void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void InsertUAVBarrier(ColorBuffer& colorBuffer, bool bFlushImmediate) = 0;
+	virtual void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void InsertUAVBarrier(IGpuResource* colorBuffer, bool bFlushImmediate) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	// Graphics context
-	virtual void ClearColor(ColorBuffer& colorBuffer) = 0;
-	virtual void ClearColor(ColorBuffer& colorBuffer, Color clearColor) = 0;
-	virtual void ClearDepth(DepthBuffer& depthBuffer) = 0;
-	virtual void ClearStencil(DepthBuffer& depthBuffer) = 0;
-	virtual void ClearDepthAndStencil(DepthBuffer& depthBuffer) = 0;
+	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
+	virtual void ClearColor(IColorBuffer* colorBuffer, Color clearColor) = 0;
+	virtual void ClearDepth(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearStencil(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearDepthAndStencil(IDepthBuffer* depthBuffer) = 0;
 
 	// Compute context
 	
 protected:
-	virtual void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
+	virtual void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
 };
 
 
@@ -101,15 +100,13 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
-	static void InitializeBuffer(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
+	static void InitializeBuffer(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
 
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
 
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
-
+	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate = false);
+	
 	void BeginFrame();
 
 protected:
@@ -125,11 +122,11 @@ public:
 		return CommandContext::Begin(id).GetGraphicsContext();
 	}
 
-	void ClearColor(ColorBuffer& colorBuffer);
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor);
-	void ClearDepth(DepthBuffer& depthBuffer);
-	void ClearStencil(DepthBuffer& depthBuffer);
-	void ClearDepthAndStencil(DepthBuffer& depthBuffer);
+	void ClearColor(IColorBuffer* colorBuffer);
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
+	void ClearDepth(IDepthBuffer* depthBuffer);
+	void ClearStencil(IDepthBuffer* depthBuffer);
+	void ClearDepthAndStencil(IDepthBuffer* depthBuffer);
 };
 
 
@@ -182,21 +179,9 @@ inline void CommandContext::Initialize()
 }
 
 
-inline void CommandContext::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
 {
-	m_contextImpl->TransitionResource(colorBuffer, newState, bFlushImmediate);
-}
-
-
-inline void CommandContext::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
-{
-	m_contextImpl->TransitionResource(depthBuffer, newState, bFlushImmediate);
-}
-
-
-inline void CommandContext::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
-{
-	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
+	m_contextImpl->TransitionResource(gpuResource, newState, bFlushImmediate);
 }
 
 
@@ -206,31 +191,31 @@ inline void CommandContext::BeginFrame()
 }
 
 
-inline void GraphicsContext::ClearColor(ColorBuffer& colorBuffer)
+inline void GraphicsContext::ClearColor(IColorBuffer* colorBuffer)
 {
 	m_contextImpl->ClearColor(colorBuffer);
 }
 
 
-inline void GraphicsContext::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
+inline void GraphicsContext::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	m_contextImpl->ClearColor(colorBuffer, clearColor);
 }
 
 
-inline void GraphicsContext::ClearDepth(DepthBuffer& depthBuffer)
+inline void GraphicsContext::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearDepth(depthBuffer);
 }
 
 
-inline void GraphicsContext::ClearStencil(DepthBuffer& depthBuffer)
+inline void GraphicsContext::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearStencil(depthBuffer);
 }
 
 
-inline void GraphicsContext::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+inline void GraphicsContext::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearDepthAndStencil(depthBuffer);
 }
