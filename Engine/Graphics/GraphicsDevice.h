@@ -13,6 +13,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\RootSignature.h"
 
 
 namespace Luna
@@ -39,12 +40,12 @@ public:
 	virtual wil::com_ptr<IPlatformData> CreateColorBufferData(ColorBufferDesc& desc, ResourceState& initialState) = 0;
 	virtual wil::com_ptr<IPlatformData> CreateDepthBufferData(DepthBufferDesc& desc, ResourceState& initialState) = 0;
 	virtual wil::com_ptr<IPlatformData> CreateGpuBufferData(GpuBufferDesc& desc, ResourceState& initialState) = 0;
-	virtual wil::com_ptr<IPlatformData> CreateRootSignatureData(RootSignatureDesc& desc) = 0;
 	virtual wil::com_ptr<IPlatformData> CreateGraphicsPSOData(GraphicsPSODesc& desc) = 0;
 
 	virtual ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
 	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
 	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
+	virtual RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 };
 
 } // namespace Luna

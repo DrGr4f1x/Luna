@@ -61,5 +61,5 @@ private:
 	} m_vsConstants;
 
 	 // Root signature
-	Luna::RootSignature m_rootSignature;
+	Luna::RootSignatureHandle m_rootSignature;
 };

@@ -33,7 +33,7 @@ struct RootSignatureDescExt
 };
 
 
-class __declspec(uuid("52A34683-8F31-4FD3-B2DD-EEE555074589")) IRootSignatureData : public IPlatformData
+class __declspec(uuid("401C875A-76F0-4F33-B300-FC55DBA83DD7")) IRootSignature12 : public IRootSignature
 {
 public:
 	virtual ID3D12RootSignature* GetRootSignature() const noexcept = 0;
@@ -43,12 +43,13 @@ public:
 };
 
 
-class __declspec(uuid("9CE032FD-F849-4C90-B583-E605421836EF")) RootSignatureData final
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IRootSignatureData, IPlatformData>>
-	, NonCopyable
+class __declspec(uuid("A23FFC17-0115-4437-BF81-F192185E7A89")) RootSignature12 final
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IRootSignature12, IRootSignature>>
 {
 public:
-	explicit RootSignatureData(const RootSignatureDescExt& descExt);
+	RootSignature12(const RootSignatureDesc& rootSignatureDesc, const RootSignatureDescExt& rootSignatureDescExt);
+
+	NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept override;
 
 	ID3D12RootSignature* GetRootSignature() const noexcept override { return m_rootSignature.get(); }
 	uint32_t GetDescriptorTableBitmap() const noexcept override { return m_descriptorTableBitmap; }

@@ -276,15 +276,12 @@ struct RootSignatureDesc
 };
 
 
-class RootSignature
+class __declspec(uuid("19DD6AF1-0342-40DB-8190-0F6485AACD77")) IRootSignature : public IUnknown
 {
 public:
-	bool Initialize(RootSignatureDesc& desc);
-
-	IPlatformData* GetPlatformData() const noexcept { return m_platformData.get(); }
-
-private:
-	wil::com_ptr<IPlatformData> m_platformData;
+	virtual NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept = 0;
 };
+
+using RootSignatureHandle = wil::com_ptr<IRootSignature>;
 
 } // namespace Luna

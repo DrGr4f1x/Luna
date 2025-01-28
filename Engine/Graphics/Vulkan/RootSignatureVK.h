@@ -29,19 +29,21 @@ struct RootSignatureDescExt
 };
 
 
-class __declspec(uuid("75D3C0C6-A72C-4F6F-94BF-8FDBF0647A62")) IRootSignatureData : public IPlatformData
+class __declspec(uuid("F2CBB8B8-A5FA-4157-8CA0-3CD53B79EE93")) IRootSignatureVK : public IRootSignature
 {
 public:
 	virtual VkPipelineLayout GetPipelineLayout() const noexcept = 0;
 };
 
 
-class __declspec(uuid("2E54BC37-A9D2-4989-A071-78C3689D9112")) RootSignatureData final
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IRootSignatureData, IPlatformData>>
+class __declspec(uuid("5E1B4285-CC94-4950-8668-BF74E0BE0FF4")) RootSignatureVK final
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IRootSignatureVK, IRootSignature>>
 	, NonCopyable
 {
 public:
-	explicit RootSignatureData(const RootSignatureDescExt& descExt);
+	RootSignatureVK(const RootSignatureDesc& rootSignatureDesc, const RootSignatureDescExt& rootSignatureDescExt);
+
+	NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept override;
 
 	VkPipelineLayout GetPipelineLayout() const noexcept override { return m_pipelineLayout->Get(); }
 

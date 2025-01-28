@@ -728,12 +728,14 @@ enum class NativeObjectType : uint32_t
 	DX12_DSV_StencilReadOnly	= 0x00010009,
 	DX12_SRV_Depth				= 0x0001000A,
 	DX12_SRV_Stencil			= 0x0001000B,
+	DX12_RootSignature			= 0x0001000C,
 
 	// Vulkan
 	VK_Image				= 0x00020001,
 	VK_Buffer				= 0x00020002,
 	VK_FrameBuffer			= 0x00020003,
 	VK_RenderPass			= 0x00020004,
+	VK_PipelineLayout		= 0x00020005,
 };
 
 } // namespace Luna

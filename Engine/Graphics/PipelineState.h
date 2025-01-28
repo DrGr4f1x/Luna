@@ -14,11 +14,14 @@
 #include "Graphics\Formats.h"
 #include "Graphics\InputLayout.h"
 #include "Graphics\PlatformData.h"
-#include "Graphics\RootSignature.h"
 
 
 namespace Luna
 {
+
+// Forward declarations
+class IRootSignature;
+
 
 struct RenderTargetBlendDesc
 {
@@ -152,7 +155,7 @@ struct GraphicsPSODesc
 	std::vector<VertexStreamDesc> vertexStreams;
 	std::vector<VertexElementDesc> vertexElements;
 
-	RootSignature rootSignature;
+	IRootSignature* rootSignature{ nullptr };
 
 	GraphicsPSODesc& SetName(const std::string& value) { name = value; return *this; }
 	GraphicsPSODesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
@@ -172,7 +175,7 @@ struct GraphicsPSODesc
 	GraphicsPSODesc& SetDomainShader(const std::string& value) { domainShader = value; return *this; }
 	GraphicsPSODesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPSODesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
-	GraphicsPSODesc& SetRootSignature(const RootSignature& value) { rootSignature = value; return *this; }
+	constexpr GraphicsPSODesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
 };
 
 

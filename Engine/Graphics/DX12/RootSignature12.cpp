@@ -16,11 +16,27 @@
 namespace Luna::DX12
 {
 
-RootSignatureData::RootSignatureData(const RootSignatureDescExt& descExt)
-	: m_rootSignature{ descExt.rootSignature }
-	, m_descriptorTableBitmap{ descExt.descriptorTableBitmap }
-	, m_samplerTableBitmap{ descExt.samplerTableBitmap }
-	, m_descriptorTableSize{ descExt.descriptorTableSize }
+RootSignature12::RootSignature12(const RootSignatureDesc& rootSignatureDesc, const RootSignatureDescExt& rootSignatureDescExt)
+	: m_rootSignature{ rootSignatureDescExt.rootSignature }
+	, m_descriptorTableBitmap{ rootSignatureDescExt.descriptorTableBitmap }
+	, m_samplerTableBitmap{ rootSignatureDescExt.samplerTableBitmap }
+	, m_descriptorTableSize{ rootSignatureDescExt.descriptorTableSize }
 {}
+
+
+NativeObjectPtr RootSignature12::GetNativeObject(NativeObjectType type) const noexcept
+{
+	using enum NativeObjectType;
+
+	switch (type)
+	{
+	case DX12_RootSignature:
+		return NativeObjectPtr(m_rootSignature.get());
+
+	default:
+		assert(false);
+		return nullptr;
+	}
+}
 
 } // namespace Luna::DX12

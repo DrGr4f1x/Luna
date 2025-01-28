@@ -18,11 +18,4 @@
 namespace Luna
 {
 
-bool RootSignature::Initialize(RootSignatureDesc& desc)
-{
-	m_platformData = GetGraphicsDevice()->CreateRootSignatureData(desc);
-
-	return m_platformData != nullptr;
-}
-
 } // namespace Luna

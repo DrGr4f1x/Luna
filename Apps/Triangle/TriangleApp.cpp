@@ -123,5 +123,5 @@ void TriangleApp::InitRootSignature()
 		.rootParameters		= { { RootParameter::RootCBV(0, ShaderStage::Vertex) } }
 	};
 
-	m_rootSignature.Initialize(rootSignatureDesc);
+	m_rootSignature = GetGraphicsDevice()->CreateRootSignature(rootSignatureDesc);
 }
