@@ -87,6 +87,10 @@ struct DeviceCaps
 	D3D12_FEATURE_DATA_D3D12_OPTIONS21 caps21{};
 #endif
 
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 614)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS22 caps22{};
+#endif
+
 	void ReadBasicCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel);
 	void ReadFullCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel, D3D_SHADER_MODEL bestShaderModel);
 
@@ -99,7 +103,7 @@ private:
 	D3D_SHADER_MODEL GetHighestShaderModel(ID3D12Device* device);
 
 private:
-	std::bitset<22> m_validCaps;
+	std::bitset<23> m_validCaps;
 	bool m_basicCapsRead{ false };
 	bool m_capsRead{ false };
 };
