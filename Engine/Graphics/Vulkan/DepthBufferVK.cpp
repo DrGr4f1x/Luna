@@ -16,16 +16,6 @@
 namespace Luna::VK
 {
 
-DepthBufferData::DepthBufferData(const DepthBufferDescExt& descExt) noexcept
-	: m_image{ descExt.image }
-	, m_imageViewDepthStencil{ descExt.imageViewDepthStencil }
-	, m_imageViewDepthOnly{ descExt.imageViewDepthOnly }
-	, m_imageViewStencilOnly{ descExt.imageViewStencilOnly }
-	, m_imageInfoDepth{ descExt.imageInfoDepth }
-	, m_imageInfoStencil{ descExt.imageInfoStencil }
-{}
-
-
 DepthBufferVK::DepthBufferVK(const DepthBufferDesc& depthBufferDesc, const DepthBufferDescExt& depthBufferDescExt)
 	: m_name{ depthBufferDesc.name }
 	, m_resourceType{ depthBufferDesc.resourceType }

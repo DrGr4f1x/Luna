@@ -15,14 +15,6 @@
 namespace Luna::DX12
 {
 
-DepthBufferData::DepthBufferData(const DepthBufferDescExt& descExt) noexcept
-	: m_resource{ descExt.resource }
-	, m_dsvHandles{ descExt.dsvHandles }
-	, m_depthSrvHandle{ descExt.depthSrvHandle }
-	, m_stencilSrvHandle{ descExt.stencilSrvHandle }
-{}
-
-
 DepthBuffer12::DepthBuffer12(const DepthBufferDesc& depthBufferDesc, const DepthBufferDescExt& depthBufferDescExt)
 	: m_name{ depthBufferDesc.name }
 	, m_resourceType{ depthBufferDesc.resourceType }

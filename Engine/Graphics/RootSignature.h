@@ -11,7 +11,6 @@
 #pragma once
 
 #include "Graphics\Enums.h"
-#include "Graphics\PlatformData.h"
 
 
 namespace Luna

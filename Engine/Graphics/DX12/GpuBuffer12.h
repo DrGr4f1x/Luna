@@ -12,7 +12,6 @@
 
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\DX12\DirectXCommon.h"
-#include "Graphics\DX12\GpuResource12.h"
 
 using namespace Microsoft::WRL;
 

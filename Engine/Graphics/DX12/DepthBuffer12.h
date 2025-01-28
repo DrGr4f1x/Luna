@@ -12,7 +12,6 @@
 
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\DX12\DirectXCommon.h"
-#include "Graphics\DX12\GpuResource12.h"
 
 using namespace Microsoft::WRL;
 
@@ -46,42 +45,6 @@ struct DepthBufferDescExt
 	DepthBufferDescExt& SetDsvHandles(const std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4>& value) noexcept { dsvHandles = value; return *this; }
 	constexpr DepthBufferDescExt& SetDepthSrvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { depthSrvHandle = value; return *this; }
 	constexpr DepthBufferDescExt& SetStencilSrvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { stencilSrvHandle = value; return *this; }
-};
-
-
-class __declspec(uuid("232C36B6-60FC-4DE6-8AD5-84769D22CDFF")) IDepthBufferData : public IGpuResourceData
-{
-public:
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_DepthReadOnly() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_StencilReadOnly() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_ReadOnly() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetDepthSRV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetStencilSRV() const noexcept = 0;
-};
-
-
-class __declspec(uuid("36E0E19C-7D07-46EA-A6FE-E222A083957D")) DepthBufferData
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBufferData, IGpuResourceData, IPlatformData>>
-	, NonCopyable
-{
-public:
-	explicit DepthBufferData(const DepthBufferDescExt& descExt) noexcept;
-
-	ID3D12Resource* GetResource() const noexcept final { return m_resource.get(); }
-	uint64_t GetGpuAddress() const noexcept override { return m_resource->GetGPUVirtualAddress(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV() const noexcept final { return m_dsvHandles[0]; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_DepthReadOnly() const noexcept final { return m_dsvHandles[1]; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_StencilReadOnly() const noexcept final { return m_dsvHandles[2]; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV_ReadOnly() const noexcept final { return m_dsvHandles[3]; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDepthSRV() const noexcept final { return m_depthSrvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetStencilSRV() const noexcept final { return m_stencilSrvHandle; }
-
-private:
-	wil::com_ptr<ID3D12Resource> m_resource;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4> m_dsvHandles{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_depthSrvHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_stencilSrvHandle{};
 };
 
 

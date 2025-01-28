@@ -13,7 +13,6 @@
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 #include "Graphics\InputLayout.h"
-#include "Graphics\PlatformData.h"
 
 
 namespace Luna
@@ -176,16 +175,6 @@ struct GraphicsPSODesc
 	GraphicsPSODesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPSODesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
 	constexpr GraphicsPSODesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
-};
-
-
-class GraphicsPSO
-{
-public:
-	bool Initialize(GraphicsPSODesc& desc);
-
-private:
-	wil::com_ptr<IPlatformData> m_platformData;
 };
 
 } // namespace

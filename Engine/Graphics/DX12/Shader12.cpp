@@ -15,9 +15,4 @@
 namespace Luna::DX12
 {
 
-ShaderData::ShaderData(ShaderDescExt& descExt)
-	: m_byteCode{ std::move(descExt.byteCode) }
-	, m_byteCodeSize{ descExt.byteCodeSize }
-{}
-
 } // namespace Luna::DX12

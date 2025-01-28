@@ -16,8 +16,4 @@
 namespace Luna::VK
 {
 
-GraphicsPSOData::GraphicsPSOData(const GraphicsPSODescExt& descExt)
-	: m_pipeline{ descExt.pipeline }
-{}
-
 } // namespace Luna::VK

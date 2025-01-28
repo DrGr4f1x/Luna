@@ -16,15 +16,6 @@
 namespace Luna::VK
 {
 
-ColorBufferData::ColorBufferData(const ColorBufferDescExt& descExt)
-	: m_image{ descExt.image }
-	, m_imageViewRtv{ descExt.imageViewRtv }
-	, m_imageViewSrv{ descExt.imageViewSrv }
-	, m_imageInfoSrv{ descExt.imageInfoSrv }
-	, m_imageInfoUav{ descExt.imageInfoUav }
-{ }
-
-
 ColorBufferVK::ColorBufferVK(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt)
 	: m_name{ desc.name }
 	, m_resourceType{ desc.resourceType }

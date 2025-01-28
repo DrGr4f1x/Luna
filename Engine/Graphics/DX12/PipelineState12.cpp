@@ -16,8 +16,4 @@
 namespace Luna::DX12
 {
 
-GraphicsPSOData::GraphicsPSOData(const GraphicsPSODescExt& descExt)
-	: m_pipelineState{ descExt.pipelineState }
-{}
-
 } // namespace Luna::DX12

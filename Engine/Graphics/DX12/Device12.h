@@ -154,10 +154,6 @@ private:
 	// Pipeline states
 	std::mutex m_pipelineStateMutex;
 	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
-
-	// Shaders
-	std::mutex m_shaderMutex;
-	std::map<size_t, wil::com_ptr<IShaderData>> m_shaderMap;
 };
 
 } // namespace Luna::DX12

@@ -10,10 +10,6 @@
 
 #pragma once
 
-#include "Graphics\PlatformData.h"
-#include "Core\NativeObjectPtr.h"
-
-
 namespace Luna
 {
 

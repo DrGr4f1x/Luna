@@ -40,44 +40,6 @@ struct DepthBufferDescExt
 };
 
 
-class __declspec(uuid("88609DFB-84C1-44D4-88DC-96B5CBB07556")) IDepthBufferData : public IPlatformData
-{
-public:
-	// Get pre-created CPU-visible descriptor handles
-	virtual VkImage GetImage() const noexcept = 0;
-	virtual VkImageView GetDepthStencilImageView() const noexcept = 0;
-	virtual VkImageView GetDepthOnlyImageView() const noexcept = 0;
-	virtual VkImageView GetStencilOnlyImageView() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetDepthImageInfo() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetStencilImageInfo() const noexcept = 0;
-};
-
-
-class __declspec(uuid("7F056BBE-DB42-4BA1-BCBB-A4AADF7669CC")) DepthBufferData
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDepthBufferData, IPlatformData>>
-	, NonCopyable
-{
-public:
-	DepthBufferData(const DepthBufferDescExt& descExt) noexcept;
-
-	VkImage GetImage() const noexcept final { return *m_image; }
-
-	VkImageView GetDepthStencilImageView() const noexcept final { return *m_imageViewDepthStencil; }
-	VkImageView GetDepthOnlyImageView() const noexcept final { return *m_imageViewDepthOnly; }
-	VkImageView GetStencilOnlyImageView() const noexcept final { return *m_imageViewStencilOnly; }
-	VkDescriptorImageInfo GetDepthImageInfo() const noexcept final { return m_imageInfoDepth; }
-	VkDescriptorImageInfo GetStencilImageInfo() const noexcept final { return m_imageInfoStencil; }
-
-private:
-	wil::com_ptr<CVkImage> m_image;
-	wil::com_ptr<CVkImageView> m_imageViewDepthStencil;
-	wil::com_ptr<CVkImageView> m_imageViewDepthOnly;
-	wil::com_ptr<CVkImageView> m_imageViewStencilOnly;
-	VkDescriptorImageInfo m_imageInfoDepth{};
-	VkDescriptorImageInfo m_imageInfoStencil{};
-};
-
-
 class __declspec(uuid("1786B0B9-91B7-4580-81DE-163AB3248DD2")) IDepthBufferVK : public IDepthBuffer
 {
 public:

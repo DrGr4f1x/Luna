@@ -16,15 +16,6 @@
 namespace Luna::DX12
 {
 
-ColorBufferData::ColorBufferData(const ColorBufferDescExt& descExt)
-	: m_resource{ descExt.resource }
-	, m_srvHandle{ descExt.srvHandle }
-	, m_rtvHandle{ descExt.rtvHandle }
-	, m_uavHandles{ descExt.uavHandles }
-{
-}
-
-
 ColorBuffer12::ColorBuffer12(const ColorBufferDesc& desc, const ColorBufferDescExt& descExt)
 	: m_name{ desc.name }
 	, m_resourceType{ desc.resourceType }

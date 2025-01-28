@@ -13,7 +13,6 @@
 #include "Core\Color.h"
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DX12\DirectXCommon.h"
-#include "Graphics\DX12\GpuResource12.h"
 
 using namespace Microsoft::WRL;
 
@@ -49,40 +48,6 @@ struct ColorBufferDescExt
 	constexpr ColorBufferDescExt& SetSrvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { srvHandle = value; return *this; }
 	constexpr ColorBufferDescExt& SetRtvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { rtvHandle = value; return *this; }
 	ColorBufferDescExt& SetUavHandles(const std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12>& value) noexcept { uavHandles = value; return *this; }
-};
-
-
-class __declspec(uuid("3618277B-EA60-4D37-9904-B4256F66A36A")) IColorBufferData : public IGpuResourceData
-{
-public:
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept = 0;
-	virtual D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept = 0;
-};
-
-
-class __declspec(uuid("BBBCFA80-B6CE-484F-B710-AF72B424B26E")) ColorBufferData
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IColorBufferData, IGpuResourceData, IPlatformData>>
-	, NonCopyable
-{
-	friend class GraphicsDevice;
-
-public:
-	explicit ColorBufferData(const ColorBufferDescExt& descExt);
-	
-	ID3D12Resource* GetResource() const noexcept override { return m_resource.get(); }
-	uint64_t GetGpuAddress() const noexcept override { return m_resource->GetGPUVirtualAddress(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV() const noexcept override { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV() const noexcept override { return m_rtvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(uint32_t uavIndex) const noexcept override { return m_uavHandles[uavIndex]; }
-
-private:
-	wil::com_ptr<ID3D12Resource> m_resource;
-
-	// Pre-constructed descriptors
-	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> m_uavHandles;
 };
 
 
