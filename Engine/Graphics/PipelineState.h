@@ -128,6 +128,15 @@ struct DepthStencilStateDesc
 };
 
 
+struct ShaderNameAndEntry
+{
+	std::string shaderFile;
+	std::string entry{ "main" };
+
+	operator bool() const { return !shaderFile.empty(); }
+};
+
+
 struct GraphicsPSODesc
 {
 	std::string name;
@@ -145,11 +154,11 @@ struct GraphicsPSODesc
 	PrimitiveTopology topology;
 	IndexBufferStripCutValue indexBufferStripCut{ IndexBufferStripCutValue::Disabled };
 
-	std::string vertexShader;
-	std::string pixelShader;
-	std::string geometryShader;
-	std::string hullShader;
-	std::string domainShader;
+	ShaderNameAndEntry vertexShader;
+	ShaderNameAndEntry pixelShader;
+	ShaderNameAndEntry geometryShader;
+	ShaderNameAndEntry hullShader;
+	ShaderNameAndEntry domainShader;
 
 	std::vector<VertexStreamDesc> vertexStreams;
 	std::vector<VertexElementDesc> vertexElements;
@@ -167,14 +176,23 @@ struct GraphicsPSODesc
 	constexpr GraphicsPSODesc& SetSampleRateShading(bool value) noexcept { sampleRateShading = value; return *this; }
 	constexpr GraphicsPSODesc& SetTopology(PrimitiveTopology value) noexcept { topology = value; return *this; }
 	constexpr GraphicsPSODesc& SetIndexBufferStripCut(IndexBufferStripCutValue value) noexcept { indexBufferStripCut = value; return *this; }
-	GraphicsPSODesc& SetVertexShader(const std::string& value) { vertexShader = value; return *this; }
-	GraphicsPSODesc& SetPixelShader(const std::string& value) { pixelShader = value; return *this; }
-	GraphicsPSODesc& SetGeometryShader(const std::string& value) { geometryShader = value; return *this; }
-	GraphicsPSODesc& SetHullShader(const std::string& value) { hullShader = value; return *this; }
-	GraphicsPSODesc& SetDomainShader(const std::string& value) { domainShader = value; return *this; }
+	GraphicsPSODesc& SetVertexShader(const std::string& value, const std::string& entry = "main") { vertexShader.shaderFile = value; vertexShader.entry = entry; return *this; }
+	GraphicsPSODesc& SetPixelShader(const std::string& value, const std::string& entry = "main") { pixelShader.shaderFile = value; pixelShader.entry = entry; return *this; }
+	GraphicsPSODesc& SetGeometryShader(const std::string& value, const std::string& entry = "main") { geometryShader.shaderFile = value; geometryShader.entry = entry; return *this; }
+	GraphicsPSODesc& SetHullShader(const std::string& value, const std::string& entry = "main") { hullShader.shaderFile = value; hullShader.entry = entry; return *this; }
+	GraphicsPSODesc& SetDomainShader(const std::string& value, const std::string& entry = "main") { domainShader.shaderFile = value; domainShader.entry = entry; return *this; }
 	GraphicsPSODesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPSODesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
 	constexpr GraphicsPSODesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
 };
+
+
+class __declspec(uuid("F35F4ED1-7BDD-41C2-A545-CA1279A9D722")) IGraphicsPSO : public IUnknown
+{
+public:
+	virtual NativeObjectPtr GetNativeObject() const noexcept = 0;
+};
+
+using GraphicsPSOHandle = wil::com_ptr<IGraphicsPSO>;
 
 } // namespace

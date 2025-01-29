@@ -24,4 +24,18 @@ struct GraphicsPSODescExt
 	ID3D12PipelineState* pipelineState{ nullptr };
 };
 
+
+class __declspec(uuid("BF47E4F0-2BB3-44E6-A076-8FF9F4C0A061")) GraphicsPSO12 final
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IGraphicsPSO>
+	, NonCopyable
+{
+public:
+	GraphicsPSO12(const GraphicsPSODesc& graphicsPSODesc, const GraphicsPSODescExt& graphicsPSODescExt);
+
+	NativeObjectPtr GetNativeObject() const noexcept override;
+
+private:
+	wil::com_ptr<ID3D12PipelineState> m_pipelineState;
+};
+
 } // namespace Luna::DX12

@@ -13,6 +13,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\PipelineState.h"
 #include "Graphics\RootSignature.h"
 
 
@@ -41,6 +42,7 @@ public:
 	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
 	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 	virtual RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
+	virtual GraphicsPSOHandle CreateGraphicsPSO(const GraphicsPSODesc& graphicsPSODesc) = 0;
 };
 
 } // namespace Luna

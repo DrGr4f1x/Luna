@@ -16,4 +16,14 @@
 namespace Luna::DX12
 {
 
+GraphicsPSO12::GraphicsPSO12(const GraphicsPSODesc& graphicsPSODesc, const GraphicsPSODescExt& graphicsPSODescExt)
+	: m_pipelineState{ graphicsPSODescExt.pipelineState }
+{}
+
+
+NativeObjectPtr GraphicsPSO12::GetNativeObject() const noexcept
+{
+	return NativeObjectPtr(m_pipelineState.get());
+}
+
 } // namespace Luna::DX12

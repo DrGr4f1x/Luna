@@ -89,6 +89,8 @@ GraphicsDevice::~GraphicsDevice()
 {
 	LogInfo(LogVulkan) << "Destroying Vulkan device." << endl;
 
+	Shader::DestroyAll();
+
 	g_graphicsDevice = nullptr;
 	g_vulkanGraphicsDevice = nullptr;
 }
@@ -524,6 +526,12 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 	};
 
 	return Make<RootSignatureVK>(rootSignatureDesc, rootSignatureDescExt);
+}
+
+
+GraphicsPSOHandle GraphicsDevice::CreateGraphicsPSO(const GraphicsPSODesc& graphicsPSODesc)
+{
+	return nullptr;
 }
 
 
