@@ -19,9 +19,17 @@ using namespace Microsoft::WRL;
 namespace Luna::VK
 {
 
-struct GraphicsPSODescExt
+class __declspec(uuid("88314541-D852-49A8-A249-2F4F9D76BC49")) GraphicsPipeline final
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IGraphicsPipeline>
+	, NonCopyable
 {
-	VkPipeline pipeline{ VK_NULL_HANDLE };
+public:
+	explicit GraphicsPipeline(CVkPipeline* pipeline);
+
+	NativeObjectPtr GetNativeObject() const noexcept override;
+
+private:
+	wil::com_ptr<CVkPipeline> m_pipeline;
 };
 
 } // namespace Luna::VK

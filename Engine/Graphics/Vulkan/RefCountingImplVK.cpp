@@ -129,4 +129,11 @@ void CVkPipelineLayout::Destroy()
 	m_pipelineLayout = VK_NULL_HANDLE;
 }
 
+
+void CVkPipeline::Destroy()
+{
+	vkDestroyPipeline(GetDevice(), m_pipeline, nullptr);
+	m_pipeline = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

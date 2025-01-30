@@ -16,4 +16,14 @@
 namespace Luna::VK
 {
 
+GraphicsPipeline::GraphicsPipeline(CVkPipeline* pipeline)
+	: m_pipeline{ pipeline }
+{}
+
+
+NativeObjectPtr GraphicsPipeline::GetNativeObject() const noexcept
+{
+	return NativeObjectPtr(*m_pipeline);
+}
+
 } // namespace Luna::VK

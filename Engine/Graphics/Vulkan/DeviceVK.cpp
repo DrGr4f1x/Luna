@@ -529,7 +529,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 }
 
 
-GraphicsPSOHandle GraphicsDevice::CreateGraphicsPSO(const GraphicsPSODesc& graphicsPSODesc)
+GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
 {
 	return nullptr;
 }

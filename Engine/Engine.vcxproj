@@ -32,6 +32,7 @@
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
+    <ClCompile Include="Graphics\CommonStates.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineState12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="Graphics\ColorBuffer.h" />
     <ClInclude Include="Graphics\CommandContext.h" />
+    <ClInclude Include="Graphics\CommonStates.h" />
     <ClInclude Include="Graphics\DepthBuffer.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\PipelineState12.h" />

@@ -515,4 +515,32 @@ private:
 	VkPipelineLayout m_pipelineLayout{ VK_NULL_HANDLE };
 };
 
+
+class __declspec(uuid("ABC4D8B2-3413-41C6-AB99-5C53718B6BA0")) CVkPipeline
+	: public RefCounted<CVkPipeline>
+	, public NonCopyable
+{
+public:
+	CVkPipeline() noexcept = default;
+	CVkPipeline(CVkDevice* device , VkPipeline pipeline)
+		: m_device{ device }
+		, m_pipeline{ pipeline }
+	{}
+	~CVkPipeline()
+	{
+		Destroy();
+	}
+
+	VkPipeline Get() const noexcept { return m_pipeline; }
+	operator VkPipeline() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkPipeline m_pipeline{ VK_NULL_HANDLE };
+};
+
 } // namespace Luna::VK

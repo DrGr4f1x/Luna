@@ -782,21 +782,21 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 }
 
 
-GraphicsPSOHandle GraphicsDevice::CreateGraphicsPSO(const GraphicsPSODesc& graphicsPSODesc)
+GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
-	d3d12PipelineDesc.SampleMask = graphicsPSODesc.sampleMask;
+	d3d12PipelineDesc.SampleMask = graphicsPipelineDesc.sampleMask;
 	d3d12PipelineDesc.InputLayout.NumElements = 0;
 
 	// Blend state
-	d3d12PipelineDesc.BlendState.AlphaToCoverageEnable = graphicsPSODesc.blendState.alphaToCoverageEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.BlendState.IndependentBlendEnable = graphicsPSODesc.blendState.independentBlendEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.BlendState.AlphaToCoverageEnable = graphicsPipelineDesc.blendState.alphaToCoverageEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.BlendState.IndependentBlendEnable = graphicsPipelineDesc.blendState.independentBlendEnable ? TRUE : FALSE;
 
 	for (uint32_t i = 0; i < 8; ++i)
 	{
 		auto& rtDesc = d3d12PipelineDesc.BlendState.RenderTarget[i];
-		const auto& renderTargetBlend = graphicsPSODesc.blendState.renderTargetBlend[i];
+		const auto& renderTargetBlend = graphicsPipelineDesc.blendState.renderTargetBlend[i];
 
 		rtDesc.BlendEnable = renderTargetBlend.blendEnable ? TRUE : FALSE;
 		rtDesc.LogicOpEnable = renderTargetBlend.logicOpEnable ? TRUE : FALSE;
@@ -811,64 +811,66 @@ GraphicsPSOHandle GraphicsDevice::CreateGraphicsPSO(const GraphicsPSODesc& graph
 	}
 
 	// Rasterizer state
-	d3d12PipelineDesc.RasterizerState.FillMode = FillModeToDX12(graphicsPSODesc.rasterizerState.fillMode);
-	d3d12PipelineDesc.RasterizerState.CullMode = CullModeToDX12(graphicsPSODesc.rasterizerState.cullMode);
-	d3d12PipelineDesc.RasterizerState.FrontCounterClockwise = graphicsPSODesc.rasterizerState.frontCounterClockwise ? TRUE : FALSE;
-	d3d12PipelineDesc.RasterizerState.DepthBias = graphicsPSODesc.rasterizerState.depthBias;
-	d3d12PipelineDesc.RasterizerState.DepthBiasClamp = graphicsPSODesc.rasterizerState.depthBiasClamp;
-	d3d12PipelineDesc.RasterizerState.SlopeScaledDepthBias = graphicsPSODesc.rasterizerState.slopeScaledDepthBias;
-	d3d12PipelineDesc.RasterizerState.DepthClipEnable = graphicsPSODesc.rasterizerState.depthClipEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.RasterizerState.MultisampleEnable = graphicsPSODesc.rasterizerState.multisampleEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.RasterizerState.AntialiasedLineEnable = graphicsPSODesc.rasterizerState.antialiasedLineEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.RasterizerState.ForcedSampleCount = graphicsPSODesc.rasterizerState.forcedSampleCount;
+	const auto& rasterizerState = graphicsPipelineDesc.rasterizerState;
+	d3d12PipelineDesc.RasterizerState.FillMode = FillModeToDX12(rasterizerState.fillMode);
+	d3d12PipelineDesc.RasterizerState.CullMode = CullModeToDX12(rasterizerState.cullMode);
+	d3d12PipelineDesc.RasterizerState.FrontCounterClockwise = rasterizerState.frontCounterClockwise ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.DepthBias = rasterizerState.depthBias;
+	d3d12PipelineDesc.RasterizerState.DepthBiasClamp = rasterizerState.depthBiasClamp;
+	d3d12PipelineDesc.RasterizerState.SlopeScaledDepthBias = rasterizerState.slopeScaledDepthBias;
+	d3d12PipelineDesc.RasterizerState.DepthClipEnable = rasterizerState.depthClipEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.MultisampleEnable = rasterizerState.multisampleEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.AntialiasedLineEnable = rasterizerState.antialiasedLineEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.ForcedSampleCount = rasterizerState.forcedSampleCount;
 	d3d12PipelineDesc.RasterizerState.ConservativeRaster =
-		graphicsPSODesc.rasterizerState.conservativeRasterizationEnable ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+		rasterizerState.conservativeRasterizationEnable ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
 	// Depth-stencil state
-	d3d12PipelineDesc.DepthStencilState.DepthEnable = graphicsPSODesc.depthStencilState.depthEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.DepthStencilState.DepthWriteMask = DepthWriteToDX12(graphicsPSODesc.depthStencilState.depthWriteMask);
-	d3d12PipelineDesc.DepthStencilState.DepthFunc = ComparisonFuncToDX12(graphicsPSODesc.depthStencilState.depthFunc);
-	d3d12PipelineDesc.DepthStencilState.StencilEnable = graphicsPSODesc.depthStencilState.stencilEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.DepthStencilState.StencilReadMask = graphicsPSODesc.depthStencilState.stencilReadMask;
-	d3d12PipelineDesc.DepthStencilState.StencilWriteMask = graphicsPSODesc.depthStencilState.stencilWriteMask;
-	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilFailOp = StencilOpToDX12(graphicsPSODesc.depthStencilState.frontFace.stencilFailOp);
-	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilDepthFailOp = StencilOpToDX12(graphicsPSODesc.depthStencilState.frontFace.stencilDepthFailOp);
-	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilPassOp = StencilOpToDX12(graphicsPSODesc.depthStencilState.frontFace.stencilPassOp);
-	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilFunc = ComparisonFuncToDX12(graphicsPSODesc.depthStencilState.frontFace.stencilFunc);
-	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFailOp = StencilOpToDX12(graphicsPSODesc.depthStencilState.backFace.stencilFailOp);
-	d3d12PipelineDesc.DepthStencilState.BackFace.StencilDepthFailOp = StencilOpToDX12(graphicsPSODesc.depthStencilState.backFace.stencilDepthFailOp);
-	d3d12PipelineDesc.DepthStencilState.BackFace.StencilPassOp = StencilOpToDX12(graphicsPSODesc.depthStencilState.backFace.stencilPassOp);
-	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFunc = ComparisonFuncToDX12(graphicsPSODesc.depthStencilState.backFace.stencilFunc);
+	const auto& depthStencilState = graphicsPipelineDesc.depthStencilState;
+	d3d12PipelineDesc.DepthStencilState.DepthEnable = depthStencilState.depthEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.DepthStencilState.DepthWriteMask = DepthWriteToDX12(depthStencilState.depthWriteMask);
+	d3d12PipelineDesc.DepthStencilState.DepthFunc = ComparisonFuncToDX12(depthStencilState.depthFunc);
+	d3d12PipelineDesc.DepthStencilState.StencilEnable = depthStencilState.stencilEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.DepthStencilState.StencilReadMask = depthStencilState.stencilReadMask;
+	d3d12PipelineDesc.DepthStencilState.StencilWriteMask = depthStencilState.stencilWriteMask;
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilFailOp = StencilOpToDX12(depthStencilState.frontFace.stencilFailOp);
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilDepthFailOp = StencilOpToDX12(depthStencilState.frontFace.stencilDepthFailOp);
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilPassOp = StencilOpToDX12(depthStencilState.frontFace.stencilPassOp);
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.frontFace.stencilFunc);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFailOp = StencilOpToDX12(depthStencilState.backFace.stencilFailOp);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilDepthFailOp = StencilOpToDX12(depthStencilState.backFace.stencilDepthFailOp);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilPassOp = StencilOpToDX12(depthStencilState.backFace.stencilPassOp);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.backFace.stencilFunc);
 
 	// Primitive topology & primitive restart
-	d3d12PipelineDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(graphicsPSODesc.topology);
-	d3d12PipelineDesc.IBStripCutValue = IndexBufferStripCutValueToDX12(graphicsPSODesc.indexBufferStripCut);
+	d3d12PipelineDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(graphicsPipelineDesc.topology);
+	d3d12PipelineDesc.IBStripCutValue = IndexBufferStripCutValueToDX12(graphicsPipelineDesc.indexBufferStripCut);
 
 	// Render target formats
-	const uint32_t numRtvs = (uint32_t)graphicsPSODesc.rtvFormats.size();
+	const uint32_t numRtvs = (uint32_t)graphicsPipelineDesc.rtvFormats.size();
 	const uint32_t maxRenderTargets = 8;
 	for (uint32_t i = 0; i < numRtvs; ++i)
 	{
-		d3d12PipelineDesc.RTVFormats[i] = FormatToDxgi(graphicsPSODesc.rtvFormats[i]).rtvFormat;
+		d3d12PipelineDesc.RTVFormats[i] = FormatToDxgi(graphicsPipelineDesc.rtvFormats[i]).rtvFormat;
 	}
 	for (uint32_t i = numRtvs; i < maxRenderTargets; ++i)
 	{
 		d3d12PipelineDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
 	}
 	d3d12PipelineDesc.NumRenderTargets = numRtvs;
-	d3d12PipelineDesc.DSVFormat = GetDSVFormat(FormatToDxgi(graphicsPSODesc.dsvFormat).resourceFormat);
-	d3d12PipelineDesc.SampleDesc.Count = graphicsPSODesc.msaaCount;
+	d3d12PipelineDesc.DSVFormat = GetDSVFormat(FormatToDxgi(graphicsPipelineDesc.dsvFormat).resourceFormat);
+	d3d12PipelineDesc.SampleDesc.Count = graphicsPipelineDesc.msaaCount;
 	d3d12PipelineDesc.SampleDesc.Quality = 0; // TODO Rework this to enable quality levels in DX12
 
 	// Input layout
-	d3d12PipelineDesc.InputLayout.NumElements = (UINT)graphicsPSODesc.vertexElements.size();
+	d3d12PipelineDesc.InputLayout.NumElements = (UINT)graphicsPipelineDesc.vertexElements.size();
 	unique_ptr<const D3D12_INPUT_ELEMENT_DESC> d3dElements;
 
 	if (d3d12PipelineDesc.InputLayout.NumElements > 0)
 	{
 		D3D12_INPUT_ELEMENT_DESC* newD3DElements = (D3D12_INPUT_ELEMENT_DESC*)malloc(sizeof(D3D12_INPUT_ELEMENT_DESC) * d3d12PipelineDesc.InputLayout.NumElements);
 
-		const auto& vertexElements = graphicsPSODesc.vertexElements;
+		const auto& vertexElements = graphicsPipelineDesc.vertexElements;
 
 		for (uint32_t i = 0; i < d3d12PipelineDesc.InputLayout.NumElements; ++i)
 		{
@@ -885,43 +887,43 @@ GraphicsPSOHandle GraphicsDevice::CreateGraphicsPSO(const GraphicsPSODesc& graph
 	}
 
 	// Shaders
-	if (graphicsPSODesc.vertexShader)
+	if (graphicsPipelineDesc.vertexShader)
 	{
-		Shader* vertexShader = LoadShader(ShaderType::Vertex, graphicsPSODesc.vertexShader);
+		Shader* vertexShader = LoadShader(ShaderType::Vertex, graphicsPipelineDesc.vertexShader);
 		assert(vertexShader);
 		d3d12PipelineDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
 	}
 
-	if (graphicsPSODesc.pixelShader)
+	if (graphicsPipelineDesc.pixelShader)
 	{
-		Shader* pixelShader = LoadShader(ShaderType::Pixel, graphicsPSODesc.pixelShader);
+		Shader* pixelShader = LoadShader(ShaderType::Pixel, graphicsPipelineDesc.pixelShader);
 		assert(pixelShader);
 		d3d12PipelineDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
 	}
 
-	if (graphicsPSODesc.geometryShader)
+	if (graphicsPipelineDesc.geometryShader)
 	{
-		Shader* geometryShader = LoadShader(ShaderType::Geometry, graphicsPSODesc.geometryShader);
+		Shader* geometryShader = LoadShader(ShaderType::Geometry, graphicsPipelineDesc.geometryShader);
 		assert(geometryShader);
 		d3d12PipelineDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
 	}
 
-	if (graphicsPSODesc.hullShader)
+	if (graphicsPipelineDesc.hullShader)
 	{
-		Shader* hullShader = LoadShader(ShaderType::Hull, graphicsPSODesc.hullShader);
+		Shader* hullShader = LoadShader(ShaderType::Hull, graphicsPipelineDesc.hullShader);
 		assert(hullShader);
 		d3d12PipelineDesc.HS = CD3DX12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
 	}
 
-	if (graphicsPSODesc.domainShader)
+	if (graphicsPipelineDesc.domainShader)
 	{
-		Shader* domainShader = LoadShader(ShaderType::Domain, graphicsPSODesc.domainShader);
+		Shader* domainShader = LoadShader(ShaderType::Domain, graphicsPipelineDesc.domainShader);
 		assert(domainShader);
 		d3d12PipelineDesc.DS = CD3DX12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
 	}
 
 	// Make sure the root signature is finalized first
-	d3d12PipelineDesc.pRootSignature = graphicsPSODesc.rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
+	d3d12PipelineDesc.pRootSignature = graphicsPipelineDesc.rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
 	assert(d3d12PipelineDesc.pRootSignature != nullptr);
 
 	d3d12PipelineDesc.InputLayout.pInputElementDescs = nullptr;
@@ -969,11 +971,7 @@ GraphicsPSOHandle GraphicsDevice::CreateGraphicsPSO(const GraphicsPSODesc& graph
 		pPipelineState = *ppPipelineState;
 	}
 
-	GraphicsPSODescExt graphicsPSODescExt{
-		.pipelineState = pPipelineState
-	};
-
-	return Make<GraphicsPSO12>(graphicsPSODesc, graphicsPSODescExt);
+	return Make<GraphicsPipeline>(pPipelineState);
 }
 
 

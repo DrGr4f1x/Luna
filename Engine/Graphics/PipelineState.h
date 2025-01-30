@@ -137,7 +137,7 @@ struct ShaderNameAndEntry
 };
 
 
-struct GraphicsPSODesc
+struct GraphicsPipelineDesc
 {
 	std::string name;
 
@@ -165,34 +165,34 @@ struct GraphicsPSODesc
 
 	IRootSignature* rootSignature{ nullptr };
 
-	GraphicsPSODesc& SetName(const std::string& value) { name = value; return *this; }
-	GraphicsPSODesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
-	GraphicsPSODesc& SetDepthStencilState(const DepthStencilStateDesc& value) noexcept { depthStencilState = value; return *this; }
-	GraphicsPSODesc& SetRasterizerState(const RasterizerStateDesc& value) noexcept { rasterizerState = value; return *this; }
-	constexpr GraphicsPSODesc& SetSampleMask(uint32_t value) noexcept { sampleMask = value; return *this; }
-	GraphicsPSODesc& SetRtvFormats(const std::vector<Format>& value) { rtvFormats = value; return *this; }
-	constexpr GraphicsPSODesc& SetDsvFormat(Format value) noexcept { dsvFormat = value; return *this; }
-	constexpr GraphicsPSODesc& SetMsaaCount(uint32_t value) noexcept { msaaCount = value; return *this; }
-	constexpr GraphicsPSODesc& SetSampleRateShading(bool value) noexcept { sampleRateShading = value; return *this; }
-	constexpr GraphicsPSODesc& SetTopology(PrimitiveTopology value) noexcept { topology = value; return *this; }
-	constexpr GraphicsPSODesc& SetIndexBufferStripCut(IndexBufferStripCutValue value) noexcept { indexBufferStripCut = value; return *this; }
-	GraphicsPSODesc& SetVertexShader(const std::string& value, const std::string& entry = "main") { vertexShader.shaderFile = value; vertexShader.entry = entry; return *this; }
-	GraphicsPSODesc& SetPixelShader(const std::string& value, const std::string& entry = "main") { pixelShader.shaderFile = value; pixelShader.entry = entry; return *this; }
-	GraphicsPSODesc& SetGeometryShader(const std::string& value, const std::string& entry = "main") { geometryShader.shaderFile = value; geometryShader.entry = entry; return *this; }
-	GraphicsPSODesc& SetHullShader(const std::string& value, const std::string& entry = "main") { hullShader.shaderFile = value; hullShader.entry = entry; return *this; }
-	GraphicsPSODesc& SetDomainShader(const std::string& value, const std::string& entry = "main") { domainShader.shaderFile = value; domainShader.entry = entry; return *this; }
-	GraphicsPSODesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
-	GraphicsPSODesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
-	constexpr GraphicsPSODesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
+	GraphicsPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
+	GraphicsPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
+	GraphicsPipelineDesc& SetDepthStencilState(const DepthStencilStateDesc& value) noexcept { depthStencilState = value; return *this; }
+	GraphicsPipelineDesc& SetRasterizerState(const RasterizerStateDesc& value) noexcept { rasterizerState = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetSampleMask(uint32_t value) noexcept { sampleMask = value; return *this; }
+	GraphicsPipelineDesc& SetRtvFormats(const std::vector<Format>& value) { rtvFormats = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetDsvFormat(Format value) noexcept { dsvFormat = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetMsaaCount(uint32_t value) noexcept { msaaCount = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetSampleRateShading(bool value) noexcept { sampleRateShading = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetTopology(PrimitiveTopology value) noexcept { topology = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetIndexBufferStripCut(IndexBufferStripCutValue value) noexcept { indexBufferStripCut = value; return *this; }
+	GraphicsPipelineDesc& SetVertexShader(const std::string& value, const std::string& entry = "main") { vertexShader.shaderFile = value; vertexShader.entry = entry; return *this; }
+	GraphicsPipelineDesc& SetPixelShader(const std::string& value, const std::string& entry = "main") { pixelShader.shaderFile = value; pixelShader.entry = entry; return *this; }
+	GraphicsPipelineDesc& SetGeometryShader(const std::string& value, const std::string& entry = "main") { geometryShader.shaderFile = value; geometryShader.entry = entry; return *this; }
+	GraphicsPipelineDesc& SetHullShader(const std::string& value, const std::string& entry = "main") { hullShader.shaderFile = value; hullShader.entry = entry; return *this; }
+	GraphicsPipelineDesc& SetDomainShader(const std::string& value, const std::string& entry = "main") { domainShader.shaderFile = value; domainShader.entry = entry; return *this; }
+	GraphicsPipelineDesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
+	GraphicsPipelineDesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
+	constexpr GraphicsPipelineDesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
 };
 
 
-class __declspec(uuid("F35F4ED1-7BDD-41C2-A545-CA1279A9D722")) IGraphicsPSO : public IUnknown
+class __declspec(uuid("F35F4ED1-7BDD-41C2-A545-CA1279A9D722")) IGraphicsPipeline : public IUnknown
 {
 public:
 	virtual NativeObjectPtr GetNativeObject() const noexcept = 0;
 };
 
-using GraphicsPSOHandle = wil::com_ptr<IGraphicsPSO>;
+using GraphicsPipelineHandle = wil::com_ptr<IGraphicsPipeline>;
 
 } // namespace

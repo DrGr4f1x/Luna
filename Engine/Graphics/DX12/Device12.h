@@ -110,7 +110,7 @@ public:
 	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
-	GraphicsPSOHandle CreateGraphicsPSO(const GraphicsPSODesc& graphicsPSODesc) override;
+	GraphicsPipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
 	void CreateResources();
 

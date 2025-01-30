@@ -24,11 +24,9 @@ namespace Luna
 struct ColorBufferDesc;
 struct DepthBufferDesc;
 struct GpuBufferDesc;
-struct GraphicsPSODesc;
+struct GraphicsPipelineDesc;
 struct RootSignatureDesc;
-struct ShaderDesc;
 class IColorBuffer;
-class IPlatformData;
 class IShaderData;
 enum class ResourceState : uint32_t;
 
@@ -42,7 +40,7 @@ public:
 	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
 	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 	virtual RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
-	virtual GraphicsPSOHandle CreateGraphicsPSO(const GraphicsPSODesc& graphicsPSODesc) = 0;
+	virtual GraphicsPipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) = 0;
 };
 
 } // namespace Luna
