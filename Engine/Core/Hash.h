@@ -66,4 +66,9 @@ template <typename T> inline size_t HashState(const T* StateDesc, size_t Count =
 	return HashRange((uint32_t*)StateDesc, (uint32_t*)(StateDesc + Count), Hash);
 }
 
+inline size_t HashMerge(size_t hash1, size_t hash2)
+{
+	return _mm_crc32_u64(hash1, hash2);
+}
+
 } // namespace Utility

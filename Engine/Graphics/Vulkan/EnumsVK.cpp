@@ -340,6 +340,31 @@ VkShaderStageFlags ShaderStageToVulkan(ShaderStage shaderStage)
 }
 
 
+VkShaderStageFlagBits ShaderTypeToVulkan(ShaderType shaderType)
+{
+	using enum ShaderType;
+	switch (shaderType)
+	{
+	case Compute:			return VK_SHADER_STAGE_COMPUTE_BIT;
+	case Vertex:			return VK_SHADER_STAGE_VERTEX_BIT;
+	case Hull:				return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+	case Domain:			return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+	case Geometry:			return VK_SHADER_STAGE_GEOMETRY_BIT;
+	case Pixel:				return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case Amplification:		return VK_SHADER_STAGE_TASK_BIT_EXT;
+	case Mesh:				return VK_SHADER_STAGE_MESH_BIT_EXT;
+	case RayGeneration:		return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+	case Miss:				return VK_SHADER_STAGE_MISS_BIT_KHR;
+	case ClosestHit:		return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+	case AnyHit:			return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+	case Intersection:		return VK_SHADER_STAGE_INTERSECTION_BIT_KHR;
+	case Callable:			return VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+
+	default: return (VkShaderStageFlagBits)0;
+	}
+}
+
+
 VkDescriptorType DescriptorTypeToVulkan(DescriptorType descriptorType)
 {
 	using enum DescriptorType;

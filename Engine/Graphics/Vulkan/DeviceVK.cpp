@@ -76,6 +76,36 @@ pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
 }
 
 
+Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry)
+{
+	auto [shaderFilenameWithExtension, exists] = GetShaderFilenameWithExtension(shaderNameAndEntry.shaderFile);
+
+	if (!exists)
+	{
+		return nullptr;
+	}
+
+	ShaderDesc shaderDesc{
+		.filenameWithExtension = shaderFilenameWithExtension,
+		.entry = shaderNameAndEntry.entry,
+		.type = type
+	};
+
+	return Shader::Load(shaderDesc);
+}
+
+void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo, VkShaderModule shaderModule, const Shader* shader)
+{
+	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	createInfo.pNext = nullptr;
+	createInfo.flags = 0;
+	createInfo.stage = ShaderTypeToVulkan(shader->GetShaderType());
+	createInfo.pName = shader->GetEntry().c_str();
+	createInfo.module = shaderModule;
+	createInfo.pSpecializationInfo = nullptr;
+}
+
+
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
 	, m_vkDevice{ desc.device }
@@ -293,11 +323,11 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 	auto buffer = Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), vkBuffer, vmaBufferAllocation);
 
 	GpuBufferDescExt gpuBufferDescExt{
-		.buffer = buffer.get(),
-		.bufferInfo = {
-			.buffer = vkBuffer,
-			.offset = 0,
-			.range = VK_WHOLE_SIZE
+		.buffer			= buffer.get(),
+		.bufferInfo		= {
+			.buffer		= vkBuffer,
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
 		}
 	};
 	return Make<GpuBufferVK>(gpuBufferDesc, gpuBufferDescExt);
@@ -531,6 +561,262 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
 {
+	// Shaders
+	vector<VkPipelineShaderStageCreateInfo> shaderStages;
+
+	auto AddShaderStageCreateInfo = [this, &shaderStages](ShaderType type, const ShaderNameAndEntry& shaderAndEntry)
+		{
+			if (shaderAndEntry)
+			{
+				Shader* shader = LoadShader(type, shaderAndEntry);
+				assert(shader);
+				auto shaderModule = CreateShaderModule(shader);
+
+				VkPipelineShaderStageCreateInfo createInfo{};
+				FillShaderStageCreateInfo(createInfo, *shaderModule, shader);
+				shaderStages.push_back(createInfo);
+			}
+		};
+
+	AddShaderStageCreateInfo(ShaderType::Vertex, graphicsPipelineDesc.vertexShader);
+	AddShaderStageCreateInfo(ShaderType::Pixel, graphicsPipelineDesc.pixelShader);
+	AddShaderStageCreateInfo(ShaderType::Geometry, graphicsPipelineDesc.geometryShader);
+	AddShaderStageCreateInfo(ShaderType::Hull, graphicsPipelineDesc.hullShader);
+	AddShaderStageCreateInfo(ShaderType::Domain, graphicsPipelineDesc.domainShader);
+
+	// Vertex streams
+	vector<VkVertexInputBindingDescription> vertexInputBindings;
+	const auto& vertexStreams = graphicsPipelineDesc.vertexStreams;
+	const uint32_t numStreams = (uint32_t)vertexStreams.size();
+	if (numStreams > 0)
+	{
+		vertexInputBindings.resize(numStreams);
+		for (uint32_t i = 0; i < numStreams; ++i)
+		{
+			vertexInputBindings[i].binding = vertexStreams[i].inputSlot;
+			vertexInputBindings[i].inputRate = InputClassificationToVulkan(vertexStreams[i].inputClassification);
+			vertexInputBindings[i].stride = vertexStreams[i].stride;
+		}
+	}
+	
+	// Vertex elements
+	vector<VkVertexInputAttributeDescription> vertexAttributes;
+	const auto& vertexElements = graphicsPipelineDesc.vertexElements;
+	const uint32_t numElements = (uint32_t)vertexElements.size();
+	if (numElements > 0)
+	{
+		vertexAttributes.resize(numElements);
+		for (uint32_t i = 0; i < numElements; ++i)
+		{
+			vertexAttributes[i].binding = vertexElements[i].inputSlot;
+			vertexAttributes[i].location = i;
+			vertexAttributes[i].format = FormatToVulkan(vertexElements[i].format);
+			vertexAttributes[i].offset = vertexElements[i].alignedByteOffset;
+		}
+	}
+	
+	// Vertex input layout
+	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
+		.sType								= VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.pNext								= nullptr,
+		.flags								= 0,
+		.vertexBindingDescriptionCount		= (uint32_t)vertexInputBindings.size(),
+		.pVertexBindingDescriptions			= vertexInputBindings.data(),
+		.vertexAttributeDescriptionCount	= (uint32_t)vertexAttributes.size(),
+		.pVertexAttributeDescriptions		= vertexAttributes.data()
+	};
+
+	// Input assembly
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
+		.sType						= VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+		.pNext						= nullptr,
+		.flags						= 0,
+		.topology					= PrimitiveTopologyToVulkan(graphicsPipelineDesc.topology),
+		.primitiveRestartEnable		= graphicsPipelineDesc.indexBufferStripCut == IndexBufferStripCutValue::Disabled ? VK_FALSE : VK_TRUE
+	};
+	
+	// Tessellation state
+	VkPipelineTessellationStateCreateInfo tessellationInfo{ 
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.patchControlPoints		= GetControlPointCount(graphicsPipelineDesc.topology)
+	};
+	
+	// Viewport state
+	VkPipelineViewportStateCreateInfo viewportStateInfo{ 
+		.sType			= VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+		.pNext			= nullptr,
+		.flags			= 0,
+		.viewportCount	= 1,
+		.pViewports		= nullptr, // dynamic state
+		.scissorCount	= 1,
+		.pScissors		= nullptr  // dynamic state
+	};
+	
+	// Rasterizer state
+	const auto rasterizerState = graphicsPipelineDesc.rasterizerState;
+	VkPipelineRasterizationStateCreateInfo rasterizerInfo
+	{ 
+		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+		.pNext						= nullptr,
+		.flags						= 0,
+		.depthClampEnable			= VK_FALSE,
+		.rasterizerDiscardEnable	= VK_FALSE,
+		.polygonMode				= FillModeToVulkan(rasterizerState.fillMode),
+		.cullMode					= CullModeToVulkan(rasterizerState.cullMode),
+		.frontFace					= rasterizerState.frontCounterClockwise ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE,
+		.depthBiasEnable			= (rasterizerState.depthBias != 0 || rasterizerState.slopeScaledDepthBias != 0.0f) ? VK_TRUE : VK_FALSE,
+		.depthBiasConstantFactor	= *reinterpret_cast<const float*>(&rasterizerState.depthBias),
+		.depthBiasClamp				= rasterizerState.depthBiasClamp,
+		.depthBiasSlopeFactor		= rasterizerState.slopeScaledDepthBias,
+		.lineWidth					= 1.0f
+	};
+	
+	// Multisample state
+	VkPipelineMultisampleStateCreateInfo multisampleInfo{ 
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+		.pNext					= nullptr,
+		.rasterizationSamples	= GetSampleCountFlags(graphicsPipelineDesc.msaaCount),
+		.sampleShadingEnable	= VK_FALSE,
+		.minSampleShading		= 0.0f,
+		.pSampleMask			= nullptr,
+		.alphaToCoverageEnable	= graphicsPipelineDesc.blendState.alphaToCoverageEnable ? VK_TRUE : VK_FALSE,
+		.alphaToOneEnable		= VK_FALSE
+	};
+	
+	// Depth stencil state
+	const auto& depthStencilState = graphicsPipelineDesc.depthStencilState;
+	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{ 
+		.sType					= VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.depthTestEnable		= depthStencilState.depthEnable ? VK_TRUE : VK_FALSE,
+		.depthWriteEnable		= depthStencilState.depthWriteMask == DepthWrite::All ? VK_TRUE : VK_FALSE,
+		.depthCompareOp			= ComparisonFuncToVulkan(depthStencilState.depthFunc),
+		.depthBoundsTestEnable	= VK_FALSE,
+		.stencilTestEnable		= depthStencilState.stencilEnable ? VK_TRUE : VK_FALSE,
+		.front = {
+			.failOp			= StencilOpToVulkan(depthStencilState.frontFace.stencilFailOp),
+			.passOp			= StencilOpToVulkan(depthStencilState.frontFace.stencilPassOp),
+			.depthFailOp	= StencilOpToVulkan(depthStencilState.frontFace.stencilDepthFailOp),
+			.compareOp		= ComparisonFuncToVulkan(depthStencilState.frontFace.stencilFunc),
+			.compareMask	= depthStencilState.stencilReadMask,
+			.writeMask		= depthStencilState.stencilWriteMask,
+			.reference		= 0
+		},
+		.back = {
+			.failOp			= StencilOpToVulkan(depthStencilState.backFace.stencilFailOp),
+			.passOp			= StencilOpToVulkan(depthStencilState.backFace.stencilPassOp),
+			.depthFailOp	= StencilOpToVulkan(depthStencilState.backFace.stencilDepthFailOp),
+			.compareOp		= ComparisonFuncToVulkan(depthStencilState.backFace.stencilFunc),
+			.compareMask	= depthStencilState.stencilReadMask,
+			.writeMask		= depthStencilState.stencilWriteMask,
+			.reference		= 0
+		},
+		.minDepthBounds			= 0.0f,
+		.maxDepthBounds			= 1.0f
+	};
+	
+	// Blend state
+	const auto& blendState = graphicsPipelineDesc.blendState;
+	VkPipelineColorBlendStateCreateInfo blendStateInfo{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = 0
+	};
+
+	array<VkPipelineColorBlendAttachmentState, 8> blendAttachments;
+
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		const auto& rt = blendState.renderTargetBlend[i];
+		blendAttachments[i].blendEnable = rt.blendEnable ? VK_TRUE : VK_FALSE;
+		blendAttachments[i].srcColorBlendFactor = BlendToVulkan(rt.srcBlend);
+		blendAttachments[i].dstColorBlendFactor = BlendToVulkan(rt.dstBlend);
+		blendAttachments[i].colorBlendOp = BlendOpToVulkan(rt.blendOp);
+		blendAttachments[i].srcAlphaBlendFactor = BlendToVulkan(rt.srcBlendAlpha);
+		blendAttachments[i].dstAlphaBlendFactor = BlendToVulkan(rt.dstBlendAlpha);
+		blendAttachments[i].alphaBlendOp = BlendOpToVulkan(rt.blendOpAlpha);
+		blendAttachments[i].colorWriteMask = ColorWriteToVulkan(rt.writeMask);
+
+		// First render target with logic op enabled gets to set the state
+		if (rt.logicOpEnable && (VK_FALSE == blendStateInfo.logicOpEnable))
+		{
+			blendStateInfo.logicOpEnable = VK_TRUE;
+			blendStateInfo.logicOp = LogicOpToVulkan(rt.logicOp);
+		}
+	}
+	const uint32_t numRtvs = (uint32_t)graphicsPipelineDesc.rtvFormats.size();
+	blendStateInfo.attachmentCount = numRtvs;
+	blendStateInfo.pAttachments = blendAttachments.data();
+
+	// Dynamic states
+	vector<VkDynamicState> dynamicStates;
+	dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
+	dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+	VkPipelineDynamicStateCreateInfo dynamicStateInfo{
+		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.pNext				= nullptr,
+		.flags				= 0,
+		.dynamicStateCount	= (uint32_t)dynamicStates.size(),
+		.pDynamicStates		= dynamicStates.data()
+	};
+
+	// TODO: Check for dynamic rendering support here.  Will need proper extension/feature system.
+	vector<VkFormat> rtvFormats;
+	if (numRtvs > 0)
+	{
+		for (uint32_t i = 0; i < numRtvs; ++i)
+		{
+			rtvFormats[i] = FormatToVulkan(graphicsPipelineDesc.rtvFormats[i]);
+		}
+	}
+
+	const Format dsvFormat = graphicsPipelineDesc.dsvFormat;
+	VkPipelineRenderingCreateInfo dynamicRenderingInfo{
+		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+		.pNext						= nullptr,
+		.viewMask					= 0,
+		.colorAttachmentCount		= (uint32_t)rtvFormats.size(),
+		.pColorAttachmentFormats	= rtvFormats.data(),
+		.depthAttachmentFormat		= FormatToVulkan(dsvFormat),
+		.stencilAttachmentFormat	= IsStencilFormat(dsvFormat) ? FormatToVulkan(dsvFormat) : VK_FORMAT_UNDEFINED
+	};
+
+	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
+		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+		.pNext					= &dynamicRenderingInfo,
+		.flags					= 0,
+		.stageCount				= (uint32_t)shaderStages.size(),
+		.pStages				= shaderStages.data(),
+		.pVertexInputState		= &vertexInputInfo,
+		.pInputAssemblyState	= &inputAssemblyInfo,
+		.pTessellationState		= &tessellationInfo,
+		.pViewportState			= &viewportStateInfo,
+		.pRasterizationState	= &rasterizerInfo,
+		.pMultisampleState		= &multisampleInfo,
+		.pDepthStencilState		= &depthStencilInfo,
+		.pColorBlendState		= &blendStateInfo,
+		.pDynamicState			= &dynamicStateInfo,
+		.layout					= graphicsPipelineDesc.rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout),
+		.renderPass				= VK_NULL_HANDLE,
+		.subpass				= 0,
+		.basePipelineHandle		= VK_NULL_HANDLE,
+		.basePipelineIndex		= 0
+	};
+
+	VkPipeline vkPipeline{ VK_NULL_HANDLE };
+	if (VK_SUCCEEDED(vkCreateGraphicsPipelines(*m_vkDevice, *m_pipelineCache, 1, &pipelineCreateInfo, nullptr, &vkPipeline)))
+	{
+		auto pipeline = Create<CVkPipeline>(m_vkDevice.get(), vkPipeline);
+		return Make<GraphicsPipeline>(pipeline.get());
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to create VkPipeline (graphics).  Error code: " << res << endl;
+	}
+
 	return nullptr;
 }
 
@@ -538,12 +824,13 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 void GraphicsDevice::CreateResources()
 {
 	m_vmaAllocator = CreateVmaAllocator();
+	m_pipelineCache = CreatePipelineCache();
 }
 
 
 wil::com_ptr<CVkFence> GraphicsDevice::CreateFence(bool bSignaled) const
 {
-	auto createInfo = VkFenceCreateInfo{ 
+	VkFenceCreateInfo createInfo{ 
 		.sType		= VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 		.pNext		= nullptr,
 		.flags		= bSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0u
@@ -636,9 +923,33 @@ wil::com_ptr<CVmaAllocator> GraphicsDevice::CreateVmaAllocator() const
 }
 
 
+wil::com_ptr<CVkPipelineCache> GraphicsDevice::CreatePipelineCache() const
+{
+	VkPipelineCacheCreateInfo createInfo{
+		.sType				= VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+		.pNext				= nullptr,
+		.flags				= 0,
+		.initialDataSize	= 0,
+		.pInitialData		= nullptr
+	};
+
+	VkPipelineCache vkPipelineCache{ VK_NULL_HANDLE };
+	if (VK_SUCCEEDED(vkCreatePipelineCache(*m_vkDevice, &createInfo, nullptr, &vkPipelineCache)))
+	{
+		return Create<CVkPipelineCache>(m_vkDevice.get(), vkPipelineCache);
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to create VkPipelineCache.  Error code: " << res << endl;
+	}
+
+	return nullptr;
+}
+
+
 wil::com_ptr<CVkImage> GraphicsDevice::CreateImage(const ImageDesc& desc) const
 {
-	auto imageCreateInfo = VkImageCreateInfo{ 
+	VkImageCreateInfo imageCreateInfo{ 
 		.sType			= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.flags			= (VkImageCreateFlags)GetImageCreateFlags(desc.resourceType),
 		.imageType		= GetImageType(desc.resourceType),
@@ -742,6 +1053,52 @@ wil::com_ptr<CVkBuffer> GraphicsDevice::CreateStagingBuffer(const void* initialD
 	memcpy(stagingAllocInfo.pMappedData, initialData, numBytes);
 
 	return Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), stagingBuffer, stagingBufferAlloc);
+}
+
+
+wil::com_ptr<CVkShaderModule> GraphicsDevice::CreateShaderModule(Shader* shader)
+{
+	CVkShaderModule** ppShaderModule = nullptr;
+	bool firstCompile = false;
+	{
+		lock_guard<mutex> CS(m_shaderModuleMutex);
+
+		size_t hashCode = shader->GetHash();
+		auto iter = m_shaderModuleHashMap.find(hashCode);
+
+		// Reserve space so the next inquiry will find that someone got here first.
+		if (iter == m_shaderModuleHashMap.end())
+		{
+			ppShaderModule = m_shaderModuleHashMap[hashCode].addressof();
+			firstCompile = true;
+		}
+		else
+		{
+			ppShaderModule = &iter->second;
+		}
+	}
+
+	if (firstCompile)
+	{
+		VkShaderModuleCreateInfo createInfo{
+		.	sType		= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			.pNext		= nullptr,
+			.flags		= 0,
+			.codeSize	= shader->GetByteCodeSize(),
+			.pCode		= reinterpret_cast<const uint32_t*>(shader->GetByteCode())
+		};
+
+		VkShaderModule vkShaderModule{ VK_NULL_HANDLE };
+		vkCreateShaderModule(*m_vkDevice, &createInfo, nullptr, &vkShaderModule);
+
+		wil::com_ptr<CVkShaderModule> shaderModule = Create<CVkShaderModule>(m_vkDevice.get(), vkShaderModule);
+
+		*ppShaderModule = shaderModule.get();
+
+		(*ppShaderModule)->AddRef();
+	}
+
+	return *ppShaderModule;
 }
 
 

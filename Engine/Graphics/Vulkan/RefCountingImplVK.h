@@ -543,4 +543,61 @@ private:
 	VkPipeline m_pipeline{ VK_NULL_HANDLE };
 };
 
+
+class __declspec(uuid("A2F4A397-56FC-4AE4-8221-83A50E383061")) CVkPipelineCache
+	: public RefCounted<CVkPipelineCache>
+	, public NonCopyable
+{
+public:
+	CVkPipelineCache() noexcept = default;
+	CVkPipelineCache(CVkDevice* device, VkPipelineCache pipelineCache)
+		: m_device{ device }
+		, m_pipelineCache{ pipelineCache }
+	{}
+	~CVkPipelineCache()
+	{
+		Destroy();
+	}
+
+	VkPipelineCache Get() const noexcept { return m_pipelineCache; }
+	operator VkPipelineCache() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkPipelineCache m_pipelineCache{ VK_NULL_HANDLE };
+};
+
+
+class __declspec(uuid("79662185-8E76-4EE0-A70F-C05FF9C2EA5F")) CVkShaderModule
+	: public RefCounted<CVkShaderModule>
+	, public NonCopyable
+{
+public:
+	CVkShaderModule() noexcept = default;
+	CVkShaderModule(CVkDevice* device, VkShaderModule shaderModule)
+		: m_device{ device }
+		, m_shaderModule{ shaderModule }
+	{}
+
+	~CVkShaderModule()
+	{
+		Destroy();
+	}
+
+	VkShaderModule Get() const noexcept { return m_shaderModule; }
+	operator VkShaderModule() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkShaderModule m_shaderModule{ VK_NULL_HANDLE };
+};
+
 } // namespace Luna::VK

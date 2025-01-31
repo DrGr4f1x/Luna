@@ -71,6 +71,7 @@ Shader* Shader::Load(const ShaderDesc& shaderDesc)
 
 	assert_succeeded(BinaryReader::ReadEntireFile(fullpath, shader->m_byteCode, &shader->m_byteCodeSize));
 	shader->m_isLoaded = true;
+	shader->m_hash = std::hash<std::u8string_view>{}(std::u8string_view{ (char8_t*)shader->GetByteCode(), shader->GetByteCodeSize() });
 
 	return shader;
 }

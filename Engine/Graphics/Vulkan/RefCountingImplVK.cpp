@@ -136,4 +136,18 @@ void CVkPipeline::Destroy()
 	m_pipeline = VK_NULL_HANDLE;
 }
 
+
+void CVkPipelineCache::Destroy()
+{
+	vkDestroyPipelineCache(GetDevice(), m_pipelineCache, nullptr);
+	m_pipelineCache = VK_NULL_HANDLE;
+}
+
+
+void CVkShaderModule::Destroy()
+{
+	vkDestroyShaderModule(GetDevice(), m_shaderModule, nullptr);
+	m_shaderModule = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

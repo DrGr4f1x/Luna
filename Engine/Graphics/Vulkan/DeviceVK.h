@@ -15,6 +15,13 @@
 
 using namespace Microsoft::WRL;
 
+// Forward declarations
+namespace Luna
+{
+
+class Shader;
+
+} // namespace Luna
 
 namespace Luna::VK
 {
@@ -156,10 +163,12 @@ private:
 	wil::com_ptr<CVkSemaphore> CreateSemaphore(VkSemaphoreType semaphoreType, uint64_t initialValue) const;
 	wil::com_ptr<CVkCommandPool> CreateCommandPool(CommandListType commandListType) const;
 	wil::com_ptr<CVmaAllocator> CreateVmaAllocator() const;
+	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& desc) const;
 	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& desc) const;
 	
 	wil::com_ptr<CVkBuffer> CreateStagingBuffer(const void* initialData, size_t numBytes) const;
+	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
 
 	VkFormatProperties GetFormatProperties(Format format) const;
 
@@ -174,6 +183,11 @@ private:
 	// Root signatures
 	std::mutex m_pipelineLayoutMutex;
 	std::map<size_t, wil::com_ptr<CVkPipelineLayout>> m_pipelineLayoutHashMap;
+
+	// Pipelines and shader modules
+	std::mutex m_shaderModuleMutex;
+	std::map<size_t, wil::com_ptr<CVkShaderModule>> m_shaderModuleHashMap;
+	wil::com_ptr<CVkPipelineCache> m_pipelineCache;
 };
 
 } // namespace Luna::VK

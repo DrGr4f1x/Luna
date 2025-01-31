@@ -43,6 +43,8 @@ public:
 	const std::byte* GetByteCode() const { return m_byteCode.get(); }
 	size_t GetByteCodeSize() const { return m_byteCodeSize; }
 
+	size_t GetHash() const { return m_hash; }
+
 private:
 	void WaitForLoad() const;
 
@@ -53,6 +55,7 @@ private:
 
 	std::unique_ptr<std::byte[]> m_byteCode;
 	size_t m_byteCodeSize{ 0 };
+	size_t m_hash{ 0 };
 
 	bool m_isLoaded{ false };
 };

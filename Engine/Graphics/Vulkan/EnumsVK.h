@@ -40,6 +40,8 @@ VkVertexInputRate InputClassificationToVulkan(InputClassification inputClassific
 
 VkShaderStageFlags ShaderStageToVulkan(ShaderStage shaderStage);
 
+VkShaderStageFlagBits ShaderTypeToVulkan(ShaderType shaderType);
+
 VkDescriptorType DescriptorTypeToVulkan(DescriptorType descriptorType);
 
 
