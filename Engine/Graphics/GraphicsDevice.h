@@ -10,17 +10,15 @@
 
 #pragma once
 
-#include "Graphics\ColorBuffer.h"
-#include "Graphics\DepthBuffer.h"
-#include "Graphics\GpuBuffer.h"
-#include "Graphics\PipelineState.h"
-#include "Graphics\RootSignature.h"
-
-
 namespace Luna
 {
 
 // Forward declarations
+class IColorBuffer;
+class IDepthBuffer;
+class IGpuBuffer;
+class IGraphicsPipeline;
+class IRootSignature;
 struct ColorBufferDesc;
 struct DepthBufferDesc;
 struct GpuBufferDesc;
@@ -36,11 +34,11 @@ class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice :
 public:
 	virtual ~IGraphicsDevice() = default;
 
-	virtual ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
-	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
-	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
-	virtual RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
-	virtual GraphicsPipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) = 0;
+	virtual wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
+	virtual wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
+	virtual wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
+	virtual wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
+	virtual wil::com_ptr<IGraphicsPipeline> CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) = 0;
 };
 
 } // namespace Luna

@@ -15,6 +15,7 @@
 
 using namespace Microsoft::WRL;
 
+
 // Forward declarations
 namespace Luna
 {
@@ -22,6 +23,7 @@ namespace Luna
 class Shader;
 
 } // namespace Luna
+
 
 namespace Luna::VK
 {
@@ -147,11 +149,11 @@ public:
 	virtual ~GraphicsDevice();
 
 	// GraphicsDevice implementation
-	ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
-	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
-	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
-	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
-	GraphicsPipelineHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
+	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
+	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
+	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
+	wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	wil::com_ptr<IGraphicsPipeline> CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
 	void CreateResources();
 
