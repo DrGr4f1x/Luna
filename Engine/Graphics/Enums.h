@@ -714,6 +714,15 @@ enum class MemoryAccess
 template <> struct EnableBitmaskOperators<MemoryAccess> { static const bool enable = true; };
 
 
+enum class DepthStencilAspect
+{
+	ReadWrite,
+	ReadOnly,
+	DepthReadOnly,
+	StencilReadOnly
+};
+
+
 enum class NativeObjectType : uint32_t
 {
 	// DX12

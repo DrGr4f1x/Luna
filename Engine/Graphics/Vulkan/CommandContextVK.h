@@ -91,6 +91,13 @@ public:
 	void ClearStencil(IDepthBuffer* depthBuffer) override;
 	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
+	void BeginRendering(IColorBuffer* renderTarget) override;
+	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<IColorBuffer*> renderTargets) override;
+	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void EndRendering() override;
+
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;

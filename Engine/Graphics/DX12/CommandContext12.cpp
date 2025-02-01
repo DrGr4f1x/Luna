@@ -52,9 +52,26 @@ inline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const IColorBuffer* colorBuffer)
 }
 
 
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const IDepthBuffer* depthBuffer)
+inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite)
 {
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV).integer };
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle{};
+
+	switch (depthStencilAspect)
+	{
+	case DepthStencilAspect::ReadWrite:
+		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV).integer };
+		break;
+	case DepthStencilAspect::ReadOnly:
+		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV_ReadOnly).integer };
+		break;
+	case DepthStencilAspect::DepthReadOnly:
+		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV_DepthReadOnly).integer };
+		break;
+	case DepthStencilAspect::StencilReadOnly:
+		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV_StencilReadOnly).integer };
+		break;
+	}
+
 	return dsvHandle;
 }
 
@@ -107,6 +124,7 @@ void CommandContext12::Reset()
 	m_numBarriersToFlush = 0;
 
 	BindDescriptorHeaps();
+	ResetRenderTargets();
 }
 
 
@@ -268,6 +286,110 @@ void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 }
 
 
+void CommandContext12::BeginRendering(IColorBuffer* renderTarget)
+{
+	assert(!m_isRendering);
+	ResetRenderTargets();
+
+	m_rtvs[0] = GetRTV(renderTarget);
+	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+	m_numRtvs = 1;
+
+	BindRenderTargets();
+
+	m_isRendering = true;
+}
+
+
+void CommandContext12::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	assert(!m_isRendering);
+	ResetRenderTargets();
+
+	m_rtvs[0] = GetRTV(renderTarget);
+	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+	m_numRtvs = 1;
+
+	m_dsv = GetDSV(depthTarget, depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	m_hasDsv = true;
+
+	BindRenderTargets();
+
+	m_isRendering = true;
+}
+
+
+void CommandContext12::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	assert(!m_isRendering);
+	ResetRenderTargets();
+
+	m_dsv = GetDSV(depthTarget, depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	m_hasDsv = true;
+
+	BindRenderTargets();
+
+	m_isRendering = true;
+}
+
+
+void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
+{
+	assert(!m_isRendering);
+	assert(renderTargets.size() <= 8);
+
+	ResetRenderTargets();
+
+	uint32_t i = 0;
+	for (IColorBuffer* renderTarget : renderTargets)
+	{
+		m_rtvs[i] = GetRTV(renderTarget);
+		m_rtvFormats[i] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+		++i;
+	}
+	m_numRtvs = (uint32_t)renderTargets.size();
+
+	BindRenderTargets();
+
+	m_isRendering = true;
+}
+
+
+void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	assert(!m_isRendering);
+	assert(renderTargets.size() <= 8);
+
+	ResetRenderTargets();
+
+	uint32_t i = 0;
+	for (IColorBuffer* renderTarget : renderTargets)
+	{
+		m_rtvs[i] = GetRTV(renderTarget);
+		m_rtvFormats[i] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+		++i;
+	}
+	m_numRtvs = (uint32_t)renderTargets.size();
+
+	m_dsv = GetDSV(depthTarget, depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	m_hasDsv = true;
+
+	BindRenderTargets();
+
+	m_isRendering = true;
+}
+
+
+void CommandContext12::EndRendering()
+{
+	assert(m_isRendering);
+	m_isRendering = false;
+}
+
+
 void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
 	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
@@ -284,6 +406,30 @@ void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 void CommandContext12::BindDescriptorHeaps()
 {
 	// TODO
+}
+
+
+void CommandContext12::BindRenderTargets()
+{
+	m_commandList->OMSetRenderTargets(
+		m_numRtvs, 
+		m_numRtvs > 0 ? m_rtvs.data() : nullptr, 
+		false, 
+		m_hasDsv ? &m_dsv : nullptr);
+}
+
+
+void CommandContext12::ResetRenderTargets()
+{
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		m_rtvs[i] = D3D12_CPU_DESCRIPTOR_HANDLE{};
+		m_rtvFormats[i] = DXGI_FORMAT_UNKNOWN;
+	}
+	m_numRtvs = 0;
+	m_dsv = D3D12_CPU_DESCRIPTOR_HANDLE{};
+	m_dsvFormat = DXGI_FORMAT_UNKNOWN;
+	m_hasDsv = false;
 }
 
 } // namespace Luna::DX12

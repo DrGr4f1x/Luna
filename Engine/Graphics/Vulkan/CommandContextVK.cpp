@@ -337,6 +337,41 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 }
 
 
+void CommandContextVK::BeginRendering(IColorBuffer* renderTarget)
+{
+	// TODO
+}
+
+
+void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	// TODO
+}
+
+
+void CommandContextVK::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	// TODO
+}
+
+
+void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets)
+{
+	// TODO
+}
+
+
+void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	// TODO
+}
+
+void CommandContextVK::EndRendering()
+{
+	// TODO
+}
+
+
 void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);

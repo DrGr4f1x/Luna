@@ -54,11 +54,20 @@ public:
 	void ClearStencil(IDepthBuffer* depthBuffer) override;
 	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
+	void BeginRendering(IColorBuffer* renderTarget) override;
+	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<IColorBuffer*> renderTargets) override;
+	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void EndRendering() override;
+
 protected:
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
 private:
 	void BindDescriptorHeaps();
+	void BindRenderTargets();
+	void ResetRenderTargets();
 
 private:
 	std::string m_id;
@@ -75,6 +84,16 @@ private:
 	uint32_t m_numBarriersToFlush{ 0 };
 
 	bool m_bHasPendingDebugEvent{ false };
+
+	// Render target state
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 8> m_rtvs;
+	D3D12_CPU_DESCRIPTOR_HANDLE m_dsv;
+	uint32_t m_numRtvs{ 0 };
+	bool m_hasDsv{ false };
+	std::array<DXGI_FORMAT, 8> m_rtvFormats;
+	DXGI_FORMAT m_dsvFormat{ DXGI_FORMAT_UNKNOWN };
+
+	bool m_isRendering{ false };
 };
 
 

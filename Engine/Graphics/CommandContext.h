@@ -61,6 +61,13 @@ public:
 	virtual void ClearStencil(IDepthBuffer* depthBuffer) = 0;
 	virtual void ClearDepthAndStencil(IDepthBuffer* depthBuffer) = 0;
 
+	virtual void BeginRendering(IColorBuffer* renderTarget) = 0;
+	virtual void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets) = 0;
+	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void EndRendering() = 0;
+
 	// Compute context
 	
 protected:
@@ -127,6 +134,13 @@ public:
 	void ClearDepth(IDepthBuffer* depthBuffer);
 	void ClearStencil(IDepthBuffer* depthBuffer);
 	void ClearDepthAndStencil(IDepthBuffer* depthBuffer);
+
+	void BeginRendering(IColorBuffer* renderTarget);
+	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(std::span<IColorBuffer*> renderTargets);
+	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void EndRendering();
 };
 
 
@@ -218,6 +232,42 @@ inline void GraphicsContext::ClearStencil(IDepthBuffer* depthBuffer)
 inline void GraphicsContext::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearDepthAndStencil(depthBuffer);
+}
+
+
+inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget)
+{
+	m_contextImpl->BeginRendering(renderTarget);
+}
+
+
+inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	m_contextImpl->BeginRendering(renderTarget, depthTarget, depthStencilAspect);
+}
+
+
+inline void GraphicsContext::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	m_contextImpl->BeginRendering(depthTarget, depthStencilAspect);
+}
+
+
+inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTargets)
+{
+	m_contextImpl->BeginRendering(renderTargets);
+}
+
+
+inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	m_contextImpl->BeginRendering(renderTargets, depthTarget, depthStencilAspect);
+}
+
+
+inline void GraphicsContext::EndRendering()
+{
+	m_contextImpl->EndRendering();
 }
 
 } // namespace Luna
