@@ -44,6 +44,15 @@ NativeObjectPtr DepthBufferVK::GetNativeObject(NativeObjectType type, uint32_t i
 	case NativeObjectType::VK_Image:
 		return NativeObjectPtr(m_image->Get());
 
+	case NativeObjectType::VK_ImageView_DSV:
+		return NativeObjectPtr(m_imageViewDepthStencil->Get());
+
+	case NativeObjectType::VK_ImageView_DSV_Depth:
+		return NativeObjectPtr(m_imageViewDepthOnly->Get());
+
+	case NativeObjectType::VK_ImageView_DSV_Stencil:
+		return NativeObjectPtr(m_imageViewStencilOnly->Get());
+
 	default:
 		assert(false);
 		return nullptr;

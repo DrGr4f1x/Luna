@@ -740,11 +740,16 @@ enum class NativeObjectType : uint32_t
 	DX12_RootSignature			= 0x0001000C,
 
 	// Vulkan
-	VK_Image				= 0x00020001,
-	VK_Buffer				= 0x00020002,
-	VK_FrameBuffer			= 0x00020003,
-	VK_RenderPass			= 0x00020004,
-	VK_PipelineLayout		= 0x00020005,
+	VK_Image					= 0x00020001,
+	VK_Buffer					= 0x00020002,
+	VK_FrameBuffer				= 0x00020003,
+	VK_RenderPass				= 0x00020004,
+	VK_PipelineLayout			= 0x00020005,
+	VK_ImageView_RTV			= 0x00020006,
+	VK_ImageView_SRV			= 0x00020007,
+	VK_ImageView_DSV			= 0x00020008,
+	VK_ImageView_DSV_Depth		= 0x00020009,
+	VK_ImageView_DSV_Stencil	= 0x0002000A,
 };
 
 } // namespace Luna

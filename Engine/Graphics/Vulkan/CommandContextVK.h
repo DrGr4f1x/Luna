@@ -103,6 +103,8 @@ private:
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
 	void BindDescriptorHeaps() {}
+	void BeginRenderingBlock();
+	void ResetRenderTargets();
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
 
@@ -114,6 +116,7 @@ private:
 
 	bool m_bInvertedViewport{ true };
 	bool m_hasPendingDebugEvent{ false };
+	bool m_isRendering{ false };
 
 	// Resource barriers
 	std::vector<TextureBarrier> m_textureBarriers;
@@ -121,6 +124,15 @@ private:
 	std::vector<VkMemoryBarrier2> m_memoryBarriers;
 	std::vector<VkBufferMemoryBarrier2> m_bufferMemoryBarriers;
 	std::vector<VkImageMemoryBarrier2> m_imageMemoryBarriers;
+
+	// Render target state
+	std::array<VkRenderingAttachmentInfo, 8> m_rtvs;
+	std::array<VkFormat, 8> m_rtvFormats;
+	uint32_t m_numRtvs{ 0 };
+	VkRenderingAttachmentInfo m_dsv;
+	VkFormat m_dsvFormat{ VK_FORMAT_UNDEFINED };
+	bool m_hasDsv{ false };
+	VkRect2D m_renderingArea;
 };
 
 } // namespace Luna::VK

@@ -25,6 +25,77 @@ using namespace std;
 namespace Luna::VK
 {
 
+VkClearValue GetColorClearValue(Color color)
+{
+	VkClearValue clearValue{};
+	clearValue.color.float32[0] = color[0];
+	clearValue.color.float32[1] = color[1];
+	clearValue.color.float32[2] = color[2];
+	clearValue.color.float32[3] = color[3];
+	return clearValue;
+}
+
+
+VkClearValue GetDepthStencilClearValue(float depth, uint32_t stencil)
+{
+	VkClearValue clearValue{};
+	clearValue.depthStencil.depth = depth;
+	clearValue.depthStencil.stencil = stencil;
+	return clearValue;
+}
+
+
+VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IColorBuffer* renderTarget)
+{
+	VkRenderingAttachmentInfo info{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+		.pNext = nullptr,
+		.imageView = renderTarget->GetNativeObject(NativeObjectType::VK_ImageView_RTV),
+		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		.resolveMode = VK_RESOLVE_MODE_NONE,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.clearValue = GetColorClearValue(renderTarget->GetClearColor())
+	};
+
+	return info;
+}
+
+
+VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+{
+	VkImageView imageView{ VK_NULL_HANDLE };
+	switch (depthStencilAspect)
+	{
+	case DepthStencilAspect::ReadWrite:
+	case DepthStencilAspect::ReadOnly:
+		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV);
+		break;
+
+	case DepthStencilAspect::DepthReadOnly:
+		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV_Depth);
+		break;
+
+	case DepthStencilAspect::StencilReadOnly:
+		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV_Stencil);
+		break;
+	}
+
+	VkRenderingAttachmentInfo info{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+		.pNext = nullptr,
+		.imageView = imageView,
+		.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+		.resolveMode = VK_RESOLVE_MODE_NONE,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.clearValue = GetDepthStencilClearValue(depthTarget->GetClearDepth(), depthTarget->GetClearStencil())
+	};
+
+	return info;
+}
+
+
 void CommandContextVK::BeginEvent(const string& label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
@@ -339,36 +410,91 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 
 void CommandContextVK::BeginRendering(IColorBuffer* renderTarget)
 {
-	// TODO
+	ResetRenderTargets();
+
+	m_rtvs[0] = GetRenderingAttachmentInfo(renderTarget);
+	m_numRtvs = 1;
+	m_rtvFormats[0] = FormatToVulkan(renderTarget->GetFormat());
+
+	BeginRenderingBlock();
 }
 
 
 void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	// TODO
+	ResetRenderTargets();
+
+	m_rtvs[0] = GetRenderingAttachmentInfo(renderTarget);
+	m_numRtvs = 1;
+	m_rtvFormats[0] = FormatToVulkan(renderTarget->GetFormat());
+
+	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
+	m_hasDsv = true;
+	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+
+	BeginRenderingBlock();
 }
 
 
 void CommandContextVK::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	// TODO
+	ResetRenderTargets();
+
+	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
+	m_hasDsv = true;
+	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+
+	BeginRenderingBlock();
 }
 
 
 void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets)
 {
-	// TODO
+	ResetRenderTargets();
+	assert(renderTargets.size() <= 8);
+
+	uint32_t i = 0;
+	for (IColorBuffer* renderTarget : renderTargets)
+	{
+		m_rtvs[i] = GetRenderingAttachmentInfo(renderTarget);
+		m_rtvFormats[i] = FormatToVulkan(renderTarget->GetFormat());
+		++i;
+	}
+	m_numRtvs = (uint32_t)renderTargets.size();
+
+	BeginRenderingBlock();
 }
 
 
 void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	// TODO
+	ResetRenderTargets();
+	assert(renderTargets.size() <= 8);
+
+	uint32_t i = 0;
+	for (IColorBuffer* renderTarget : renderTargets)
+	{
+		m_rtvs[i] = GetRenderingAttachmentInfo(renderTarget);
+		m_rtvFormats[i] = FormatToVulkan(renderTarget->GetFormat());
+		++i;
+	}
+	m_numRtvs = (uint32_t)renderTargets.size();
+
+	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
+	m_hasDsv = true;
+	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+
+	BeginRenderingBlock();
 }
+
 
 void CommandContextVK::EndRendering()
 {
-	// TODO
+	assert(m_isRendering);
+
+	vkCmdEndRendering(m_commandBuffer);
+
+	m_isRendering = false;
 }
 
 
@@ -385,6 +511,41 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetVulkanDeviceManager()->ReleaseBuffer(stagingBuffer.get());
+}
+
+
+void CommandContextVK::BeginRenderingBlock()
+{
+	assert(!m_isRendering);
+
+	VkRenderingInfo renderingInfo{
+		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+		.pNext = nullptr,
+		.flags = 0,
+		.renderArea = m_renderingArea,
+		.layerCount = 1,
+		.viewMask = 0,
+		.colorAttachmentCount = m_numRtvs,
+		.pColorAttachments = m_numRtvs > 0 ? m_rtvs.data() : nullptr,
+		.pDepthAttachment = m_hasDsv ? &m_dsv : nullptr,
+		.pStencilAttachment = (m_hasDsv && IsStencilFormat(m_dsvFormat)) ? &m_dsv : nullptr
+	};
+
+	vkCmdBeginRendering(m_commandBuffer, &renderingInfo);
+
+	m_isRendering = true;
+}
+
+
+void CommandContextVK::ResetRenderTargets()
+{
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		m_rtvFormats[i] = VK_FORMAT_UNDEFINED;
+	}
+	m_numRtvs = 0;
+	m_dsvFormat = VK_FORMAT_UNDEFINED;
+	m_hasDsv = false;
 }
 
 } // namespace Luna::VK
