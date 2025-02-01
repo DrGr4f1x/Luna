@@ -12,6 +12,8 @@
 
 #include "TriangleApp.h"
 
+#include "Graphics\CommonStates.h"
+
 using namespace Luna;
 using namespace std;
 
@@ -83,6 +85,7 @@ void TriangleApp::Startup()
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
 
 	InitRootSignature();
+	InitPipelineState();
 }
 
 
@@ -127,4 +130,37 @@ void TriangleApp::InitRootSignature()
 	};
 
 	m_rootSignature = GetGraphicsDevice()->CreateRootSignature(rootSignatureDesc);
+}
+
+
+void TriangleApp::InitPipelineState()
+{
+	VertexStreamDesc vertexStreamDesc{
+		.inputSlot				= 0,
+		.stride					= sizeof(Vertex),
+		.inputClassification	= InputClassification::PerVertexData
+	};
+
+	vector<VertexElementDesc> vertexElements{
+		{ "POSITION", 0, Format::RGB32_Float, 0, offsetof(Vertex, position), InputClassification::PerVertexData, 0 },
+		{ "COLOR", 0, Format::RGB32_Float, 0, offsetof(Vertex, color), InputClassification::PerVertexData, 0 }
+	};
+
+	GraphicsPipelineDesc desc
+	{
+		.name				= "Graphics PSO",
+		.blendState			= CommonStates::BlendDisable(),
+		.depthStencilState	= CommonStates::DepthStateReadOnlyReversed(),
+		.rasterizerState	= CommonStates::RasterizerTwoSided(),
+		.rtvFormats			= { GetColorFormat() },
+		.dsvFormat			= GetDepthFormat(),
+		.topology			= PrimitiveTopology::TriangleList,
+		.vertexShader		= { .shaderFile = "TriangleVS" },
+		.pixelShader		= { .shaderFile = "TrianglePS" },
+		.vertexStreams		= { vertexStreamDesc },
+		.vertexElements		= vertexElements,
+		.rootSignature		= m_rootSignature.get()
+	};
+
+	m_graphicsPipeline = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
 }

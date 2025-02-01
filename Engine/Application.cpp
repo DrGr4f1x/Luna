@@ -257,6 +257,18 @@ void Application::UpdateWindowSize()
 }
 
 
+Format Application::GetColorFormat()
+{
+	return m_deviceManager->GetColorFormat();
+}
+
+
+Format Application::GetDepthFormat()
+{
+	return m_deviceManager->GetDepthFormat();
+}
+
+
 bool Application::Initialize()
 {
 	// Create core engine systems

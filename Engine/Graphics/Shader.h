@@ -37,7 +37,7 @@ public:
 	explicit Shader(const ShaderDesc& shaderDesc);
 	
 	const std::string& GetFilenameWithExtension() const { return m_filenameWithExtension; }
-	const std::string GetEntry() const { return m_entry; }
+	const std::string& GetEntry() const { return m_entry; }
 	ShaderType GetShaderType() const { return m_type; }
 
 	const std::byte* GetByteCode() const { return m_byteCode.get(); }

@@ -45,6 +45,7 @@ struct DeviceManagerDesc
 
 	uint32_t numSwapChainBuffers{ 3 };
 	Format swapChainFormat{ Format::SRGBA8_UNorm };
+	Format depthBufferFormat{ Format::D32S8 };
 	uint32_t swapChainSampleCount{ 1 };
 	uint32_t swapChainSampleQuality{ 0 };
 	uint32_t maxFramesInFlight{ 2 };
@@ -73,6 +74,7 @@ struct DeviceManagerDesc
 	constexpr DeviceManagerDesc& SetEnableVSync(bool value) noexcept { enableVSync = value; return *this; }
 	constexpr DeviceManagerDesc& SetNumSwapChainBuffers(uint32_t value) noexcept { numSwapChainBuffers = value; return *this; }
 	constexpr DeviceManagerDesc& SetSwapChainFormat(Format value) noexcept { swapChainFormat = value; return *this; }
+	constexpr DeviceManagerDesc& SetDepthBufferFormat(Format value) noexcept { depthBufferFormat = value; return *this; }
 	constexpr DeviceManagerDesc& SetSwapChainSampleCount(uint32_t value) noexcept { swapChainSampleCount = value; return *this; }
 	constexpr DeviceManagerDesc& SetSwapChainSampleQuality(uint32_t value) noexcept { swapChainSampleQuality = value; return *this; }
 	constexpr DeviceManagerDesc& SetMaxFramesInFlight(uint32_t value) noexcept { maxFramesInFlight = value; return *this; }
@@ -103,6 +105,9 @@ public:
 	virtual ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex) = 0;
 
 	virtual IColorBuffer* GetColorBuffer() = 0;
+
+	virtual Format GetColorFormat() = 0;
+	virtual Format GetDepthFormat() = 0;
 };
 
 } // namespace Luna

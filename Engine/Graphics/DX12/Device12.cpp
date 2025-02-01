@@ -875,7 +875,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		for (uint32_t i = 0; i < d3d12PipelineDesc.InputLayout.NumElements; ++i)
 		{
 			newD3DElements[i].AlignedByteOffset = vertexElements[i].alignedByteOffset;
-			newD3DElements[i].Format = FormatToDxgi(vertexElements[i].format).resourceFormat;
+			newD3DElements[i].Format = FormatToDxgi(vertexElements[i].format).srvFormat;
 			newD3DElements[i].InputSlot = vertexElements[i].inputSlot;
 			newD3DElements[i].InputSlotClass = InputClassificationToDX12(vertexElements[i].inputClassification);
 			newD3DElements[i].InstanceDataStepRate = vertexElements[i].instanceDataStepRate;
@@ -958,7 +958,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		HRESULT res = m_dxDevice->CreateGraphicsPipelineState(&d3d12PipelineDesc, IID_PPV_ARGS(&pPipelineState));
 		ThrowIfFailed(res);
 
-		SetDebugName(pPipelineState, "GfxPSO");
+		SetDebugName(pPipelineState, graphicsPipelineDesc.name);
 
 		m_pipelineStateMap[hashCode].attach(pPipelineState);
 	}

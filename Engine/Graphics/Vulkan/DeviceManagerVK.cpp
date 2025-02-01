@@ -296,7 +296,8 @@ void DeviceManager::CreateDeviceResources()
 
 void DeviceManager::CreateWindowSizeDependentResources()
 { 
-	m_swapChainFormat = { FormatToVulkan(RemoveSrgb(m_desc.swapChainFormat)), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+	m_swapChainFormat = RemoveSrgb(m_desc.swapChainFormat);
+	m_swapChainSurfaceFormat = { FormatToVulkan(m_swapChainFormat), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
 	VkExtent2D extent{
 		m_desc.backBufferWidth,
@@ -317,8 +318,8 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	VkSwapchainCreateInfoKHR createInfo{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
 	createInfo.surface = *m_vkSurface;
 	createInfo.minImageCount = m_desc.numSwapChainBuffers;
-	createInfo.imageFormat = m_swapChainFormat.format;
-	createInfo.imageColorSpace = m_swapChainFormat.colorSpace;
+	createInfo.imageFormat = m_swapChainSurfaceFormat.format;
+	createInfo.imageColorSpace = m_swapChainSurfaceFormat.colorSpace;
 	createInfo.imageExtent = extent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = usage;
@@ -332,8 +333,8 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	createInfo.clipped = true;
 	createInfo.oldSwapchain = nullptr;
 
-	vector<VkFormat> imageFormats{ m_swapChainFormat.format };
-	switch (m_swapChainFormat.format)
+	vector<VkFormat> imageFormats{ m_swapChainSurfaceFormat.format };
+	switch (m_swapChainSurfaceFormat.format)
 	{
 	case VK_FORMAT_R8G8B8A8_UNORM:
 		imageFormats.push_back(VK_FORMAT_R8G8B8A8_SRGB);
@@ -444,7 +445,7 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 		.height				= m_desc.backBufferHeight,
 		.arraySizeOrDepth	= 1,
 		.numSamples			= 1,
-		.format				= m_desc.swapChainFormat
+		.format				= m_swapChainFormat
 	};
 
 	auto image = Create<CVkImage>(m_vkDevice.get(), m_vkSwapChainImages[imageIndex]->Get());
@@ -456,7 +457,7 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 		.name				= format("Primary Swapchain {} RTV Image View", imageIndex),
 		.resourceType		= ResourceType::Texture2D,
 		.imageUsage			= GpuImageUsage::RenderTarget,
-		.format				= m_desc.swapChainFormat,
+		.format				= m_swapChainFormat,
 		.imageAspect		= ImageAspect::Color,
 		.baseMipLevel		= 0,
 		.mipCount			= 1,
@@ -493,6 +494,18 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 IColorBuffer* DeviceManager::GetColorBuffer()
 {
 	return m_swapChainBuffers[m_swapChainIndex].get();
+}
+
+
+Format DeviceManager::GetColorFormat()
+{
+	return m_swapChainFormat;
+}
+
+
+Format DeviceManager::GetDepthFormat()
+{
+	return m_desc.depthBufferFormat;
 }
 
 

@@ -53,6 +53,9 @@ public:
 
 	IColorBuffer* GetColorBuffer() final;
 
+	Format GetColorFormat() final;
+	Format GetDepthFormat() final;
+
 	void ReleaseImage(CVkImage* image);
 	void ReleaseBuffer(CVkBuffer* buffer);
 
@@ -103,7 +106,8 @@ private:
 	std::vector<wil::com_ptr<CVkImage>> m_vkSwapChainImages;
 	uint32_t m_swapChainIndex{ (uint32_t)-1 };
 	bool m_swapChainMutableFormatSupported{ false };
-	VkSurfaceFormatKHR m_swapChainFormat{};
+	VkSurfaceFormatKHR m_swapChainSurfaceFormat{};
+	Format m_swapChainFormat;
 
 	// Swapchain color buffers
 	std::vector<ColorBufferHandle> m_swapChainBuffers;

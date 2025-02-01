@@ -764,7 +764,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	};
 
 	// TODO: Check for dynamic rendering support here.  Will need proper extension/feature system.
-	vector<VkFormat> rtvFormats;
+	vector<VkFormat> rtvFormats(numRtvs);
 	if (numRtvs > 0)
 	{
 		for (uint32_t i = 0; i < numRtvs; ++i)

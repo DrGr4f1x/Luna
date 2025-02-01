@@ -148,7 +148,7 @@ struct GraphicsPipelineDesc
 	uint32_t sampleMask{ 0xFFFFFFFF };
 	std::vector<Format> rtvFormats;
 	Format dsvFormat;
-	uint32_t msaaCount;
+	uint32_t msaaCount{ 1 };
 	bool sampleRateShading{ false };
 
 	PrimitiveTopology topology;

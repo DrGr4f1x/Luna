@@ -94,6 +94,9 @@ protected:
 
 	void UpdateWindowSize();
 
+	Format GetColorFormat();
+	Format GetDepthFormat();
+
 protected:
 	ApplicationInfo m_appInfo;
 	std::string m_appNameWithApi;

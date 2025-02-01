@@ -284,7 +284,9 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	// TODO: The window dimensions might have changed externally.  Need to pass those in from somewhere else.
 	const uint32_t newBackBufferWidth = m_desc.backBufferWidth;
 	const uint32_t newBackBufferHeight = m_desc.backBufferHeight;
-	DXGI_FORMAT dxgiFormat = FormatToDxgi(RemoveSrgb(m_desc.swapChainFormat)).rtvFormat;
+
+	m_swapChainFormat = RemoveSrgb(m_desc.swapChainFormat);
+	DXGI_FORMAT dxgiFormat = FormatToDxgi(m_swapChainFormat).rtvFormat;
 
 	if (m_dxSwapChain)
 	{
@@ -462,6 +464,18 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 IColorBuffer* DeviceManager::GetColorBuffer()
 {
 	return m_swapChainBuffers[m_backBufferIndex].get();
+}
+
+
+Format DeviceManager::GetColorFormat()
+{
+	return m_swapChainFormat;
+}
+
+
+Format DeviceManager::GetDepthFormat()
+{
+	return m_desc.depthBufferFormat;
 }
 
 

@@ -63,6 +63,9 @@ public:
 
 	IColorBuffer* GetColorBuffer() final;
 
+	Format GetColorFormat() final;
+	Format GetDepthFormat() final;
+
 	void HandleDeviceLost();
 
 	void ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation = nullptr);
@@ -103,6 +106,7 @@ private:
 	std::vector<ColorBufferHandle> m_swapChainBuffers;
 	wil::com_ptr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
+	Format m_swapChainFormat;
 
 	// Presentation synchronization
 	wil::com_ptr<ID3D12Fence> m_fence;
