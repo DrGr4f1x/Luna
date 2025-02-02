@@ -343,14 +343,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 	size_t hashCode = Utility::g_hashStart;
 
-	// Build merged list of root parameters
-	std::vector<RootParameter> rootParameters;
-	for (const auto& rootParameterSet : rootSignatureDesc.rootParameters)
-	{
-		rootParameters.insert(rootParameters.end(), rootParameterSet.begin(), rootParameterSet.end());
-	}
-
-	for (const auto& rootParameter : rootParameters)
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
 		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
 
@@ -431,11 +424,11 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
 
 			VkDescriptorSetLayoutCreateInfo createInfo{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.pNext = nullptr,
-				.flags = 0,
-				.bindingCount = 1,
-				.pBindings = &vkBinding
+				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+				.pNext			= nullptr,
+				.flags			= 0,
+				.bindingCount	= 1,
+				.pBindings		= &vkBinding
 			};
 
 			VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };

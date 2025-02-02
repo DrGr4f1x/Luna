@@ -126,7 +126,7 @@ void TriangleApp::InitRootSignature()
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Sig",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
-		.rootParameters		= { { RootParameter::RootCBV(0, ShaderStage::Vertex) } }
+		.rootParameters		= { RootParameter::RootCBV(0, ShaderStage::Vertex) }
 	};
 
 	m_rootSignature = GetGraphicsDevice()->CreateRootSignature(rootSignatureDesc);

@@ -371,7 +371,7 @@ bool Application::CreateAppWindow()
 
 void Application::CreateDeviceManager()
 {
-	auto desc = DeviceManagerDesc{
+	DeviceManagerDesc deviceManagerDesc{
 		.appName				= m_appInfo.name,
 		.graphicsApi			= m_appInfo.api,
 		.enableValidation		= m_appInfo.useValidation,
@@ -382,7 +382,7 @@ void Application::CreateDeviceManager()
 		.hinstance				= m_hinst
 	};
 
-	m_deviceManager = Luna::CreateDeviceManager(desc);
+	m_deviceManager = Luna::CreateDeviceManager(deviceManagerDesc);
 	m_deviceManager->CreateDeviceResources();
 }
 

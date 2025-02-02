@@ -22,6 +22,9 @@ struct DescriptorRange
 	uint32_t startRegister{ 0 };
 	uint32_t numDescriptors{ 1 };
 
+	constexpr DescriptorRange& SetDescriptorType(DescriptorType value) noexcept { descriptorType = value; return *this; }
+	constexpr DescriptorRange& SetStartRegister(uint32_t value) noexcept { startRegister = value; return *this; }
+	constexpr DescriptorRange& SetNumDescriptors(uint32_t value) noexcept { numDescriptors = value; return *this; }
 
 	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1)
 	{
@@ -175,6 +178,14 @@ struct RootParameter
 	uint32_t num32BitConstants{ 0 };
 	std::vector<DescriptorRange> table;
 
+	constexpr RootParameter& SetShaderVisibility(Luna::ShaderStage value) noexcept { shaderVisibility = value; return *this; }
+	constexpr RootParameter& SetParameterType(RootParameterType value) noexcept { parameterType = value; return *this; }
+	constexpr RootParameter& SetStartRegister(uint32_t value) noexcept { startRegister = value; return *this; }
+	constexpr RootParameter& SetRegisterSpace(uint32_t value) noexcept { registerSpace = value; return *this; }
+	constexpr RootParameter& SetNum32BitConstants(uint32_t value) noexcept { num32BitConstants = value; return *this; }
+	RootParameter& SetTable(const std::vector<DescriptorRange>& value) { table = value; return *this; }
+
+
 	static RootParameter RootConstants(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
 	{
 		auto ret = RootParameter
@@ -270,8 +281,18 @@ struct RootSignatureDesc
 {
 	std::string name{};
 	RootSignatureFlags flags{ RootSignatureFlags::None };
-	std::vector<RootParameters> rootParameters;
 	VulkanBindingOffsets bindingOffsets{};
+	RootParameters rootParameters;
+
+	RootSignatureDesc& SetName(const std::string& value) { name = value; return *this; }
+	constexpr RootSignatureDesc& SetFlags(RootSignatureFlags value) noexcept { flags = value; return *this; }
+	RootSignatureDesc& SetBindingOffsets(VulkanBindingOffsets value) noexcept { bindingOffsets = value; return *this; }
+	RootSignatureDesc& SetRootParameters(const RootParameters& value) { rootParameters = value; return *this; }
+	RootSignatureDesc& AppendRootParameters(const RootParameters& value)
+	{
+		rootParameters.insert(rootParameters.end(), value.begin(), value.end());
+		return *this;
+	}
 };
 
 

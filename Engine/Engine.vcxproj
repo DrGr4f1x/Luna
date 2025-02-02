@@ -33,6 +33,7 @@
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
     <ClCompile Include="Graphics\CommonStates.cpp" />
+    <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineState12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
@@ -54,6 +55,7 @@
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\InputLayout.cpp" />
     <ClCompile Include="Graphics\Shader.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
@@ -113,7 +115,9 @@
     <ClInclude Include="Graphics\CommandContext.h" />
     <ClInclude Include="Graphics\CommonStates.h" />
     <ClInclude Include="Graphics\DepthBuffer.h" />
+    <ClInclude Include="Graphics\DescriptorSet.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
+    <ClInclude Include="Graphics\DX12\DescriptorSet12.h" />
     <ClInclude Include="Graphics\DX12\PipelineState12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
@@ -144,6 +148,7 @@
     <ClInclude Include="Graphics\PixelBuffer.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
     <ClInclude Include="Graphics\Shader.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />

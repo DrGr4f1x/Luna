@@ -612,7 +612,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 {
 	std::vector<D3D12_ROOT_PARAMETER1> d3d12RootParameters;
 
-	auto exitGuard = sg::make_scope_guard([&]()
+	auto exitGuard = wil::scope_exit([&]()
 		{
 			for (auto& param : d3d12RootParameters)
 			{
@@ -623,15 +623,8 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 			}
 		});
 
-	// Build merged list of root parameters
-	std::vector<RootParameter> rootParameters;
-	for (const auto& rootParameterSet : rootSignatureDesc.rootParameters)
-	{
-		rootParameters.insert(rootParameters.end(), rootParameterSet.begin(), rootParameterSet.end());
-	}
-
 	// Build DX12 root parameter descriptions
-	for (const auto& rootParameter : rootParameters)
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{

@@ -151,6 +151,12 @@
     <ClCompile Include="Graphics\CommonStates.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -399,6 +405,15 @@
     </ClInclude>
     <ClInclude Include="Graphics\CommonStates.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DescriptorSet.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\DescriptorSet12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h">
+      <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
