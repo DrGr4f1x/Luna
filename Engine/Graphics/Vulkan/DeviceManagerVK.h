@@ -51,7 +51,7 @@ public:
 
 	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex) final;
 
-	IColorBuffer* GetColorBuffer() final;
+	ColorBufferHandle GetColorBuffer() final;
 
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;

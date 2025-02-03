@@ -496,9 +496,15 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 
 GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
+	GpuBufferDesc gpuBufferDesc2{ gpuBufferDesc };
+	if (gpuBufferDesc2.resourceType == ResourceType::ConstantBuffer)
+	{
+		gpuBufferDesc2.elementSize = Math::AlignUp(gpuBufferDesc2.elementSize, 256);
+	}
+	
 	ResourceState initialState = ResourceState::GenericRead;
 
-	wil::com_ptr<D3D12MA::Allocation> allocation = CreateGpuBuffer(gpuBufferDesc, initialState);
+	wil::com_ptr<D3D12MA::Allocation> allocation = CreateGpuBuffer(gpuBufferDesc2, initialState);
 	ID3D12Resource* pResource = allocation->GetResource();
 
 	GpuBufferDescExt gpuBufferDescExt{
@@ -506,9 +512,9 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 		.allocation		= allocation.get()
 	};
 
-	const size_t bufferSize = gpuBufferDesc.elementCount * gpuBufferDesc.elementSize;
+	const size_t bufferSize = gpuBufferDesc2.elementCount * gpuBufferDesc2.elementSize;
 
-	if (gpuBufferDesc.resourceType == ResourceType::ByteAddressBuffer || gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::ByteAddressBuffer || gpuBufferDesc2.resourceType == ResourceType::IndirectArgsBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
 			.Format						= DXGI_FORMAT_R32_TYPELESS,
@@ -539,15 +545,15 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 		gpuBufferDescExt.SetUavHandle(uavHandle);
 	}
 
-	if (gpuBufferDesc.resourceType == ResourceType::StructuredBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::StructuredBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
 			.Format						= DXGI_FORMAT_UNKNOWN,
 			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
 			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
 			.Buffer = {
-				.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
-				.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+				.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
+				.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
 				.Flags					= D3D12_BUFFER_SRV_FLAG_NONE
 			}
 		};
@@ -559,8 +565,8 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 			.Format			= DXGI_FORMAT_UNKNOWN,
 			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
 			.Buffer = {
-				.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
-				.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+				.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
+				.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
 				.CounterOffsetInBytes	= 0,
 				.Flags					= D3D12_BUFFER_UAV_FLAG_NONE
 			}
@@ -576,11 +582,11 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-			.Format						= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+			.Format						= FormatToDxgi(gpuBufferDesc2.format).resourceFormat,
 			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
 			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
 			.Buffer = {
-				.NumElements	= (uint32_t)gpuBufferDesc.elementCount,
+				.NumElements	= (uint32_t)gpuBufferDesc2.elementCount,
 				.Flags			= D3D12_BUFFER_SRV_FLAG_NONE
 			}
 		};
@@ -589,10 +595,10 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-			.Format			= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+			.Format			= FormatToDxgi(gpuBufferDesc2.format).resourceFormat,
 			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
 			.Buffer = {
-				.NumElements	= (uint32_t)gpuBufferDesc.elementCount,
+				.NumElements	= (uint32_t)gpuBufferDesc2.elementCount,
 				.Flags			= D3D12_BUFFER_UAV_FLAG_NONE
 			}
 		};
@@ -608,7 +614,7 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 	{
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{
 			.BufferLocation		= pResource->GetGPUVirtualAddress(),
-			.SizeInBytes		= (uint32_t)(gpuBufferDesc.elementCount * gpuBufferDesc.elementSize)
+			.SizeInBytes		= (uint32_t)(gpuBufferDesc2.elementCount * gpuBufferDesc2.elementSize)
 		};
 
 		auto cbvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -617,7 +623,7 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 		gpuBufferDescExt.SetCbvHandle(cbvHandle);
 	}
 
-	return Make<GpuBuffer12>(gpuBufferDesc, gpuBufferDescExt);
+	return Make<GpuBuffer12>(gpuBufferDesc2, gpuBufferDescExt);
 }
 
 

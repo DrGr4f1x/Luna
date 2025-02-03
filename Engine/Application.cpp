@@ -137,12 +137,12 @@ void Application::Render()
 {
 	auto& context = GraphicsContext::Begin("Frame");
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::RenderTarget);
+	context.ClearColor(GetColorBuffer().get(), DirectX::Colors::CornflowerBlue);
 
 	// Rendering code goes here
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::Present);
 	context.Finish();
 }
 
@@ -194,7 +194,7 @@ void Application::Run()
 }
 
 
-IColorBuffer* Application::GetColorBuffer() const
+ColorBufferHandle Application::GetColorBuffer() const
 {
 	return m_deviceManager->GetColorBuffer();
 }

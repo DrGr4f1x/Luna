@@ -103,7 +103,7 @@ public:
 
 	virtual wil::com_ptr<IColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex) = 0;
 
-	virtual IColorBuffer* GetColorBuffer() = 0;
+	virtual wil::com_ptr<IColorBuffer> GetColorBuffer() = 0;
 
 	virtual Format GetColorFormat() = 0;
 	virtual Format GetDepthFormat() = 0;

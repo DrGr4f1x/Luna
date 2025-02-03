@@ -80,7 +80,7 @@ public:
 
 	void Run();
 
-	IColorBuffer* GetColorBuffer() const;
+	wil::com_ptr<IColorBuffer> GetColorBuffer() const;
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 

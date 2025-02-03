@@ -358,7 +358,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
     // and create render target views for each of them.
 	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
-		auto swapChainBuffer = CreateColorBufferFromSwapChain(i);
+		ColorBufferHandle swapChainBuffer = CreateColorBufferFromSwapChain(i);
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 
@@ -461,9 +461,9 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 }
 
 
-IColorBuffer* DeviceManager::GetColorBuffer()
+ColorBufferHandle DeviceManager::GetColorBuffer()
 {
-	return m_swapChainBuffers[m_backBufferIndex].get();
+	return m_swapChainBuffers[m_backBufferIndex];
 }
 
 

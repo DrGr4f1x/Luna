@@ -491,9 +491,9 @@ ColorBufferHandle DeviceManager::CreateColorBufferFromSwapChain(uint32_t imageIn
 }
 
 
-IColorBuffer* DeviceManager::GetColorBuffer()
+ColorBufferHandle DeviceManager::GetColorBuffer()
 {
-	return m_swapChainBuffers[m_swapChainIndex].get();
+	return m_swapChainBuffers[m_swapChainIndex];
 }
 
 
