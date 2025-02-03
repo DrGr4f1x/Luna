@@ -604,6 +604,19 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 		gpuBufferDescExt.SetUavHandle(uavHandle);
 	}
 
+	if (gpuBufferDesc.resourceType == ResourceType::ConstantBuffer)
+	{
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{
+			.BufferLocation		= pResource->GetGPUVirtualAddress(),
+			.SizeInBytes		= (uint32_t)(gpuBufferDesc.elementCount * gpuBufferDesc.elementSize)
+		};
+
+		auto cbvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_dxDevice->CreateConstantBufferView(&cbvDesc, cbvHandle);
+
+		gpuBufferDescExt.SetCbvHandle(cbvHandle);
+	}
+
 	return Make<GpuBuffer12>(gpuBufferDesc, gpuBufferDescExt);
 }
 
@@ -622,6 +635,13 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 				}
 			}
 		});
+
+	// Validate RootSignatureDesc
+	if (!rootSignatureDesc.Validate())
+	{
+		LogError(LogDirectX) << "RootSignature is not valid!" << endl;
+		return nullptr;
+	}
 
 	// Build DX12 root parameter descriptions
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)

@@ -17,7 +17,8 @@ namespace Luna::VK
 {
 
 RootSignatureVK::RootSignatureVK(const RootSignatureDesc& rootSignatureDesc, const RootSignatureDescExt& rootSignatureDescExt)
-	: m_pipelineLayout{ rootSignatureDescExt.pipelineLayout }
+	: m_desc{ rootSignatureDesc }
+	, m_pipelineLayout{ rootSignatureDescExt.pipelineLayout }
 	, m_descriptorSetLayouts{ rootSignatureDescExt.descriptorSetLayouts }
 {}
 
@@ -35,6 +36,18 @@ NativeObjectPtr RootSignatureVK::GetNativeObject(NativeObjectType type) const no
 		assert(false);
 		return nullptr;
 	}
+}
+
+
+uint32_t RootSignatureVK::GetNumRootParameters() const noexcept
+{
+	return (uint32_t)m_desc.rootParameters.size();
+}
+
+
+const RootParameter& RootSignatureVK::GetRootParameter(uint32_t index) const noexcept
+{
+	return m_desc.rootParameters[index];
 }
 
 } // namespace Luna::VK

@@ -18,6 +18,7 @@
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
+#include "DescriptorAllocatorVK.h"
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
 #include "RootSignatureVK.h"
@@ -120,6 +121,7 @@ GraphicsDevice::~GraphicsDevice()
 	LogInfo(LogVulkan) << "Destroying Vulkan device." << endl;
 
 	Shader::DestroyAll();
+	DescriptorSetAllocator::DestroyAll();
 
 	g_graphicsDevice = nullptr;
 	g_vulkanGraphicsDevice = nullptr;
@@ -336,6 +338,13 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 
 RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
+	// Validate RootSignatureDesc
+	if (!rootSignatureDesc.Validate())
+	{
+		LogError(LogVulkan) << "RootSignature is not valid!" << endl;
+		return nullptr;
+	}
+
 	std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> descriptorSetLayouts;
 	std::vector<VkPushConstantRange> vkPushConstantRanges;

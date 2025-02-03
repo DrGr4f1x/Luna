@@ -25,12 +25,14 @@ struct GpuBufferDescExt
 	D3D12MA::Allocation* allocation{ nullptr };
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
 	D3D12_CPU_DESCRIPTOR_HANDLE uavHandle{};
+	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle{};
 	ResourceState usageState{ ResourceState::Undefined };
 
 	constexpr GpuBufferDescExt& SetResource(ID3D12Resource* value) noexcept { resource = value; return *this; }
 	constexpr GpuBufferDescExt& SetAllocation(D3D12MA::Allocation* value) noexcept { allocation = value; return *this; }
 	constexpr GpuBufferDescExt& SetSrvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { srvHandle = value; return *this; }
 	constexpr GpuBufferDescExt& SetUavHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { uavHandle = value; return *this; }
+	constexpr GpuBufferDescExt& SetCbvHandle(D3D12_CPU_DESCRIPTOR_HANDLE value) noexcept { cbvHandle = value; return *this; }
 	constexpr GpuBufferDescExt& SetUsageState(ResourceState value) noexcept { usageState = value; return *this; }
 };
 
@@ -72,6 +74,7 @@ private:
 	wil::com_ptr<D3D12MA::Allocation> m_allocation;
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle{};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_uavHandle{};
+	D3D12_CPU_DESCRIPTOR_HANDLE m_cbvHandle{};
 };
 
 } // namespace Luna::DX12

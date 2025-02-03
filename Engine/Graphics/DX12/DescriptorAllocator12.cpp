@@ -12,7 +12,9 @@
 
 #include "DescriptorAllocator12.h"
 
+#include "Device12.h"
 #include "Strings12.h"
+
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -62,6 +64,54 @@ ID3D12DescriptorHeap* DescriptorAllocator::RequestNewHeap(ID3D12Device* device)
 	m_descriptorHeapPool.emplace_back(heap);
 
 	return heap.get();
+}
+
+
+void UserDescriptorHeap::Create(const string& debugHeapName)
+{
+	auto device = GetD3D12GraphicsDevice()->GetD3D12Device();
+
+	ThrowIfFailed(device->CreateDescriptorHeap(&m_heapDesc, IID_PPV_ARGS(&m_heap)));
+
+	SetDebugName(m_heap.get(), debugHeapName);
+
+	m_descriptorSize = device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	m_numFreeDescriptors = m_heapDesc.NumDescriptors;
+	m_firstHandle = DescriptorHandle(m_heap->GetCPUDescriptorHandleForHeapStart(), m_heap->GetGPUDescriptorHandleForHeapStart());
+	m_nextFreeHandle = m_firstHandle;
+}
+
+
+void UserDescriptorHeap::Destroy()
+{
+	m_heap = nullptr;
+}
+
+
+DescriptorHandle UserDescriptorHeap::Alloc(uint32_t count)
+{
+	assert_msg(HasAvailableSpace(count), "Descriptor Heap out of space.  Increase heap size.");
+	DescriptorHandle ret = m_nextFreeHandle;
+	m_nextFreeHandle += count * m_descriptorSize;
+	return ret;
+}
+
+
+bool UserDescriptorHeap::ValidateHandle(const DescriptorHandle& dhandle) const
+{
+	if (dhandle.GetCpuHandle().ptr < m_firstHandle.GetCpuHandle().ptr ||
+		dhandle.GetCpuHandle().ptr >= m_firstHandle.GetCpuHandle().ptr + m_heapDesc.NumDescriptors * m_descriptorSize)
+	{
+		return false;
+	}
+
+	if (dhandle.GetGpuHandle().ptr - m_firstHandle.GetGpuHandle().ptr !=
+		dhandle.GetCpuHandle().ptr - m_firstHandle.GetCpuHandle().ptr)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 } // namespace Luna::DX12

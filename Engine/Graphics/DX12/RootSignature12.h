@@ -49,14 +49,20 @@ class __declspec(uuid("A23FFC17-0115-4437-BF81-F192185E7A89")) RootSignature12 f
 public:
 	RootSignature12(const RootSignatureDesc& rootSignatureDesc, const RootSignatureDescExt& rootSignatureDescExt);
 
+	// IRootSignature implementation
 	NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept override;
 
+	uint32_t GetNumRootParameters() const noexcept override;
+	const RootParameter& GetRootParameter(uint32_t index) const noexcept override;
+
+	// IRootSignature12 implementation
 	ID3D12RootSignature* GetRootSignature() const noexcept override { return m_rootSignature.get(); }
 	uint32_t GetDescriptorTableBitmap() const noexcept override { return m_descriptorTableBitmap; }
 	uint32_t GetSamplerTableBitmap() const noexcept override { return m_samplerTableBitmap; }
 	const std::vector<uint32_t>& GetDescriptorTableSize() const noexcept override { return m_descriptorTableSize; }
 
 private:
+	RootSignatureDesc m_desc;
 	wil::com_ptr<ID3D12RootSignature> m_rootSignature;
 	uint32_t m_descriptorTableBitmap{ 0 };
 	uint32_t m_samplerTableBitmap{ 0 };

@@ -43,11 +43,17 @@ class __declspec(uuid("5E1B4285-CC94-4950-8668-BF74E0BE0FF4")) RootSignatureVK f
 public:
 	RootSignatureVK(const RootSignatureDesc& rootSignatureDesc, const RootSignatureDescExt& rootSignatureDescExt);
 
+	// IRootSignature implementation
 	NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept override;
 
+	uint32_t GetNumRootParameters() const noexcept override;
+	const RootParameter& GetRootParameter(uint32_t index) const noexcept override;
+
+	// IRootSignatureVK implementation
 	VkPipelineLayout GetPipelineLayout() const noexcept override { return m_pipelineLayout->Get(); }
 
 private:
+	RootSignatureDesc m_desc;
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> m_descriptorSetLayouts;
 };

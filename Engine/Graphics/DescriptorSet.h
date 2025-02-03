@@ -26,7 +26,7 @@ public:
 	virtual void SetSRV(int paramIndex, const IDepthBuffer* depthBuffer, bool depthSrv = true) = 0;
 	virtual void SetSRV(int paramIndex, const IGpuBuffer* gpuBuffer) = 0;
 
-	virtual void SetUAV(int paramIndex, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetUAV(int paramIndex, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) = 0;
 	virtual void SetUAV(int paramIndex, const IDepthBuffer* depthBuffer) = 0;
 	virtual void SetUAV(int paramIndex, const IGpuBuffer* gpuBuffer) = 0;
 

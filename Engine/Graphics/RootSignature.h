@@ -185,6 +185,28 @@ struct RootParameter
 	constexpr RootParameter& SetNum32BitConstants(uint32_t value) noexcept { num32BitConstants = value; return *this; }
 	RootParameter& SetTable(const std::vector<DescriptorRange>& value) { table = value; return *this; }
 
+	bool Validate() const
+	{
+		if (parameterType == RootParameterType::Table && table.size() > 0)
+		{
+			bool isSamplerTable = table[0].descriptorType == DescriptorType::Sampler;
+			for (uint32_t i = 1; i < (uint32_t)table.size(); ++i)
+			{
+				if (isSamplerTable && table[i].descriptorType != DescriptorType::Sampler)
+				{
+					LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
+					return false;
+				}
+
+				if (!isSamplerTable && table[i].descriptorType == DescriptorType::Sampler)
+				{
+					LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 	static RootParameter RootConstants(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
 	{
@@ -293,6 +315,18 @@ struct RootSignatureDesc
 		rootParameters.insert(rootParameters.end(), value.begin(), value.end());
 		return *this;
 	}
+
+	bool Validate() const
+	{
+		for (const auto& rootParameter : rootParameters)
+		{
+			if (!rootParameter.Validate())
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 };
 
 
@@ -300,6 +334,9 @@ class __declspec(uuid("19DD6AF1-0342-40DB-8190-0F6485AACD77")) IRootSignature : 
 {
 public:
 	virtual NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept = 0;
+
+	virtual uint32_t GetNumRootParameters() const noexcept = 0;
+	virtual const RootParameter& GetRootParameter(uint32_t index) const noexcept = 0;
 };
 
 using RootSignatureHandle = wil::com_ptr<IRootSignature>;

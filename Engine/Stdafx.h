@@ -73,9 +73,6 @@
 #include <variant>
 #include <vector>
 
-// External headers
-#include "scope_guard.hpp"
-
 // Core headers
 #include "Core\BitmaskEnum.h"
 #include "Core\Containers.h"

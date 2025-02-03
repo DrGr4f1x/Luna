@@ -28,6 +28,7 @@ GpuBuffer12::GpuBuffer12(const GpuBufferDesc& gpuBufferDesc, const GpuBufferDesc
 	, m_allocation{ gpuBufferDescExt.allocation }
 	, m_srvHandle{ gpuBufferDescExt.srvHandle }
 	, m_uavHandle{ gpuBufferDescExt.uavHandle }
+	, m_cbvHandle{ gpuBufferDescExt.cbvHandle }
 {}
 
 
@@ -48,6 +49,9 @@ NativeObjectPtr GpuBuffer12::GetNativeObject(NativeObjectType type, uint32_t ind
 
 	case DX12_GpuVirtualAddress:
 		return NativeObjectPtr(m_resource->GetGPUVirtualAddress());
+
+	case DX12_CBV:
+		return NativeObjectPtr(m_cbvHandle.ptr);
 
 	default:
 		assert(false);

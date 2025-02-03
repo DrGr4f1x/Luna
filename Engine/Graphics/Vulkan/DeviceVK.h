@@ -157,10 +157,10 @@ public:
 
 	void CreateResources();
 
-private:
 	VkDevice GetDevice() noexcept { return *m_vkDevice; }
 	VmaAllocator GetAllocator() noexcept { return *m_vmaAllocator; }
 
+private:
 	wil::com_ptr<CVkFence> CreateFence(bool bSignalled) const;
 	wil::com_ptr<CVkSemaphore> CreateSemaphore(VkSemaphoreType semaphoreType, uint64_t initialValue) const;
 	wil::com_ptr<CVkCommandPool> CreateCommandPool(CommandListType commandListType) const;

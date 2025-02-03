@@ -100,6 +100,7 @@ class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice
 	friend class CommandContext12;
 	friend class DeviceManager;
 	friend class GpuBufferData;
+	friend class UserDescriptorHeap;
 
 public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept;
@@ -114,10 +115,10 @@ public:
 
 	void CreateResources();
 
-private:
 	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }
 	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
 
+private:
 	void InstallDebugCallback();
 	void ReadCaps();
 
