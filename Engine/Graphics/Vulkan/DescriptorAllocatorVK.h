@@ -34,7 +34,7 @@ protected:
 };
 
 
-// TODO: Refactor this
+// TODO: Refactor this.  Roll it entirely into GraphicsDevice?
 extern DescriptorSetAllocator g_descriptorSetAllocator;
 inline VkDescriptorSet AllocateDescriptorSet(VkDescriptorSetLayout layout)
 {

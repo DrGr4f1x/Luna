@@ -104,8 +104,10 @@ VkDescriptorPool DescriptorSetAllocator::RequestNewPool()
 		.pPoolSizes		= typeCounts
 	};
 
+	auto device = GetVulkanGraphicsDevice()->GetDevice();
+
 	VkDescriptorPool pool{ VK_NULL_HANDLE };
-	ThrowIfFailed(vkCreateDescriptorPool(GetDevice(), &createInfo, nullptr, &pool));
+	ThrowIfFailed(vkCreateDescriptorPool(device, &createInfo, nullptr, &pool));
 
 	sm_descriptorPoolList.emplace_back(pool);
 

@@ -10,11 +10,17 @@
 
 #pragma once
 
-#include "Graphics\Enums.h"
+#include "Graphics\GraphicsCommon.h"
+
+using namespace std;
 
 
 namespace Luna
 {
+
+// Forward declarations
+class IDescriptorSet;
+
 
 struct DescriptorRange
 {
