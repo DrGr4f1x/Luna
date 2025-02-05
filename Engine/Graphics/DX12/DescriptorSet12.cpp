@@ -15,7 +15,6 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
-#include "Graphics\DX12\DescriptorAllocator12.h"
 #include "Graphics\DX12\Device12.h"
 
 
@@ -26,6 +25,7 @@ inline void ValidateDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE handle)
 {
 	assert(handle.ptr != 0);
 }
+
 
 inline D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const IGpuResource* gpuResource)
 {
@@ -60,61 +60,66 @@ inline D3D12_CPU_DESCRIPTOR_HANDLE GetCBV(const IGpuBuffer* gpuBuffer)
 }
 
 
-DescriptorSet::DescriptorSet()
+DescriptorSet::DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt)
+	: m_descriptorHandle{ descriptorSetDescExt.descriptorHandle }
+	, m_numDescriptors{ descriptorSetDescExt.numDescriptors }
+	, m_isSamplerTable{ descriptorSetDescExt.isSamplerTable }
+	, m_isRootCBV{ descriptorSetDescExt.isRootCbv }
 {
-	for (uint32_t j = 0; j < MaxDescriptors; ++j)
+	assert(m_numDescriptors <= MaxDescriptorsPerTable);
+
+	for (uint32_t j = 0; j < MaxDescriptorsPerTable; ++j)
 	{
 		m_descriptors[j].ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
 	}
-	m_gpuDescriptor.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
 }
 
 
-void DescriptorSet::SetSRV(int paramIndex, const IColorBuffer* colorBuffer)
+void DescriptorSet::SetSRV(int slot, const IColorBuffer* colorBuffer)
 {
-	SetDescriptor(paramIndex, GetSRV(colorBuffer));
+	SetDescriptor(slot, GetSRV(colorBuffer));
 }
 
 
-void DescriptorSet::SetSRV(int paramIndex, const IDepthBuffer* depthBuffer, bool depthSrv)
+void DescriptorSet::SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv)
 {
-	SetDescriptor(paramIndex, GetSRV(depthBuffer, depthSrv));
+	SetDescriptor(slot, GetSRV(depthBuffer, depthSrv));
 }
 
 
-void DescriptorSet::SetSRV(int paramIndex, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetSRV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	SetDescriptor(paramIndex, GetSRV(gpuBuffer));
+	SetDescriptor(slot, GetSRV(gpuBuffer));
 }
 
 
-void DescriptorSet::SetUAV(int paramIndex, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void DescriptorSet::SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
 {
-	SetDescriptor(paramIndex, GetUAV(colorBuffer, uavIndex));
+	SetDescriptor(slot, GetUAV(colorBuffer, uavIndex));
 }
 
 
-void DescriptorSet::SetUAV(int paramIndex, const IDepthBuffer* colorBuffer)
+void DescriptorSet::SetUAV(int slot, const IDepthBuffer* colorBuffer)
 {
 	assert_msg(false, "Depth UAVs not yet supported");
 }
 
 
-void DescriptorSet::SetUAV(int paramIndex, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	SetDescriptor(paramIndex, GetUAV(gpuBuffer, 0));
+	SetDescriptor(slot, GetUAV(gpuBuffer, 0));
 }
 
 
-void DescriptorSet::SetCBV(int paramIndex, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetCBV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	if (m_bIsRootCBV)
+	if (m_isRootCBV)
 	{
 		m_gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
 	}
 	else
 	{
-		SetDescriptor(paramIndex, GetCBV(gpuBuffer));
+		SetDescriptor(slot, GetCBV(gpuBuffer));
 	}
 }
 
@@ -127,32 +132,23 @@ void DescriptorSet::SetDynamicOffset(uint32_t offset)
 }
 
 
-void DescriptorSet::Update()
+void DescriptorSet::Update(ID3D12Device* device)
 {
-	if (!IsDirty() || m_descriptors.empty())
+	if (!IsDirty() || m_numDescriptors == 0)
 		return;
 
-	auto device = GetD3D12GraphicsDevice()->GetD3D12Device();
+	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = m_isSamplerTable 
+		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
-	const uint32_t numDescriptors = __popcnt(m_dirtyBits);
-
-	D3D12_DESCRIPTOR_HEAP_TYPE heapType{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
-
-	if (m_bIsSamplerTable)
-	{
-		heapType = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-	}
-
-	DescriptorHandle descHandle = AllocateUserDescriptor(heapType, numDescriptors);
+	//DescriptorHandle descHandle = AllocateUserDescriptor(heapType, numDescriptors);
 	uint32_t descriptorSize = device->GetDescriptorHandleIncrementSize(heapType);
-
-	m_gpuDescriptor = descHandle.GetGpuHandle();
 
 	unsigned long setBit{ 0 };
 	uint32_t index{ 0 };
 	while (_BitScanForward(&setBit, m_dirtyBits))
 	{
-		DescriptorHandle offsetHandle = descHandle + index * descriptorSize;
+		DescriptorHandle offsetHandle = m_descriptorHandle + index * descriptorSize;
 		m_dirtyBits &= ~(1 << setBit);
 
 		device->CopyDescriptorsSimple(1, offsetHandle.GetCpuHandle(), m_descriptors[index], heapType);
@@ -164,12 +160,13 @@ void DescriptorSet::Update()
 }
 
 
-void DescriptorSet::SetDescriptor(int paramIndex, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
+void DescriptorSet::SetDescriptor(int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
 {
-	if (m_descriptors[paramIndex].ptr != descriptor.ptr)
+	assert(slot >= 0 && slot < (int)m_numDescriptors);
+	if (m_descriptors[slot].ptr != descriptor.ptr)
 	{
-		m_descriptors[paramIndex] = descriptor;
-		m_dirtyBits |= (1 << paramIndex);
+		m_descriptors[slot] = descriptor;
+		m_dirtyBits |= (1 << slot);
 	}
 }
 

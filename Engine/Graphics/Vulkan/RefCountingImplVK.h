@@ -427,6 +427,9 @@ private:
 };
 
 
+//
+// VkBuffer
+//
 class __declspec(uuid("56B8DE36-FF52-40B2-A736-CD91EE48EAD0")) CVkBuffer
 	: public RefCounted<CVkBuffer>
 	, public NonCopyable
@@ -460,6 +463,39 @@ private:
 };
 
 
+//
+// VkBufferView
+//
+class __declspec(uuid("E5A4DE6C-365B-4B7D-8203-BE8C7F840A73")) CVkBufferView
+	: public RefCounted<CVkBufferView>
+	, public NonCopyable
+{
+public:
+	CVkBufferView() noexcept = default;
+	CVkBufferView(CVkDevice* device, VkBufferView bufferView)
+		: m_device{ device }
+		, m_bufferView{ bufferView }
+	{}
+	~CVkBufferView()
+	{
+		Destroy();
+	}
+
+	VkBufferView Get() const noexcept { return m_bufferView; }
+	operator VkBufferView() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkBufferView m_bufferView{ VK_NULL_HANDLE };
+};
+
+//
+// VkDescriptorSetLayout
+//
 class __declspec(uuid("69336CFB-EC2C-4D6D-AA13-C3EB3BEA4592")) CVkDescriptorSetLayout
 	: public RefCounted<CVkDescriptorSetLayout>
 	, public NonCopyable
@@ -488,6 +524,9 @@ private:
 };
 
 
+//
+// VkPipelineLayout
+//
 class __declspec(uuid("789884E6-D174-4398-B552-A28AF8F20152")) CVkPipelineLayout
 	: public RefCounted<CVkPipelineLayout>
 	, public NonCopyable
@@ -516,6 +555,9 @@ private:
 };
 
 
+//
+// VkPipeline
+//
 class __declspec(uuid("ABC4D8B2-3413-41C6-AB99-5C53718B6BA0")) CVkPipeline
 	: public RefCounted<CVkPipeline>
 	, public NonCopyable
@@ -544,6 +586,9 @@ private:
 };
 
 
+//
+// VkPipelineCache
+//
 class __declspec(uuid("A2F4A397-56FC-4AE4-8221-83A50E383061")) CVkPipelineCache
 	: public RefCounted<CVkPipelineCache>
 	, public NonCopyable
@@ -572,6 +617,9 @@ private:
 };
 
 
+//
+// VkShaderModule
+//
 class __declspec(uuid("79662185-8E76-4EE0-A70F-C05FF9C2EA5F")) CVkShaderModule
 	: public RefCounted<CVkShaderModule>
 	, public NonCopyable

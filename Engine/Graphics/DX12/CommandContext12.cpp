@@ -120,7 +120,8 @@ void CommandContext12::Reset()
 
 	m_curGraphicsRootSignature = nullptr;
 	m_curComputeRootSignature = nullptr;
-	m_curPipelineState = nullptr;
+	m_curGraphicsPipelineState = nullptr;
+	m_curComputePipelineState = nullptr;
 	m_numBarriersToFlush = 0;
 
 	BindDescriptorHeaps();
@@ -387,6 +388,54 @@ void CommandContext12::EndRendering()
 {
 	assert(m_isRendering);
 	m_isRendering = false;
+}
+
+
+void CommandContext12::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
+{ 
+	D3D12_VIEWPORT viewport{
+		.TopLeftX = x,
+		.TopLeftY = y,
+		.Width = w,
+		.Height = h,
+		.MinDepth = minDepth,
+		.MaxDepth = maxDepth
+	};
+
+	m_commandList->RSSetViewports(1, &viewport);
+}
+
+
+void CommandContext12::SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+{
+	auto rect = CD3DX12_RECT(left, top, right, bottom);
+
+	assert(rect.left < rect.right && rect.top < rect.bottom);
+
+	m_commandList->RSSetScissorRects(1, &rect);
+}
+
+
+void CommandContext12::SetStencilRef(uint32_t stencilRef)
+{
+	m_commandList->OMSetStencilRef(stencilRef);
+}
+
+
+void CommandContext12::SetBlendFactor(Color blendFactor)
+{
+	m_commandList->OMSetBlendFactor(blendFactor.GetPtr());
+}
+
+
+void CommandContext12::SetPrimitiveTopology(PrimitiveTopology topology)
+{
+	auto newTopology = PrimitiveTopologyToDX12(topology);
+	if (m_curPrimitiveTopology != newTopology)
+	{
+		m_commandList->IASetPrimitiveTopology(newTopology);
+		m_curPrimitiveTopology = newTopology;
+	}
 }
 
 

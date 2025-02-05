@@ -44,8 +44,8 @@ public:
 	virtual VkImage GetImage() const noexcept = 0;
 	virtual VkImageView GetImageViewRtv() const noexcept = 0;
 	virtual VkImageView GetImageViewSrv() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetImageInfoSrv() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetImageInfoUav() const noexcept = 0;
+	virtual VkDescriptorImageInfo* GetImageInfoSrv() const noexcept = 0;
+	virtual VkDescriptorImageInfo* GetImageInfoUav() const noexcept = 0;
 };
 
 
@@ -86,8 +86,8 @@ public:
 	VkImage GetImage() const noexcept override { return *m_image; }
 	VkImageView GetImageViewRtv() const noexcept override { return *m_imageViewRtv; }
 	VkImageView GetImageViewSrv() const noexcept override { return *m_imageViewSrv; }
-	VkDescriptorImageInfo GetImageInfoSrv() const noexcept override { return m_imageInfoSrv; }
-	VkDescriptorImageInfo GetImageInfoUav() const noexcept override { return m_imageInfoUav; }
+	VkDescriptorImageInfo* GetImageInfoSrv() const noexcept override { return &m_imageInfoSrv; }
+	VkDescriptorImageInfo* GetImageInfoUav() const noexcept override { return &m_imageInfoUav; }
 
 private:
 	std::string m_name;
@@ -110,8 +110,8 @@ private:
 	wil::com_ptr<CVkImage> m_image;
 	wil::com_ptr<CVkImageView> m_imageViewRtv;
 	wil::com_ptr<CVkImageView> m_imageViewSrv;
-	VkDescriptorImageInfo m_imageInfoSrv{};
-	VkDescriptorImageInfo m_imageInfoUav{};
+	mutable VkDescriptorImageInfo m_imageInfoSrv{};
+	mutable VkDescriptorImageInfo m_imageInfoUav{};
 };
 
 } // namespace Luna::VK

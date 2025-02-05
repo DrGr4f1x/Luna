@@ -498,6 +498,50 @@ void CommandContextVK::EndRendering()
 }
 
 
+void CommandContextVK::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
+{
+	VkViewport viewport{
+		.x			= x,
+		.y			= y,
+		.width		= w,
+		.height		= h,
+		.minDepth	= minDepth,
+		.maxDepth	= maxDepth
+	};
+	
+	vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+}
+
+
+void CommandContextVK::SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+{
+	VkRect2D scissor{};
+	scissor.extent.width = right - left;
+	scissor.extent.height = bottom - top;
+	scissor.offset.x = static_cast<int32_t>(left);
+	scissor.offset.y = static_cast<int32_t>(top);
+	vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
+}
+
+
+void CommandContextVK::SetStencilRef(uint32_t stencilRef)
+{
+	vkCmdSetStencilReference(m_commandBuffer, VK_STENCIL_FRONT_AND_BACK, stencilRef);
+}
+
+
+void CommandContextVK::SetBlendFactor(Color blendFactor)
+{
+	vkCmdSetBlendConstants(m_commandBuffer, blendFactor.GetPtr());
+}
+
+
+void CommandContextVK::SetPrimitiveTopology(PrimitiveTopology topology)
+{
+	vkCmdSetPrimitiveTopology(m_commandBuffer, PrimitiveTopologyToVulkan(topology));
+}
+
+
 void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);

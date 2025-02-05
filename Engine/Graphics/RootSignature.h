@@ -214,6 +214,26 @@ struct RootParameter
 		return true;
 	}
 
+	uint32_t GetNumDescriptors() const
+	{
+		uint32_t numDescriptors = 0;
+
+		if (parameterType == RootParameterType::Table)
+		{
+			for (const auto& tableRange : table)
+			{
+				numDescriptors += tableRange.numDescriptors;
+			}
+		}
+
+		return numDescriptors;
+	}
+
+	bool IsSamplerTable() const
+	{
+		return (parameterType == RootParameterType::Table && table[0].descriptorType == DescriptorType::Sampler);
+	}
+
 	static RootParameter RootConstants(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
 	{
 		auto ret = RootParameter
@@ -343,6 +363,8 @@ public:
 
 	virtual uint32_t GetNumRootParameters() const noexcept = 0;
 	virtual const RootParameter& GetRootParameter(uint32_t index) const noexcept = 0;
+
+	virtual wil::com_ptr<IDescriptorSet> CreateDescriptorSet(uint32_t index) const = 0;
 };
 
 using RootSignatureHandle = wil::com_ptr<IRootSignature>;

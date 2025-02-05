@@ -61,6 +61,12 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
+	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
+	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
+	void SetStencilRef(uint32_t stencilRef) override;
+	void SetBlendFactor(Color blendFactor) override;
+	void SetPrimitiveTopology(PrimitiveTopology topology) override;
+
 protected:
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 
@@ -78,7 +84,10 @@ private:
 
 	ID3D12RootSignature* m_curGraphicsRootSignature{ nullptr };
 	ID3D12RootSignature* m_curComputeRootSignature{ nullptr };
-	ID3D12PipelineState* m_curPipelineState{ nullptr };
+	ID3D12PipelineState* m_curGraphicsPipelineState{ nullptr };
+	ID3D12PipelineState* m_curComputePipelineState{ nullptr };
+
+	D3D12_PRIMITIVE_TOPOLOGY m_curPrimitiveTopology;
 
 	D3D12_RESOURCE_BARRIER m_resourceBarrierBuffer[16];
 	uint32_t m_numBarriersToFlush{ 0 };

@@ -324,8 +324,26 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 
 	auto buffer = Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), vkBuffer, vmaBufferAllocation);
 
+	wil::com_ptr<CVkBufferView> bufferView;
+	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
+	{
+		VkBufferViewCreateInfo bufferViewCreateInfo{
+			.sType		= VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
+			.pNext		= nullptr,
+			.flags		= 0,
+			.buffer		= vkBuffer,
+			.format		= FormatToVulkan(gpuBufferDesc.format),
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
+		};
+		VkBufferView vkBufferView{ VK_NULL_HANDLE };
+		vkCreateBufferView(*m_vkDevice, &bufferViewCreateInfo, nullptr, &vkBufferView);
+		bufferView = Create<CVkBufferView>(m_vkDevice.get(), vkBufferView);
+	}
+
 	GpuBufferDescExt gpuBufferDescExt{
 		.buffer			= buffer.get(),
+		.bufferView		= bufferView.get(),
 		.bufferInfo		= {
 			.buffer		= vkBuffer,
 			.offset		= 0,
@@ -757,6 +775,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	vector<VkDynamicState> dynamicStates;
 	dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
+	dynamicStates.push_back(VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY);
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 		.pNext				= nullptr,

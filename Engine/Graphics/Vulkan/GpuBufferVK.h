@@ -19,10 +19,12 @@ namespace Luna::VK
 struct GpuBufferDescExt
 {
 	CVkBuffer* buffer{ nullptr };
+	CVkBufferView* bufferView{ nullptr };
 	VkDescriptorBufferInfo bufferInfo{};
 	ResourceState usageState{ ResourceState::Undefined };
 
 	constexpr GpuBufferDescExt& SetBuffer(CVkBuffer* value) noexcept { buffer = value; return *this; }
+	constexpr GpuBufferDescExt& SetBufferView(CVkBufferView* value) noexcept { bufferView = value; return *this; }
 	constexpr GpuBufferDescExt& SetBufferInfo(VkDescriptorBufferInfo value) noexcept { bufferInfo = value; return *this; }
 	constexpr GpuBufferDescExt& SetUsageState(ResourceState value) noexcept { usageState = value; return *this; }
 };
@@ -32,7 +34,8 @@ class __declspec(uuid("12C950F5-CA09-4B2F-9362-B8369B6D4255")) IGpuBufferVK : pu
 {
 public:
 	virtual VkBuffer GetBuffer() const noexcept = 0;
-	virtual VkDescriptorBufferInfo GetDescriptorBufferInfo() const noexcept = 0;
+	virtual VkBufferView GetBufferView() const noexcept = 0;
+	virtual VkDescriptorBufferInfo* GetDescriptorBufferInfo() const noexcept = 0;
 };
 
 
@@ -61,7 +64,8 @@ public:
 
 	// IGpuBufferVK implementation
 	VkBuffer GetBuffer() const noexcept override { return m_buffer->Get(); }
-	VkDescriptorBufferInfo GetDescriptorBufferInfo() const noexcept override { return m_bufferInfo; }
+	VkBufferView GetBufferView() const noexcept override { return m_bufferView->Get(); }
+	VkDescriptorBufferInfo* GetDescriptorBufferInfo() const noexcept override { return &m_bufferInfo; }
 
 private:
 	std::string m_name;
@@ -74,7 +78,8 @@ private:
 	size_t m_elementSize{ 0 };
 
 	wil::com_ptr<CVkBuffer> m_buffer;
-	VkDescriptorBufferInfo m_bufferInfo;
+	wil::com_ptr<CVkBufferView> m_bufferView;
+	mutable VkDescriptorBufferInfo m_bufferInfo;
 };
 
 } // namespace Luna::VK

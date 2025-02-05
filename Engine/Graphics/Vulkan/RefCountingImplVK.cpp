@@ -116,6 +116,13 @@ void CVkBuffer::Destroy()
 }
 
 
+void CVkBufferView::Destroy()
+{
+	vkDestroyBufferView(GetDevice(), m_bufferView, nullptr);
+	m_bufferView = VK_NULL_HANDLE;
+}
+
+
 void CVkDescriptorSetLayout::Destroy()
 {
 	vkDestroyDescriptorSetLayout(GetDevice(), m_descriptorSetLayout, nullptr);

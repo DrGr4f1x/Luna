@@ -23,6 +23,13 @@ using namespace Microsoft::WRL;
 namespace Luna::DX12
 {
 
+UserDescriptorHeap g_userDescriptorHeap[2] =
+{
+	{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1024 },
+	{ D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1024 },
+};
+
+
 D3D12_CPU_DESCRIPTOR_HANDLE DescriptorAllocator::Allocate(ID3D12Device* device, uint32_t count)
 {
 	assert(count <= m_numDescriptorsPerHeap);

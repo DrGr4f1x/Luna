@@ -98,6 +98,12 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
+	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
+	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
+	void SetStencilRef(uint32_t stencilRef) override;
+	void SetBlendFactor(Color blendFactor) override;
+	void SetPrimitiveTopology(PrimitiveTopology topology) override;
+
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;

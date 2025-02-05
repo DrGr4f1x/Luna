@@ -24,9 +24,6 @@ struct DepthBufferDesc;
 struct GpuBufferDesc;
 struct GraphicsPipelineDesc;
 struct RootSignatureDesc;
-class IColorBuffer;
-class IShaderData;
-enum class ResourceState : uint32_t;
 
 
 class __declspec(uuid("DBECDD70-7F0B-4C9B-ADFA-048104E474C8")) IGraphicsDevice : public IUnknown

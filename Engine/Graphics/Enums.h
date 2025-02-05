@@ -751,6 +751,12 @@ enum class NativeObjectType : uint32_t
 	VK_ImageView_DSV			= 0x00020008,
 	VK_ImageView_DSV_Depth		= 0x00020009,
 	VK_ImageView_DSV_Stencil	= 0x0002000A,
+	VK_ImageInfo_SRV			= 0x0002000B,
+	VK_ImageInfo_UAV			= 0x0002000C,
+	VK_ImageInfo_SRV_Depth		= 0x0002000D,
+	VK_ImageInfo_SRV_Stencil	= 0x0002000E,
+	VK_BufferInfo				= 0x0002000F,
+	VK_BufferView				= 0x00020010,
 };
 
 } // namespace Luna

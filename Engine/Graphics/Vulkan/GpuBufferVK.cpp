@@ -23,6 +23,7 @@ GpuBufferVK::GpuBufferVK(const GpuBufferDesc& gpuBufferDesc, const GpuBufferDesc
 	, m_elementCount{ gpuBufferDesc.elementCount }
 	, m_elementSize{ gpuBufferDesc.elementSize }
 	, m_buffer{ gpuBufferDescExt.buffer }
+	, m_bufferView{ gpuBufferDescExt.bufferView }
 	, m_bufferInfo{ gpuBufferDescExt.bufferInfo }
 {}
 
@@ -35,6 +36,12 @@ NativeObjectPtr GpuBufferVK::GetNativeObject(NativeObjectType type, uint32_t ind
 	{
 	case VK_Buffer:
 		return NativeObjectPtr(m_buffer->Get());
+
+	case VK_BufferInfo:
+		return NativeObjectPtr(GetDescriptorBufferInfo());
+
+	case VK_BufferView:
+		return NativeObjectPtr(m_bufferView->Get());
 
 	default:
 		assert(false);

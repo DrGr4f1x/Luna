@@ -68,6 +68,14 @@ public:
 	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
+	// TODO: look into the inverted viewport situation for Vulkan
+	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
+	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
+	// TODO: Support separate front and back stencil
+	virtual void SetStencilRef(uint32_t stencilRef) = 0;
+	virtual void SetBlendFactor(Color blendFactor) = 0;
+	virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
+
 	// Compute context
 	
 protected:
@@ -141,6 +149,13 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets);
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
+
+	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
+	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
+	void SetViewportAndScissor(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
+	void SetStencilRef(uint32_t stencilRef);
+	void SetBlendFactor(Color blendFactor);
+	void SetPrimitiveTopology(PrimitiveTopology topology);
 };
 
 
@@ -268,6 +283,43 @@ inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTarge
 inline void GraphicsContext::EndRendering()
 {
 	m_contextImpl->EndRendering();
+}
+
+
+inline void GraphicsContext::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
+{
+	m_contextImpl->SetViewport(x, y, w, h, minDepth, maxDepth);
+}
+
+
+inline void GraphicsContext::SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+{
+	m_contextImpl->SetScissor(left, top, right, bottom);
+}
+
+
+inline void GraphicsContext::SetViewportAndScissor(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
+{
+	m_contextImpl->SetViewport((float)x, (float)y, (float)w, (float)h, 0.0f, 1.0f);
+	m_contextImpl->SetScissor(x, y, x + w, y + h);
+}
+
+
+inline void GraphicsContext::SetStencilRef(uint32_t stencilRef)
+{
+	m_contextImpl->SetStencilRef(stencilRef);
+}
+
+
+inline void GraphicsContext::SetBlendFactor(Color blendFactor)
+{
+	m_contextImpl->SetBlendFactor(blendFactor);
+}
+
+
+inline void GraphicsContext::SetPrimitiveTopology(PrimitiveTopology topology)
+{
+	m_contextImpl->SetPrimitiveTopology(topology);
 }
 
 } // namespace Luna

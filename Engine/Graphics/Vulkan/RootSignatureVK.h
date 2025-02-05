@@ -49,11 +49,13 @@ public:
 	uint32_t GetNumRootParameters() const noexcept override;
 	const RootParameter& GetRootParameter(uint32_t index) const noexcept override;
 
+	wil::com_ptr<IDescriptorSet> CreateDescriptorSet(uint32_t index) const override;
+
 	// IRootSignatureVK implementation
 	VkPipelineLayout GetPipelineLayout() const noexcept override { return m_pipelineLayout->Get(); }
 
 private:
-	RootSignatureDesc m_desc;
+	const RootSignatureDesc m_desc;
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> m_descriptorSetLayouts;
 };

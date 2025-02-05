@@ -12,6 +12,9 @@
 
 #include "RootSignatureVK.h"
 
+#include "DescriptorAllocatorVK.h"
+#include "DescriptorSetVK.h"
+
 
 namespace Luna::VK
 {
@@ -48,6 +51,24 @@ uint32_t RootSignatureVK::GetNumRootParameters() const noexcept
 const RootParameter& RootSignatureVK::GetRootParameter(uint32_t index) const noexcept
 {
 	return m_desc.rootParameters[index];
+}
+
+
+DescriptorSetHandle RootSignatureVK::CreateDescriptorSet(uint32_t index) const
+{
+	assert(index < m_desc.rootParameters.size());
+
+	VkDescriptorSet descriptorSet = AllocateDescriptorSet(m_descriptorSetLayouts[index]->Get());
+	const auto& rootParam = GetRootParameter(index);
+
+	DescriptorSetDescExt descriptorSetDescExt{
+		.descriptorSet = descriptorSet,
+		.numDescriptors = rootParam.GetNumDescriptors(),
+		.isDynamicCbv = false,
+		.isRootCbv = rootParam.parameterType == RootParameterType::RootCBV
+	};
+
+	return Make<DescriptorSet>(descriptorSetDescExt);
 }
 
 } // namespace Luna::VK

@@ -19,6 +19,10 @@
 namespace Luna
 {
 
+// Constants
+constexpr uint32_t MaxDescriptorsPerTable = 32;
+
+
 // Functions
 bool IsDeveloperModeEnabled();
 bool IsRenderDocAvailable();

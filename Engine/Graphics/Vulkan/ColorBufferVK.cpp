@@ -48,6 +48,12 @@ NativeObjectPtr ColorBufferVK::GetNativeObject(NativeObjectType type, uint32_t i
 	case NativeObjectType::VK_ImageView_SRV:
 		return NativeObjectPtr(m_imageViewSrv->Get());
 
+	case NativeObjectType::VK_ImageInfo_SRV:
+		return NativeObjectPtr(GetImageInfoSrv());
+
+	case NativeObjectType::VK_ImageInfo_UAV:
+		return NativeObjectPtr(GetImageInfoUav());
+
 	default:
 		assert(false);
 		return nullptr;

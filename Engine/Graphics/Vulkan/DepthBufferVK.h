@@ -47,8 +47,8 @@ public:
 	virtual VkImageView GetDepthStencilImageView() const noexcept = 0;
 	virtual VkImageView GetDepthOnlyImageView() const noexcept = 0;
 	virtual VkImageView GetStencilOnlyImageView() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetDepthImageInfo() const noexcept = 0;
-	virtual VkDescriptorImageInfo GetStencilImageInfo() const noexcept = 0;
+	virtual VkDescriptorImageInfo* GetDepthImageInfo() const noexcept = 0;
+	virtual VkDescriptorImageInfo* GetStencilImageInfo() const noexcept = 0;
 };
 
 
@@ -90,8 +90,8 @@ public:
 	VkImageView GetDepthStencilImageView() const noexcept override { return *m_imageViewDepthStencil; }
 	VkImageView GetDepthOnlyImageView() const noexcept override { return *m_imageViewDepthOnly; }
 	VkImageView GetStencilOnlyImageView() const noexcept override { return *m_imageViewStencilOnly; }
-	VkDescriptorImageInfo GetDepthImageInfo() const noexcept override { return m_imageInfoDepth; }
-	VkDescriptorImageInfo GetStencilImageInfo() const noexcept override { return m_imageInfoStencil; }
+	VkDescriptorImageInfo* GetDepthImageInfo() const noexcept override { return &m_imageInfoDepth; }
+	VkDescriptorImageInfo* GetStencilImageInfo() const noexcept override { return &m_imageInfoStencil; }
 
 private:
 	std::string m_name;
@@ -115,8 +115,8 @@ private:
 	wil::com_ptr<CVkImageView> m_imageViewDepthStencil;
 	wil::com_ptr<CVkImageView> m_imageViewDepthOnly;
 	wil::com_ptr<CVkImageView> m_imageViewStencilOnly;
-	VkDescriptorImageInfo m_imageInfoDepth{};
-	VkDescriptorImageInfo m_imageInfoStencil{};
+	mutable VkDescriptorImageInfo m_imageInfoDepth{};
+	mutable VkDescriptorImageInfo m_imageInfoStencil{};
 };
 
 } // namespace Luna::VK
