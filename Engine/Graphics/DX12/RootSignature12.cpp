@@ -62,7 +62,7 @@ DescriptorSetHandle RootSignature12::CreateDescriptorSet(uint32_t index) const
 	assert(index < m_desc.rootParameters.size());
 
 	const auto& rootParam = GetRootParameter(index);
-	bool isSamplerTable = rootParam.IsSamplerTable();
+	const bool isSamplerTable = rootParam.IsSamplerTable();
 	
 	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = isSamplerTable
 		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
@@ -70,11 +70,15 @@ DescriptorSetHandle RootSignature12::CreateDescriptorSet(uint32_t index) const
 
 	DescriptorHandle descriptorHandle = AllocateUserDescriptor(heapType);
 
+	const bool isRootBuffer = rootParam.parameterType == RootParameterType::RootCBV ||
+		rootParam.parameterType == RootParameterType::RootSRV ||
+		rootParam.parameterType == RootParameterType::RootUAV;
+
 	DescriptorSetDescExt descriptorSetDescExt{
 		.descriptorHandle	= descriptorHandle,
 		.numDescriptors		= rootParam.GetNumDescriptors(),
 		.isSamplerTable		= isSamplerTable,
-		.isRootCbv			= rootParam.parameterType == RootParameterType::RootCBV
+		.isRootBuffer		= isRootBuffer
 	};
 
 	return Make<DescriptorSet>(descriptorSetDescExt);

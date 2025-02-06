@@ -258,7 +258,6 @@ enum class DescriptorType : uint8_t
 {
 	None,
 	ConstantBuffer,
-	DynamicConstantBuffer,
 	TextureSRV,
 	TextureUAV,
 	TypedBufferSRV,

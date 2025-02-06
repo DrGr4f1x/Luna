@@ -61,11 +61,14 @@ DescriptorSetHandle RootSignatureVK::CreateDescriptorSet(uint32_t index) const
 	VkDescriptorSet descriptorSet = AllocateDescriptorSet(m_descriptorSetLayouts[index]->Get());
 	const auto& rootParam = GetRootParameter(index);
 
+	const bool isDynamicBuffer = rootParam.parameterType == RootParameterType::RootCBV ||
+		rootParam.parameterType == RootParameterType::RootSRV ||
+		rootParam.parameterType == RootParameterType::RootUAV;
+
 	DescriptorSetDescExt descriptorSetDescExt{
-		.descriptorSet = descriptorSet,
-		.numDescriptors = rootParam.GetNumDescriptors(),
-		.isDynamicCbv = false,
-		.isRootCbv = rootParam.parameterType == RootParameterType::RootCBV
+		.descriptorSet		= descriptorSet,
+		.numDescriptors		= rootParam.GetNumDescriptors(),
+		.isDynamicBuffer	= isDynamicBuffer
 	};
 
 	return Make<DescriptorSet>(descriptorSetDescExt);

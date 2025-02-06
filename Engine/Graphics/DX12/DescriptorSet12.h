@@ -25,7 +25,7 @@ struct DescriptorSetDescExt
 	DescriptorHandle descriptorHandle;
 	uint32_t numDescriptors{ 0 };
 	bool isSamplerTable{ false };
-	bool isRootCbv{ false };
+	bool isRootBuffer{ false };
 };
 
 
@@ -62,7 +62,7 @@ private:
 	uint32_t m_dynamicOffset{ 0 };
 
 	bool m_isSamplerTable{ false };
-	bool m_isRootCBV{ false };
+	bool m_isRootBuffer{ false };
 };
 
 } // namespace Luna::DX12

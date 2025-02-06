@@ -64,7 +64,7 @@ DescriptorSet::DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt)
 	: m_descriptorHandle{ descriptorSetDescExt.descriptorHandle }
 	, m_numDescriptors{ descriptorSetDescExt.numDescriptors }
 	, m_isSamplerTable{ descriptorSetDescExt.isSamplerTable }
-	, m_isRootCBV{ descriptorSetDescExt.isRootCbv }
+	, m_isRootBuffer{ descriptorSetDescExt.isRootBuffer }
 {
 	assert(m_numDescriptors <= MaxDescriptorsPerTable);
 
@@ -89,7 +89,15 @@ void DescriptorSet::SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depth
 
 void DescriptorSet::SetSRV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	SetDescriptor(slot, GetSRV(gpuBuffer));
+	if (m_isRootBuffer)
+	{
+		assert(slot == 0);
+		m_gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
+	}
+	else
+	{
+		SetDescriptor(slot, GetSRV(gpuBuffer));
+	}
 }
 
 
@@ -107,14 +115,23 @@ void DescriptorSet::SetUAV(int slot, const IDepthBuffer* colorBuffer)
 
 void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	SetDescriptor(slot, GetUAV(gpuBuffer, 0));
+	if (m_isRootBuffer)
+	{
+		assert(slot == 0);
+		m_gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
+	}
+	else
+	{
+		SetDescriptor(slot, GetUAV(gpuBuffer, 0));
+	}
 }
 
 
 void DescriptorSet::SetCBV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	if (m_isRootCBV)
+	if (m_isRootBuffer)
 	{
+		assert(slot == 0);
 		m_gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
 	}
 	else

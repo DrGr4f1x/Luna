@@ -372,7 +372,6 @@ VkDescriptorType DescriptorTypeToVulkan(DescriptorType descriptorType)
 	switch (descriptorType)
 	{
 	case ConstantBuffer:				return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; break;
-	case DynamicConstantBuffer:			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; break;
 	case Sampler:						return VK_DESCRIPTOR_TYPE_SAMPLER; break;
 	case TextureSRV:					return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE; break;
 	case TextureUAV:					return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE; break;

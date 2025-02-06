@@ -147,6 +147,7 @@
     <ClInclude Include="Graphics\InputLayout.h" />
     <ClInclude Include="Graphics\PipelineState.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
+    <ClInclude Include="Graphics\ResourceSet.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
     <ClInclude Include="Graphics\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />

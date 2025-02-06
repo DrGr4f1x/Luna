@@ -415,7 +415,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 		{
 			VkDescriptorSetLayoutBinding vkBinding{
 				.binding				= rootParameter.startRegister + rootSignatureDesc.bindingOffsets.shaderResource,
-				.descriptorType			= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				.descriptorType			= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
 				.descriptorCount		= 1,
 				.stageFlags				= shaderStageFlags,
 				.pImmutableSamplers		= nullptr
@@ -442,7 +442,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 		{
 			VkDescriptorSetLayoutBinding vkBinding{
 				.binding				= rootParameter.startRegister + rootSignatureDesc.bindingOffsets.unorderedAccess,
-				.descriptorType			= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				.descriptorType			= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
 				.descriptorCount		= 1,
 				.stageFlags				= shaderStageFlags,
 				.pImmutableSamplers		= nullptr
@@ -498,7 +498,6 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 					break;
 
 				case DescriptorType::ConstantBuffer:
-				case DescriptorType::DynamicConstantBuffer:
 					offset = rootSignatureDesc.bindingOffsets.constantBuffer;
 					break;
 

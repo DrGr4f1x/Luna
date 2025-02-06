@@ -43,17 +43,6 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange DynamicConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1)
-	{
-		auto res = DescriptorRange{
-			.descriptorType		= DescriptorType::DynamicConstantBuffer,
-			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
-		};
-		return res;
-	}
-
-
 	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1)
 	{
 		auto res = DescriptorRange{
@@ -193,21 +182,25 @@ struct RootParameter
 
 	bool Validate() const
 	{
-		if (parameterType == RootParameterType::Table && table.size() > 0)
+		if (parameterType == RootParameterType::Table)
 		{
-			bool isSamplerTable = table[0].descriptorType == DescriptorType::Sampler;
-			for (uint32_t i = 1; i < (uint32_t)table.size(); ++i)
+			// Verify that the table does not contain a mix of sampler and non-sampler ranges
+			if (!table.empty())
 			{
-				if (isSamplerTable && table[i].descriptorType != DescriptorType::Sampler)
+				bool isSamplerTable = table[0].descriptorType == DescriptorType::Sampler;
+				for (uint32_t i = 1; i < (uint32_t)table.size(); ++i)
 				{
-					LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
-					return false;
-				}
+					if (isSamplerTable && table[i].descriptorType != DescriptorType::Sampler)
+					{
+						LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
+						return false;
+					}
 
-				if (!isSamplerTable && table[i].descriptorType == DescriptorType::Sampler)
-				{
-					LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
-					return false;
+					if (!isSamplerTable && table[i].descriptorType == DescriptorType::Sampler)
+					{
+						LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
+						return false;
+					}
 				}
 			}
 		}
@@ -344,6 +337,12 @@ struct RootSignatureDesc
 
 	bool Validate() const
 	{
+		if (rootParameters.size() > MaxRootParameters)
+		{
+			LogError(LogGraphics) << std::format("RootSignature {} contains {} parameters, but the maximum is {}", name, rootParameters.size(), MaxRootParameters) << std::endl;
+			return false;
+		}
+
 		for (const auto& rootParameter : rootParameters)
 		{
 			if (!rootParameter.Validate())

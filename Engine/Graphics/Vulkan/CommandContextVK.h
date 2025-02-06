@@ -85,6 +85,8 @@ public:
 	void InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
+	void ClearUAV(IGpuBuffer* gpuBuffer) override;
+	//void ClearUAV(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
 	void ClearDepth(IDepthBuffer* depthBuffer) override;
@@ -98,11 +100,20 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
+	void SetRootSignature(IRootSignature* rootSignature) override;
+
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
 	void SetStencilRef(uint32_t stencilRef) override;
 	void SetBlendFactor(Color blendFactor) override;
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
+
+	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
+	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val) override;
+	void SetConstants(uint32_t rootIndex, DWParam x) override;
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
 
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
@@ -113,6 +124,8 @@ private:
 	void ResetRenderTargets();
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
+
+	VkPipelineLayout GetPipelineLayout() const noexcept { return (m_type == CommandListType::Compute) ? m_computePipelineLayout : m_graphicsPipelineLayout; }
 
 private:
 	std::string m_id;
@@ -139,6 +152,11 @@ private:
 	VkFormat m_dsvFormat{ VK_FORMAT_UNDEFINED };
 	bool m_hasDsv{ false };
 	VkRect2D m_renderingArea;
+
+	// Pipeline state
+	VkPipelineLayout m_graphicsPipelineLayout{ VK_NULL_HANDLE };
+	VkPipelineLayout m_computePipelineLayout{ VK_NULL_HANDLE };
+	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
 };
 
 } // namespace Luna::VK

@@ -23,8 +23,7 @@ struct DescriptorSetDescExt
 {
 	VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
 	uint32_t numDescriptors{ 0 };
-	bool isDynamicCbv{ false };
-	bool isRootCbv{ false };
+	bool isDynamicBuffer{ false };
 };
 
 
@@ -57,9 +56,7 @@ private:
 	uint32_t m_numDescriptors{ 0 };
 	uint32_t m_dirtyBits{ 0 };
 	uint32_t m_dynamicOffset{ 0 };
-	bool m_isDynamicCBV{ false };
-
-	bool m_isRootCBV{ false };
+	bool m_isDynamicBuffer{ false };
 
 	bool m_isInitialized{ false };
 };

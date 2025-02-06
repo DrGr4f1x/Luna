@@ -25,6 +25,7 @@ class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
 class IGpuResource;
+class IRootSignature;
 
 
 class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
@@ -55,6 +56,9 @@ public:
 	virtual void FlushResourceBarriers() = 0;
 
 	// Graphics context
+	virtual void ClearUAV(IGpuBuffer* gpuBuffer) = 0;
+	// TODO: Figure out how to implement this for Vulkan
+	//virtual void ClearUAV(IColorBuffer* colorBuffer) = 0;
 	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
 	virtual void ClearColor(IColorBuffer* colorBuffer, Color clearColor) = 0;
 	virtual void ClearDepth(IDepthBuffer* depthBuffer) = 0;
@@ -68,6 +72,8 @@ public:
 	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
+	virtual void SetRootSignature(IRootSignature* rootSignature) = 0;
+
 	// TODO: look into the inverted viewport situation for Vulkan
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -75,6 +81,13 @@ public:
 	virtual void SetStencilRef(uint32_t stencilRef) = 0;
 	virtual void SetBlendFactor(Color blendFactor) = 0;
 	virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
+
+	virtual void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
+	virtual void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val) = 0;
+	virtual void SetConstants(uint32_t rootIndex, DWParam x) = 0;
+	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) = 0;
+	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
+	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
 
 	// Compute context
 	
@@ -137,6 +150,8 @@ public:
 		return CommandContext::Begin(id).GetGraphicsContext();
 	}
 
+	void ClearUAV(IGpuBuffer* gpuBuffer);
+	//void ClearUAV(IColorBuffer* colorBuffer);
 	void ClearColor(IColorBuffer* colorBuffer);
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
 	void ClearDepth(IDepthBuffer* depthBuffer);
@@ -150,12 +165,22 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
+	void SetRootSignature(IRootSignature* rootSignature);
+
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
 	void SetViewportAndScissor(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 	void SetStencilRef(uint32_t stencilRef);
 	void SetBlendFactor(Color blendFactor);
 	void SetPrimitiveTopology(PrimitiveTopology topology);
+
+	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
+	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
+	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val);
+	void SetConstants(uint32_t rootIndex, DWParam x);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
 };
 
 
@@ -218,6 +243,18 @@ inline void CommandContext::BeginFrame()
 {
 	m_contextImpl->BeginFrame();
 }
+
+
+inline void GraphicsContext::ClearUAV(IGpuBuffer* gpuBuffer)
+{
+	m_contextImpl->ClearUAV(gpuBuffer);
+}
+
+
+//inline void GraphicsContext::ClearUAV(IColorBuffer* colorBuffer)
+//{
+//	m_contextImpl->ClearUAV(colorBuffer);
+//}
 
 
 inline void GraphicsContext::ClearColor(IColorBuffer* colorBuffer)
@@ -286,6 +323,12 @@ inline void GraphicsContext::EndRendering()
 }
 
 
+inline void GraphicsContext::SetRootSignature(IRootSignature* rootSignature)
+{
+	m_contextImpl->SetRootSignature(rootSignature);
+}
+
+
 inline void GraphicsContext::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 {
 	m_contextImpl->SetViewport(x, y, w, h, minDepth, maxDepth);
@@ -320,6 +363,48 @@ inline void GraphicsContext::SetBlendFactor(Color blendFactor)
 inline void GraphicsContext::SetPrimitiveTopology(PrimitiveTopology topology)
 {
 	m_contextImpl->SetPrimitiveTopology(topology);
+}
+
+
+inline void GraphicsContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants)
+{
+	m_contextImpl->SetConstantArray(rootIndex, numConstants, constants, 0);
+}
+
+
+inline void GraphicsContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
+{
+	m_contextImpl->SetConstantArray(rootIndex, numConstants, constants, offset);
+}
+
+
+inline void GraphicsContext::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
+{
+	m_contextImpl->SetConstant(rootIndex, offset, val);
+}
+
+
+inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x)
+{
+	m_contextImpl->SetConstants(rootIndex, x);
+}
+
+
+inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
+{
+	m_contextImpl->SetConstants(rootIndex, x, y);
+}
+
+
+inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
+{
+	m_contextImpl->SetConstants(rootIndex, x, y, z);
+}
+
+
+inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
+{
+	m_contextImpl->SetConstants(rootIndex, x, y, z, w);
 }
 
 } // namespace Luna

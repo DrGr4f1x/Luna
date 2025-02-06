@@ -20,6 +20,7 @@ namespace Luna
 {
 
 // Constants
+constexpr uint32_t MaxRootParameters = 8;
 constexpr uint32_t MaxDescriptorsPerTable = 32;
 
 

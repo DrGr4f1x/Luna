@@ -48,6 +48,8 @@ public:
 	void FlushResourceBarriers() override;
 
 	// Graphics context
+	void ClearUAV(IGpuBuffer* gpuBuffer) override;
+	//void ClearUAV(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
 	void ClearDepth(IDepthBuffer* depthBuffer) override;
@@ -61,11 +63,20 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
+	void SetRootSignature(IRootSignature* rootSignature) override;
+
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
 	void SetStencilRef(uint32_t stencilRef) override;
 	void SetBlendFactor(Color blendFactor) override;
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
+
+	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
+	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val) override;
+	void SetConstants(uint32_t rootIndex, DWParam x) override;
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
 
 protected:
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
@@ -82,12 +93,12 @@ private:
 	ID3D12GraphicsCommandList* m_commandList{ nullptr };
 	ID3D12CommandAllocator* m_currentAllocator{ nullptr };
 
-	ID3D12RootSignature* m_curGraphicsRootSignature{ nullptr };
-	ID3D12RootSignature* m_curComputeRootSignature{ nullptr };
-	ID3D12PipelineState* m_curGraphicsPipelineState{ nullptr };
-	ID3D12PipelineState* m_curComputePipelineState{ nullptr };
+	ID3D12RootSignature* m_graphicsRootSignature{ nullptr };
+	ID3D12RootSignature* m_computeRootSignature{ nullptr };
+	ID3D12PipelineState* m_graphicsPipelineState{ nullptr };
+	ID3D12PipelineState* m_computePipelineState{ nullptr };
 
-	D3D12_PRIMITIVE_TOPOLOGY m_curPrimitiveTopology;
+	D3D12_PRIMITIVE_TOPOLOGY m_primitiveTopology;
 
 	D3D12_RESOURCE_BARRIER m_resourceBarrierBuffer[16];
 	uint32_t m_numBarriersToFlush{ 0 };

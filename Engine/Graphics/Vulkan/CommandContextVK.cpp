@@ -12,12 +12,13 @@
 
 #include "CommandContextVK.h"
 
-#include "Graphics\Vulkan\ColorBufferVK.h"
-#include "Graphics\Vulkan\DepthBufferVK.h"
-#include "Graphics\Vulkan\DeviceVK.h"
-#include "Graphics\Vulkan\DeviceManagerVK.h"
-#include "Graphics\Vulkan\GpuBufferVK.h"
-#include "Graphics\Vulkan\QueueVK.h"
+#include "ColorBufferVK.h"
+#include "DepthBufferVK.h"
+#include "DeviceVK.h"
+#include "DeviceManagerVK.h"
+#include "GpuBufferVK.h"
+#include "QueueVK.h"
+#include "RootSignatureVK.h"
 
 using namespace std;
 
@@ -330,6 +331,13 @@ void CommandContextVK::FlushResourceBarriers()
 }
 
 
+void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
+{
+	uint32_t data = 0;
+	vkCmdFillBuffer(m_commandBuffer, gpuBuffer->GetNativeObject(NativeObjectType::VK_Buffer), 0, VK_WHOLE_SIZE, data);
+}
+
+
 void CommandContextVK::ClearColor(IColorBuffer* colorBuffer)
 {
 	ClearColor(colorBuffer, colorBuffer->GetClearColor());
@@ -498,6 +506,30 @@ void CommandContextVK::EndRendering()
 }
 
 
+void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	if (m_type == CommandListType::Direct)
+	{
+		m_computePipelineLayout = VK_NULL_HANDLE;
+		m_graphicsPipelineLayout = rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout);
+	}
+	else
+	{
+		m_graphicsPipelineLayout = VK_NULL_HANDLE;
+		m_computePipelineLayout = rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout);
+	}
+
+	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
+	for (uint32_t i = 0; i < numRootParameters; ++i)
+	{
+		const auto& rootParameter = rootSignature->GetRootParameter(i);
+		m_shaderStages[i] = ShaderStageToVulkan(rootParameter.shaderVisibility);
+	}
+}
+
+
 void CommandContextVK::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 {
 	VkViewport viewport{
@@ -542,6 +574,83 @@ void CommandContextVK::SetPrimitiveTopology(PrimitiveTopology topology)
 }
 
 
+void CommandContextVK::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
+{
+	vkCmdPushConstants(
+		m_commandBuffer,
+		GetPipelineLayout(),
+		m_shaderStages[rootIndex],
+		offset * sizeof(DWORD),
+		numConstants * sizeof(DWORD),
+		constants);
+}
+
+
+void CommandContextVK::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
+{
+	uint32_t v = get<uint32_t>(val.value);
+	vkCmdPushConstants(
+		m_commandBuffer,
+		GetPipelineLayout(),
+		m_shaderStages[rootIndex],
+		offset * sizeof(uint32_t),
+		sizeof(uint32_t),
+		&v);
+}
+
+
+void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x)
+{
+	uint32_t v = get<uint32_t>(x.value);
+	vkCmdPushConstants(
+		m_commandBuffer,
+		GetPipelineLayout(),
+		m_shaderStages[rootIndex],
+		0,
+		sizeof(uint32_t),
+		&v);
+}
+
+
+void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
+{
+	uint32_t val[] = { get<uint32_t>(x.value), get<uint32_t>(y.value) };
+	vkCmdPushConstants(
+		m_commandBuffer,
+		GetPipelineLayout(),
+		m_shaderStages[rootIndex],
+		0,
+		2 * sizeof(uint32_t),
+		&val);
+}
+
+
+void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
+{
+	uint32_t val[] = { get<uint32_t>(x.value), get<uint32_t>(y.value), get<uint32_t>(z.value) };
+	vkCmdPushConstants(
+		m_commandBuffer,
+		GetPipelineLayout(),
+		m_shaderStages[rootIndex],
+		0,
+		3 * sizeof(uint32_t),
+		&val);
+}
+
+
+void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
+{
+	uint32_t val[] = { get<uint32_t>(x.value), get<uint32_t>(y.value), get<uint32_t>(z.value), get<uint32_t>(w.value) };
+	vkCmdPushConstants(
+		m_commandBuffer,
+		GetPipelineLayout(),
+		m_shaderStages[rootIndex],
+		0,
+		4 * sizeof(uint32_t),
+		&val);
+}
+
+
 void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
@@ -563,16 +672,16 @@ void CommandContextVK::BeginRenderingBlock()
 	assert(!m_isRendering);
 
 	VkRenderingInfo renderingInfo{
-		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-		.pNext = nullptr,
-		.flags = 0,
-		.renderArea = m_renderingArea,
-		.layerCount = 1,
-		.viewMask = 0,
-		.colorAttachmentCount = m_numRtvs,
-		.pColorAttachments = m_numRtvs > 0 ? m_rtvs.data() : nullptr,
-		.pDepthAttachment = m_hasDsv ? &m_dsv : nullptr,
-		.pStencilAttachment = (m_hasDsv && IsStencilFormat(m_dsvFormat)) ? &m_dsv : nullptr
+		.sType					= VK_STRUCTURE_TYPE_RENDERING_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.renderArea				= m_renderingArea,
+		.layerCount				= 1,
+		.viewMask				= 0,
+		.colorAttachmentCount	= m_numRtvs,
+		.pColorAttachments		= m_numRtvs > 0 ? m_rtvs.data() : nullptr,
+		.pDepthAttachment		= m_hasDsv ? &m_dsv : nullptr,
+		.pStencilAttachment		= (m_hasDsv && IsStencilFormat(m_dsvFormat)) ? &m_dsv : nullptr
 	};
 
 	vkCmdBeginRendering(m_commandBuffer, &renderingInfo);

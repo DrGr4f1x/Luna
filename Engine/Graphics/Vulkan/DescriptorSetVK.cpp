@@ -60,8 +60,7 @@ const VkBufferView* GetBufferView(const IGpuResource* gpuResource)
 DescriptorSet::DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt)
 	: m_descriptorSet{descriptorSetDescExt.descriptorSet}
 	, m_numDescriptors{descriptorSetDescExt.numDescriptors}
-	, m_isDynamicCBV{ descriptorSetDescExt.isDynamicCbv }
-	, m_isRootCBV{ descriptorSetDescExt.isRootCbv }
+	, m_isDynamicBuffer{ descriptorSetDescExt.isDynamicBuffer }
 {
 	assert(m_numDescriptors <= MaxDescriptorsPerTable);
 
@@ -117,6 +116,11 @@ void DescriptorSet::SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depth
 
 void DescriptorSet::SetSRV(int slot, const IGpuBuffer* gpuBuffer)
 {
+	if (m_isDynamicBuffer)
+	{
+		assert(slot == 0);
+	}
+
 	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
 
 	const VkDescriptorBufferInfo* bufferInfo = GetBufferInfo(gpuBuffer);
@@ -135,7 +139,7 @@ void DescriptorSet::SetSRV(int slot, const IGpuBuffer* gpuBuffer)
 	}
 	else
 	{
-		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		writeSet.pBufferInfo = bufferInfo;
 	}
 
@@ -169,6 +173,11 @@ void DescriptorSet::SetUAV(int slot, const IDepthBuffer* depthBuffer)
 
 void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
 {
+	if (m_isDynamicBuffer)
+	{
+		assert(slot == 0);
+	}
+
 	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
 
 	writeSet.descriptorCount = 1;
@@ -182,7 +191,7 @@ void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
 	}
 	else
 	{
-		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		writeSet.pBufferInfo = GetBufferInfo(gpuBuffer);
 	}
 
@@ -190,28 +199,32 @@ void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
 }
 
 
-void DescriptorSet::SetCBV(int paramIndex, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetCBV(int slot, const IGpuBuffer* gpuBuffer)
 {
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[paramIndex];
+	if (m_isDynamicBuffer)
+	{
+		assert(slot == 0);
+	}
+
+	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
 
 	const VkDescriptorBufferInfo* bufferInfo = GetBufferInfo(gpuBuffer);
 	if (writeSet.pBufferInfo == bufferInfo)
 		return;
 
 	writeSet.descriptorCount = 1;
-	// TODO: refactor dynamic CBVs
-	writeSet.descriptorType = m_isDynamicCBV ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = paramIndex;
+	writeSet.dstBinding = slot;
 	writeSet.pBufferInfo = bufferInfo;
 
-	m_dirtyBits |= (1 << paramIndex);
+	m_dirtyBits |= (1 << slot);
 }
 
 
 void DescriptorSet::SetDynamicOffset(uint32_t offset)
 {
-	assert(m_isDynamicCBV);
+	assert(m_isDynamicBuffer);
 
 	m_dynamicOffset = offset;
 }

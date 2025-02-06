@@ -18,6 +18,7 @@
 #include "DeviceManager12.h"
 #include "GpuBuffer12.h"
 #include "Queue12.h"
+#include "RootSignature12.h"
 
 #if ENABLE_D3D12_DEBUG_MARKERS
 #include <pix3.h>
@@ -118,10 +119,10 @@ void CommandContext12::Reset()
 	m_currentAllocator = GetD3D12DeviceManager()->GetQueue(m_type).RequestAllocator();
 	m_commandList->Reset(m_currentAllocator, nullptr);
 
-	m_curGraphicsRootSignature = nullptr;
-	m_curComputeRootSignature = nullptr;
-	m_curGraphicsPipelineState = nullptr;
-	m_curComputePipelineState = nullptr;
+	m_graphicsRootSignature = nullptr;
+	m_computeRootSignature = nullptr;
+	m_graphicsPipelineState = nullptr;
+	m_computePipelineState = nullptr;
 	m_numBarriersToFlush = 0;
 
 	BindDescriptorHeaps();
@@ -249,6 +250,12 @@ void CommandContext12::FlushResourceBarriers()
 		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
 		m_numBarriersToFlush = 0;
 	}
+}
+
+
+void CommandContext12::ClearUAV(IGpuBuffer* gpuBuffer)
+{
+	// TODO: We need to allocate a GPU descriptor, so need to implement dynamic descriptor heaps to do this.
 }
 
 
@@ -391,15 +398,46 @@ void CommandContext12::EndRendering()
 }
 
 
+void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	if (m_type == CommandListType::Direct)
+	{
+		m_computeRootSignature = nullptr;
+		ID3D12RootSignature* d3d12RootSignature = rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
+		if (m_graphicsRootSignature == d3d12RootSignature)
+		{
+			return;
+		}
+
+		m_commandList->SetGraphicsRootSignature(d3d12RootSignature);
+		m_graphicsRootSignature = d3d12RootSignature;
+	}
+	else
+	{
+		m_graphicsRootSignature = nullptr;
+		ID3D12RootSignature* d3d12RootSignature = rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
+		if (m_computeRootSignature == d3d12RootSignature)
+		{
+			return;
+		}
+
+		m_commandList->SetComputeRootSignature(d3d12RootSignature);
+		m_computeRootSignature = d3d12RootSignature;
+	}
+}
+
+
 void CommandContext12::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 { 
 	D3D12_VIEWPORT viewport{
-		.TopLeftX = x,
-		.TopLeftY = y,
-		.Width = w,
-		.Height = h,
-		.MinDepth = minDepth,
-		.MaxDepth = maxDepth
+		.TopLeftX	= x,
+		.TopLeftY	= y,
+		.Width		= w,
+		.Height		= h,
+		.MinDepth	= minDepth,
+		.MaxDepth	= maxDepth
 	};
 
 	m_commandList->RSSetViewports(1, &viewport);
@@ -430,11 +468,107 @@ void CommandContext12::SetBlendFactor(Color blendFactor)
 
 void CommandContext12::SetPrimitiveTopology(PrimitiveTopology topology)
 {
-	auto newTopology = PrimitiveTopologyToDX12(topology);
-	if (m_curPrimitiveTopology != newTopology)
+	const auto newTopology = PrimitiveTopologyToDX12(topology);
+	if (m_primitiveTopology != newTopology)
 	{
 		m_commandList->IASetPrimitiveTopology(newTopology);
-		m_curPrimitiveTopology = newTopology;
+		m_primitiveTopology = newTopology;
+	}
+}
+
+
+void CommandContext12::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, constants, offset);
+	}
+	else
+	{
+		m_commandList->SetComputeRoot32BitConstants(rootIndex, numConstants, constants, offset);
+	}
+}
+
+
+void CommandContext12::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(val.value), offset);
+	}
+	else
+	{
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(val.value), offset);
+	}
+}
+
+
+void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+	}
+	else
+	{
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+	}
+}
+
+
+void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+	}
+	else
+	{
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+	}
+}
+
+
+void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
+	}
+	else
+	{
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
+	}
+}
+
+
+void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(w.value), 3);
+	}
+	else
+	{
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(w.value), 3);
 	}
 }
 
