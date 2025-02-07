@@ -166,6 +166,10 @@
     <ClCompile Include="Graphics\Vulkan\ResourceSetVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Camera.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -436,6 +440,10 @@
     <ClInclude Include="Graphics\Vulkan\ResourceSetVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Camera.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">

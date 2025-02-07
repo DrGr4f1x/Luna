@@ -12,7 +12,7 @@
 
 #include "StepTimer.h"
 #include "Graphics\GraphicsCommon.h"
-
+#include "Graphics\Camera.h"
 
 // Forward declarations
 struct GLFWwindow;
@@ -110,6 +110,9 @@ protected:
 
 	// Frame timer
 	StepTimer m_timer;
+
+	// Camera
+	Camera m_camera;
 
 	// Engine systems
 	std::unique_ptr<FileSystem> m_fileSystem;

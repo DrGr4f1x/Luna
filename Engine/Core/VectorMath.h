@@ -61,3 +61,4 @@
 #include "Math\Matrix4.h"
 #include "Math\Functions.inl"
 #include "Math\Random.h"
+#include "Math\Frustum.h"

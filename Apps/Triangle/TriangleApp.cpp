@@ -20,6 +20,7 @@ using namespace std;
 
 TriangleApp::TriangleApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
+	, m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) }
 {
 }
 
@@ -98,8 +99,7 @@ void TriangleApp::Shutdown()
 
 void TriangleApp::Update()
 {
-	// Application update tick
-	// Set m_bIsRunning to false if your application wants to exit
+	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds());
 }
 
 

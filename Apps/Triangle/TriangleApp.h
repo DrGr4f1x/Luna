@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Application.h"
+#include "CameraController.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceSet.h"
@@ -41,6 +42,10 @@ private:
 	void InitResources();
 
 private:
+	// Camera controls
+	float m_zoom{ -2.5f };
+	Luna::CameraController m_controller;
+
 	// Vertex layout used in this example
 	struct Vertex
 	{
