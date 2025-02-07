@@ -29,13 +29,28 @@ struct DescriptorSetDescExt
 };
 
 
+class __declspec(uuid("1FF0DA5B-4F66-4BEF-92A0-1E611D9440AF")) IDescriptorSet12 : public IDescriptorSet
+{
+public:
+	virtual bool IsDirty() const = 0;
+	virtual bool IsRootBuffer() const = 0;
+	virtual bool IsSamplerTable() const = 0;
+	virtual bool HasDescriptors() const = 0;
+	virtual D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptor() const = 0;
+	virtual uint64_t GetGpuAddress() const = 0;
+	virtual uint32_t GetDynamicOffset() const = 0;
+	virtual void Update() = 0;
+};
+
+
 class __declspec(uuid("D673302E-0617-4432-96C4-30A4F4E30195")) DescriptorSet final
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IDescriptorSet>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDescriptorSet12, IDescriptorSet>>
 	, NonCopyable
 {
 public:
 	explicit DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt);
 
+	// IDescriptorSet implementation
 	void SetSRV(int slot, const IColorBuffer* colorBuffer) override;
 	void SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) override;
 	void SetSRV(int slot, const IGpuBuffer* gpuBuffer) override;
@@ -48,9 +63,17 @@ public:
 
 	void SetDynamicOffset(uint32_t offset) override;
 
+	// IDescriptorSet12 implementation
+	bool IsDirty() const override { return m_dirtyBits != 0; }
+	bool IsRootBuffer() const override { return m_isRootBuffer; }
+	bool IsSamplerTable() const override { return m_isSamplerTable; }
+	bool HasDescriptors() const override { return m_numDescriptors > 0; }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptor() const override { return m_descriptorHandle.GetGpuHandle(); }
+	uint64_t GetGpuAddress() const override { return m_gpuAddress; }
+	uint32_t GetDynamicOffset() const override { return m_dynamicOffset; }
+	void Update() override;
+
 private:
-	bool IsDirty() const noexcept { return m_dirtyBits != 0; }
-	void Update(ID3D12Device* device);
 	void SetDescriptor(int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
 private:

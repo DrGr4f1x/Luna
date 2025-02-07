@@ -54,9 +54,11 @@ public:
 	NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept override;
 
 	uint32_t GetNumRootParameters() const noexcept override;
+	RootParameter& GetRootParameter(uint32_t index) noexcept override;
 	const RootParameter& GetRootParameter(uint32_t index) const noexcept override;
 
 	wil::com_ptr<IDescriptorSet> CreateDescriptorSet(uint32_t index) const override;
+	wil::com_ptr<IResourceSet> CreateResourceSet() const override;
 
 	// IRootSignature12 implementation
 	ID3D12RootSignature* GetRootSignature() const noexcept override { return m_rootSignature.get(); }
@@ -65,7 +67,7 @@ public:
 	const std::vector<uint32_t>& GetDescriptorTableSize() const noexcept override { return m_descriptorTableSize; }
 
 private:
-	const RootSignatureDesc m_desc;
+	RootSignatureDesc m_desc;
 	wil::com_ptr<ID3D12RootSignature> m_rootSignature;
 	uint32_t m_descriptorTableBitmap{ 0 };
 	uint32_t m_samplerTableBitmap{ 0 };

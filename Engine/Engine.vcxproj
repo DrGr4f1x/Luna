@@ -35,6 +35,7 @@
     <ClCompile Include="Graphics\CommonStates.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineState12.cpp" />
+    <ClCompile Include="Graphics\DX12\ResourceSet12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
@@ -58,6 +59,7 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\ResourceSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
@@ -120,6 +122,7 @@
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSet12.h" />
     <ClInclude Include="Graphics\DX12\PipelineState12.h" />
+    <ClInclude Include="Graphics\DX12\ResourceSet12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
@@ -153,6 +156,7 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateVK.h" />
+    <ClInclude Include="Graphics\Vulkan\ResourceSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />

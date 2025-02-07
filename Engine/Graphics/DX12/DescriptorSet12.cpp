@@ -149,7 +149,7 @@ void DescriptorSet::SetDynamicOffset(uint32_t offset)
 }
 
 
-void DescriptorSet::Update(ID3D12Device* device)
+void DescriptorSet::Update()
 {
 	if (!IsDirty() || m_numDescriptors == 0)
 		return;
@@ -157,6 +157,8 @@ void DescriptorSet::Update(ID3D12Device* device)
 	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = m_isSamplerTable 
 		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
 		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	auto device = GetD3D12GraphicsDevice()->GetD3D12Device();
 
 	//DescriptorHandle descHandle = AllocateUserDescriptor(heapType, numDescriptors);
 	uint32_t descriptorSize = device->GetDescriptorHandleIncrementSize(heapType);

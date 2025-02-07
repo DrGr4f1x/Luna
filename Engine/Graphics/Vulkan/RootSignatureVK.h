@@ -47,15 +47,17 @@ public:
 	NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept override;
 
 	uint32_t GetNumRootParameters() const noexcept override;
+	RootParameter& GetRootParameter(uint32_t index) noexcept override;
 	const RootParameter& GetRootParameter(uint32_t index) const noexcept override;
 
 	wil::com_ptr<IDescriptorSet> CreateDescriptorSet(uint32_t index) const override;
+	wil::com_ptr<IResourceSet> CreateResourceSet() const override;
 
 	// IRootSignatureVK implementation
 	VkPipelineLayout GetPipelineLayout() const noexcept override { return m_pipelineLayout->Get(); }
 
 private:
-	const RootSignatureDesc m_desc;
+	RootSignatureDesc m_desc;
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> m_descriptorSetLayouts;
 };

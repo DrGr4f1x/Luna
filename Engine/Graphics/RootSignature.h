@@ -20,6 +20,7 @@ namespace Luna
 
 // Forward declarations
 class IDescriptorSet;
+class IResourceSet;
 
 
 struct DescriptorRange
@@ -361,9 +362,14 @@ public:
 	virtual NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept = 0;
 
 	virtual uint32_t GetNumRootParameters() const noexcept = 0;
+	virtual RootParameter& GetRootParameter(uint32_t index) noexcept = 0;
 	virtual const RootParameter& GetRootParameter(uint32_t index) const noexcept = 0;
 
 	virtual wil::com_ptr<IDescriptorSet> CreateDescriptorSet(uint32_t index) const = 0;
+	virtual wil::com_ptr<IResourceSet> CreateResourceSet() const = 0;
+
+	RootParameter& operator[](uint32_t index) { return GetRootParameter(index); }
+	const RootParameter& operator[](uint32_t index) const { return GetRootParameter(index); }
 };
 
 using RootSignatureHandle = wil::com_ptr<IRootSignature>;

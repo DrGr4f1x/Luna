@@ -27,13 +27,26 @@ struct DescriptorSetDescExt
 };
 
 
+class __declspec(uuid("8DC4BDEF-EF45-4274-B659-6264A0982DBD")) IDescriptorSetVK : public IDescriptorSet
+{
+public:
+	virtual bool IsDirty() const = 0;
+	virtual bool HasDescriptors() const = 0;
+	virtual bool IsDynamicBuffer() const = 0;
+	virtual VkDescriptorSet GetDescriptorSet() const = 0;
+	virtual uint32_t GetDynamicOffset() const = 0;
+	virtual void Update() = 0;
+};
+
+
 class __declspec(uuid("EB8306AB-A0A9-419B-9825-4B70B95A9F05")) DescriptorSet final
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IDescriptorSet>
+	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ChainInterfaces<IDescriptorSetVK, IDescriptorSet>>
 	, NonCopyable
 {
 public:
 	explicit DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt);
 
+	// IDescriptorSet implementation
 	void SetSRV(int slot, const IColorBuffer* colorBuffer) override;
 	void SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) override;
 	void SetSRV(int slot, const IGpuBuffer* gpuBuffer) override;
@@ -46,9 +59,13 @@ public:
 
 	void SetDynamicOffset(uint32_t offset) override;
 
-private:
-	bool IsDirty() const noexcept { return m_dirtyBits != 0; }
-	void Update();
+	// IDescriptorSetVK implementation
+	bool IsDirty() const override { return m_dirtyBits != 0; }
+	bool HasDescriptors() const override { return m_numDescriptors > 0; }
+	bool IsDynamicBuffer() const override { return m_isDynamicBuffer; }
+	VkDescriptorSet GetDescriptorSet() const override { return m_descriptorSet; }
+	uint32_t GetDynamicOffset() const override { return m_dynamicOffset; }
+	void Update() override;
 
 private:
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
@@ -57,8 +74,6 @@ private:
 	uint32_t m_dirtyBits{ 0 };
 	uint32_t m_dynamicOffset{ 0 };
 	bool m_isDynamicBuffer{ false };
-
-	bool m_isInitialized{ false };
 };
 
 } // namespace Luna::VK

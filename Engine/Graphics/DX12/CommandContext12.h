@@ -19,6 +19,10 @@ using namespace Microsoft::WRL;
 namespace Luna::DX12
 {
 
+// Forward declarations
+class IDescriptorSet12;
+
+
 class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
 {
@@ -64,6 +68,7 @@ public:
 	void EndRendering() override;
 
 	void SetRootSignature(IRootSignature* rootSignature) override;
+	void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -77,9 +82,20 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
+	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
+	void SetResources(IResourceSet* resourceSet) override;
+
+	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
+	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+
+	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
+		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
+	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
+		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 
 protected:
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet12* descriptorSet);
 
 private:
 	void BindDescriptorHeaps();

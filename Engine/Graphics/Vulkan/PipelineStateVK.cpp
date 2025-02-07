@@ -16,8 +16,9 @@
 namespace Luna::VK
 {
 
-GraphicsPipeline::GraphicsPipeline(CVkPipeline* pipeline)
-	: m_pipeline{ pipeline }
+GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc, CVkPipeline* pipeline)
+	: m_desc{ graphicsPipelineDesc }
+	, m_pipeline { pipeline }
 {}
 
 

@@ -990,7 +990,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		pPipelineState = *ppPipelineState;
 	}
 
-	return Make<GraphicsPipeline>(pPipelineState);
+	return Make<GraphicsPipeline>(graphicsPipelineDesc, pPipelineState);
 }
 
 

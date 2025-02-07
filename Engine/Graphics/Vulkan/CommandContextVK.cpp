@@ -14,10 +14,13 @@
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
+#include "DescriptorSetVK.h"
 #include "DeviceVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
+#include "PipelineStateVK.h"
 #include "QueueVK.h"
+#include "ResourceSetVK.h"
 #include "RootSignatureVK.h"
 
 using namespace std;
@@ -138,6 +141,11 @@ void CommandContextVK::Reset()
 {
 	assert(m_commandBuffer == VK_NULL_HANDLE);
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
+
+	m_graphicsPipelineLayout = VK_NULL_HANDLE;
+	m_computePipelineLayout = VK_NULL_HANDLE;
+	m_graphicsPipeline = VK_NULL_HANDLE;
+	m_computePipeline = VK_NULL_HANDLE;
 }
 
 
@@ -530,6 +538,20 @@ void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
+void CommandContextVK::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
+{
+	m_computePipelineLayout = VK_NULL_HANDLE;
+
+	VkPipeline vkPipeline = graphicsPipeline->GetNativeObject();
+
+	if (vkPipeline != m_graphicsPipeline)
+	{
+		m_graphicsPipeline = vkPipeline;
+		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
+	}
+}
+
+
 void CommandContextVK::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 {
 	VkViewport viewport{
@@ -651,6 +673,61 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
+void CommandContextVK::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+{
+	DescriptorSetHandle descriptorSetHandle{ descriptorSet };
+	SetDescriptors_Internal(rootIndex, descriptorSetHandle.query<IDescriptorSetVK>().get());
+}
+
+
+void CommandContextVK::SetResources(IResourceSet* resourceSet)
+{
+	ResourceSetHandle resourceSetHandle{ resourceSet };
+	wil::com_ptr<IResourceSetVK> resourceSetVK = resourceSetHandle.query<IResourceSetVK>();
+
+	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	{
+		SetDescriptors_Internal(i, resourceSetVK->GetDescriptorSet(i));
+	}
+}
+
+
+void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+{
+	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
+	const VkIndexType indexType = is16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
+	vkCmdBindIndexBuffer(m_commandBuffer, gpuBuffer->GetNativeObject(NativeObjectType::VK_Buffer), 0, indexType);
+}
+
+
+void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+{
+	VkDeviceSize offsets[1] = { 0 };
+	VkBuffer buffers[1] = { gpuBuffer->GetNativeObject(NativeObjectType::VK_Buffer) };
+	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
+}
+
+
+void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
+	uint32_t startVertexLocation, uint32_t startInstanceLocation)
+{
+	FlushResourceBarriers();
+	// TODO
+	//m_dynamicDescriptorPool.CommitGraphicsDescriptorSets(m_commandList, m_curGraphicsPipelineLayout);
+	vkCmdDraw(m_commandBuffer, vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
+}
+
+
+void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
+	int32_t baseVertexLocation, uint32_t startInstanceLocation)
+{
+	FlushResourceBarriers();
+	// TODO
+	//m_dynamicDescriptorPool.CommitGraphicsDescriptorSets(m_commandList, m_curGraphicsPipelineLayout);
+	vkCmdDrawIndexed(m_commandBuffer, indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+
 void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
@@ -664,6 +741,34 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetVulkanDeviceManager()->ReleaseBuffer(stagingBuffer.get());
+}
+
+
+void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSetVK* descriptorSet)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	if (!descriptorSet->HasDescriptors())
+		return;
+
+	if (descriptorSet->IsDirty())
+		descriptorSet->Update();
+
+	VkDescriptorSet vkDescriptorSet = descriptorSet->GetDescriptorSet();
+	if (vkDescriptorSet == VK_NULL_HANDLE)
+		return;
+
+	uint32_t dynamicOffset = descriptorSet->GetDynamicOffset();
+
+	vkCmdBindDescriptorSets(
+		m_commandBuffer,
+		(m_type == CommandListType::Direct) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
+		(m_type == CommandListType::Direct) ? m_graphicsPipelineLayout : m_computePipelineLayout,
+		rootIndex,
+		1,
+		&vkDescriptorSet,
+		descriptorSet->IsDynamicBuffer() ? 1 : 0,
+		descriptorSet->IsDynamicBuffer() ? &dynamicOffset : nullptr);
 }
 
 

@@ -16,8 +16,9 @@
 namespace Luna::DX12
 {
 
-GraphicsPipeline::GraphicsPipeline(ID3D12PipelineState* pipelineState)
-	: m_pipelineState{ pipelineState }
+GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc, ID3D12PipelineState* pipelineState)
+	: m_desc{ graphicsPipelineDesc }
+	, m_pipelineState{ pipelineState }
 {}
 
 

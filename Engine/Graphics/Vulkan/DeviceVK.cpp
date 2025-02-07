@@ -830,7 +830,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	if (VK_SUCCEEDED(vkCreateGraphicsPipelines(*m_vkDevice, *m_pipelineCache, 1, &pipelineCreateInfo, nullptr, &vkPipeline)))
 	{
 		auto pipeline = Create<CVkPipeline>(m_vkDevice.get(), vkPipeline);
-		return Make<GraphicsPipeline>(pipeline.get());
+		return Make<GraphicsPipeline>(graphicsPipelineDesc, pipeline.get());
 	}
 	else
 	{

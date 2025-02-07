@@ -23,8 +23,11 @@ class GraphicsContext;
 
 class IColorBuffer;
 class IDepthBuffer;
+class IDescriptorSet;
 class IGpuBuffer;
 class IGpuResource;
+class IGraphicsPipeline;
+class IResourceSet;
 class IRootSignature;
 
 
@@ -73,6 +76,7 @@ public:
 	virtual void EndRendering() = 0;
 
 	virtual void SetRootSignature(IRootSignature* rootSignature) = 0;
+	virtual void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline) = 0;
 
 	// TODO: look into the inverted viewport situation for Vulkan
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
@@ -88,6 +92,16 @@ public:
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
+	virtual void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) = 0;
+	virtual void SetResources(IResourceSet* resourceSet) = 0;
+
+	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
+
+	virtual void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
+		uint32_t startVertexLocation, uint32_t startInstanceLocation) = 0;
+	virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
+		int32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
 
 	// Compute context
 	
@@ -166,6 +180,7 @@ public:
 	void EndRendering();
 
 	void SetRootSignature(IRootSignature* rootSignature);
+	void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
@@ -181,6 +196,18 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
+	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet);
+	void SetResources(IResourceSet* resourceSet);
+
+	void SetIndexBuffer(const IGpuBuffer* gpuBuffer);
+	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer);
+
+	void Draw(uint32_t vertexCount, uint32_t vertexStartOffset = 0);
+	void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation = 0, int32_t baseVertexLocation = 0);
+	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
+		uint32_t startVertexLocation = 0, uint32_t startInstanceLocation = 0);
+	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
+		int32_t baseVertexLocation, uint32_t startInstanceLocation);
 };
 
 
@@ -329,6 +356,12 @@ inline void GraphicsContext::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
+inline void GraphicsContext::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
+{
+	m_contextImpl->SetGraphicsPipeline(graphicsPipeline);
+}
+
+
 inline void GraphicsContext::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 {
 	m_contextImpl->SetViewport(x, y, w, h, minDepth, maxDepth);
@@ -405,6 +438,56 @@ inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
 	m_contextImpl->SetConstants(rootIndex, x, y, z, w);
+}
+
+
+inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+{
+	m_contextImpl->SetDescriptors(rootIndex, descriptorSet);
+}
+
+
+inline void GraphicsContext::SetResources(IResourceSet* resourceSet)
+{
+	m_contextImpl->SetResources(resourceSet);
+}
+
+
+inline void GraphicsContext::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+{
+	m_contextImpl->SetIndexBuffer(gpuBuffer);
+}
+
+
+inline void GraphicsContext::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+{
+	m_contextImpl->SetVertexBuffer(slot, gpuBuffer);
+}
+
+
+inline void GraphicsContext::Draw(uint32_t vertexCount, uint32_t vertexStartOffset)
+{
+	m_contextImpl->DrawInstanced(vertexCount, 1, vertexStartOffset, 0);
+}
+
+
+inline void GraphicsContext::DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation, int32_t baseVertexLocation)
+{
+	m_contextImpl->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, 0);
+}
+
+
+inline void GraphicsContext::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
+	uint32_t startVertexLocation, uint32_t startInstanceLocation)
+{
+	m_contextImpl->DrawInstanced(vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
+}
+
+
+inline void GraphicsContext::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
+	int32_t baseVertexLocation, uint32_t startInstanceLocation)
+{
+	m_contextImpl->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
 } // namespace Luna

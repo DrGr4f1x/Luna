@@ -15,6 +15,7 @@
 #include "DescriptorSet12.h"
 #include "Device12.h"
 #include "DirectXCommon.h"
+#include "ResourceSet12.h"
 
 
 namespace Luna::DX12
@@ -51,8 +52,16 @@ uint32_t RootSignature12::GetNumRootParameters() const noexcept
 }
 
 
+RootParameter& RootSignature12::GetRootParameter(uint32_t index) noexcept
+{
+	assert(index < m_desc.rootParameters.size());
+	return m_desc.rootParameters[index];
+}
+
+
 const RootParameter& RootSignature12::GetRootParameter(uint32_t index) const noexcept
 {
+	assert(index < m_desc.rootParameters.size());
 	return m_desc.rootParameters[index];
 }
 
@@ -82,6 +91,18 @@ DescriptorSetHandle RootSignature12::CreateDescriptorSet(uint32_t index) const
 	};
 
 	return Make<DescriptorSet>(descriptorSetDescExt);
+}
+
+
+ResourceSetHandle RootSignature12::CreateResourceSet() const
+{
+	array<DescriptorSetHandle, MaxRootParameters> descriptorSets;
+	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	{
+		descriptorSets[i] = CreateDescriptorSet(i);
+	}
+
+	return Make<ResourceSet>(descriptorSets);
 }
 
 } // namespace Luna::DX12

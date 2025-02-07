@@ -191,6 +191,8 @@ class __declspec(uuid("F35F4ED1-7BDD-41C2-A545-CA1279A9D722")) IGraphicsPipeline
 {
 public:
 	virtual NativeObjectPtr GetNativeObject() const noexcept = 0;
+
+	virtual PrimitiveTopology GetPrimitiveTopology() const noexcept = 0;
 };
 
 using GraphicsPipelineHandle = wil::com_ptr<IGraphicsPipeline>;

@@ -18,8 +18,6 @@ class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
 
-// TODO: DynamicCBVs need some work. Looks like the DynamicCBV concept is only valid in DX12 for RootCBVs,
-// so maybe unify that way.
 
 class __declspec(uuid("B744F600-1AE2-4B5C-961D-D122127F972F")) IDescriptorSet : public IUnknown
 {

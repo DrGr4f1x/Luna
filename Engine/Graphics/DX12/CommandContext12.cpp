@@ -14,10 +14,13 @@
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
+#include "DescriptorSet12.h"
 #include "Device12.h"
 #include "DeviceManager12.h"
 #include "GpuBuffer12.h"
+#include "PipelineState12.h"
 #include "Queue12.h"
+#include "ResourceSet12.h"
 #include "RootSignature12.h"
 
 #if ENABLE_D3D12_DEBUG_MARKERS
@@ -429,6 +432,26 @@ void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
+void CommandContext12::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
+{
+	m_computePipelineState = nullptr;
+	ID3D12PipelineState* graphicsPSO = graphicsPipeline->GetNativeObject();
+
+	if (m_graphicsPipelineState != graphicsPSO)
+	{
+		m_commandList->SetPipelineState(graphicsPSO);
+		m_graphicsPipelineState = graphicsPSO;
+	}
+
+	auto topology = PrimitiveTopologyToDX12(graphicsPipeline->GetPrimitiveTopology());
+	if (m_primitiveTopology != topology)
+	{
+		m_commandList->IASetPrimitiveTopology(topology);
+		m_primitiveTopology = topology;
+	}
+}
+
+
 void CommandContext12::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 { 
 	D3D12_VIEWPORT viewport{
@@ -573,6 +596,77 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
+void CommandContext12::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+{
+	DescriptorSetHandle descriptorSetHandle{ descriptorSet };
+	SetDescriptors_Internal(rootIndex, descriptorSetHandle.query<IDescriptorSet12>().get());
+}
+
+
+void CommandContext12::SetResources(IResourceSet* resourceSet)
+{
+	// TODO: Need to rework this.  Should use a single shader-visible heap (of each type) for all descriptors.
+	// See the MSDN docs on SetDescriptorHeaps.  Should only set descriptor heaps once per frame.
+	ID3D12DescriptorHeap* heaps[] = {
+		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].GetHeapPointer(),
+		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].GetHeapPointer()
+	};
+	m_commandList->SetDescriptorHeaps(2, heaps);
+
+	ResourceSetHandle resourceSetHandle{ resourceSet };
+	wil::com_ptr<IResourceSet12> resourceSet12 = resourceSetHandle.query<IResourceSet12>();
+	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	{
+		SetDescriptors_Internal(i, resourceSet12->GetDescriptorSet(i));
+	}
+}
+
+
+void CommandContext12::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+{
+	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
+	D3D12_INDEX_BUFFER_VIEW ibv{
+		.BufferLocation		= gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer,
+		.SizeInBytes		= (uint32_t)gpuBuffer->GetSize(),
+		.Format				= is16Bit ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
+	};
+	m_commandList->IASetIndexBuffer(&ibv);
+}
+
+
+void CommandContext12::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+{
+	D3D12_VERTEX_BUFFER_VIEW vbv{
+		.BufferLocation		= gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer,
+		.SizeInBytes		= (uint32_t)gpuBuffer->GetSize(),
+		.StrideInBytes		= (uint32_t)gpuBuffer->GetElementSize()
+	};
+	m_commandList->IASetVertexBuffers(slot, 1, &vbv);
+}
+
+
+void CommandContext12::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
+	uint32_t startVertexLocation, uint32_t startInstanceLocation)
+{
+	FlushResourceBarriers();
+	// TODO
+	//m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	//m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_commandList->DrawInstanced(vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
+}
+
+
+void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
+	int32_t baseVertexLocation, uint32_t startInstanceLocation)
+{
+	FlushResourceBarriers();
+	// TODO
+	//m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	//m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+
 void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
 	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
@@ -583,6 +677,43 @@ void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
+}
+
+
+void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet12* descriptorSet)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	if (!descriptorSet->HasDescriptors() && !descriptorSet->IsRootBuffer())
+		return;
+
+	if (descriptorSet->IsDirty())
+		descriptorSet->Update();
+
+	auto gpuDescriptor = descriptorSet->GetGpuDescriptor();
+	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	{
+		if (m_type == CommandListType::Direct)
+		{
+			m_commandList->SetGraphicsRootDescriptorTable(rootIndex, gpuDescriptor);
+		}
+		else
+		{
+			m_commandList->SetComputeRootDescriptorTable(rootIndex, gpuDescriptor);
+		}
+	}
+	else if (descriptorSet->GetGpuAddress() != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	{
+		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = descriptorSet->GetGpuAddress() + descriptorSet->GetDynamicOffset();
+		if (m_type == CommandListType::Direct)
+		{
+			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);
+		}
+		else
+		{
+			m_commandList->SetComputeRootConstantBufferView(rootIndex, gpuFinalAddress);
+		}
+	}
 }
 
 

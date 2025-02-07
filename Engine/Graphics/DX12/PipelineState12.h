@@ -24,11 +24,14 @@ class __declspec(uuid("BF47E4F0-2BB3-44E6-A076-8FF9F4C0A061")) GraphicsPipeline 
 	, NonCopyable
 {
 public:
-	explicit GraphicsPipeline(ID3D12PipelineState* pipelineState);
+	explicit GraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc, ID3D12PipelineState* pipelineState);
 
 	NativeObjectPtr GetNativeObject() const noexcept override;
 
+	PrimitiveTopology GetPrimitiveTopology() const noexcept override { return m_desc.topology; }
+
 private:
+	const GraphicsPipelineDesc m_desc;
 	wil::com_ptr<ID3D12PipelineState> m_pipelineState;
 };
 
