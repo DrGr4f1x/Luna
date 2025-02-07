@@ -452,6 +452,7 @@ public:
 
 	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 	VmaAllocator GetAllocator() const noexcept { return m_allocator->Get(); }
+	VmaAllocation GetAllocation() const noexcept { return m_allocation; }
 
 	void Destroy();
 

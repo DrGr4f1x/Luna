@@ -49,4 +49,24 @@ NativeObjectPtr GpuBufferVK::GetNativeObject(NativeObjectType type, uint32_t ind
 	}
 }
 
+
+void GpuBufferVK::Update(size_t sizeInBytes, const void* data)
+{
+	Update(sizeInBytes, 0, data);
+}
+
+
+void GpuBufferVK::Update(size_t sizeInBytes, size_t offset, const void* data)
+{
+	assert((sizeInBytes + offset) <= GetSize());
+
+	// Map uniform buffer and update it
+	uint8_t* pData = nullptr;
+	ThrowIfFailed(vmaMapMemory(m_buffer->GetAllocator(), m_buffer->GetAllocation(), (void**)&pData));
+	memcpy(pData + offset, data, sizeInBytes);
+	// Unmap after data has been copied
+	// Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU
+	vmaUnmapMemory(m_buffer->GetAllocator(), m_buffer->GetAllocation());
+}
+
 } // namespace Luna::VK

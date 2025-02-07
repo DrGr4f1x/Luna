@@ -59,6 +59,8 @@ public:
 	size_t GetSize() const noexcept override { return m_elementCount * m_elementSize; }
 	size_t GetElementCount() const noexcept override { return m_elementCount; }
 	size_t GetElementSize() const noexcept override { return m_elementSize; }
+	void Update(size_t sizeInBytes, const void* data) override;
+	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
 
 private:
 	std::string m_name;

@@ -59,4 +59,26 @@ NativeObjectPtr GpuBuffer12::GetNativeObject(NativeObjectType type, uint32_t ind
 	}
 }
 
+
+void GpuBuffer12::Update(size_t sizeInBytes, const void* data)
+{
+	Update(sizeInBytes, 0, data);
+}
+
+
+void GpuBuffer12::Update(size_t sizeInBytes, size_t offset, const void* data)
+{
+	assert((sizeInBytes + offset) <= GetSize());
+
+	CD3DX12_RANGE readRange(0, 0);
+
+	// Map uniform buffer and update it
+	uint8_t* pData = nullptr;
+	ThrowIfFailed(m_resource->Map(0, &readRange, reinterpret_cast<void**>(&pData)));
+	memcpy((void*)(pData + offset), data, sizeInBytes);
+	// Unmap after data has been copied
+	// Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU
+	m_resource->Unmap(0, nullptr);
+}
+
 } // namespace Luna::DX12

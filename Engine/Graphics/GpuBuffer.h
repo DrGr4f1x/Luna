@@ -46,6 +46,9 @@ public:
 	virtual size_t GetSize() const noexcept = 0;
 	virtual size_t GetElementCount() const noexcept = 0;
 	virtual size_t GetElementSize() const noexcept = 0;
+	// TODO: Sweep the code for this stuff and use std::span (or a view?)
+	virtual void Update(size_t sizeInBytes, const void* data) = 0;
+	virtual void Update(size_t sizeInBytes, size_t offset, const void* data) = 0;
 };
 
 using GpuBufferHandle = wil::com_ptr<IGpuBuffer>;
