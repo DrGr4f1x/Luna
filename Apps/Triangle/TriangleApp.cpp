@@ -86,6 +86,7 @@ void TriangleApp::Startup()
 
 	InitRootSignature();
 	InitPipelineState();
+	InitResources();
 }
 
 
@@ -163,4 +164,11 @@ void TriangleApp::InitPipelineState()
 	};
 
 	m_graphicsPipeline = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
+}
+
+
+void TriangleApp::InitResources()
+{
+	m_resources = m_rootSignature->CreateResourceSet();
+	m_resources->SetCBV(0, 0, m_constantBuffer.get());
 }

@@ -13,6 +13,7 @@
 #include "Application.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
+#include "Graphics\ResourceSet.h"
 #include "Graphics\RootSignature.h"
 
 
@@ -37,6 +38,7 @@ protected:
 private:
 	void InitRootSignature();
 	void InitPipelineState();
+	void InitResources();
 
 private:
 	// Vertex layout used in this example
@@ -67,4 +69,7 @@ private:
 
 	// Pipeline state
 	Luna::GraphicsPipelineHandle m_graphicsPipeline;
+
+	// Resources
+	Luna::ResourceSetHandle m_resources;
 };

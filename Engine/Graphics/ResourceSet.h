@@ -37,6 +37,8 @@ public:
 	virtual void SetCBV(int param, int slot, const IGpuBuffer * gpuBuffer) = 0;
 
 	virtual void SetDynamicOffset(int param, uint32_t offset) = 0;
+
+	virtual uint32_t GetNumDescriptorSets() const = 0;
 };
 
 using ResourceSetHandle = wil::com_ptr<IResourceSet>;

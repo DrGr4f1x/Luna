@@ -38,7 +38,7 @@ class __declspec(uuid("4CFAE961-6CF9-46BC-84DA-6E727A564F30")) ResourceSet
 	, NonCopyable
 {
 public:
-	explicit ResourceSet(const std::array<wil::com_ptr<IDescriptorSet>, MaxRootParameters>& descriptorSets);
+	explicit ResourceSet(const std::vector<wil::com_ptr<IDescriptorSet>>& descriptorSets);
 
 	// IDescriptorSet implementation
 	void SetSRV(int param, int slot, const IColorBuffer* colorBuffer) override;
@@ -53,12 +53,14 @@ public:
 
 	void SetDynamicOffset(int param, uint32_t offset) override;
 
+	uint32_t GetNumDescriptorSets() const override { return (uint32_t)m_descriptorSets.size(); }
+
 	// IDescriptorSet12 implementation
 	IDescriptorSet12* GetDescriptorSet(uint32_t index) override;
 	const IDescriptorSet12* GetDescriptorSet(uint32_t index) const override;
 
 private:
-	std::array<wil::com_ptr<IDescriptorSet12>, MaxRootParameters> m_descriptorSets;
+	std::vector<wil::com_ptr<IDescriptorSet12>> m_descriptorSets;
 };
 
 } // namespace Luna::DX12

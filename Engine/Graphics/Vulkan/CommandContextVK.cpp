@@ -685,7 +685,7 @@ void CommandContextVK::SetResources(IResourceSet* resourceSet)
 	ResourceSetHandle resourceSetHandle{ resourceSet };
 	wil::com_ptr<IResourceSetVK> resourceSetVK = resourceSetHandle.query<IResourceSetVK>();
 
-	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	for (uint32_t i = 0; i < resourceSet->GetNumDescriptorSets(); ++i)
 	{
 		SetDescriptors_Internal(i, resourceSetVK->GetDescriptorSet(i));
 	}

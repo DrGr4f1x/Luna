@@ -96,8 +96,11 @@ DescriptorSetHandle RootSignature12::CreateDescriptorSet(uint32_t index) const
 
 ResourceSetHandle RootSignature12::CreateResourceSet() const
 {
-	array<DescriptorSetHandle, MaxRootParameters> descriptorSets;
-	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	const size_t numDescriptorSets = m_desc.rootParameters.size();
+	assert(numDescriptorSets < MaxRootParameters);
+
+	vector<DescriptorSetHandle> descriptorSets(numDescriptorSets);
+	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
 		descriptorSets[i] = CreateDescriptorSet(i);
 	}

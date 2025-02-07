@@ -38,7 +38,7 @@ class __declspec(uuid("7D7AA274-908C-4FD5-8A92-EE5DF1E77645")) ResourceSet
 	, NonCopyable
 {
 public:
-	explicit ResourceSet(const std::array<wil::com_ptr<IDescriptorSet>, MaxRootParameters>& descriptorSets);
+	explicit ResourceSet(const std::vector<wil::com_ptr<IDescriptorSet>>& descriptorSets);
 
 	// IDescriptorSet implementation
 	void SetSRV(int param, int slot, const IColorBuffer* colorBuffer) override;
@@ -53,12 +53,14 @@ public:
 
 	void SetDynamicOffset(int param, uint32_t offset) override;
 
+	uint32_t GetNumDescriptorSets() const override { return (uint32_t)m_descriptorSets.size(); }
+
 	// IDescriptorSetVK implementation
 	IDescriptorSetVK* GetDescriptorSet(uint32_t index) override;
 	const IDescriptorSetVK* GetDescriptorSet(uint32_t index) const override;
 
 private:
-	std::array<wil::com_ptr<IDescriptorSetVK>, MaxRootParameters> m_descriptorSets;
+	std::vector<wil::com_ptr<IDescriptorSetVK>> m_descriptorSets;
 };
 
 } // namespace Luna::VK

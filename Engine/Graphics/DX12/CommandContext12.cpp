@@ -615,7 +615,7 @@ void CommandContext12::SetResources(IResourceSet* resourceSet)
 
 	ResourceSetHandle resourceSetHandle{ resourceSet };
 	wil::com_ptr<IResourceSet12> resourceSet12 = resourceSetHandle.query<IResourceSet12>();
-	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	for (uint32_t i = 0; i < resourceSet->GetNumDescriptorSets(); ++i)
 	{
 		SetDescriptors_Internal(i, resourceSet12->GetDescriptorSet(i));
 	}

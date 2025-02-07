@@ -18,12 +18,13 @@
 namespace Luna::DX12
 {
 
-ResourceSet::ResourceSet(const std::array<wil::com_ptr<IDescriptorSet>, MaxRootParameters>& descriptorSets)
+ResourceSet::ResourceSet(const std::vector<wil::com_ptr<IDescriptorSet>>& descriptorSets)
 {
-	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	m_descriptorSets.reserve(descriptorSets.size());
+	for (uint32_t i = 0; i < (uint32_t)descriptorSets.size(); ++i)
 	{
 		wil::com_ptr<IDescriptorSet12> descriptorSet12;
-		m_descriptorSets[i] = descriptorSets[i].query<IDescriptorSet12>();
+		m_descriptorSets.push_back(descriptorSets[i].query<IDescriptorSet12>());
 	}
 }
 
@@ -78,14 +79,14 @@ void ResourceSet::SetDynamicOffset(int param, uint32_t offset)
 
 IDescriptorSet12* ResourceSet::GetDescriptorSet(uint32_t index)
 {
-	assert(index < MaxRootParameters);
+	assert(index < (uint32_t)m_descriptorSets.size());
 	return m_descriptorSets[index].get();
 }
 
 
 const IDescriptorSet12* ResourceSet::GetDescriptorSet(uint32_t index) const
 {
-	assert(index < MaxRootParameters);
+	assert(index < (uint32_t)m_descriptorSets.size());
 	return m_descriptorSets[index].get();
 }
 
