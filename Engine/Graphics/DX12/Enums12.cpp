@@ -710,12 +710,15 @@ D3D12_RESOURCE_DIMENSION GetResourceDimension(ResourceType resourceType)
 
 D3D12_HEAP_TYPE GetHeapType(MemoryAccess memoryAccess)
 {
-	switch (memoryAccess)
+	if (HasFlag(memoryAccess, MemoryAccess::CpuWrite))
 	{
-	case MemoryAccess::CpuWrite:	return D3D12_HEAP_TYPE_UPLOAD; break;
-	case MemoryAccess::CpuRead:		return D3D12_HEAP_TYPE_READBACK; break;
-	default:						return D3D12_HEAP_TYPE_DEFAULT; break;
+		return D3D12_HEAP_TYPE_UPLOAD;
 	}
+	else if (HasFlag(memoryAccess, MemoryAccess::CpuWrite))
+	{
+		return D3D12_HEAP_TYPE_READBACK;
+	}
+	return D3D12_HEAP_TYPE_DEFAULT;
 }
 
 } // namespace Luna::DX12

@@ -22,6 +22,7 @@ GpuBuffer12::GpuBuffer12(const GpuBufferDesc& gpuBufferDesc, const GpuBufferDesc
 	: m_name{ gpuBufferDesc.name }
 	, m_resourceType{ gpuBufferDesc.resourceType }
 	, m_usageState{ gpuBufferDescExt.usageState }
+	, m_memoryAccess{ gpuBufferDesc.memoryAccess }
 	, m_elementCount{ gpuBufferDesc.elementCount }
 	, m_elementSize{ gpuBufferDesc.elementSize }
 	, m_resource{ gpuBufferDescExt.resource }
@@ -69,6 +70,7 @@ void GpuBuffer12::Update(size_t sizeInBytes, const void* data)
 void GpuBuffer12::Update(size_t sizeInBytes, size_t offset, const void* data)
 {
 	assert((sizeInBytes + offset) <= GetSize());
+	assert(HasFlag(m_memoryAccess, MemoryAccess::CpuWrite));
 
 	CD3DX12_RANGE readRange(0, 0);
 

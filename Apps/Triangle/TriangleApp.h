@@ -41,6 +41,8 @@ private:
 	void InitPipelineState();
 	void InitResources();
 
+	void UpdateConstantBuffer();
+
 private:
 	// Camera controls
 	float m_zoom{ -2.5f };

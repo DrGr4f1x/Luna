@@ -77,13 +77,27 @@ void TriangleApp::Startup()
 	GpuBufferDesc constantBufferDesc{
 		.name			= "VS Constant Buffer",
 		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
+		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
 		.elementCount	= 1,
 		.elementSize	= sizeof(m_vsConstants),
 		.initialData	= &m_vsConstants
 	};
 	m_constantBuffer = graphicsDevice->CreateGpuBuffer(constantBufferDesc);
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
+
+	// Setup camera
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
+	m_camera.Update();
+
+	m_controller.SetSpeedScale(0.025f);
+	m_controller.RefreshFromCamera();
+
+	UpdateConstantBuffer();
 
 	InitRootSignature();
 	InitPipelineState();
@@ -171,4 +185,13 @@ void TriangleApp::InitResources()
 {
 	m_resources = m_rootSignature->CreateResourceSet();
 	m_resources->SetCBV(0, 0, m_constantBuffer.get());
+}
+
+
+void TriangleApp::UpdateConstantBuffer()
+{
+	// Update matrices
+	m_vsConstants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+
+	m_constantBuffer->Update(sizeof(m_vsConstants), &m_vsConstants);
 }

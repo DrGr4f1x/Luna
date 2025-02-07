@@ -20,6 +20,7 @@ GpuBufferVK::GpuBufferVK(const GpuBufferDesc& gpuBufferDesc, const GpuBufferDesc
 	: m_name{ gpuBufferDesc.name }
 	, m_resourceType{ gpuBufferDesc.resourceType }
 	, m_usageState{ gpuBufferDescExt.usageState }
+	, m_memoryAccess{ gpuBufferDesc.memoryAccess }
 	, m_elementCount{ gpuBufferDesc.elementCount }
 	, m_elementSize{ gpuBufferDesc.elementSize }
 	, m_buffer{ gpuBufferDescExt.buffer }
@@ -59,6 +60,7 @@ void GpuBufferVK::Update(size_t sizeInBytes, const void* data)
 void GpuBufferVK::Update(size_t sizeInBytes, size_t offset, const void* data)
 {
 	assert((sizeInBytes + offset) <= GetSize());
+	assert(HasFlag(m_memoryAccess, MemoryAccess::CpuWrite));
 
 	// Map uniform buffer and update it
 	uint8_t* pData = nullptr;

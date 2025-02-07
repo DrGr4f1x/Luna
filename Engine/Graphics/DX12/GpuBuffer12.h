@@ -68,6 +68,8 @@ private:
 
 	ResourceState m_usageState{ ResourceState::Undefined };
 	ResourceState m_transitioningState{ ResourceState::Undefined };
+	// TODO: Just store the main Desc struct
+	MemoryAccess m_memoryAccess;
 
 	size_t m_elementCount{ 0 };
 	size_t m_elementSize{ 0 };

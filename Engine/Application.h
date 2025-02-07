@@ -93,6 +93,10 @@ protected:
 	virtual void CreateWindowSizeDependentResources() {}
 
 	void UpdateWindowSize();
+	// TODO: Think about where the authoritative window size is stored
+	uint32_t GetWindowWidth() const { return m_appInfo.width; }
+	uint32_t GetWindowHeight() const { return m_appInfo.height; }
+	float GetWindowAspectRatio() const { return (float)m_appInfo.height / (float)m_appInfo.width; }
 
 	Format GetColorFormat();
 	Format GetDepthFormat();
