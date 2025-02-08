@@ -1,0 +1,37 @@
+TODO:
+-- Guard against illegal command context calls between BeginRendering and EndRendering
+-- Proper Vulkan extension support
+-- Clean up ShaderCompiler code organization
+-- Proper DX12 feature support
+-- Dynamic descriptors / push descriptors (e.g. SetSRV, SetUAV etc on command context)
+-- Command context linear allocator for dynamic buffers
+-- Try out std::variant for platform data, e.g. ID3D12Resource & VkImage
+    -- ColorBuffer
+    -- DepthBuffer
+    -- GpuBuffer
+    -- RootSignature
+    -- GraphicsPipeline
+-- ComputeContext
+-- Mesh shaders
+-- Ray tracing
+-- Texture loading
+-- Mesh loading
+-- Bindless support
+-- Handle authoritative window size in Application better
+-- EngineProfiling from MiniEngine
+-- How to do ClearUAV(IColorBuffer*) in Vulkan
+-- Separate Front/Back stencil ref, both platforms
+-- Get rid of UserDescriptorHeap in DX12 - can only bind one Heap of each type (CbvSrvUav and Sampler) per frame (ideally for perf)
+-- Refactor commandline parameters at Application level
+-- Look into DX12 Present one more time
+-- Look into Vulkan Present one more time - Timeline semaphore?
+-- Backbuffer count (3) is hardcoded - handle this a different way
+-- Handle WindowSize better in the DeviceManagers
+-- OnDeviceLost/OnDeviceRestored in DeviceManagers - do I actually need this?
+-- All platform resources (e.g. ColorBuffer, GpuBuffer) should store their creation Descs
+-- Try out std::span for IGpuBuffer::Update
+-- Move Reset logic into CommandManager::AllocateContext (?)
+-- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
+-- Think about refactoring/simplifying CameraController.  I've never loved this class.
+
+DONE:
