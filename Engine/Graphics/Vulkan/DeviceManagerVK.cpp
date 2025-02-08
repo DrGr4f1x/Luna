@@ -73,6 +73,7 @@ VkBool32 DebugMessageCallback(
 	if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 	{
 		LogError(LogVulkan) << debugMessage << endl;
+		__debugbreak();
 	}
 	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 	{

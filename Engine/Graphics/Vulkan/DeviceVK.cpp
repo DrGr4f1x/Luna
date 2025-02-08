@@ -17,6 +17,7 @@
 #include "Graphics\Shader.h"
 
 #include "ColorBufferVK.h"
+#include "CommandContextVK.h"
 #include "DepthBufferVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "GpuBufferVK.h"
@@ -241,7 +242,7 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 		.resourceType		= ResourceType::Texture2D,
 		.imageUsage			= GpuImageUsage::DepthStencilTarget,
 		.format				= depthBufferDesc.format,
-		.imageAspect		= ImageAspect::Color,
+		.imageAspect		= imageAspect,
 		.baseMipLevel		= 0,
 		.mipCount			= depthBufferDesc.numMips,
 		.baseArraySlice		= 0,
@@ -350,7 +351,16 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 			.range		= VK_WHOLE_SIZE
 		}
 	};
-	return Make<GpuBufferVK>(gpuBufferDesc, gpuBufferDescExt);
+	
+	auto gpuBuffer = Make<GpuBufferVK>(gpuBufferDesc, gpuBufferDescExt);
+
+	if (gpuBufferDesc.initialData)
+	{
+		const size_t bufferSize = gpuBufferDesc.elementCount * gpuBufferDesc.elementSize;
+		CommandContext::InitializeBuffer(gpuBuffer.Get(), gpuBufferDesc.initialData, bufferSize);
+	}
+
+	return gpuBuffer;
 }
 
 

@@ -400,12 +400,12 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 	clearValue.DepthStencil.Depth = depthBufferDesc.clearDepth;
 	clearValue.DepthStencil.Stencil = depthBufferDesc.clearStencil;
 
-	ID3D12Resource* resource{ nullptr };
+	wil::com_ptr<ID3D12Resource> resource;
 	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
 	assert_succeeded(m_dxDevice->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
 		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&resource)));
 
-	SetDebugName(resource, depthBufferDesc.name);
+	SetDebugName(resource.get(), depthBufferDesc.name);
 
 	// Create descriptors and derived views
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -431,10 +431,10 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 	dsvHandles[1] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-	m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[0]);
+	m_dxDevice->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[0]);
 
 	dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH;
-	m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[1]);
+	m_dxDevice->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[1]);
 
 	auto stencilReadFormat = GetStencilFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
@@ -443,10 +443,10 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 		dsvHandles[3] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_STENCIL;
-		m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[2]);
+		m_dxDevice->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[2]);
 
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
-		m_dxDevice->CreateDepthStencilView(resource, &dsvDesc, dsvHandles[3]);
+		m_dxDevice->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[3]);
 	}
 	else
 	{
@@ -472,7 +472,7 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 	}
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	m_dxDevice->CreateShaderResourceView(resource, &srvDesc, depthSrvHandle);
+	m_dxDevice->CreateShaderResourceView(resource.get(), &srvDesc, depthSrvHandle);
 
 	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
 	{
@@ -480,13 +480,13 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 
 		srvDesc.Format = stencilReadFormat;
 		srvDesc.Texture2D.PlaneSlice = (srvDesc.Format == DXGI_FORMAT_X32_TYPELESS_G8X24_UINT) ? 1 : 0;
-		m_dxDevice->CreateShaderResourceView(resource, &srvDesc, stencilSrvHandle);
+		m_dxDevice->CreateShaderResourceView(resource.get(), &srvDesc, stencilSrvHandle);
 	}
 
 	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 
 	auto depthBufferDescExt = DepthBufferDescExt{}
-		.SetResource(resource)
+		.SetResource(resource.get())
 		.SetUsageState(ResourceState::Common)
 		.SetPlaneCount(planeCount)
 		.SetDsvHandles(dsvHandles)
@@ -509,6 +509,8 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 
 	wil::com_ptr<D3D12MA::Allocation> allocation = CreateGpuBuffer(gpuBufferDesc2, initialState);
 	ID3D12Resource* pResource = allocation->GetResource();
+
+	SetDebugName(pResource, gpuBufferDesc.name);
 
 	GpuBufferDescExt gpuBufferDescExt{
 		.resource		= pResource,
@@ -1173,6 +1175,8 @@ wil::com_ptr<D3D12MA::Allocation> GraphicsDevice::CreateStagingBuffer(const void
 		nullptr,
 		&allocation,
 		IID_NULL, nullptr);
+
+	SetDebugName(allocation->GetResource(), "Staging Buffer");
 
 	auto resource = allocation->GetResource();
 	void* mappedPtr{ nullptr };

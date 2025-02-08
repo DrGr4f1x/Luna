@@ -69,18 +69,26 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IColorBuffer* renderTarget)
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	VkImageView imageView{ VK_NULL_HANDLE };
+	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
 	{
 	case DepthStencilAspect::ReadWrite:
+		imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV);
+		break;
+
 	case DepthStencilAspect::ReadOnly:
+		imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV);
 		break;
 
 	case DepthStencilAspect::DepthReadOnly:
+		imageLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
 		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV_Depth);
 		break;
 
 	case DepthStencilAspect::StencilReadOnly:
+		imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
 		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV_Stencil);
 		break;
 	}
@@ -89,7 +97,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IDepthBuffer* depthTarget, 
 		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 		.pNext = nullptr,
 		.imageView = imageView,
-		.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+		.imageLayout = imageLayout,
 		.resolveMode = VK_RESOLVE_MODE_NONE,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
 		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -146,6 +154,11 @@ void CommandContextVK::Reset()
 	m_computePipelineLayout = VK_NULL_HANDLE;
 	m_graphicsPipeline = VK_NULL_HANDLE;
 	m_computePipeline = VK_NULL_HANDLE;
+
+	m_renderingArea.offset.x = -1;
+	m_renderingArea.offset.y = -1;
+	m_renderingArea.extent.width = 0;
+	m_renderingArea.extent.height = 0;
 }
 
 
@@ -432,6 +445,8 @@ void CommandContextVK::BeginRendering(IColorBuffer* renderTarget)
 	m_numRtvs = 1;
 	m_rtvFormats[0] = FormatToVulkan(renderTarget->GetFormat());
 
+	SetRenderingArea(renderTarget);
+
 	BeginRenderingBlock();
 }
 
@@ -448,6 +463,9 @@ void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* 
 	m_hasDsv = true;
 	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
 
+	SetRenderingArea(renderTarget);
+	SetRenderingArea(depthTarget);
+
 	BeginRenderingBlock();
 }
 
@@ -459,6 +477,8 @@ void CommandContextVK::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAsp
 	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
 	m_hasDsv = true;
 	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+
+	SetRenderingArea(depthTarget);
 
 	BeginRenderingBlock();
 }
@@ -474,6 +494,9 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets)
 	{
 		m_rtvs[i] = GetRenderingAttachmentInfo(renderTarget);
 		m_rtvFormats[i] = FormatToVulkan(renderTarget->GetFormat());
+
+		SetRenderingArea(renderTarget);
+
 		++i;
 	}
 	m_numRtvs = (uint32_t)renderTargets.size();
@@ -492,6 +515,9 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, ID
 	{
 		m_rtvs[i] = GetRenderingAttachmentInfo(renderTarget);
 		m_rtvFormats[i] = FormatToVulkan(renderTarget->GetFormat());
+
+		SetRenderingArea(renderTarget);
+
 		++i;
 	}
 	m_numRtvs = (uint32_t)renderTargets.size();
@@ -499,6 +525,8 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, ID
 	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
 	m_hasDsv = true;
 	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+
+	SetRenderingArea(depthTarget);
 
 	BeginRenderingBlock();
 }
@@ -772,6 +800,23 @@ void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSe
 }
 
 
+void CommandContextVK::SetRenderingArea(IPixelBuffer* pixelBuffer)
+{
+	m_renderingArea.offset.x = 0;
+	m_renderingArea.offset.y = 0;
+
+	if (m_renderingArea.extent.width != 0 || m_renderingArea.extent.height != 0)
+	{
+		// Validate dimensions
+		assert(m_renderingArea.extent.width == (uint32_t)pixelBuffer->GetWidth());
+		assert(m_renderingArea.extent.height == pixelBuffer->GetHeight());
+	}
+
+	m_renderingArea.extent.width = (uint32_t)pixelBuffer->GetWidth();
+	m_renderingArea.extent.height = pixelBuffer->GetHeight();
+}
+
+
 void CommandContextVK::BeginRenderingBlock()
 {
 	assert(!m_isRendering);
@@ -804,6 +849,12 @@ void CommandContextVK::ResetRenderTargets()
 	m_numRtvs = 0;
 	m_dsvFormat = VK_FORMAT_UNDEFINED;
 	m_hasDsv = false;
+
+	// Reset the rendering area
+	m_renderingArea.offset.x = -1;
+	m_renderingArea.offset.y = -1;
+	m_renderingArea.extent.width = 0;
+	m_renderingArea.extent.height = 0;
 }
 
 } // namespace Luna::VK

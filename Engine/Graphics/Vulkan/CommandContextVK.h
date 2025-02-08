@@ -23,6 +23,7 @@ namespace Luna
 class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
+class IPixelBuffer;
 
 } // namespace Luna
 
@@ -133,6 +134,7 @@ private:
 	void SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSetVK* descriptorSet);
 
 	void BindDescriptorHeaps() {}
+	void SetRenderingArea(IPixelBuffer* pixelBuffer);
 	void BeginRenderingBlock();
 	void ResetRenderTargets();
 
