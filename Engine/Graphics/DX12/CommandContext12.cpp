@@ -126,6 +126,7 @@ void CommandContext12::Reset()
 	m_computeRootSignature = nullptr;
 	m_graphicsPipelineState = nullptr;
 	m_computePipelineState = nullptr;
+	m_primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
 	m_numBarriersToFlush = 0;
 
 	BindDescriptorHeaps();

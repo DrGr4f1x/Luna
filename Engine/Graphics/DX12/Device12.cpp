@@ -14,6 +14,7 @@
 
 #include "FileSystem.h"
 
+#include "Graphics\CommandContext.h"
 #include "Graphics\Shader.h"
 
 #include "ColorBuffer12.h"
@@ -227,6 +228,8 @@ GraphicsDevice::~GraphicsDevice()
 	}
 
 	Shader::DestroyAll();
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Destroy();
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Destroy();
 
 	g_d3d12GraphicsDevice = nullptr;
 	g_graphicsDevice = nullptr;
@@ -484,7 +487,7 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 
 	auto depthBufferDescExt = DepthBufferDescExt{}
 		.SetResource(resource)
-		.SetUsageState(ResourceState::DepthRead | ResourceState::DepthWrite)
+		.SetUsageState(ResourceState::Common)
 		.SetPlaneCount(planeCount)
 		.SetDsvHandles(dsvHandles)
 		.SetDepthSrvHandle(depthSrvHandle)
@@ -623,7 +626,14 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 		gpuBufferDescExt.SetCbvHandle(cbvHandle);
 	}
 
-	return Make<GpuBuffer12>(gpuBufferDesc2, gpuBufferDescExt);
+	auto gpuBuffer = Make<GpuBuffer12>(gpuBufferDesc2, gpuBufferDescExt);
+
+	if (gpuBufferDesc2.initialData)
+	{
+		CommandContext::InitializeBuffer(gpuBuffer.Get(), gpuBufferDesc2.initialData, bufferSize);
+	}
+
+	return gpuBuffer;
 }
 
 

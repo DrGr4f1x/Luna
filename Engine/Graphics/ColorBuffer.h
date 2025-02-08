@@ -24,7 +24,7 @@ struct ColorBufferDesc
 	ResourceType resourceType{ ResourceType::Texture2D };
 	uint64_t width{ 0 };
 	uint32_t height{ 0 };
-	uint32_t arraySizeOrDepth{ 0 };
+	uint32_t arraySizeOrDepth{ 1 };
 	uint32_t numMips{ 1 };
 	uint32_t numSamples{ 1 };
 	Format format{ Format::Unknown };

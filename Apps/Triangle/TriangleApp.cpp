@@ -12,6 +12,8 @@
 
 #include "TriangleApp.h"
 
+#include "Graphics\ColorBuffer.h"
+#include "Graphics\CommandContext.h"
 #include "Graphics\CommonStates.h"
 
 using namespace Luna;
@@ -80,7 +82,7 @@ void TriangleApp::Startup()
 		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
 		.elementCount	= 1,
 		.elementSize	= sizeof(m_vsConstants),
-		.initialData	= &m_vsConstants
+		.initialData	= nullptr
 	};
 	m_constantBuffer = graphicsDevice->CreateGpuBuffer(constantBufferDesc);
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
@@ -99,9 +101,12 @@ void TriangleApp::Startup()
 
 	UpdateConstantBuffer();
 
+	InitDepthBuffer();
 	InitRootSignature();
 	InitPipelineState();
 	InitResources();
+
+	m_resources->SetCBV(0, 0, m_constantBuffer.get());
 }
 
 
@@ -119,8 +124,43 @@ void TriangleApp::Update()
 
 void TriangleApp::Render()
 {
-	// Application main render loop
-	Application::Render();
+	auto& context = GraphicsContext::Begin("Frame");
+
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::RenderTarget);
+	context.TransitionResource(m_depthBuffer.get(), ResourceState::DepthWrite);
+	Color clearColor{ DirectX::Colors::CornflowerBlue };
+	context.ClearColor(GetColorBuffer().get(), clearColor);
+	context.ClearDepth(m_depthBuffer.get());
+
+	context.BeginRendering(GetColorBuffer().get(), m_depthBuffer.get());
+
+	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+
+	context.SetRootSignature(m_rootSignature.get());
+	context.SetGraphicsPipeline(m_graphicsPipeline.get());
+
+	context.SetResources(m_resources.get());
+
+	//context.SetCBV(0, 0, m_constantBuffer);
+
+	/*vector<Vertex> vertexData =
+	{
+		{ { -1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ {  0.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+	};
+	context.SetDynamicVB(0, 3, sizeof(Vertex), vertexData.data());*/
+
+	context.SetVertexBuffer(0, m_vertexBuffer.get());
+	
+	context.SetIndexBuffer(m_indexBuffer.get());
+
+	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
+
+	context.EndRendering();
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::Present);
+
+	context.Finish();
 }
 
 
@@ -133,6 +173,20 @@ void TriangleApp::CreateDeviceDependentResources()
 void TriangleApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+}
+
+
+void TriangleApp::InitDepthBuffer()
+{
+	DepthBufferDesc depthBufferDesc{
+		.name = "Depth Buffer",
+		.resourceType = ResourceType::Texture2D,
+		.width = GetWindowWidth(),
+		.height = GetWindowHeight(),
+		.format = GetDepthFormat()
+	};
+
+	m_depthBuffer = GetGraphicsDevice()->CreateDepthBuffer(depthBufferDesc);
 }
 
 

@@ -12,6 +12,7 @@
 
 #include "Application.h"
 #include "CameraController.h"
+#include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceSet.h"
@@ -37,6 +38,7 @@ protected:
 	void CreateWindowSizeDependentResources() override;
 
 private:
+	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitPipelineState();
 	void InitResources();
@@ -47,6 +49,8 @@ private:
 	// Camera controls
 	float m_zoom{ -2.5f };
 	Luna::CameraController m_controller;
+
+	Luna::DepthBufferHandle m_depthBuffer;
 
 	// Vertex layout used in this example
 	struct Vertex
