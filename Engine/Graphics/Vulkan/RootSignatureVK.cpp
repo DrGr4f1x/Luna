@@ -74,8 +74,11 @@ DescriptorSetHandle RootSignatureVK::CreateDescriptorSet(uint32_t index) const
 		rootParam.parameterType == RootParameterType::RootSRV ||
 		rootParam.parameterType == RootParameterType::RootUAV;
 
+
+
 	DescriptorSetDescExt descriptorSetDescExt{
 		.descriptorSet		= descriptorSet,
+		.bindingOffsets		= m_desc.bindingOffsets,
 		.numDescriptors		= rootParam.GetNumDescriptors(),
 		.isDynamicBuffer	= isDynamicBuffer
 	};

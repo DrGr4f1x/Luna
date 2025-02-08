@@ -127,9 +127,10 @@ void TriangleApp::Render()
 	auto& context = GraphicsContext::Begin("Frame");
 
 	context.TransitionResource(GetColorBuffer().get(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer.get(), ResourceState::DepthWrite);
 	Color clearColor{ DirectX::Colors::CornflowerBlue };
 	context.ClearColor(GetColorBuffer().get(), clearColor);
+
+	context.TransitionResource(m_depthBuffer.get(), ResourceState::DepthWrite);
 	context.ClearDepth(m_depthBuffer.get());
 
 	context.BeginRendering(GetColorBuffer().get(), m_depthBuffer.get());
@@ -140,6 +141,8 @@ void TriangleApp::Render()
 	context.SetGraphicsPipeline(m_graphicsPipeline.get());
 
 	context.SetResources(m_resources.get());
+
+	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
 	//context.SetCBV(0, 0, m_constantBuffer);
 

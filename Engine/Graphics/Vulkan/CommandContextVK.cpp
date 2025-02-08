@@ -584,9 +584,9 @@ void CommandContextVK::SetViewport(float x, float y, float w, float h, float min
 {
 	VkViewport viewport{
 		.x			= x,
-		.y			= y,
+		.y			= h,
 		.width		= w,
-		.height		= h,
+		.height		= -h,
 		.minDepth	= minDepth,
 		.maxDepth	= maxDepth
 	};
@@ -820,6 +820,8 @@ void CommandContextVK::SetRenderingArea(IPixelBuffer* pixelBuffer)
 void CommandContextVK::BeginRenderingBlock()
 {
 	assert(!m_isRendering);
+
+	FlushResourceBarriers();
 
 	VkRenderingInfo renderingInfo{
 		.sType					= VK_STRUCTURE_TYPE_RENDERING_INFO,

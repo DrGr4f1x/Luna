@@ -58,8 +58,9 @@ const VkBufferView* GetBufferView(const IGpuResource* gpuResource)
 
 
 DescriptorSet::DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt)
-	: m_descriptorSet{descriptorSetDescExt.descriptorSet}
-	, m_numDescriptors{descriptorSetDescExt.numDescriptors}
+	: m_descriptorSet{ descriptorSetDescExt.descriptorSet }
+	, m_bindingOffsets{ descriptorSetDescExt.bindingOffsets }
+	, m_numDescriptors{ descriptorSetDescExt.numDescriptors }
 	, m_isDynamicBuffer{ descriptorSetDescExt.isDynamicBuffer }
 {
 	assert(m_numDescriptors <= MaxDescriptorsPerTable);
@@ -69,6 +70,10 @@ DescriptorSet::DescriptorSet(const DescriptorSetDescExt& descriptorSetDescExt)
 		VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[j];
 		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		writeSet.pNext = nullptr;
+		writeSet.dstBinding = 0;
+		writeSet.dstArrayElement = 0;
+		writeSet.descriptorCount = 0;
+		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		writeSet.pImageInfo = nullptr;
 		writeSet.pBufferInfo = nullptr;
 		writeSet.pTexelBufferView = nullptr;
@@ -88,7 +93,8 @@ void DescriptorSet::SetSRV(int slot, const IColorBuffer* colorBuffer)
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
+	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
 	writeSet.pImageInfo = imageInfo;
 
 	m_dirtyBits |= (1 << slot);
@@ -107,7 +113,8 @@ void DescriptorSet::SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depth
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
+	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
 	writeSet.pImageInfo = imageInfo;
 
 	m_dirtyBits |= (1 << slot);
@@ -130,7 +137,8 @@ void DescriptorSet::SetSRV(int slot, const IGpuBuffer* gpuBuffer)
 
 	writeSet.descriptorCount = 1;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
+	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
@@ -158,7 +166,8 @@ void DescriptorSet::SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t u
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
+	writeSet.dstBinding = slot + m_bindingOffsets.unorderedAccess;
+	writeSet.dstArrayElement = 0;
 	writeSet.pImageInfo = imageInfo;
 
 	m_dirtyBits |= (1 << slot);
@@ -182,7 +191,8 @@ void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
 
 	writeSet.descriptorCount = 1;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
+	writeSet.dstBinding = slot + m_bindingOffsets.unorderedAccess;
+	writeSet.dstArrayElement = 0;
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
@@ -215,7 +225,8 @@ void DescriptorSet::SetCBV(int slot, const IGpuBuffer* gpuBuffer)
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
+	writeSet.dstBinding = slot + m_bindingOffsets.constantBuffer;
+	writeSet.dstArrayElement = 0;
 	writeSet.pBufferInfo = bufferInfo;
 
 	m_dirtyBits |= (1 << slot);
@@ -232,7 +243,7 @@ void DescriptorSet::SetDynamicOffset(uint32_t offset)
 
 void DescriptorSet::Update()
 {
-	if (!IsDirty() || m_numDescriptors == 0)
+	if (!IsDirty())
 		return;
 
 	array<VkWriteDescriptorSet, MaxDescriptorsPerTable> liveDescriptors;

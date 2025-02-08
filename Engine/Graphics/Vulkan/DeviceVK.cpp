@@ -293,7 +293,7 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 		.imageViewStencilOnly	= imageViewStencilOnly.get(),
 		.imageInfoDepth			= imageInfoDepth,
 		.imageInfoStencil		= imageInfoStencil,
-		.usageState				= ResourceState::DepthRead | ResourceState::DepthWrite
+		.usageState				= ResourceState::Undefined
 	};
 
 	return Make<DepthBufferVK>(depthBufferDesc, depthBufferDescExt);

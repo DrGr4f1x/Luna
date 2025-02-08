@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\DescriptorSet.h"
+#include "Graphics\RootSignature.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 using namespace Microsoft::WRL;
@@ -22,6 +23,7 @@ namespace Luna::VK
 struct DescriptorSetDescExt
 {
 	VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
+	VulkanBindingOffsets bindingOffsets;
 	uint32_t numDescriptors{ 0 };
 	bool isDynamicBuffer{ false };
 };
@@ -61,7 +63,7 @@ public:
 
 	// IDescriptorSetVK implementation
 	bool IsDirty() const override { return m_dirtyBits != 0; }
-	bool HasDescriptors() const override { return m_numDescriptors > 0; }
+	bool HasDescriptors() const override { return (m_numDescriptors > 0) || IsDynamicBuffer(); }
 	bool IsDynamicBuffer() const override { return m_isDynamicBuffer; }
 	VkDescriptorSet GetDescriptorSet() const override { return m_descriptorSet; }
 	uint32_t GetDynamicOffset() const override { return m_dynamicOffset; }
@@ -69,6 +71,7 @@ public:
 
 private:
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
+	VulkanBindingOffsets m_bindingOffsets;
 	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> m_writeDescriptorSets;
 	uint32_t m_numDescriptors{ 0 };
 	uint32_t m_dirtyBits{ 0 };
