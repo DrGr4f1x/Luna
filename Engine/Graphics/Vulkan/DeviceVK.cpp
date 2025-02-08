@@ -307,7 +307,6 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 
 	VkBufferCreateInfo bufferCreateInfo{
 		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.pNext	= nullptr,
 		.size	= gpuBufferDesc.elementCount * gpuBufferDesc.elementSize,
 		.usage	= GetBufferUsageFlags(gpuBufferDesc.resourceType) | transferFlags
 	};
@@ -331,8 +330,6 @@ GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 	{
 		VkBufferViewCreateInfo bufferViewCreateInfo{
 			.sType		= VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
-			.pNext		= nullptr,
-			.flags		= 0,
 			.buffer		= vkBuffer,
 			.format		= FormatToVulkan(gpuBufferDesc.format),
 			.offset		= 0,
@@ -409,8 +406,6 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 			VkDescriptorSetLayoutCreateInfo createInfo{
 				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.pNext			= nullptr,
-				.flags			= 0,
 				.bindingCount	= 1,
 				.pBindings		= &vkBinding
 			};
@@ -436,8 +431,6 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 			VkDescriptorSetLayoutCreateInfo createInfo{
 				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.pNext			= nullptr,
-				.flags			= 0,
 				.bindingCount	= 1,
 				.pBindings		= &vkBinding
 			};
@@ -463,8 +456,6 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 			VkDescriptorSetLayoutCreateInfo createInfo{
 				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.pNext			= nullptr,
-				.flags			= 0,
 				.bindingCount	= 1,
 				.pBindings		= &vkBinding
 			};
@@ -524,8 +515,6 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 			VkDescriptorSetLayoutCreateInfo createInfo{
 				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.pNext			= nullptr,
-				.flags			= 0,
 				.bindingCount	= (uint32_t)vkLayoutBindings.size(),
 				.pBindings		= vkLayoutBindings.data()
 			};
@@ -562,8 +551,6 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 	{
 		VkPipelineLayoutCreateInfo createInfo{
 			.sType						= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.pNext						= nullptr,
-			.flags						= 0,
 			.setLayoutCount				= (uint32_t)vkDescriptorSetLayouts.size(),
 			.pSetLayouts				= vkDescriptorSetLayouts.data(),
 			.pushConstantRangeCount		= (uint32_t)vkPushConstantRanges.size(),
@@ -655,8 +642,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	// Vertex input layout
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 		.sType								= VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		.pNext								= nullptr,
-		.flags								= 0,
 		.vertexBindingDescriptionCount		= (uint32_t)vertexInputBindings.size(),
 		.pVertexBindingDescriptions			= vertexInputBindings.data(),
 		.vertexAttributeDescriptionCount	= (uint32_t)vertexAttributes.size(),
@@ -666,8 +651,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	// Input assembly
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-		.pNext						= nullptr,
-		.flags						= 0,
 		.topology					= PrimitiveTopologyToVulkan(pipelineDesc.topology),
 		.primitiveRestartEnable		= pipelineDesc.indexBufferStripCut == IndexBufferStripCutValue::Disabled ? VK_FALSE : VK_TRUE
 	};
@@ -675,16 +658,12 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	// Tessellation state
 	VkPipelineTessellationStateCreateInfo tessellationInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
-		.pNext					= nullptr,
-		.flags					= 0,
 		.patchControlPoints		= GetControlPointCount(pipelineDesc.topology)
 	};
 
 	// Viewport state
 	VkPipelineViewportStateCreateInfo viewportStateInfo{
 		.sType			= VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-		.pNext			= nullptr,
-		.flags			= 0,
 		.viewportCount	= 1,
 		.pViewports		= nullptr, // dynamic state
 		.scissorCount	= 1,
@@ -696,8 +675,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	VkPipelineRasterizationStateCreateInfo rasterizerInfo
 	{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-		.pNext						= nullptr,
-		.flags						= 0,
 		.depthClampEnable			= VK_FALSE,
 		.rasterizerDiscardEnable	= VK_FALSE,
 		.polygonMode				= FillModeToVulkan(rasterizerState.fillMode),
@@ -713,7 +690,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	// Multisample state
 	VkPipelineMultisampleStateCreateInfo multisampleInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-		.pNext					= nullptr,
 		.rasterizationSamples	= GetSampleCountFlags(pipelineDesc.msaaCount),
 		.sampleShadingEnable	= VK_FALSE,
 		.minSampleShading		= 0.0f,
@@ -726,8 +702,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	const auto& depthStencilState = pipelineDesc.depthStencilState;
 	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-		.pNext					= nullptr,
-		.flags					= 0,
 		.depthTestEnable		= depthStencilState.depthEnable ? VK_TRUE : VK_FALSE,
 		.depthWriteEnable		= depthStencilState.depthWriteMask == DepthWrite::All ? VK_TRUE : VK_FALSE,
 		.depthCompareOp			= ComparisonFuncToVulkan(depthStencilState.depthFunc),
@@ -757,11 +731,7 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 
 	// Blend state
 	const auto& blendState = pipelineDesc.blendState;
-	VkPipelineColorBlendStateCreateInfo blendStateInfo{
-		.sType	= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-		.pNext	= nullptr,
-		.flags	= 0
-	};
+	VkPipelineColorBlendStateCreateInfo blendStateInfo{ .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
 
 	array<VkPipelineColorBlendAttachmentState, 8> blendAttachments;
 
@@ -795,8 +765,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	dynamicStates.push_back(VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY);
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-		.pNext				= nullptr,
-		.flags				= 0,
 		.dynamicStateCount	= (uint32_t)dynamicStates.size(),
 		.pDynamicStates		= dynamicStates.data()
 	};
@@ -814,7 +782,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	const Format dsvFormat = pipelineDesc.dsvFormat;
 	VkPipelineRenderingCreateInfo dynamicRenderingInfo{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
-		.pNext						= nullptr,
 		.viewMask					= 0,
 		.colorAttachmentCount		= (uint32_t)rtvFormats.size(),
 		.pColorAttachmentFormats	= rtvFormats.data(),
@@ -825,7 +792,6 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const Graphi
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.pNext					= &dynamicRenderingInfo,
-		.flags					= 0,
 		.stageCount				= (uint32_t)shaderStages.size(),
 		.pStages				= shaderStages.data(),
 		.pVertexInputState		= &vertexInputInfo,
@@ -870,7 +836,6 @@ wil::com_ptr<CVkFence> GraphicsDevice::CreateFence(bool bSignaled) const
 {
 	VkFenceCreateInfo createInfo{ 
 		.sType		= VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-		.pNext		= nullptr,
 		.flags		= bSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0u
 	};
 
@@ -905,7 +870,7 @@ wil::com_ptr<CVkSemaphore> GraphicsDevice::CreateSemaphore(VkSemaphoreType semap
 
 wil::com_ptr<CVkCommandPool> GraphicsDevice::CreateCommandPool(CommandListType commandListType) const
 {
-	uint32_t queueFamilyIndex{ 0 };
+	uint32_t queueFamilyIndex = 0;
 	switch (commandListType)
 	{
 	case CommandListType::Compute: 
@@ -921,9 +886,11 @@ wil::com_ptr<CVkCommandPool> GraphicsDevice::CreateCommandPool(CommandListType c
 		break;
 	}
 
-	VkCommandPoolCreateInfo createInfo{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-	createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	createInfo.queueFamilyIndex = queueFamilyIndex;
+	VkCommandPoolCreateInfo createInfo{ 
+		.sType				= VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.flags				= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.queueFamilyIndex	= queueFamilyIndex
+	};
 
 	VkCommandPool vkCommandPool{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateCommandPool(*m_vkDevice, &createInfo, nullptr, &vkCommandPool)))
@@ -965,8 +932,6 @@ wil::com_ptr<CVkPipelineCache> GraphicsDevice::CreatePipelineCache() const
 {
 	VkPipelineCacheCreateInfo createInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
-		.pNext				= nullptr,
-		.flags				= 0,
 		.initialDataSize	= 0,
 		.pInitialData		= nullptr
 	};
@@ -1070,7 +1035,6 @@ wil::com_ptr<CVkBuffer> GraphicsDevice::CreateStagingBuffer(const void* initialD
 {
 	VkBufferCreateInfo stagingBufferInfo{ 
 		.sType			= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO ,
-		.pNext			= nullptr,
 		.size			= numBytes,
 		.usage			= VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 		.sharingMode	= VK_SHARING_MODE_EXCLUSIVE
@@ -1120,8 +1084,6 @@ wil::com_ptr<CVkShaderModule> GraphicsDevice::CreateShaderModule(Shader* shader)
 	{
 		VkShaderModuleCreateInfo createInfo{
 		.	sType		= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-			.pNext		= nullptr,
-			.flags		= 0,
 			.codeSize	= shader->GetByteCodeSize(),
 			.pCode		= reinterpret_cast<const uint32_t*>(shader->GetByteCode())
 		};

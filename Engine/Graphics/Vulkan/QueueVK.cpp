@@ -133,7 +133,6 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence)
 
 	auto timelineInfo = VkTimelineSemaphoreSubmitInfo{
 		.sType						= VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO,
-		.pNext						= nullptr,
 		.waitSemaphoreValueCount	= (uint32_t)m_waitSemaphoreValues.size(),
 		.pWaitSemaphoreValues		= m_waitSemaphoreValues.data(),
 		.signalSemaphoreValueCount	= (uint32_t)m_signalSemaphoreValues.size(),

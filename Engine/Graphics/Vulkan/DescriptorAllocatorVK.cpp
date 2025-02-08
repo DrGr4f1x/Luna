@@ -38,7 +38,6 @@ VkDescriptorSet DescriptorSetAllocator::Allocate(VkDescriptorSetLayout layout)
 
 	VkDescriptorSetAllocateInfo allocInfo{
 		.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.pNext					= nullptr,
 		.descriptorPool			= m_descriptorPool,
 		.descriptorSetCount		= 1,
 		.pSetLayouts			= &layout
@@ -97,8 +96,6 @@ VkDescriptorPool DescriptorSetAllocator::RequestNewPool()
 
 	VkDescriptorPoolCreateInfo createInfo{
 		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.pNext			= nullptr,
-		.flags			= 0,
 		.maxSets		= sm_numDescriptorsPerPool,
 		.poolSizeCount	= _countof(typeCounts),
 		.pPoolSizes		= typeCounts

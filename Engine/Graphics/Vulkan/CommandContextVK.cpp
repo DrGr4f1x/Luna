@@ -55,7 +55,6 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IColorBuffer* renderTarget)
 {
 	VkRenderingAttachmentInfo info{
 		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.pNext = nullptr,
 		.imageView = renderTarget->GetNativeObject(NativeObjectType::VK_ImageView_RTV),
 		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		.resolveMode = VK_RESOLVE_MODE_NONE,
@@ -97,7 +96,6 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IDepthBuffer* depthTarget, 
 
 	VkRenderingAttachmentInfo info{
 		.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-		.pNext = nullptr,
 		.imageView = imageView,
 		.imageLayout = imageLayout,
 		.resolveMode = VK_RESOLVE_MODE_NONE,
@@ -174,11 +172,7 @@ void CommandContextVK::Initialize()
 
 void CommandContextVK::BeginFrame()
 {
-	VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-	beginInfo.pNext = nullptr;
-	beginInfo.flags = 0;
-	beginInfo.pInheritanceInfo = nullptr;
-
+	VkCommandBufferBeginInfo beginInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
 	vkBeginCommandBuffer(m_commandBuffer, &beginInfo);
 }
 
@@ -841,8 +835,6 @@ void CommandContextVK::BeginRenderingBlock()
 
 	VkRenderingInfo renderingInfo{
 		.sType					= VK_STRUCTURE_TYPE_RENDERING_INFO,
-		.pNext					= nullptr,
-		.flags					= 0,
 		.renderArea				= m_renderingArea,
 		.layerCount				= 1,
 		.viewMask				= 0,
