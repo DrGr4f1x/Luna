@@ -17,7 +17,6 @@
 namespace Luna::VK
 {
 
-// TODO - Move this somewhere else
 struct UUID
 {
 	uint32_t value1{ 0 };

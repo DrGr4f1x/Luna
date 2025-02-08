@@ -78,7 +78,6 @@ public:
 	virtual void SetRootSignature(IRootSignature* rootSignature) = 0;
 	virtual void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline) = 0;
 
-	// TODO: look into the inverted viewport situation for Vulkan
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
 	// TODO: Support separate front and back stencil
