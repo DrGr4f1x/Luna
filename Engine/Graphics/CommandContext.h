@@ -20,14 +20,13 @@ namespace Luna
 class CommandContext;
 class ComputeContext;
 class GraphicsContext;
-class GraphicsPSO;
+class GraphicsPipelineState;
 
 class IColorBuffer;
 class IDepthBuffer;
 class IDescriptorSet;
 class IGpuBuffer;
 class IGpuResource;
-class IGraphicsPipeline;
 class IResourceSet;
 class IRootSignature;
 
@@ -77,8 +76,7 @@ public:
 	virtual void EndRendering() = 0;
 
 	virtual void SetRootSignature(IRootSignature* rootSignature) = 0;
-	virtual void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline) = 0;
-	virtual void SetGraphicsPipeline(GraphicsPSO& graphicsPipeline) = 0;
+	virtual void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -181,8 +179,7 @@ public:
 	void EndRendering();
 
 	void SetRootSignature(IRootSignature* rootSignature);
-	void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline);
-	void SetGraphicsPipeline(GraphicsPSO& graphicsPipeline);
+	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
@@ -358,13 +355,7 @@ inline void GraphicsContext::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
-inline void GraphicsContext::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
-{
-	m_contextImpl->SetGraphicsPipeline(graphicsPipeline);
-}
-
-
-inline void GraphicsContext::SetGraphicsPipeline(GraphicsPSO& graphicsPipeline)
+inline void GraphicsContext::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline)
 {
 	m_contextImpl->SetGraphicsPipeline(graphicsPipeline);
 }

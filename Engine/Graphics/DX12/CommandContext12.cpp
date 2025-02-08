@@ -12,6 +12,7 @@
 
 #include "CommandContext12.h"
 
+#include "Graphics\PipelineState.h"
 #include "Graphics\PlatformData.h"
 
 #include "ColorBuffer12.h"
@@ -20,7 +21,6 @@
 #include "Device12.h"
 #include "DeviceManager12.h"
 #include "GpuBuffer12.h"
-#include "PipelineState12.h"
 #include "Queue12.h"
 #include "ResourceSet12.h"
 #include "RootSignature12.h"
@@ -435,27 +435,7 @@ void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
-void CommandContext12::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
-{
-	m_computePipelineState = nullptr;
-	ID3D12PipelineState* graphicsPSO = graphicsPipeline->GetNativeObject();
-
-	if (m_graphicsPipelineState != graphicsPSO)
-	{
-		m_commandList->SetPipelineState(graphicsPSO);
-		m_graphicsPipelineState = graphicsPSO;
-	}
-
-	auto topology = PrimitiveTopologyToDX12(graphicsPipeline->GetPrimitiveTopology());
-	if (m_primitiveTopology != topology)
-	{
-		m_commandList->IASetPrimitiveTopology(topology);
-		m_primitiveTopology = topology;
-	}
-}
-
-
-void CommandContext12::SetGraphicsPipeline(GraphicsPSO& graphicsPipeline)
+void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline)
 {
 	m_computePipelineState = nullptr;
 	ID3D12PipelineState* graphicsPSO = graphicsPipeline.GetPlatformData()->GetDX12();

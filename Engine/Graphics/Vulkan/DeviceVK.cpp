@@ -14,6 +14,7 @@
 
 #include "FileSystem.h"
 
+#include "Graphics\PipelineState.h"
 #include "Graphics\PlatformData.h"
 #include "Graphics\Shader.h"
 
@@ -22,7 +23,6 @@
 #include "DepthBufferVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "GpuBufferVK.h"
-#include "PipelineStateVK.h"
 #include "RootSignatureVK.h"
 
 using namespace std;
@@ -576,14 +576,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 }
 
 
-GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
-{
-	auto pipeline = CreateGraphicsPipeline2(graphicsPipelineDesc);
-	return Make<GraphicsPipeline>(graphicsPipelineDesc, pipeline->GetVulkan());
-}
-
-
-shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const GraphicsPipelineDesc& pipelineDesc)
+shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;

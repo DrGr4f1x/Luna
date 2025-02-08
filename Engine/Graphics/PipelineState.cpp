@@ -18,10 +18,10 @@
 namespace Luna
 {
 
-void GraphicsPSO::Initialize(GraphicsPipelineDesc& desc)
+void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
 	m_desc = desc;
-	m_platformData = GetGraphicsDevice()->CreateGraphicsPipeline2(desc);
+	m_platformData = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
 }
 
 } // namespace Luna

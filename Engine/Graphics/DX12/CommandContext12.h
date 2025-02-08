@@ -68,8 +68,7 @@ public:
 	void EndRendering() override;
 
 	void SetRootSignature(IRootSignature* rootSignature) override;
-	void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline) override;
-	void SetGraphicsPipeline(GraphicsPSO& graphicsPipeline) override;
+	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) override;
 	
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;

@@ -188,7 +188,7 @@ struct GraphicsPipelineDesc
 };
 
 
-class GraphicsPSO
+class GraphicsPipelineState
 {
 public:
 	PrimitiveTopology GetPrimitiveTopology() const { return m_desc.topology; }
@@ -202,16 +202,5 @@ private:
 
 	std::shared_ptr<GraphicsPSOData> m_platformData;
 };
-
-
-class __declspec(uuid("F35F4ED1-7BDD-41C2-A545-CA1279A9D722")) IGraphicsPipeline : public IUnknown
-{
-public:
-	virtual NativeObjectPtr GetNativeObject() const noexcept = 0;
-
-	virtual PrimitiveTopology GetPrimitiveTopology() const noexcept = 0;
-};
-
-using GraphicsPipelineHandle = wil::com_ptr<IGraphicsPipeline>;
 
 } // namespace

@@ -12,6 +12,7 @@
 
 #include "CommandContextVK.h"
 
+#include "Graphics\PipelineState.h"
 #include "Graphics\PlatformData.h"
 
 #include "ColorBufferVK.h"
@@ -20,7 +21,6 @@
 #include "DeviceVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
-#include "PipelineStateVK.h"
 #include "QueueVK.h"
 #include "ResourceSetVK.h"
 #include "RootSignatureVK.h"
@@ -562,21 +562,7 @@ void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
-void CommandContextVK::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
-{
-	m_computePipelineLayout = VK_NULL_HANDLE;
-
-	VkPipeline vkPipeline = graphicsPipeline->GetNativeObject();
-
-	if (vkPipeline != m_graphicsPipeline)
-	{
-		m_graphicsPipeline = vkPipeline;
-		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
-	}
-}
-
-
-void CommandContextVK::SetGraphicsPipeline(GraphicsPSO& graphicsPipeline)
+void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline)
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 

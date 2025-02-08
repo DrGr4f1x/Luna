@@ -234,7 +234,6 @@ void TriangleApp::InitPipelineState()
 		.rootSignature		= m_rootSignature.get()
 	};
 
-	//m_graphicsPipeline = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
 	m_graphicsPipeline.Initialize(desc);
 }
 

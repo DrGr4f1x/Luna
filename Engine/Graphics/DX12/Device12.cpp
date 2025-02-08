@@ -15,6 +15,7 @@
 #include "FileSystem.h"
 
 #include "Graphics\CommandContext.h"
+#include "Graphics\PipelineState.h"
 #include "Graphics\PlatformData.h"
 #include "Graphics\Shader.h"
 
@@ -24,7 +25,6 @@
 #include "DeviceCaps12.h"
 #include "Formats12.h"
 #include "GpuBuffer12.h"
-#include "PipelineState12.h"
 #include "Queue12.h"
 #include "RootSignature12.h"
 #include "Shader12.h"
@@ -814,15 +814,7 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 }
 
 
-GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
-{
-	auto platformData = CreateGraphicsPipeline2(graphicsPipelineDesc);
-
-	return Make<GraphicsPipeline>(graphicsPipelineDesc, platformData->GetDX12());
-}
-
-
-shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const GraphicsPipelineDesc& pipelineDesc)
+shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
