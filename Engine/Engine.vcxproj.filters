@@ -170,6 +170,9 @@
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="Graphics\PipelineState.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -444,6 +447,9 @@
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="CameraController.h" />
+    <ClInclude Include="Graphics\PlatformData.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">

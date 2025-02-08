@@ -79,7 +79,8 @@ private:
 	Luna::RootSignatureHandle m_rootSignature;
 
 	// Pipeline state
-	Luna::GraphicsPipelineHandle m_graphicsPipeline;
+	//Luna::GraphicsPipelineHandle m_graphicsPipeline;
+	Luna::GraphicsPSO m_graphicsPipeline;
 
 	// Resources
 	Luna::ResourceSetHandle m_resources;

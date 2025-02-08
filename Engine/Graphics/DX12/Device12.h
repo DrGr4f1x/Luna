@@ -17,6 +17,12 @@
 using namespace Microsoft::WRL;
 
 
+namespace Luna
+{
+class GraphicsPSOData;
+}
+
+
 namespace Luna::DX12
 {
 
@@ -112,6 +118,8 @@ public:
 	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	wil::com_ptr<IGraphicsPipeline> CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
+
+	std::shared_ptr<GraphicsPSOData> CreateGraphicsPipeline2(const GraphicsPipelineDesc& desc) override;
 
 	void CreateResources();
 

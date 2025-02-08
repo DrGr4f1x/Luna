@@ -15,6 +15,7 @@
 #include "FileSystem.h"
 
 #include "Graphics\CommandContext.h"
+#include "Graphics\PlatformData.h"
 #include "Graphics\Shader.h"
 
 #include "ColorBuffer12.h"
@@ -815,19 +816,27 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
 {
+	auto platformData = CreateGraphicsPipeline2(graphicsPipelineDesc);
+
+	return Make<GraphicsPipeline>(graphicsPipelineDesc, platformData->GetDX12());
+}
+
+
+shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const GraphicsPipelineDesc& pipelineDesc)
+{
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
-	d3d12PipelineDesc.SampleMask = graphicsPipelineDesc.sampleMask;
+	d3d12PipelineDesc.SampleMask = pipelineDesc.sampleMask;
 	d3d12PipelineDesc.InputLayout.NumElements = 0;
 
 	// Blend state
-	d3d12PipelineDesc.BlendState.AlphaToCoverageEnable = graphicsPipelineDesc.blendState.alphaToCoverageEnable ? TRUE : FALSE;
-	d3d12PipelineDesc.BlendState.IndependentBlendEnable = graphicsPipelineDesc.blendState.independentBlendEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.BlendState.AlphaToCoverageEnable = pipelineDesc.blendState.alphaToCoverageEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.BlendState.IndependentBlendEnable = pipelineDesc.blendState.independentBlendEnable ? TRUE : FALSE;
 
 	for (uint32_t i = 0; i < 8; ++i)
 	{
 		auto& rtDesc = d3d12PipelineDesc.BlendState.RenderTarget[i];
-		const auto& renderTargetBlend = graphicsPipelineDesc.blendState.renderTargetBlend[i];
+		const auto& renderTargetBlend = pipelineDesc.blendState.renderTargetBlend[i];
 
 		rtDesc.BlendEnable = renderTargetBlend.blendEnable ? TRUE : FALSE;
 		rtDesc.LogicOpEnable = renderTargetBlend.logicOpEnable ? TRUE : FALSE;
@@ -842,7 +851,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	}
 
 	// Rasterizer state
-	const auto& rasterizerState = graphicsPipelineDesc.rasterizerState;
+	const auto& rasterizerState = pipelineDesc.rasterizerState;
 	d3d12PipelineDesc.RasterizerState.FillMode = FillModeToDX12(rasterizerState.fillMode);
 	d3d12PipelineDesc.RasterizerState.CullMode = CullModeToDX12(rasterizerState.cullMode);
 	d3d12PipelineDesc.RasterizerState.FrontCounterClockwise = rasterizerState.frontCounterClockwise ? TRUE : FALSE;
@@ -857,7 +866,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		rasterizerState.conservativeRasterizationEnable ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
 	// Depth-stencil state
-	const auto& depthStencilState = graphicsPipelineDesc.depthStencilState;
+	const auto& depthStencilState = pipelineDesc.depthStencilState;
 	d3d12PipelineDesc.DepthStencilState.DepthEnable = depthStencilState.depthEnable ? TRUE : FALSE;
 	d3d12PipelineDesc.DepthStencilState.DepthWriteMask = DepthWriteToDX12(depthStencilState.depthWriteMask);
 	d3d12PipelineDesc.DepthStencilState.DepthFunc = ComparisonFuncToDX12(depthStencilState.depthFunc);
@@ -874,34 +883,34 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.backFace.stencilFunc);
 
 	// Primitive topology & primitive restart
-	d3d12PipelineDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(graphicsPipelineDesc.topology);
-	d3d12PipelineDesc.IBStripCutValue = IndexBufferStripCutValueToDX12(graphicsPipelineDesc.indexBufferStripCut);
+	d3d12PipelineDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(pipelineDesc.topology);
+	d3d12PipelineDesc.IBStripCutValue = IndexBufferStripCutValueToDX12(pipelineDesc.indexBufferStripCut);
 
 	// Render target formats
-	const uint32_t numRtvs = (uint32_t)graphicsPipelineDesc.rtvFormats.size();
+	const uint32_t numRtvs = (uint32_t)pipelineDesc.rtvFormats.size();
 	const uint32_t maxRenderTargets = 8;
 	for (uint32_t i = 0; i < numRtvs; ++i)
 	{
-		d3d12PipelineDesc.RTVFormats[i] = FormatToDxgi(graphicsPipelineDesc.rtvFormats[i]).rtvFormat;
+		d3d12PipelineDesc.RTVFormats[i] = FormatToDxgi(pipelineDesc.rtvFormats[i]).rtvFormat;
 	}
 	for (uint32_t i = numRtvs; i < maxRenderTargets; ++i)
 	{
 		d3d12PipelineDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
 	}
 	d3d12PipelineDesc.NumRenderTargets = numRtvs;
-	d3d12PipelineDesc.DSVFormat = GetDSVFormat(FormatToDxgi(graphicsPipelineDesc.dsvFormat).resourceFormat);
-	d3d12PipelineDesc.SampleDesc.Count = graphicsPipelineDesc.msaaCount;
+	d3d12PipelineDesc.DSVFormat = GetDSVFormat(FormatToDxgi(pipelineDesc.dsvFormat).resourceFormat);
+	d3d12PipelineDesc.SampleDesc.Count = pipelineDesc.msaaCount;
 	d3d12PipelineDesc.SampleDesc.Quality = 0; // TODO Rework this to enable quality levels in DX12
 
 	// Input layout
-	d3d12PipelineDesc.InputLayout.NumElements = (UINT)graphicsPipelineDesc.vertexElements.size();
+	d3d12PipelineDesc.InputLayout.NumElements = (UINT)pipelineDesc.vertexElements.size();
 	unique_ptr<const D3D12_INPUT_ELEMENT_DESC> d3dElements;
 
 	if (d3d12PipelineDesc.InputLayout.NumElements > 0)
 	{
 		D3D12_INPUT_ELEMENT_DESC* newD3DElements = (D3D12_INPUT_ELEMENT_DESC*)malloc(sizeof(D3D12_INPUT_ELEMENT_DESC) * d3d12PipelineDesc.InputLayout.NumElements);
 
-		const auto& vertexElements = graphicsPipelineDesc.vertexElements;
+		const auto& vertexElements = pipelineDesc.vertexElements;
 
 		for (uint32_t i = 0; i < d3d12PipelineDesc.InputLayout.NumElements; ++i)
 		{
@@ -918,43 +927,43 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	}
 
 	// Shaders
-	if (graphicsPipelineDesc.vertexShader)
+	if (pipelineDesc.vertexShader)
 	{
-		Shader* vertexShader = LoadShader(ShaderType::Vertex, graphicsPipelineDesc.vertexShader);
+		Shader* vertexShader = LoadShader(ShaderType::Vertex, pipelineDesc.vertexShader);
 		assert(vertexShader);
 		d3d12PipelineDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
 	}
 
-	if (graphicsPipelineDesc.pixelShader)
+	if (pipelineDesc.pixelShader)
 	{
-		Shader* pixelShader = LoadShader(ShaderType::Pixel, graphicsPipelineDesc.pixelShader);
+		Shader* pixelShader = LoadShader(ShaderType::Pixel, pipelineDesc.pixelShader);
 		assert(pixelShader);
 		d3d12PipelineDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
 	}
 
-	if (graphicsPipelineDesc.geometryShader)
+	if (pipelineDesc.geometryShader)
 	{
-		Shader* geometryShader = LoadShader(ShaderType::Geometry, graphicsPipelineDesc.geometryShader);
+		Shader* geometryShader = LoadShader(ShaderType::Geometry, pipelineDesc.geometryShader);
 		assert(geometryShader);
 		d3d12PipelineDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
 	}
 
-	if (graphicsPipelineDesc.hullShader)
+	if (pipelineDesc.hullShader)
 	{
-		Shader* hullShader = LoadShader(ShaderType::Hull, graphicsPipelineDesc.hullShader);
+		Shader* hullShader = LoadShader(ShaderType::Hull, pipelineDesc.hullShader);
 		assert(hullShader);
 		d3d12PipelineDesc.HS = CD3DX12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
 	}
 
-	if (graphicsPipelineDesc.domainShader)
+	if (pipelineDesc.domainShader)
 	{
-		Shader* domainShader = LoadShader(ShaderType::Domain, graphicsPipelineDesc.domainShader);
+		Shader* domainShader = LoadShader(ShaderType::Domain, pipelineDesc.domainShader);
 		assert(domainShader);
 		d3d12PipelineDesc.DS = CD3DX12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
 	}
 
 	// Make sure the root signature is finalized first
-	d3d12PipelineDesc.pRootSignature = graphicsPipelineDesc.rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
+	d3d12PipelineDesc.pRootSignature = pipelineDesc.rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
 	assert(d3d12PipelineDesc.pRootSignature != nullptr);
 
 	d3d12PipelineDesc.InputLayout.pInputElementDescs = nullptr;
@@ -989,7 +998,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		HRESULT res = m_dxDevice->CreateGraphicsPipelineState(&d3d12PipelineDesc, IID_PPV_ARGS(&pPipelineState));
 		ThrowIfFailed(res);
 
-		SetDebugName(pPipelineState, graphicsPipelineDesc.name);
+		SetDebugName(pPipelineState, pipelineDesc.name);
 
 		m_pipelineStateMap[hashCode].attach(pPipelineState);
 	}
@@ -1002,7 +1011,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		pPipelineState = *ppPipelineState;
 	}
 
-	return Make<GraphicsPipeline>(graphicsPipelineDesc, pPipelineState);
+	return make_shared<GraphicsPSOData>(pPipelineState);
 }
 
 

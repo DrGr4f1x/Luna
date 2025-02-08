@@ -14,6 +14,7 @@
 
 #include "FileSystem.h"
 
+#include "Graphics\PlatformData.h"
 #include "Graphics\Shader.h"
 
 #include "ColorBufferVK.h"
@@ -590,6 +591,13 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 
 GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc)
 {
+	auto pipeline = CreateGraphicsPipeline2(graphicsPipelineDesc);
+	return Make<GraphicsPipeline>(graphicsPipelineDesc, pipeline->GetVulkan());
+}
+
+
+shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline2(const GraphicsPipelineDesc& pipelineDesc)
+{
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
@@ -607,15 +615,15 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 			}
 		};
 
-	AddShaderStageCreateInfo(ShaderType::Vertex, graphicsPipelineDesc.vertexShader);
-	AddShaderStageCreateInfo(ShaderType::Pixel, graphicsPipelineDesc.pixelShader);
-	AddShaderStageCreateInfo(ShaderType::Geometry, graphicsPipelineDesc.geometryShader);
-	AddShaderStageCreateInfo(ShaderType::Hull, graphicsPipelineDesc.hullShader);
-	AddShaderStageCreateInfo(ShaderType::Domain, graphicsPipelineDesc.domainShader);
+	AddShaderStageCreateInfo(ShaderType::Vertex, pipelineDesc.vertexShader);
+	AddShaderStageCreateInfo(ShaderType::Pixel, pipelineDesc.pixelShader);
+	AddShaderStageCreateInfo(ShaderType::Geometry, pipelineDesc.geometryShader);
+	AddShaderStageCreateInfo(ShaderType::Hull, pipelineDesc.hullShader);
+	AddShaderStageCreateInfo(ShaderType::Domain, pipelineDesc.domainShader);
 
 	// Vertex streams
 	vector<VkVertexInputBindingDescription> vertexInputBindings;
-	const auto& vertexStreams = graphicsPipelineDesc.vertexStreams;
+	const auto& vertexStreams = pipelineDesc.vertexStreams;
 	const uint32_t numStreams = (uint32_t)vertexStreams.size();
 	if (numStreams > 0)
 	{
@@ -627,10 +635,10 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 			vertexInputBindings[i].stride = vertexStreams[i].stride;
 		}
 	}
-	
+
 	// Vertex elements
 	vector<VkVertexInputAttributeDescription> vertexAttributes;
-	const auto& vertexElements = graphicsPipelineDesc.vertexElements;
+	const auto& vertexElements = pipelineDesc.vertexElements;
 	const uint32_t numElements = (uint32_t)vertexElements.size();
 	if (numElements > 0)
 	{
@@ -643,7 +651,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 			vertexAttributes[i].offset = vertexElements[i].alignedByteOffset;
 		}
 	}
-	
+
 	// Vertex input layout
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 		.sType								= VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -660,20 +668,20 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 		.pNext						= nullptr,
 		.flags						= 0,
-		.topology					= PrimitiveTopologyToVulkan(graphicsPipelineDesc.topology),
-		.primitiveRestartEnable		= graphicsPipelineDesc.indexBufferStripCut == IndexBufferStripCutValue::Disabled ? VK_FALSE : VK_TRUE
+		.topology					= PrimitiveTopologyToVulkan(pipelineDesc.topology),
+		.primitiveRestartEnable		= pipelineDesc.indexBufferStripCut == IndexBufferStripCutValue::Disabled ? VK_FALSE : VK_TRUE
 	};
-	
+
 	// Tessellation state
-	VkPipelineTessellationStateCreateInfo tessellationInfo{ 
+	VkPipelineTessellationStateCreateInfo tessellationInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
 		.pNext					= nullptr,
 		.flags					= 0,
-		.patchControlPoints		= GetControlPointCount(graphicsPipelineDesc.topology)
+		.patchControlPoints		= GetControlPointCount(pipelineDesc.topology)
 	};
-	
+
 	// Viewport state
-	VkPipelineViewportStateCreateInfo viewportStateInfo{ 
+	VkPipelineViewportStateCreateInfo viewportStateInfo{
 		.sType			= VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 		.pNext			= nullptr,
 		.flags			= 0,
@@ -682,11 +690,11 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		.scissorCount	= 1,
 		.pScissors		= nullptr  // dynamic state
 	};
-	
+
 	// Rasterizer state
-	const auto rasterizerState = graphicsPipelineDesc.rasterizerState;
+	const auto rasterizerState = pipelineDesc.rasterizerState;
 	VkPipelineRasterizationStateCreateInfo rasterizerInfo
-	{ 
+	{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		.pNext						= nullptr,
 		.flags						= 0,
@@ -701,22 +709,22 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		.depthBiasSlopeFactor		= rasterizerState.slopeScaledDepthBias,
 		.lineWidth					= 1.0f
 	};
-	
+
 	// Multisample state
-	VkPipelineMultisampleStateCreateInfo multisampleInfo{ 
+	VkPipelineMultisampleStateCreateInfo multisampleInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
 		.pNext					= nullptr,
-		.rasterizationSamples	= GetSampleCountFlags(graphicsPipelineDesc.msaaCount),
+		.rasterizationSamples	= GetSampleCountFlags(pipelineDesc.msaaCount),
 		.sampleShadingEnable	= VK_FALSE,
 		.minSampleShading		= 0.0f,
 		.pSampleMask			= nullptr,
-		.alphaToCoverageEnable	= graphicsPipelineDesc.blendState.alphaToCoverageEnable ? VK_TRUE : VK_FALSE,
+		.alphaToCoverageEnable	= pipelineDesc.blendState.alphaToCoverageEnable ? VK_TRUE : VK_FALSE,
 		.alphaToOneEnable		= VK_FALSE
 	};
-	
+
 	// Depth stencil state
-	const auto& depthStencilState = graphicsPipelineDesc.depthStencilState;
-	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{ 
+	const auto& depthStencilState = pipelineDesc.depthStencilState;
+	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 		.pNext					= nullptr,
 		.flags					= 0,
@@ -743,16 +751,16 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 			.writeMask		= depthStencilState.stencilWriteMask,
 			.reference		= 0
 		},
-		.minDepthBounds			= 0.0f,
-		.maxDepthBounds			= 1.0f
+		.minDepthBounds = 0.0f,
+		.maxDepthBounds = 1.0f
 	};
-	
+
 	// Blend state
-	const auto& blendState = graphicsPipelineDesc.blendState;
+	const auto& blendState = pipelineDesc.blendState;
 	VkPipelineColorBlendStateCreateInfo blendStateInfo{
-		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-		.pNext = nullptr,
-		.flags = 0
+		.sType	= VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+		.pNext	= nullptr,
+		.flags	= 0
 	};
 
 	array<VkPipelineColorBlendAttachmentState, 8> blendAttachments;
@@ -776,7 +784,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 			blendStateInfo.logicOp = LogicOpToVulkan(rt.logicOp);
 		}
 	}
-	const uint32_t numRtvs = (uint32_t)graphicsPipelineDesc.rtvFormats.size();
+	const uint32_t numRtvs = (uint32_t)pipelineDesc.rtvFormats.size();
 	blendStateInfo.attachmentCount = numRtvs;
 	blendStateInfo.pAttachments = blendAttachments.data();
 
@@ -799,11 +807,11 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	{
 		for (uint32_t i = 0; i < numRtvs; ++i)
 		{
-			rtvFormats[i] = FormatToVulkan(graphicsPipelineDesc.rtvFormats[i]);
+			rtvFormats[i] = FormatToVulkan(pipelineDesc.rtvFormats[i]);
 		}
 	}
 
-	const Format dsvFormat = graphicsPipelineDesc.dsvFormat;
+	const Format dsvFormat = pipelineDesc.dsvFormat;
 	VkPipelineRenderingCreateInfo dynamicRenderingInfo{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 		.pNext						= nullptr,
@@ -829,7 +837,7 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 		.pDepthStencilState		= &depthStencilInfo,
 		.pColorBlendState		= &blendStateInfo,
 		.pDynamicState			= &dynamicStateInfo,
-		.layout					= graphicsPipelineDesc.rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout),
+		.layout					= pipelineDesc.rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout),
 		.renderPass				= VK_NULL_HANDLE,
 		.subpass				= 0,
 		.basePipelineHandle		= VK_NULL_HANDLE,
@@ -840,14 +848,14 @@ GraphicsPipelineHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipe
 	if (VK_SUCCEEDED(vkCreateGraphicsPipelines(*m_vkDevice, *m_pipelineCache, 1, &pipelineCreateInfo, nullptr, &vkPipeline)))
 	{
 		auto pipeline = Create<CVkPipeline>(m_vkDevice.get(), vkPipeline);
-		return Make<GraphicsPipeline>(graphicsPipelineDesc, pipeline.get());
+		return make_shared<GraphicsPSOData>(pipeline.get());
 	}
 	else
 	{
 		LogError(LogVulkan) << "Failed to create VkPipeline (graphics).  Error code: " << res << endl;
 	}
 
-	return nullptr;
+	return make_shared<GraphicsPSOData>((CVkPipeline*)nullptr);
 }
 
 

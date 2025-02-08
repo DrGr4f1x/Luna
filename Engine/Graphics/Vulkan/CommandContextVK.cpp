@@ -12,6 +12,8 @@
 
 #include "CommandContextVK.h"
 
+#include "Graphics\PlatformData.h"
+
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
 #include "DescriptorSetVK.h"
@@ -571,6 +573,20 @@ void CommandContextVK::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
 	VkPipeline vkPipeline = graphicsPipeline->GetNativeObject();
+
+	if (vkPipeline != m_graphicsPipeline)
+	{
+		m_graphicsPipeline = vkPipeline;
+		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
+	}
+}
+
+
+void CommandContextVK::SetGraphicsPipeline(GraphicsPSO& graphicsPipeline)
+{
+	m_computePipelineLayout = VK_NULL_HANDLE;
+
+	VkPipeline vkPipeline = *graphicsPipeline.GetPlatformData()->GetVulkan();
 
 	if (vkPipeline != m_graphicsPipeline)
 	{

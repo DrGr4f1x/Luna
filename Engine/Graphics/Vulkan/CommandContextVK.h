@@ -104,6 +104,7 @@ public:
 
 	void SetRootSignature(IRootSignature* rootSignature) override;
 	void SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline) override;
+	void SetGraphicsPipeline(GraphicsPSO& graphicsPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;

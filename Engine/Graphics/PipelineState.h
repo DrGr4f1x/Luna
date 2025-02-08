@@ -20,6 +20,7 @@ namespace Luna
 
 // Forward declarations
 class IRootSignature;
+class GraphicsPSOData;
 
 
 struct RenderTargetBlendDesc
@@ -184,6 +185,22 @@ struct GraphicsPipelineDesc
 	GraphicsPipelineDesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPipelineDesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
 	constexpr GraphicsPipelineDesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
+};
+
+
+class GraphicsPSO
+{
+public:
+	PrimitiveTopology GetPrimitiveTopology() const { return m_desc.topology; }
+
+	void Initialize(GraphicsPipelineDesc& pipelineDesc);
+
+	GraphicsPSOData* GetPlatformData() { return m_platformData.get(); }
+
+private:
+	GraphicsPipelineDesc m_desc;
+
+	std::shared_ptr<GraphicsPSOData> m_platformData;
 };
 
 

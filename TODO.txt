@@ -21,7 +21,7 @@ TODO:
 -- EngineProfiling from MiniEngine
 -- How to do ClearUAV(IColorBuffer*) in Vulkan
 -- Separate Front/Back stencil ref, both platforms
--- Get rid of UserDescriptorHeap in DX12 - can only bind one Heap of each type (CbvSrvUav and Sampler) per frame (ideally for perf)
+-- Get rid of UserDescriptorHeap in DX12 - should ideally only bind one Heap of each type (CbvSrvUav and Sampler) per frame, for perf
 -- Refactor commandline parameters at Application level
 -- Look into DX12 Present one more time
 -- Look into Vulkan Present one more time - Timeline semaphore?

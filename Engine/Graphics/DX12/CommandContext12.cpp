@@ -12,6 +12,8 @@
 
 #include "CommandContext12.h"
 
+#include "Graphics\PlatformData.h"
+
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
 #include "DescriptorSet12.h"
@@ -445,6 +447,26 @@ void CommandContext12::SetGraphicsPipeline(IGraphicsPipeline* graphicsPipeline)
 	}
 
 	auto topology = PrimitiveTopologyToDX12(graphicsPipeline->GetPrimitiveTopology());
+	if (m_primitiveTopology != topology)
+	{
+		m_commandList->IASetPrimitiveTopology(topology);
+		m_primitiveTopology = topology;
+	}
+}
+
+
+void CommandContext12::SetGraphicsPipeline(GraphicsPSO& graphicsPipeline)
+{
+	m_computePipelineState = nullptr;
+	ID3D12PipelineState* graphicsPSO = graphicsPipeline.GetPlatformData()->GetDX12();
+
+	if (m_graphicsPipelineState != graphicsPSO)
+	{
+		m_commandList->SetPipelineState(graphicsPSO);
+		m_graphicsPipelineState = graphicsPSO;
+	}
+
+	auto topology = PrimitiveTopologyToDX12(graphicsPipeline.GetPrimitiveTopology());
 	if (m_primitiveTopology != topology)
 	{
 		m_commandList->IASetPrimitiveTopology(topology);

@@ -138,7 +138,7 @@ void TriangleApp::Render()
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
 	context.SetRootSignature(m_rootSignature.get());
-	context.SetGraphicsPipeline(m_graphicsPipeline.get());
+	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	context.SetResources(m_resources.get());
 
@@ -234,7 +234,8 @@ void TriangleApp::InitPipelineState()
 		.rootSignature		= m_rootSignature.get()
 	};
 
-	m_graphicsPipeline = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
+	//m_graphicsPipeline = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
+	m_graphicsPipeline.Initialize(desc);
 }
 
 
