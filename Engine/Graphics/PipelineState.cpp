@@ -18,6 +18,13 @@
 namespace Luna
 {
 
+PipelineStateHandleType::~PipelineStateHandleType()
+{
+	assert(m_pool);
+	m_pool->DestroyHandle(this);
+}
+
+
 void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
 	m_desc = desc;

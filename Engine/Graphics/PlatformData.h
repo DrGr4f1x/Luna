@@ -16,8 +16,6 @@
 namespace Luna
 {
 
-//using GraphicsPSOData = std::variant<wil::com_ptr<ID3D12PipelineState>, wil::com_ptr<VK::CVkPipeline>>;
-
 class GraphicsPSOData
 {
 public:
@@ -34,6 +32,15 @@ public:
 
 private:
 	std::variant<wil::com_ptr<ID3D12PipelineState>, wil::com_ptr<VK::CVkPipeline>> m_data;
+};
+
+
+class CpuDescriptorData
+{
+public:
+
+private:
+
 };
 
 } // namespace Luna

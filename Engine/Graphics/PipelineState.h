@@ -188,6 +188,39 @@ struct GraphicsPipelineDesc
 };
 
 
+class IPipelineStatePool;
+
+
+class __declspec(uuid("F2A84C37-1876-440B-AC18-4D712C906D83")) PipelineStateHandleType : public RefCounted<PipelineStateHandleType>
+{
+public:
+	PipelineStateHandleType(uint32_t index, IPipelineStatePool* pool)
+		: m_index{ index }
+		, m_pool{ pool }
+	{
+	}
+
+	~PipelineStateHandleType();
+
+	uint32_t GetIndex() const { return m_index; }
+
+private:
+	uint32_t m_index{ 0 };
+	IPipelineStatePool* m_pool{ nullptr };
+};
+
+using PipelineStateHandle = wil::com_ptr<PipelineStateHandleType>;
+
+
+class IPipelineStatePool
+{
+public:
+	// Create/Destroy pipeline state
+	virtual PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
+	virtual void DestroyHandle(PipelineStateHandleType* handle) = 0;
+};
+
+
 class GraphicsPipelineState
 {
 public:

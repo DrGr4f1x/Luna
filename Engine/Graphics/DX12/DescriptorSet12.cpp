@@ -160,7 +160,6 @@ void DescriptorSet::Update()
 
 	auto device = GetD3D12GraphicsDevice()->GetD3D12Device();
 
-	//DescriptorHandle descHandle = AllocateUserDescriptor(heapType, numDescriptors);
 	uint32_t descriptorSize = device->GetDescriptorHandleIncrementSize(heapType);
 
 	unsigned long setBit{ 0 };

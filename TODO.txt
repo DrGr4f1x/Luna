@@ -33,5 +33,8 @@ TODO:
 -- Move Reset logic into CommandManager::AllocateContext (?)
 -- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
+-- Take another look at Shaders.  Not super happy with how things are.
 
 DONE:
+-- Try out std::variant for platform data, e.g. ID3D12Resource & VkImage
+    -- GraphicsPipeline

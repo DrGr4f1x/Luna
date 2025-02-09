@@ -36,6 +36,7 @@
     <ClCompile Include="Graphics\CommandContext.cpp" />
     <ClCompile Include="Graphics\CommonStates.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp" />
+    <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp" />
     <ClCompile Include="Graphics\DX12\ResourceSet12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
@@ -60,6 +61,7 @@
     <ClCompile Include="Graphics\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\PipelineStatePoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ResourceSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
@@ -124,6 +126,7 @@
     <ClInclude Include="Graphics\DescriptorSet.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSet12.h" />
+    <ClInclude Include="Graphics\DX12\PipelineStatePool12.h" />
     <ClInclude Include="Graphics\DX12\ResourceSet12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
@@ -149,6 +152,7 @@
     <ClInclude Include="Graphics\GpuResource.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
     <ClInclude Include="Graphics\GraphicsDevice.h" />
+    <ClInclude Include="Graphics\HandlePool.h" />
     <ClInclude Include="Graphics\InputLayout.h" />
     <ClInclude Include="Graphics\PipelineState.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
@@ -158,6 +162,7 @@
     <ClInclude Include="Graphics\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
+    <ClInclude Include="Graphics\Vulkan\PipelineStatePoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\ResourceSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
