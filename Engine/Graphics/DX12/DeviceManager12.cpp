@@ -277,9 +277,8 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	WaitForGpu();
 
 	// Release resources tied to swap chain and update fence values
-	// TODO: hard-coded backbuffer count is 3 here.  Get this from somewhere else.
-	const uint32_t backBufferCount{ 3 };
 	m_swapChainBuffers.clear();
+	const uint32_t backBufferCount = m_desc.numSwapChainBuffers;
 
 	// TODO: The window dimensions might have changed externally.  Need to pass those in from somewhere else.
 	const uint32_t newBackBufferWidth = m_desc.backBufferWidth;

@@ -5,12 +5,14 @@ TODO:
 -- Proper DX12 feature support
 -- Dynamic descriptors / push descriptors (e.g. SetSRV, SetUAV etc on command context)
 -- Command context linear allocator for dynamic buffers
--- Try out std::variant for platform data, e.g. ID3D12Resource & VkImage
+-- Handles and pools for:
     -- ColorBuffer
     -- DepthBuffer
     -- GpuBuffer
     -- RootSignature
-    -- GraphicsPipeline
+    -- ComputePipelineState
+    -- MeshletPipelineState
+    -- RayTracing (??)
 -- ComputeContext
 -- Mesh shaders
 -- Ray tracing
@@ -25,16 +27,28 @@ TODO:
 -- Refactor commandline parameters at Application level
 -- Look into DX12 Present one more time
 -- Look into Vulkan Present one more time - Timeline semaphore?
--- Backbuffer count (3) is hardcoded - handle this a different way
 -- Handle WindowSize better in the DeviceManagers
+-- DX12 device removed (look for TODO in DeviceManager12.cpp)
 -- OnDeviceLost/OnDeviceRestored in DeviceManagers - do I actually need this?
--- All platform resources (e.g. ColorBuffer, GpuBuffer) should store their creation Descs
+-- All platform resources (e.g. ColorBuffer, GpuBuffer) should store their creation Descs.  Actually the corresponding Pool should hold the Descs.
 -- Try out std::span for IGpuBuffer::Update
 -- Move Reset logic into CommandManager::AllocateContext (?)
 -- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
 -- Take another look at Shaders.  Not super happy with how things are.
+-- Trim GraphicsDeviceDesc - most of that stuff is on the DeviceManager, unneeded by the GraphicsDevice itself
 
 DONE:
+-- Handles and pools for:
+    -- GraphicsPipelineState
+-- Backbuffer count (3) is hardcoded - handle this a different way
+
+
+WON'T DO:
+[Note: Using a Handle/Pool design instead.]
 -- Try out std::variant for platform data, e.g. ID3D12Resource & VkImage
+    -- ColorBuffer
+    -- DepthBuffer
+    -- GpuBuffer
+    -- RootSignature
     -- GraphicsPipeline
