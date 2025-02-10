@@ -204,6 +204,7 @@ DeviceRLDOHelper::~DeviceRLDOHelper()
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept
 	: m_desc{ desc }
 	, m_deviceRLDOHelper{ desc.dx12Device, desc.enableValidation }
+	, m_pipelinePool{ m_desc.dx12Device }
 {
 	LogInfo(LogDirectX) << "Creating DirectX 12 device." << endl;
 
@@ -814,7 +815,35 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 }
 
 
-shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+PipelineStateHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+{
+	return m_pipelinePool.CreateGraphicsPipeline(pipelineDesc);
+}
+
+
+void GraphicsDevice::CreateResources()
+{
+	if (m_desc.enableValidation)
+	{
+		InstallDebugCallback();
+	}
+
+	// Create descriptor allocators
+	m_descriptorAllocators[0] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_descriptorAllocators[1] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	m_descriptorAllocators[2] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_descriptorAllocators[3] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Create("User Descriptor Heap, CBV_SRV_UAV");
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Create("User Descriptor Heap, SAMPLER");
+
+	m_caps = make_unique<DeviceCaps>();
+	ReadCaps();
+	m_caps->LogCaps();
+}
+
+
+wil::com_ptr<ID3D12PipelineState> GraphicsDevice::AllocateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
@@ -1003,29 +1032,7 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline(const Graphic
 		pPipelineState = *ppPipelineState;
 	}
 
-	return make_shared<GraphicsPSOData>(pPipelineState);
-}
-
-
-void GraphicsDevice::CreateResources()
-{
-	if (m_desc.enableValidation)
-	{
-		InstallDebugCallback();
-	}
-
-	// Create descriptor allocators
-	m_descriptorAllocators[0] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_descriptorAllocators[1] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-	m_descriptorAllocators[2] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	m_descriptorAllocators[3] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
-	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Create("User Descriptor Heap, CBV_SRV_UAV");
-	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Create("User Descriptor Heap, SAMPLER");
-
-	m_caps = make_unique<DeviceCaps>();
-	ReadCaps();
-	m_caps->LogCaps();
+	return pPipelineState;
 }
 
 

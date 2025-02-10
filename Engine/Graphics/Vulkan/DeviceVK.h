@@ -12,6 +12,7 @@
 
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\PipelineStatePoolVK.h"
 
 using namespace Microsoft::WRL;
 
@@ -144,6 +145,7 @@ class __declspec(uuid("402B61AE-0C51-46D3-B0EC-A2911B380181")) GraphicsDevice
 	friend class CommandContextVK;
 	friend class DeviceManager;
 	friend class Queue;
+	friend class PipelineStatePool;
 
 public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc);
@@ -155,7 +157,7 @@ public:
 	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
-	std::shared_ptr<GraphicsPSOData> CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
+	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
 
 	void CreateResources();
 
@@ -163,6 +165,8 @@ public:
 	VmaAllocator GetAllocator() noexcept { return *m_vmaAllocator; }
 
 private:
+	wil::com_ptr<CVkPipeline> AllocateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
+
 	wil::com_ptr<CVkFence> CreateFence(bool bSignalled) const;
 	wil::com_ptr<CVkSemaphore> CreateSemaphore(VkSemaphoreType semaphoreType, uint64_t initialValue) const;
 	wil::com_ptr<CVkCommandPool> CreateCommandPool(CommandListType commandListType) const;
@@ -192,6 +196,9 @@ private:
 	std::mutex m_shaderModuleMutex;
 	std::map<size_t, wil::com_ptr<CVkShaderModule>> m_shaderModuleHashMap;
 	wil::com_ptr<CVkPipelineCache> m_pipelineCache;
+
+	// Platform data pools
+	PipelineStatePool m_pipelinePool;
 };
 
 } // namespace Luna::VK

@@ -28,7 +28,7 @@ PipelineStateHandleType::~PipelineStateHandleType()
 void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
 	m_desc = desc;
-	m_platformData = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
+	m_handle = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
 }
 
 } // namespace Luna

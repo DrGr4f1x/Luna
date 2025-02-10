@@ -224,16 +224,17 @@ public:
 class GraphicsPipelineState
 {
 public:
+	// TODO: get this from the PipelineStatePool
 	PrimitiveTopology GetPrimitiveTopology() const { return m_desc.topology; }
 
 	void Initialize(GraphicsPipelineDesc& pipelineDesc);
 
-	GraphicsPSOData* GetPlatformData() { return m_platformData.get(); }
+	PipelineStateHandle GetHandle() const { return m_handle; }
 
 private:
 	GraphicsPipelineDesc m_desc;
 
-	std::shared_ptr<GraphicsPSOData> m_platformData;
+	PipelineStateHandle m_handle;
 };
 
 } // namespace

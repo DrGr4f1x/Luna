@@ -23,10 +23,14 @@ class PipelineStatePool : public IPipelineStatePool
 
 public:
 	explicit PipelineStatePool(ID3D12Device* device);
+	~PipelineStatePool();
 
 	// Create/Destroy pipeline state
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	void DestroyHandle(PipelineStateHandleType* handle) override;
+
+	// Getters
+	ID3D12PipelineState* GetPipelineState(PipelineStateHandleType* handle) const;
 
 private:
 	wil::com_ptr<ID3D12Device> m_device;
@@ -43,5 +47,9 @@ private:
 	// Cold data: GraphicsPipelineDesc
 	std::array<GraphicsPipelineDesc, MaxItems> m_descs;
 };
+
+
+PipelineStatePool* const GetD3D12PipelineStatePool();
+
 
 } // namespace Luna::DX12

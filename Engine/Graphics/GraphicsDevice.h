@@ -14,7 +14,7 @@ namespace Luna
 {
 
 // Forward declarations
-class GraphicsPSOData;
+class PipelineStateHandleType;
 class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
@@ -36,7 +36,7 @@ public:
 	virtual wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 	virtual wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 
-	virtual std::shared_ptr<GraphicsPSOData> CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) = 0;
+	virtual wil::com_ptr<PipelineStateHandleType> CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) = 0;
 };
 
 } // namespace Luna

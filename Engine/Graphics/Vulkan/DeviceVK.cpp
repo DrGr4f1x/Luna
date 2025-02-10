@@ -112,6 +112,7 @@ void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo, VkSh
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
 	, m_vkDevice{ desc.device }
+	, m_pipelinePool{ m_vkDevice.get()}
 {
 	g_graphicsDevice = this;
 	g_vulkanGraphicsDevice = this;
@@ -576,7 +577,13 @@ RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc&
 }
 
 
-shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+PipelineStateHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+{
+	return m_pipelinePool.CreateGraphicsPipeline(pipelineDesc);
+}
+
+
+wil::com_ptr<CVkPipeline> GraphicsDevice::AllocateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -807,14 +814,14 @@ shared_ptr<GraphicsPSOData> GraphicsDevice::CreateGraphicsPipeline(const Graphic
 	if (VK_SUCCEEDED(vkCreateGraphicsPipelines(*m_vkDevice, *m_pipelineCache, 1, &pipelineCreateInfo, nullptr, &vkPipeline)))
 	{
 		auto pipeline = Create<CVkPipeline>(m_vkDevice.get(), vkPipeline);
-		return make_shared<GraphicsPSOData>(pipeline.get());
+		return pipeline;
 	}
 	else
 	{
 		LogError(LogVulkan) << "Failed to create VkPipeline (graphics).  Error code: " << res << endl;
 	}
 
-	return make_shared<GraphicsPSOData>((CVkPipeline*)nullptr);
+	return nullptr;
 }
 
 

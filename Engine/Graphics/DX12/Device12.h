@@ -13,6 +13,7 @@
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Shader.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\PipelineStatePool12.h"
 
 using namespace Microsoft::WRL;
 
@@ -107,6 +108,7 @@ class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice
 	friend class DeviceManager;
 	friend class GpuBufferData;
 	friend class UserDescriptorHeap;
+	friend class PipelineStatePool;
 
 public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept;
@@ -118,7 +120,7 @@ public:
 	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
-	std::shared_ptr<GraphicsPSOData> CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
+	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 
 	void CreateResources();
 
@@ -126,6 +128,8 @@ public:
 	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
 
 private:
+	wil::com_ptr<ID3D12PipelineState> AllocateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
+
 	void InstallDebugCallback();
 	void ReadCaps();
 
@@ -163,6 +167,9 @@ private:
 	// Pipeline states
 	std::mutex m_pipelineStateMutex;
 	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
+
+	// Platform data pools
+	PipelineStatePool m_pipelinePool;
 };
 
 } // namespace Luna::DX12

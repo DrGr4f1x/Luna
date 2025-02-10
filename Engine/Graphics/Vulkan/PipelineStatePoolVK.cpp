@@ -20,9 +20,14 @@
 namespace Luna::VK
 {
 
+PipelineStatePool* g_pipelineStatePool{ nullptr };
+
+
 PipelineStatePool::PipelineStatePool(CVkDevice* device)
 	: m_device{ device }
 {
+	assert(g_pipelineStatePool == nullptr);
+
 	// Populate freelist and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -30,6 +35,14 @@ PipelineStatePool::PipelineStatePool(CVkDevice* device)
 		m_pipelines[i].reset();
 		m_descs[i] = GraphicsPipelineDesc{};
 	}
+
+	g_pipelineStatePool = this;
+}
+
+
+PipelineStatePool::~PipelineStatePool()
+{
+	g_pipelineStatePool = nullptr;
 }
 
 
@@ -44,9 +57,8 @@ PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipe
 
 	m_descs[index] = pipelineDesc;
 
-	// TODO: do the pipeline creation here, not in the device
-	auto pipeline = GetVulkanGraphicsDevice()->CreateGraphicsPipeline(pipelineDesc);
-	m_pipelines[index] = pipeline->GetVulkan();
+	// TODO: do pipeline creation here, not in the device
+	m_pipelines[index] = GetVulkanGraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
 
 	return Create<PipelineStateHandleType>(index, this);
 }
@@ -56,13 +68,26 @@ void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
 {
 	std::lock_guard guard(m_allocationMutex);
 
-	// TODO: queue this up to execute in one big batch, e.g. at the end of the frame
+	// TODO: queue this up to execute in one big deallocation batch, e.g. at the end of the frame
 
 	uint32_t index = handle->GetIndex();
 	m_descs[index] = GraphicsPipelineDesc{};
 	m_pipelines[index].reset();
 
 	m_freeList.push(index);
+}
+
+
+VkPipeline PipelineStatePool::GetPipeline(PipelineStateHandleType* handle) const
+{
+	uint32_t index = handle->GetIndex();
+	return m_pipelines[index]->Get();
+}
+
+
+PipelineStatePool* const GetVulkanPipelineStatePool()
+{
+	return g_pipelineStatePool;
 }
 
 } // namespace Luna::VK

@@ -13,7 +13,6 @@
 #include "CommandContextVK.h"
 
 #include "Graphics\PipelineState.h"
-#include "Graphics\PlatformData.h"
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
@@ -21,6 +20,7 @@
 #include "DeviceVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
+#include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
 #include "ResourceSetVK.h"
 #include "RootSignatureVK.h"
@@ -566,7 +566,7 @@ void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	VkPipeline vkPipeline = *graphicsPipeline.GetPlatformData()->GetVulkan();
+	VkPipeline vkPipeline = GetVulkanPipelineStatePool()->GetPipeline(graphicsPipeline.GetHandle().get());
 
 	if (vkPipeline != m_graphicsPipeline)
 	{

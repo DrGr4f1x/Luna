@@ -19,9 +19,14 @@
 namespace Luna::DX12
 {
 
+PipelineStatePool* g_pipelineStatePool{ nullptr };
+
+
 PipelineStatePool::PipelineStatePool(ID3D12Device* device)
 	: m_device{ device }
 {
+	assert(g_pipelineStatePool == nullptr);
+
 	// Populate freelist and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -29,6 +34,14 @@ PipelineStatePool::PipelineStatePool(ID3D12Device* device)
 		m_pipelines[i].reset();
 		m_descs[i] = GraphicsPipelineDesc{};
 	}
+
+	g_pipelineStatePool = this;
+}
+
+
+PipelineStatePool::~PipelineStatePool()
+{
+	g_pipelineStatePool = nullptr;
 }
 
 
@@ -44,8 +57,7 @@ PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipe
 	m_descs[index] = pipelineDesc;
 
 	// TODO: do the pipeline creation here, not in the device
-	auto pipeline = GetD3D12GraphicsDevice()->CreateGraphicsPipeline(pipelineDesc);
-	m_pipelines[index] = pipeline->GetDX12();
+	m_pipelines[index] = GetD3D12GraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
 
 	return Create<PipelineStateHandleType>(index, this);
 }
@@ -62,6 +74,19 @@ void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
 	m_pipelines[index].reset();
 
 	m_freeList.push(index);
+}
+
+
+ID3D12PipelineState* PipelineStatePool::GetPipelineState(PipelineStateHandleType* handle) const
+{
+	uint32_t index = handle->GetIndex();
+	return m_pipelines[index].get();
+}
+
+
+PipelineStatePool* const GetD3D12PipelineStatePool()
+{
+	return g_pipelineStatePool;
 }
 
 } // namespace Luna::DX12

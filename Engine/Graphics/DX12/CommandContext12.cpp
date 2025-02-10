@@ -21,6 +21,7 @@
 #include "Device12.h"
 #include "DeviceManager12.h"
 #include "GpuBuffer12.h"
+#include "PipelineStatePool12.h"
 #include "Queue12.h"
 #include "ResourceSet12.h"
 #include "RootSignature12.h"
@@ -438,7 +439,9 @@ void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
 void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline)
 {
 	m_computePipelineState = nullptr;
-	ID3D12PipelineState* graphicsPSO = graphicsPipeline.GetPlatformData()->GetDX12();
+
+	// TODO: Pass handle in as function parameter
+	ID3D12PipelineState* graphicsPSO = GetD3D12PipelineStatePool()->GetPipelineState(graphicsPipeline.GetHandle().get());
 
 	if (m_graphicsPipelineState != graphicsPSO)
 	{
@@ -446,6 +449,7 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 		m_graphicsPipelineState = graphicsPSO;
 	}
 
+	// TODO: Add getter for primitive topology to PipelineStatePool
 	auto topology = PrimitiveTopologyToDX12(graphicsPipeline.GetPrimitiveTopology());
 	if (m_primitiveTopology != topology)
 	{
