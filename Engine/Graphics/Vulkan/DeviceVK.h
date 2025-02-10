@@ -159,6 +159,8 @@ public:
 
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
 
+	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
+
 	void CreateResources();
 
 	VkDevice GetDevice() noexcept { return *m_vkDevice; }

@@ -13,8 +13,11 @@
 namespace Luna
 {
 
-// Forward declarations
+// Forward declarations (new)
 class PipelineStateHandleType;
+class IPipelineStatePool;
+
+// Forward declarations
 class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
@@ -37,6 +40,8 @@ public:
 	virtual wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 
 	virtual wil::com_ptr<PipelineStateHandleType> CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) = 0;
+
+	virtual IPipelineStatePool* GetPipelineStatePool() = 0;
 };
 
 } // namespace Luna

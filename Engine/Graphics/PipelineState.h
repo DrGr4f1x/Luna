@@ -197,8 +197,7 @@ public:
 	PipelineStateHandleType(uint32_t index, IPipelineStatePool* pool)
 		: m_index{ index }
 		, m_pool{ pool }
-	{
-	}
+	{}
 
 	~PipelineStateHandleType();
 
@@ -218,6 +217,9 @@ public:
 	// Create/Destroy pipeline state
 	virtual PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
 	virtual void DestroyHandle(PipelineStateHandleType* handle) = 0;
+
+	// Platform agnostic getters
+	virtual const GraphicsPipelineDesc& GetDesc(PipelineStateHandleType* handle) const = 0;
 };
 
 
@@ -225,15 +227,16 @@ class GraphicsPipelineState
 {
 public:
 	// TODO: get this from the PipelineStatePool
-	PrimitiveTopology GetPrimitiveTopology() const { return m_desc.topology; }
+	PrimitiveTopology GetPrimitiveTopology() const;
 
 	void Initialize(GraphicsPipelineDesc& pipelineDesc);
 
 	PipelineStateHandle GetHandle() const { return m_handle; }
 
 private:
-	GraphicsPipelineDesc m_desc;
+	const GraphicsPipelineDesc& GetDesc() const;
 
+private:
 	PipelineStateHandle m_handle;
 };
 

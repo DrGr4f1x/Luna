@@ -122,6 +122,8 @@ public:
 
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 
+	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
+
 	void CreateResources();
 
 	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }

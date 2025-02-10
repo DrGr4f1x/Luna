@@ -12,8 +12,9 @@
 
 #include "GraphicsCommon.h"
 
-#include "Graphics\DX12\DeviceManager12.h"
-#include "Graphics\Vulkan\DeviceManagerVK.h"
+#include "PipelineState.h"
+#include "DX12\DeviceManager12.h"
+#include "Vulkan\DeviceManagerVK.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -123,6 +124,12 @@ IDeviceManager* GetDeviceManager()
 IGraphicsDevice* GetGraphicsDevice()
 {
 	return g_graphicsDevice;
+}
+
+
+IPipelineStatePool* GetPipelineStatePool()
+{
+	return GetGraphicsDevice()->GetPipelineStatePool();
 }
 
 } // namespace Luna

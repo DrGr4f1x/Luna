@@ -29,6 +29,9 @@ public:
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	void DestroyHandle(PipelineStateHandleType* handle) override;
 
+	// Platform agnostic getters
+	const GraphicsPipelineDesc& GetDesc(PipelineStateHandleType* handle) const override;
+
 	// Getters
 	VkPipeline GetPipeline(PipelineStateHandleType* handle) const;
 

@@ -25,10 +25,22 @@ PipelineStateHandleType::~PipelineStateHandleType()
 }
 
 
+PrimitiveTopology GraphicsPipelineState::GetPrimitiveTopology() const
+{
+	return GetDesc().topology;
+}
+
+
 void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
-	m_desc = desc;
 	m_handle = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
 }
+
+
+const GraphicsPipelineDesc& GraphicsPipelineState::GetDesc() const
+{
+	return GetPipelineStatePool()->GetDesc(m_handle.get());
+}
+
 
 } // namespace Luna

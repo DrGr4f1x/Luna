@@ -19,6 +19,10 @@
 namespace Luna
 {
 
+// Forward declarations
+class IPipelineStatePool;
+
+
 // Constants
 constexpr uint32_t MaxRootParameters = 8;
 constexpr uint32_t MaxDescriptorsPerTable = 32;
@@ -93,6 +97,7 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
 IGraphicsDevice* GetGraphicsDevice();
+IPipelineStatePool* GetPipelineStatePool();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

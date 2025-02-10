@@ -63,6 +63,8 @@ PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipe
 
 void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
 {
+	assert(handle != nullptr);
+
 	std::lock_guard guard(m_allocationMutex);
 
 	// TODO: queue this up to execute in one big batch, e.g. at the end of the frame
@@ -75,8 +77,19 @@ void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
 }
 
 
+const GraphicsPipelineDesc& PipelineStatePool::GetDesc(PipelineStateHandleType* handle) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+	return m_descs[index];
+}
+
+
 ID3D12PipelineState* PipelineStatePool::GetPipelineState(PipelineStateHandleType* handle) const
 {
+	assert(handle != nullptr);
+
 	uint32_t index = handle->GetIndex();
 	return m_pipelines[index].get();
 }
