@@ -12,8 +12,6 @@
 
 #include "PipelineStatePoolVK.h"
 
-#include "Graphics\PlatformData.h"
-
 #include "DeviceVK.h"
 
 

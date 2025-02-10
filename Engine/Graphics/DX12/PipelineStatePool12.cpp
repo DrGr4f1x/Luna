@@ -12,8 +12,6 @@
 
 #include "PipelineStatePool12.h"
 
-#include "Graphics\PlatformData.h"
-
 #include "Device12.h"
 
 namespace Luna::DX12

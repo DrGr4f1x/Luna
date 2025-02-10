@@ -13,7 +13,6 @@
 #include "CommandContext12.h"
 
 #include "Graphics\PipelineState.h"
-#include "Graphics\PlatformData.h"
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"

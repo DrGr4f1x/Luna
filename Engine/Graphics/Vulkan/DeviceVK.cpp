@@ -15,7 +15,6 @@
 #include "FileSystem.h"
 
 #include "Graphics\PipelineState.h"
-#include "Graphics\PlatformData.h"
 #include "Graphics\Shader.h"
 
 #include "ColorBufferVK.h"

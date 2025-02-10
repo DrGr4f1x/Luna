@@ -155,7 +155,6 @@
     <ClInclude Include="Graphics\InputLayout.h" />
     <ClInclude Include="Graphics\PipelineState.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
-    <ClInclude Include="Graphics\PlatformData.h" />
     <ClInclude Include="Graphics\ResourceSet.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
     <ClInclude Include="Graphics\Shader.h" />

@@ -16,7 +16,6 @@
 
 #include "Graphics\CommandContext.h"
 #include "Graphics\PipelineState.h"
-#include "Graphics\PlatformData.h"
 #include "Graphics\Shader.h"
 
 #include "ColorBuffer12.h"
