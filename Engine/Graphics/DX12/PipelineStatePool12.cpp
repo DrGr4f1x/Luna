@@ -54,8 +54,7 @@ PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipe
 
 	m_descs[index] = pipelineDesc;
 
-	// TODO: do the pipeline creation here, not in the device
-	m_pipelines[index] = GetD3D12GraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
+	m_pipelines[index] = FindOrCreateGraphicsPipelineState(pipelineDesc);
 
 	return Create<PipelineStateHandleType>(index, this);
 }
@@ -92,6 +91,12 @@ ID3D12PipelineState* PipelineStatePool::GetPipelineState(PipelineStateHandleType
 
 	uint32_t index = handle->GetIndex();
 	return m_pipelines[index].get();
+}
+
+
+wil::com_ptr<ID3D12PipelineState> PipelineStatePool::FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+{
+	return GetD3D12GraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
 }
 
 

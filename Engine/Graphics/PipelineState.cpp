@@ -42,5 +42,4 @@ const GraphicsPipelineDesc& GraphicsPipelineState::GetDesc() const
 	return GetPipelineStatePool()->GetDesc(m_handle.get());
 }
 
-
 } // namespace Luna

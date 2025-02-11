@@ -36,6 +36,9 @@ public:
 	ID3D12PipelineState* GetPipelineState(PipelineStateHandleType* handle) const;
 
 private:
+	wil::com_ptr<ID3D12PipelineState> FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
+
+private:
 	wil::com_ptr<ID3D12Device> m_device;
 
 	// Allocation mutex

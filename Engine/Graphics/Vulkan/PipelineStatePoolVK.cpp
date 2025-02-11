@@ -55,8 +55,7 @@ PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipe
 
 	m_descs[index] = pipelineDesc;
 
-	// TODO: do pipeline creation here, not in the device
-	m_pipelines[index] = GetVulkanGraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
+	m_pipelines[index] = FindOrCreateGraphicsPipelineState(pipelineDesc);
 
 	return Create<PipelineStateHandleType>(index, this);
 }
@@ -93,6 +92,12 @@ VkPipeline PipelineStatePool::GetPipeline(PipelineStateHandleType* handle) const
 
 	uint32_t index = handle->GetIndex();
 	return m_pipelines[index]->Get();
+}
+
+
+wil::com_ptr<CVkPipeline> PipelineStatePool::FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+{
+	return GetVulkanGraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
 }
 
 

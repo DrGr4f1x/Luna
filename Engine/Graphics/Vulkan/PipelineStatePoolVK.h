@@ -36,6 +36,9 @@ public:
 	VkPipeline GetPipeline(PipelineStateHandleType* handle) const;
 
 private:
+	wil::com_ptr<CVkPipeline> FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
+
+private:
 	wil::com_ptr<CVkDevice> m_device;
 
 	// Allocation mutex
