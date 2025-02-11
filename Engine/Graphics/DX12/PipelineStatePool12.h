@@ -52,6 +52,10 @@ private:
 
 	// Cold data: GraphicsPipelineDesc
 	std::array<GraphicsPipelineDesc, MaxItems> m_descs;
+
+	// Pipeline state map
+	std::mutex m_pipelineStateMutex;
+	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
 };
 
 

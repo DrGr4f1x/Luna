@@ -14,6 +14,14 @@
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
+namespace Luna
+{
+
+class Shader;
+
+} // namespace Luna
+
+
 namespace Luna::VK
 {
 
@@ -37,6 +45,8 @@ public:
 
 private:
 	wil::com_ptr<CVkPipeline> FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
+	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
+	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
 
 private:
 	wil::com_ptr<CVkDevice> m_device;
@@ -52,6 +62,11 @@ private:
 
 	// Cold data: GraphicsPipelineDesc
 	std::array<GraphicsPipelineDesc, MaxItems> m_descs;
+
+	// Pipelines and shader modules
+	std::mutex m_shaderModuleMutex;
+	std::map<size_t, wil::com_ptr<CVkShaderModule>> m_shaderModuleHashMap;
+	wil::com_ptr<CVkPipelineCache> m_pipelineCache;
 };
 
 

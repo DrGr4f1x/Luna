@@ -130,8 +130,6 @@ public:
 	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
 
 private:
-	wil::com_ptr<ID3D12PipelineState> AllocateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
-
 	void InstallDebugCallback();
 	void ReadCaps();
 
@@ -165,10 +163,6 @@ private:
 	// Root signatures
 	std::mutex m_rootSignatureMutex;
 	std::map<size_t, wil::com_ptr<ID3D12RootSignature>> m_rootSignatureHashMap;
-
-	// Pipeline states
-	std::mutex m_pipelineStateMutex;
-	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
 
 	// Platform data pools
 	PipelineStatePool m_pipelinePool;
