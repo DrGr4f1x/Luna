@@ -76,11 +76,11 @@ private:
 	} m_vsConstants;
 
 	 // Root signature
-	Luna::RootSignatureHandle m_rootSignature;
+	Luna::RootSignature m_rootSignature;
 
 	// Pipeline state
 	Luna::GraphicsPipelineState m_graphicsPipeline;
 
 	// Resources
-	Luna::ResourceSetHandle m_resources;
+	Luna::ResourceSet m_resources;
 };

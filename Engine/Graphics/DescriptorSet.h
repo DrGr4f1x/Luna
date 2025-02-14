@@ -16,25 +16,76 @@ namespace Luna
 // Forward declarations
 class IColorBuffer;
 class IDepthBuffer;
+class IDescriptorSetPool;
 class IGpuBuffer;
+class RootSignature;
 
 
-class __declspec(uuid("B744F600-1AE2-4B5C-961D-D122127F972F")) IDescriptorSet : public IUnknown
+class __declspec(uuid("BDE2324D-CF9C-4489-9612-4C5DE87F88B6")) DescriptorSetHandleType : public RefCounted<DescriptorSetHandleType>
 {
 public:
-	virtual void SetSRV(int slot, const IColorBuffer* colorBuffer) = 0;
-	virtual void SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) = 0;
-	virtual void SetSRV(int slot, const IGpuBuffer* gpuBuffer) = 0;
+	DescriptorSetHandleType(uint32_t index, IDescriptorSetPool* pool)
+		: m_index{ index }
+		, m_pool{ pool }
+	{}
+	~DescriptorSetHandleType();
 
-	virtual void SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) = 0;
-	virtual void SetUAV(int slot, const IDepthBuffer* depthBuffer) = 0;
-	virtual void SetUAV(int slot, const IGpuBuffer* gpuBuffer) = 0;
+	uint32_t GetIndex() const { return m_index; }
 
-	virtual void SetCBV(int slot, const IGpuBuffer* gpuBuffer) = 0;
-
-	virtual void SetDynamicOffset(uint32_t offset) = 0;
+private:
+	uint32_t m_index{ 0 };
+	IDescriptorSetPool* m_pool{ nullptr };
 };
 
-using DescriptorSetHandle = wil::com_ptr<IDescriptorSet>;
+using DescriptorSetHandle = wil::com_ptr<DescriptorSetHandleType>;
+
+
+class IDescriptorSetPool
+{
+public:
+	// Destroy DescriptorSet.  Creation is implemented per-platform.
+	virtual void DestroyHandle(DescriptorSetHandleType* handle) = 0;
+
+	// Platform agnostic functions
+	// TODO: change 'int slot' to uint32_t
+	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) = 0;
+	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer) = 0;
+
+	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) = 0;
+	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer) = 0;
+	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer) = 0;
+
+	virtual void SetCBV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer) = 0;
+
+	virtual void SetDynamicOffset(DescriptorSetHandleType* handle, uint32_t offset) = 0;
+
+	virtual void UpdateGpuDescriptors(DescriptorSetHandleType* handle) = 0;
+};
+
+
+class DescriptorSet
+{
+public:
+	void Initialize(const RootSignature& rootSignature, uint32_t rootParamIndex);
+
+	// TODO: change 'int slot' to uint32_t
+	void SetSRV(int slot, const IColorBuffer* colorBuffer);
+	void SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true);
+	void SetSRV(int slot, const IGpuBuffer* gpuBuffer);
+
+	void SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0);
+	void SetUAV(int slot, const IDepthBuffer* depthBuffer);
+	void SetUAV(int slot, const IGpuBuffer* gpuBuffer);
+
+	void SetCBV(int slot, const IGpuBuffer* gpuBuffer);
+
+	void SetDynamicOffset(uint32_t offset);
+
+	DescriptorSetHandle GetHandle() const { return m_handle; }
+
+private:
+	DescriptorSetHandle m_handle;
+};
 
 } // namespace Luna

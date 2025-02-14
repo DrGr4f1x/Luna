@@ -12,18 +12,17 @@
 
 #include "CommandContext12.h"
 
-#include "Graphics\PipelineState.h"
+#include "Graphics\ResourceSet.h"
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
-#include "DescriptorSet12.h"
+#include "DescriptorSetPool12.h"
 #include "Device12.h"
 #include "DeviceManager12.h"
 #include "GpuBuffer12.h"
 #include "PipelineStatePool12.h"
 #include "Queue12.h"
-#include "ResourceSet12.h"
-#include "RootSignature12.h"
+#include "RootSignaturePool12.h"
 
 #if ENABLE_D3D12_DEBUG_MARKERS
 #include <pix3.h>
@@ -404,14 +403,15 @@ void CommandContext12::EndRendering()
 }
 
 
-void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
+void CommandContext12::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	ID3D12RootSignature* d3d12RootSignature = GetD3D12RootSignaturePool()->GetRootSignature(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{
 		m_computeRootSignature = nullptr;
-		ID3D12RootSignature* d3d12RootSignature = rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
 		if (m_graphicsRootSignature == d3d12RootSignature)
 		{
 			return;
@@ -423,7 +423,6 @@ void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
 	else
 	{
 		m_graphicsRootSignature = nullptr;
-		ID3D12RootSignature* d3d12RootSignature = rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
 		if (m_computeRootSignature == d3d12RootSignature)
 		{
 			return;
@@ -602,14 +601,13 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContext12::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+void CommandContext12::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
 {
-	DescriptorSetHandle descriptorSetHandle{ descriptorSet };
-	SetDescriptors_Internal(rootIndex, descriptorSetHandle.query<IDescriptorSet12>().get());
+	SetDescriptors_Internal(rootIndex, descriptorSet.GetHandle().get());
 }
 
 
-void CommandContext12::SetResources(IResourceSet* resourceSet)
+void CommandContext12::SetResources(ResourceSet& resourceSet)
 {
 	// TODO: Need to rework this.  Should use a single shader-visible heap (of each type) for all descriptors.
 	// See the MSDN docs on SetDescriptorHeaps.  Should only set descriptor heaps once per frame.
@@ -619,11 +617,10 @@ void CommandContext12::SetResources(IResourceSet* resourceSet)
 	};
 	m_commandList->SetDescriptorHeaps(2, heaps);
 
-	ResourceSetHandle resourceSetHandle{ resourceSet };
-	wil::com_ptr<IResourceSet12> resourceSet12 = resourceSetHandle.query<IResourceSet12>();
-	for (uint32_t i = 0; i < resourceSet->GetNumDescriptorSets(); ++i)
+	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
+	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		SetDescriptors_Internal(i, resourceSet12->GetDescriptorSet(i));
+		SetDescriptors_Internal(i, resourceSet[i].GetHandle().get());
 	}
 }
 
@@ -686,17 +683,19 @@ void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 }
 
 
-void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet12* descriptorSet)
+void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!descriptorSet->HasDescriptors() && !descriptorSet->IsRootBuffer())
+	auto* pool = GetD3D12DescriptorSetPool();
+
+	if (!pool->HasBindableDescriptors(descriptorSetHandle))
 		return;
 
-	if (descriptorSet->IsDirty())
-		descriptorSet->Update();
+	// Copy descriptors
+	pool->UpdateGpuDescriptors(descriptorSetHandle);
 
-	auto gpuDescriptor = descriptorSet->GetGpuDescriptor();
+	auto gpuDescriptor = pool->GetGpuDescriptorHandle(descriptorSetHandle);
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
 		if (m_type == CommandListType::Direct)
@@ -708,9 +707,9 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSe
 			m_commandList->SetComputeRootDescriptorTable(rootIndex, gpuDescriptor);
 		}
 	}
-	else if (descriptorSet->GetGpuAddress() != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	else if (pool->GetGpuAddress(descriptorSetHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = descriptorSet->GetGpuAddress() + descriptorSet->GetDynamicOffset();
+		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = pool->GetGpuAddressWithOffset(descriptorSetHandle);
 		if (m_type == CommandListType::Direct)
 		{
 			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);

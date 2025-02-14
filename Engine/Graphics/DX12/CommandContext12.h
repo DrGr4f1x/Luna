@@ -16,12 +16,16 @@
 using namespace Microsoft::WRL;
 
 
-namespace Luna::DX12
+namespace Luna
 {
 
-// Forward declarations
-class IDescriptorSet12;
+class DescriptorSetHandleType;
 
+} // namespace Luna
+
+
+namespace Luna::DX12
+{
 
 class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
@@ -67,7 +71,7 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
-	void SetRootSignature(IRootSignature* rootSignature) override;
+	void SetRootSignature(RootSignature& rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) override;
 	
 
@@ -83,8 +87,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
-	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
-	void SetResources(IResourceSet* resourceSet) override;
+	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) override;
+	void SetResources(ResourceSet& resourceSet) override;
 
 	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
@@ -96,7 +100,7 @@ public:
 
 protected:
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet12* descriptorSet);
+	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
 
 private:
 	void BindDescriptorHeaps();

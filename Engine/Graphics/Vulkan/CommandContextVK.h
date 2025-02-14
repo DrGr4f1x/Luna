@@ -20,6 +20,7 @@ namespace Luna
 {
 
 // Forward declarations
+class DescriptorSetHandleType;
 class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
@@ -102,7 +103,7 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
-	void SetRootSignature(IRootSignature* rootSignature) override;
+	void SetRootSignature(RootSignature& rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
@@ -117,8 +118,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
-	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
-	void SetResources(IResourceSet* resourceSet) override;
+	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) override;
+	void SetResources(ResourceSet& resourceSet) override;
 
 	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
@@ -131,7 +132,7 @@ public:
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSetVK* descriptorSet);
+	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
 
 	void BindDescriptorHeaps() {}
 	void SetRenderingArea(IPixelBuffer* pixelBuffer);

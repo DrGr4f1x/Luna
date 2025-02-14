@@ -17,7 +17,7 @@
 #include "Graphics\Shader.h"
 
 #include "DeviceVK.h"
-#include "RootSignatureVK.h"
+#include "RootSignaturePoolVK.h"
 
 using namespace std;
 
@@ -87,7 +87,7 @@ PipelineStatePool::PipelineStatePool(CVkDevice* device)
 {
 	assert(g_pipelineStatePool == nullptr);
 
-	// Populate freelist and data arrays
+	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
 		m_freeList.push(i);
@@ -382,7 +382,7 @@ wil::com_ptr<CVkPipeline> PipelineStatePool::FindOrCreateGraphicsPipelineState(c
 		.pDepthStencilState = &depthStencilInfo,
 		.pColorBlendState = &blendStateInfo,
 		.pDynamicState = &dynamicStateInfo,
-		.layout = pipelineDesc.rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout),
+		.layout = GetVulkanRootSignaturePool()->GetPipelineLayout(pipelineDesc.rootSignature.get()),
 		.renderPass = VK_NULL_HANDLE,
 		.subpass = 0,
 		.basePipelineHandle = VK_NULL_HANDLE,

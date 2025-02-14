@@ -21,6 +21,7 @@ namespace Luna
 // Forward declarations
 class IDescriptorSet;
 class IResourceSet;
+class DescriptorSetHandleType;
 
 
 struct DescriptorRange
@@ -356,22 +357,62 @@ struct RootSignatureDesc
 };
 
 
-class __declspec(uuid("19DD6AF1-0342-40DB-8190-0F6485AACD77")) IRootSignature : public IUnknown
+class IRootSignaturePool;
+
+
+class __declspec(uuid("03216DC0-6CCA-4E66-B35D-9B2CD19868BF")) RootSignatureHandleType : public RefCounted<RootSignatureHandleType>
 {
 public:
-	virtual NativeObjectPtr GetNativeObject(NativeObjectType type) const noexcept = 0;
+	RootSignatureHandleType(uint32_t index, IRootSignaturePool* pool)
+		: m_index{ index }
+		, m_pool{ pool }
+	{}
 
-	virtual uint32_t GetNumRootParameters() const noexcept = 0;
-	virtual RootParameter& GetRootParameter(uint32_t index) noexcept = 0;
-	virtual const RootParameter& GetRootParameter(uint32_t index) const noexcept = 0;
+	~RootSignatureHandleType();
 
-	virtual wil::com_ptr<IDescriptorSet> CreateDescriptorSet(uint32_t index) const = 0;
-	virtual wil::com_ptr<IResourceSet> CreateResourceSet() const = 0;
+	uint32_t GetIndex() const { return m_index; }
 
-	RootParameter& operator[](uint32_t index) { return GetRootParameter(index); }
-	const RootParameter& operator[](uint32_t index) const { return GetRootParameter(index); }
+private:
+	uint32_t m_index{ 0 };
+	IRootSignaturePool* m_pool{ nullptr };
 };
 
-using RootSignatureHandle = wil::com_ptr<IRootSignature>;
+using RootSignatureHandle = wil::com_ptr<RootSignatureHandleType>;
+
+
+class IRootSignaturePool
+{
+public:
+	// Create/Destroy RootSignature
+	virtual RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
+	virtual void DestroyHandle(RootSignatureHandleType* handle) = 0;
+
+	// Platform agnostic functions
+	virtual const RootSignatureDesc& GetDesc(RootSignatureHandleType* handle) const = 0;
+	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const = 0;
+};
+
+
+class RootSignature
+{
+public:
+	
+	uint32_t GetNumRootParameters() const;
+	const RootParameter& GetRootParameter(uint32_t index) const;
+
+	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(uint32_t index) const;
+
+	const RootParameter& operator[](uint32_t index) const { return GetRootParameter(index); }
+
+	void Initialize(RootSignatureDesc& rootSignatureDesc);
+
+	RootSignatureHandle GetHandle() const { return m_handle; }
+
+private:
+	const RootSignatureDesc& GetDesc() const;
+
+private:
+	RootSignatureHandle m_handle;
+};
 
 } // namespace Luna

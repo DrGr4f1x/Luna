@@ -105,8 +105,6 @@ void TriangleApp::Startup()
 	InitRootSignature();
 	InitPipelineState();
 	InitResources();
-
-	m_resources->SetCBV(0, 0, m_constantBuffer.get());
 }
 
 
@@ -137,10 +135,10 @@ void TriangleApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.SetRootSignature(m_rootSignature.get());
+	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetResources(m_resources.get());
+	context.SetResources(m_resources);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
@@ -182,11 +180,11 @@ void TriangleApp::CreateWindowSizeDependentResources()
 void TriangleApp::InitDepthBuffer()
 {
 	DepthBufferDesc depthBufferDesc{
-		.name = "Depth Buffer",
-		.resourceType = ResourceType::Texture2D,
-		.width = GetWindowWidth(),
-		.height = GetWindowHeight(),
-		.format = GetDepthFormat()
+		.name			= "Depth Buffer",
+		.resourceType	= ResourceType::Texture2D,
+		.width			= GetWindowWidth(),
+		.height			= GetWindowHeight(),
+		.format			= GetDepthFormat()
 	};
 
 	m_depthBuffer = GetGraphicsDevice()->CreateDepthBuffer(depthBufferDesc);
@@ -201,7 +199,7 @@ void TriangleApp::InitRootSignature()
 		.rootParameters		= { RootParameter::RootCBV(0, ShaderStage::Vertex) }
 	};
 
-	m_rootSignature = GetGraphicsDevice()->CreateRootSignature(rootSignatureDesc);
+	m_rootSignature.Initialize(rootSignatureDesc);
 }
 
 
@@ -231,7 +229,7 @@ void TriangleApp::InitPipelineState()
 		.pixelShader		= { .shaderFile = "TrianglePS" },
 		.vertexStreams		= { vertexStreamDesc },
 		.vertexElements		= vertexElements,
-		.rootSignature		= m_rootSignature.get()
+		.rootSignature		= m_rootSignature.GetHandle()
 	};
 
 	m_graphicsPipeline.Initialize(desc);
@@ -240,8 +238,8 @@ void TriangleApp::InitPipelineState()
 
 void TriangleApp::InitResources()
 {
-	m_resources = m_rootSignature->CreateResourceSet();
-	m_resources->SetCBV(0, 0, m_constantBuffer.get());
+	m_resources.Initialize(m_rootSignature);
+	m_resources.SetCBV(0, 0, m_constantBuffer.get());
 }
 
 

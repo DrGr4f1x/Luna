@@ -13,17 +13,17 @@
 #include "CommandContextVK.h"
 
 #include "Graphics\PipelineState.h"
+#include "Graphics\ResourceSet.h"
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
-#include "DescriptorSetVK.h"
+#include "DescriptorSetPoolVK.h"
 #include "DeviceVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
 #include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
-#include "ResourceSetVK.h"
-#include "RootSignatureVK.h"
+#include "RootSignaturePoolVK.h"
 
 using namespace std;
 
@@ -538,25 +538,28 @@ void CommandContextVK::EndRendering()
 }
 
 
-void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
+void CommandContextVK::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	VkPipelineLayout pipelineLayout = GetVulkanRootSignaturePool()->GetPipelineLayout(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{
 		m_computePipelineLayout = VK_NULL_HANDLE;
-		m_graphicsPipelineLayout = rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout);
+		m_graphicsPipelineLayout = pipelineLayout;
 	}
 	else
 	{
 		m_graphicsPipelineLayout = VK_NULL_HANDLE;
-		m_computePipelineLayout = rootSignature->GetNativeObject(NativeObjectType::VK_PipelineLayout);
+		m_computePipelineLayout = pipelineLayout;
 	}
 
-	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
+	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
 	for (uint32_t i = 0; i < numRootParameters; ++i)
 	{
-		const auto& rootParameter = rootSignature->GetRootParameter(i);
+		const auto& rootParameter = rootSignature.GetRootParameter(i);
+		// TODO: Store this in the RootSignaturePool so we don't have to do this conversion every frame.
 		m_shaderStages[i] = ShaderStageToVulkan(rootParameter.shaderVisibility);
 	}
 }
@@ -697,21 +700,18 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContextVK::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
 {
-	DescriptorSetHandle descriptorSetHandle{ descriptorSet };
-	SetDescriptors_Internal(rootIndex, descriptorSetHandle.query<IDescriptorSetVK>().get());
+	SetDescriptors_Internal(rootIndex, descriptorSet.GetHandle().get());
 }
 
 
-void CommandContextVK::SetResources(IResourceSet* resourceSet)
+void CommandContextVK::SetResources(ResourceSet& resourceSet)
 {
-	ResourceSetHandle resourceSetHandle{ resourceSet };
-	wil::com_ptr<IResourceSetVK> resourceSetVK = resourceSetHandle.query<IResourceSetVK>();
-
-	for (uint32_t i = 0; i < resourceSet->GetNumDescriptorSets(); ++i)
+	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
+	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		SetDescriptors_Internal(i, resourceSetVK->GetDescriptorSet(i));
+		SetDescriptors_Internal(i, resourceSet[i].GetHandle().get());
 	}
 }
 
@@ -768,21 +768,23 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 }
 
 
-void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSetVK* descriptorSet)
+void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!descriptorSet->HasDescriptors())
+	auto* pool = GetVulkanDescriptorSetPool();
+
+	if (!pool->HasDescriptors(descriptorSetHandle))
 		return;
 
-	if (descriptorSet->IsDirty())
-		descriptorSet->Update();
+	pool->UpdateGpuDescriptors(descriptorSetHandle);
 
-	VkDescriptorSet vkDescriptorSet = descriptorSet->GetDescriptorSet();
+	VkDescriptorSet vkDescriptorSet = pool->GetDescriptorSet(descriptorSetHandle);
 	if (vkDescriptorSet == VK_NULL_HANDLE)
 		return;
 
-	uint32_t dynamicOffset = descriptorSet->GetDynamicOffset();
+	uint32_t dynamicOffset = pool->GetDynamicOffset(descriptorSetHandle);
+	bool isDynamicBuffer = pool->IsDynamicBuffer(descriptorSetHandle);
 
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,
@@ -791,8 +793,8 @@ void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSe
 		rootIndex,
 		1,
 		&vkDescriptorSet,
-		descriptorSet->IsDynamicBuffer() ? 1 : 0,
-		descriptorSet->IsDynamicBuffer() ? &dynamicOffset : nullptr);
+		isDynamicBuffer ? 1 : 0,
+		isDynamicBuffer ? &dynamicOffset : nullptr);
 }
 
 

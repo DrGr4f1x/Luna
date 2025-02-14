@@ -12,7 +12,9 @@
 
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\DescriptorSetPoolVK.h"
 #include "Graphics\Vulkan\PipelineStatePoolVK.h"
+#include "Graphics\Vulkan\RootSignaturePoolVK.h"
 
 using namespace Microsoft::WRL;
 
@@ -155,11 +157,13 @@ public:
 	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
-	wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
-	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& desc) override;
+	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
+	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
 	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
+	IRootSignaturePool* GetRootSignaturePool() override { return &m_rootSignaturePool; }
 
 	void CreateResources();
 
@@ -186,12 +190,10 @@ private:
 	// VmaAllocator
 	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
 
-	// Root signatures
-	std::mutex m_pipelineLayoutMutex;
-	std::map<size_t, wil::com_ptr<CVkPipelineLayout>> m_pipelineLayoutHashMap;
-
 	// Platform data pools
+	DescriptorSetPool m_descriptorSetPool;
 	PipelineStatePool m_pipelinePool;
+	RootSignaturePool m_rootSignaturePool;
 };
 
 } // namespace Luna::VK

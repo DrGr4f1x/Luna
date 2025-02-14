@@ -13,13 +13,14 @@
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 #include "Graphics\InputLayout.h"
+#include "Graphics\RootSignature.h"
 
 
 namespace Luna
 {
 
 // Forward declarations
-class IRootSignature;
+class RootSignatureHandleType;
 class GraphicsPSOData;
 
 
@@ -164,7 +165,7 @@ struct GraphicsPipelineDesc
 	std::vector<VertexStreamDesc> vertexStreams;
 	std::vector<VertexElementDesc> vertexElements;
 
-	IRootSignature* rootSignature{ nullptr };
+	wil::com_ptr<RootSignatureHandleType> rootSignature{ nullptr };
 
 	GraphicsPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
 	GraphicsPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
@@ -184,7 +185,7 @@ struct GraphicsPipelineDesc
 	GraphicsPipelineDesc& SetDomainShader(const std::string& value, const std::string& entry = "main") { domainShader.shaderFile = value; domainShader.entry = entry; return *this; }
 	GraphicsPipelineDesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPipelineDesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
-	constexpr GraphicsPipelineDesc& SetRootSignature(IRootSignature* value) { rootSignature = value; return *this; }
+	GraphicsPipelineDesc& SetRootSignature(RootSignatureHandleType* value) { rootSignature = value; return *this; }
 };
 
 

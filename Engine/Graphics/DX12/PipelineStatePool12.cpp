@@ -15,7 +15,7 @@
 #include "FileSystem.h"
 
 #include "Device12.h"
-#include "RootSignature12.h"
+#include "RootSignaturePool12.h"
 
 using namespace std;
 
@@ -80,7 +80,7 @@ PipelineStatePool::PipelineStatePool(ID3D12Device* device)
 {
 	assert(g_pipelineStatePool == nullptr);
 
-	// Populate freelist and data arrays
+	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
 		m_freeList.push(i);
@@ -293,7 +293,7 @@ wil::com_ptr<ID3D12PipelineState> PipelineStatePool::FindOrCreateGraphicsPipelin
 
 	// Make sure the root signature is finalized first
 	// TODO: RootSignature should be a Handle from the RootSignaturePool
-	d3d12PipelineDesc.pRootSignature = pipelineDesc.rootSignature->GetNativeObject(NativeObjectType::DX12_RootSignature);
+	d3d12PipelineDesc.pRootSignature = GetD3D12RootSignaturePool()->GetRootSignature(pipelineDesc.rootSignature.get());
 	assert(d3d12PipelineDesc.pRootSignature != nullptr);
 
 	d3d12PipelineDesc.InputLayout.pInputElementDescs = nullptr;

@@ -127,9 +127,21 @@ IGraphicsDevice* GetGraphicsDevice()
 }
 
 
+IDescriptorSetPool* GetDescriptorSetPool()
+{
+	return GetGraphicsDevice()->GetDescriptorSetPool();
+}
+
+
 IPipelineStatePool* GetPipelineStatePool()
 {
 	return GetGraphicsDevice()->GetPipelineStatePool();
+}
+
+
+IRootSignaturePool* GetRootSignaturePool()
+{
+	return GetGraphicsDevice()->GetRootSignaturePool();
 }
 
 } // namespace Luna

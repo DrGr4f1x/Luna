@@ -126,12 +126,6 @@
     <ClCompile Include="..\External\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
       <Filter>External\D3D12MemoryAllocator</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\RootSignature12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\InputLayout.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -145,19 +139,7 @@
     <ClCompile Include="Graphics\CommonStates.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\DX12\ResourceSet12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\ResourceSetVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Camera.cpp">
@@ -165,6 +147,33 @@
     </ClCompile>
     <ClCompile Include="CameraController.cpp" />
     <ClCompile Include="Graphics\PipelineState.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DescriptorSet.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\RootSignaturePool12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\RootSignature.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\RootSignaturePoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\PipelineStatePoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\ResourceSet.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>
@@ -385,12 +394,6 @@
     <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
       <Filter>External\D3D12MemoryAllocator</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\RootSignature12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\RootSignature.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -413,30 +416,33 @@
     <ClInclude Include="Graphics\DescriptorSet.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\DescriptorSet12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\ResourceSet.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\ResourceSet12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\ResourceSetVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Camera.h">
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="CameraController.h" />
-    <ClInclude Include="Graphics\PlatformData.h">
-      <Filter>Graphics</Filter>
+    <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\PipelineStatePool12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\RootSignaturePool12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\RootSignaturePoolVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\PipelineStatePoolVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h">
+      <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

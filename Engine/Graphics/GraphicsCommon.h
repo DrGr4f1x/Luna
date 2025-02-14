@@ -20,7 +20,9 @@ namespace Luna
 {
 
 // Forward declarations
+class IDescriptorSetPool;
 class IPipelineStatePool;
+class IRootSignaturePool;
 
 
 // Constants
@@ -97,7 +99,9 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
 IGraphicsDevice* GetGraphicsDevice();
+IDescriptorSetPool* GetDescriptorSetPool();
 IPipelineStatePool* GetPipelineStatePool();
+IRootSignaturePool* GetRootSignaturePool();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

@@ -19,16 +19,16 @@ namespace Luna
 // Forward declarations
 class CommandContext;
 class ComputeContext;
+class DescriptorSet;
 class GraphicsContext;
 class GraphicsPipelineState;
+class ResourceSet;
+class RootSignature;
 
 class IColorBuffer;
 class IDepthBuffer;
-class IDescriptorSet;
 class IGpuBuffer;
 class IGpuResource;
-class IResourceSet;
-class IRootSignature;
 
 
 class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
@@ -75,7 +75,7 @@ public:
 	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
-	virtual void SetRootSignature(IRootSignature* rootSignature) = 0;
+	virtual void SetRootSignature(RootSignature& rootSignature) = 0;
 	virtual void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
@@ -91,8 +91,8 @@ public:
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
-	virtual void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) = 0;
-	virtual void SetResources(IResourceSet* resourceSet) = 0;
+	virtual void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) = 0;
+	virtual void SetResources(ResourceSet& resourceSet) = 0;
 
 	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
 	virtual void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
@@ -178,7 +178,7 @@ public:
 	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
-	void SetRootSignature(IRootSignature* rootSignature);
+	void SetRootSignature(RootSignature& rootSignature);
 	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
@@ -195,8 +195,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
-	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet);
-	void SetResources(IResourceSet* resourceSet);
+	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet);
+	void SetResources(ResourceSet& resourceSet);
 
 	void SetIndexBuffer(const IGpuBuffer* gpuBuffer);
 	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer);
@@ -349,7 +349,7 @@ inline void GraphicsContext::EndRendering()
 }
 
 
-inline void GraphicsContext::SetRootSignature(IRootSignature* rootSignature)
+inline void GraphicsContext::SetRootSignature(RootSignature& rootSignature)
 {
 	m_contextImpl->SetRootSignature(rootSignature);
 }
@@ -440,13 +440,13 @@ inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam
 }
 
 
-inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
 {
 	m_contextImpl->SetDescriptors(rootIndex, descriptorSet);
 }
 
 
-inline void GraphicsContext::SetResources(IResourceSet* resourceSet)
+inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 {
 	m_contextImpl->SetResources(resourceSet);
 }

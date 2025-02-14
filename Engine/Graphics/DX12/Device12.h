@@ -13,7 +13,9 @@
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Shader.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\DescriptorSetPool12.h"
 #include "Graphics\DX12\PipelineStatePool12.h"
+#include "Graphics\DX12\RootSignaturePool12.h"
 
 using namespace Microsoft::WRL;
 
@@ -118,11 +120,13 @@ public:
 	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
-	wil::com_ptr<IRootSignature> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
-	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
+	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
+	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
 	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
+	IRootSignaturePool* GetRootSignaturePool() override { return &m_rootSignaturePool; }
 
 	void CreateResources();
 
@@ -160,12 +164,10 @@ private:
 	// Format properties
 	std::unordered_map<DXGI_FORMAT, uint8_t> m_dxgiFormatPlaneCounts;
 
-	// Root signatures
-	std::mutex m_rootSignatureMutex;
-	std::map<size_t, wil::com_ptr<ID3D12RootSignature>> m_rootSignatureHashMap;
-
 	// Platform data pools
+	DescriptorSetPool m_descriptorSetPool;
 	PipelineStatePool m_pipelinePool;
+	RootSignaturePool m_rootSignaturePool;
 };
 
 } // namespace Luna::DX12
