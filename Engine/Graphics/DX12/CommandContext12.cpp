@@ -19,7 +19,6 @@
 #include "DescriptorSetPool12.h"
 #include "Device12.h"
 #include "DeviceManager12.h"
-#include "GpuBuffer12.h"
 #include "PipelineStatePool12.h"
 #include "Queue12.h"
 #include "RootSignaturePool12.h"
@@ -186,6 +185,27 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 }
 
 
+void CommandContext12::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	ResourceState oldState = gpuBuffer.GetUsageState();
+
+	if (m_type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	GpuBufferPool* pool = GetD3D12GpuBufferPool();
+	GpuBufferHandle handle = gpuBuffer.GetHandle();
+
+	ID3D12Resource* resource = pool->GetResource(handle.get());
+
+	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
+
+	gpuBuffer.SetUsageState(newState);
+}
+
+
 void CommandContext12::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
 {
 	ResourceState oldState = gpuResource->GetUsageState();
@@ -196,55 +216,19 @@ void CommandContext12::TransitionResource(IGpuResource* gpuResource, ResourceSta
 		assert(IsValidComputeResourceState(newState));
 	}
 
-	if (oldState != newState)
-	{
-		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
-		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+	ID3D12Resource* resource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
 
-		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrierDesc.Transition.pResource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
-		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		barrierDesc.Transition.StateBefore = ResourceStateToDX12(oldState);
-		barrierDesc.Transition.StateAfter = ResourceStateToDX12(newState);
+	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
 
-		// Check to see if we already started the transition
-		if (newState == gpuResource->GetTransitioningState())
-		{
-			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_END_ONLY;
-			gpuResource->SetTransitioningState(ResourceState::Undefined);
-		}
-		else
-		{
-			barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		}
-
-		gpuResource->SetUsageState(newState);
-	}
-	else if (newState == ResourceState::UnorderedAccess)
-	{
-		InsertUAVBarrier(gpuResource, bFlushImmediate);
-	}
-
-	if (bFlushImmediate || m_numBarriersToFlush == 16)
-	{
-		FlushResourceBarriers();
-	}
+	gpuResource->SetUsageState(newState);
 }
 
 
 void CommandContext12::InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate)
 {
-	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
-	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+	ID3D12Resource* resource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
 
-	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrierDesc.UAV.pResource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
-
-	if (bFlushImmediate)
-	{
-		FlushResourceBarriers();
-	}
+	InsertUAVBarrier_Internal(resource, bFlushImmediate);
 }
 
 
@@ -258,7 +242,7 @@ void CommandContext12::FlushResourceBarriers()
 }
 
 
-void CommandContext12::ClearUAV(IGpuBuffer* gpuBuffer)
+void CommandContext12::ClearUAV(GpuBuffer& gpuBuffer)
 {
 	// TODO: We need to allocate a GPU descriptor, so need to implement dynamic descriptor heaps to do this.
 }
@@ -625,24 +609,30 @@ void CommandContext12::SetResources(ResourceSet& resourceSet)
 }
 
 
-void CommandContext12::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 {
-	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
+	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	auto handle = gpuBuffer.GetHandle();
+
+	const bool is16Bit = gpuBufferPool->GetElementSize(handle.get()) == sizeof(uint16_t);
 	D3D12_INDEX_BUFFER_VIEW ibv{
-		.BufferLocation		= gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer,
-		.SizeInBytes		= (uint32_t)gpuBuffer->GetSize(),
+		.BufferLocation		= gpuBufferPool->GetGpuAddress(handle.get()),
+		.SizeInBytes		= (uint32_t)gpuBufferPool->GetSize(handle.get()),
 		.Format				= is16Bit ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
 	};
 	m_commandList->IASetIndexBuffer(&ibv);
 }
 
 
-void CommandContext12::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
 {
+	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	auto handle = gpuBuffer.GetHandle();
+
 	D3D12_VERTEX_BUFFER_VIEW vbv{
-		.BufferLocation		= gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer,
-		.SizeInBytes		= (uint32_t)gpuBuffer->GetSize(),
-		.StrideInBytes		= (uint32_t)gpuBuffer->GetElementSize()
+		.BufferLocation		= gpuBufferPool->GetGpuAddress(handle.get()),
+		.SizeInBytes		= (uint32_t)gpuBufferPool->GetSize(handle.get()),
+		.StrideInBytes		= (uint32_t)gpuBufferPool->GetElementSize(handle.get())
 	};
 	m_commandList->IASetVertexBuffers(slot, 1, &vbv);
 }
@@ -670,13 +660,58 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
-void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContext12::TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate)
+{
+	if (oldState != newState)
+	{
+		assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+		D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+		barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrierDesc.Transition.pResource = resource;
+		barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrierDesc.Transition.StateBefore = oldState;
+		barrierDesc.Transition.StateAfter = newState;
+		barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	}
+	else if (newState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+	{
+		InsertUAVBarrier_Internal(resource, bFlushImmediate);
+	}
+
+	if (bFlushImmediate || m_numBarriersToFlush == 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContext12::InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate)
+{
+	assert_msg(m_numBarriersToFlush < 16, "Exceeded arbitrary limit on buffered barriers");
+	D3D12_RESOURCE_BARRIER& barrierDesc = m_resourceBarrierBuffer[m_numBarriersToFlush++];
+
+	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrierDesc.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrierDesc.UAV.pResource = resource;
+
+	if (bFlushImmediate)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
+	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	auto handle = destBuffer.GetHandle();
+
 	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
 	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(destBuffer->GetNativeObject(NativeObjectType::DX12_Resource), offset, stagingAllocation->GetResource(), 0, numBytes);
+	m_commandList->CopyBufferRegion(gpuBufferPool->GetResource(handle.get()), offset, stagingAllocation->GetResource(), 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());

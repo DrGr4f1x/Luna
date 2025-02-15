@@ -37,6 +37,7 @@
     <ClCompile Include="Graphics\CommonStates.cpp" />
     <ClCompile Include="Graphics\DescriptorSet.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp" />
+    <ClCompile Include="Graphics\DX12\GpuBufferPool12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
@@ -49,12 +50,12 @@
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
     <ClCompile Include="Graphics\DX12\Enums12.cpp" />
     <ClCompile Include="Graphics\DX12\Formats12.cpp" />
-    <ClCompile Include="Graphics\DX12\GpuBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignaturePool12.cpp" />
     <ClCompile Include="Graphics\DX12\Shader12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
+    <ClCompile Include="Graphics\GpuBuffer.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\InputLayout.cpp" />
     <ClCompile Include="Graphics\PipelineState.cpp" />
@@ -63,6 +64,7 @@
     <ClCompile Include="Graphics\Shader.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\GpuBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStatePoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignaturePoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
@@ -75,7 +77,6 @@
     <ClCompile Include="Graphics\Vulkan\EnumsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ExtensionManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\FormatsVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\GpuBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\QueueVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VersionVK.cpp" />
@@ -127,6 +128,7 @@
     <ClInclude Include="Graphics\DescriptorSet.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h" />
+    <ClInclude Include="Graphics\DX12\GpuBufferPool12.h" />
     <ClInclude Include="Graphics\DX12\PipelineStatePool12.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
@@ -140,7 +142,6 @@
     <ClInclude Include="Graphics\DX12\Enums12.h" />
     <ClInclude Include="Graphics\DX12\Flags12.h" />
     <ClInclude Include="Graphics\DX12\Formats12.h" />
-    <ClInclude Include="Graphics\DX12\GpuBuffer12.h" />
     <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\RootSignaturePool12.h" />
@@ -160,6 +161,7 @@
     <ClInclude Include="Graphics\Shader.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h" />
+    <ClInclude Include="Graphics\Vulkan\GpuBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStatePoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignaturePoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
@@ -173,7 +175,6 @@
     <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
-    <ClInclude Include="Graphics\Vulkan\GpuBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
     <ClInclude Include="Graphics\Vulkan\StringsVK.h" />

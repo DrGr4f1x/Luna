@@ -133,6 +133,12 @@ IDescriptorSetPool* GetDescriptorSetPool()
 }
 
 
+IGpuBufferPool* GetGpuBufferPool()
+{
+	return GetGraphicsDevice()->GetGpuBufferPool();
+}
+
+
 IPipelineStatePool* GetPipelineStatePool()
 {
 	return GetGraphicsDevice()->GetPipelineStatePool();

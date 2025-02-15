@@ -114,12 +114,6 @@
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\GpuBuffer12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\GpuBufferVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
@@ -175,6 +169,15 @@
     </ClCompile>
     <ClCompile Include="Graphics\ResourceSet.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\GpuBuffer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\GpuBufferPool12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\GpuBufferPoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -379,14 +382,8 @@
     <ClInclude Include="Graphics\GpuResource.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\GpuBuffer12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\GpuBuffer.h">
       <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\GpuBufferVK.h">
-      <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\LinearAllocator12.h">
       <Filter>Graphics\DX12</Filter>
@@ -442,6 +439,12 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\GpuBufferPool12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\GpuBufferPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>

@@ -19,6 +19,7 @@ using namespace Microsoft::WRL;
 namespace Luna
 {
 
+// Forward declarations
 class DescriptorSetHandleType;
 
 } // namespace Luna
@@ -51,12 +52,13 @@ public:
 	void BeginFrame() override {}
 	uint64_t Finish(bool bWaitForCompletion) override;
 
+	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(IGpuResource* colorBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	// Graphics context
-	void ClearUAV(IGpuBuffer* gpuBuffer) override;
+	void ClearUAV(GpuBuffer& gpuBuffer) override;
 	//void ClearUAV(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
@@ -90,8 +92,8 @@ public:
 	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) override;
 	void SetResources(ResourceSet& resourceSet) override;
 
-	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
-	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+	void SetIndexBuffer(const GpuBuffer& gpuBuffer) override;
+	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) override;
 
 	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
@@ -99,7 +101,9 @@ public:
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 
 protected:
-	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
+	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
+	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
 
 private:

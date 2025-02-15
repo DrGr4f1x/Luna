@@ -14,6 +14,7 @@
 #include "Graphics\Shader.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\DescriptorSetPool12.h"
+#include "Graphics\DX12\GpuBufferPool12.h"
 #include "Graphics\DX12\PipelineStatePool12.h"
 #include "Graphics\DX12\RootSignaturePool12.h"
 
@@ -108,8 +109,8 @@ class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice
 {
 	friend class CommandContext12;
 	friend class DeviceManager;
-	friend class GpuBufferData;
 	friend class UserDescriptorHeap;
+	friend class GpuBufferPool;
 	friend class PipelineStatePool;
 
 public:
@@ -119,12 +120,12 @@ public:
 	// GraphicsDevice implementation
 	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
-	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
 	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
 	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
+	IGpuBufferPool* GetGpuBufferPool() override { return &m_gpuBufferPool; }
 	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
 	IRootSignaturePool* GetRootSignaturePool() override { return &m_rootSignaturePool; }
 
@@ -166,6 +167,7 @@ private:
 
 	// Platform data pools
 	DescriptorSetPool m_descriptorSetPool;
+	GpuBufferPool m_gpuBufferPool;
 	PipelineStatePool m_pipelinePool;
 	RootSignaturePool m_rootSignaturePool;
 };

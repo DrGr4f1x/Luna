@@ -14,13 +14,10 @@
 
 #include "FileSystem.h"
 
-#include "Graphics\PipelineState.h"
-
 #include "ColorBufferVK.h"
 #include "CommandContextVK.h"
 #include "DepthBufferVK.h"
 #include "DescriptorAllocatorVK.h"
-#include "GpuBufferVK.h"
 
 using namespace std;
 
@@ -56,6 +53,7 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
 	, m_vkDevice{ desc.device }
 	, m_descriptorSetPool{ m_vkDevice.get() }
+	, m_gpuBufferPool{ m_vkDevice.get() }
 	, m_pipelinePool{ m_vkDevice.get() }
 	, m_rootSignaturePool{ m_vkDevice.get() }
 {
@@ -246,67 +244,6 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 }
 
 
-GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
-{
-	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-	VkBufferCreateInfo bufferCreateInfo{
-		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size	= gpuBufferDesc.elementCount * gpuBufferDesc.elementSize,
-		.usage	= GetBufferUsageFlags(gpuBufferDesc.resourceType) | transferFlags
-	};
-
-	VmaAllocationCreateInfo allocCreateInfo = {};
-	allocCreateInfo.flags = GetMemoryFlags(gpuBufferDesc.memoryAccess);
-	allocCreateInfo.usage = GetMemoryUsage(gpuBufferDesc.memoryAccess);
-
-	VkBuffer vkBuffer{ VK_NULL_HANDLE };
-	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
-
-	auto res = vmaCreateBuffer(*m_vmaAllocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
-	assert(res == VK_SUCCESS);
-
-	SetDebugName(*m_vkDevice, vkBuffer, gpuBufferDesc.name);
-
-	auto buffer = Create<CVkBuffer>(m_vkDevice.get(), m_vmaAllocator.get(), vkBuffer, vmaBufferAllocation);
-
-	wil::com_ptr<CVkBufferView> bufferView;
-	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
-	{
-		VkBufferViewCreateInfo bufferViewCreateInfo{
-			.sType		= VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
-			.buffer		= vkBuffer,
-			.format		= FormatToVulkan(gpuBufferDesc.format),
-			.offset		= 0,
-			.range		= VK_WHOLE_SIZE
-		};
-		VkBufferView vkBufferView{ VK_NULL_HANDLE };
-		vkCreateBufferView(*m_vkDevice, &bufferViewCreateInfo, nullptr, &vkBufferView);
-		bufferView = Create<CVkBufferView>(m_vkDevice.get(), vkBufferView);
-	}
-
-	GpuBufferDescExt gpuBufferDescExt{
-		.buffer			= buffer.get(),
-		.bufferView		= bufferView.get(),
-		.bufferInfo		= {
-			.buffer		= vkBuffer,
-			.offset		= 0,
-			.range		= VK_WHOLE_SIZE
-		}
-	};
-	
-	auto gpuBuffer = Make<GpuBufferVK>(gpuBufferDesc, gpuBufferDescExt);
-
-	if (gpuBufferDesc.initialData)
-	{
-		const size_t bufferSize = gpuBufferDesc.elementCount * gpuBufferDesc.elementSize;
-		CommandContext::InitializeBuffer(gpuBuffer.Get(), gpuBufferDesc.initialData, bufferSize);
-	}
-
-	return gpuBuffer;
-}
-
-
 RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
 	return m_rootSignaturePool.CreateRootSignature(rootSignatureDesc);
@@ -322,6 +259,7 @@ PipelineStateHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelin
 void GraphicsDevice::CreateResources()
 {
 	m_vmaAllocator = CreateVmaAllocator();
+	m_gpuBufferPool.SetAllocator(m_vmaAllocator.get());
 }
 
 

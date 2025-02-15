@@ -13,6 +13,7 @@
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\Vulkan\DescriptorSetPoolVK.h"
+#include "Graphics\Vulkan\GpuBufferPoolVK.h"
 #include "Graphics\Vulkan\PipelineStatePoolVK.h"
 #include "Graphics\Vulkan\RootSignaturePoolVK.h"
 
@@ -156,12 +157,12 @@ public:
 	// GraphicsDevice implementation
 	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
-	wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
 	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
 	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
+	IGpuBufferPool* GetGpuBufferPool() override { return &m_gpuBufferPool; }
 	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
 	IRootSignaturePool* GetRootSignaturePool() override { return &m_rootSignaturePool; }
 
@@ -192,6 +193,7 @@ private:
 
 	// Platform data pools
 	DescriptorSetPool m_descriptorSetPool;
+	GpuBufferPool m_gpuBufferPool;
 	PipelineStatePool m_pipelinePool;
 	RootSignaturePool m_rootSignaturePool;
 };

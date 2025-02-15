@@ -21,9 +21,6 @@ namespace Luna
 
 // Forward declarations
 class DescriptorSetHandleType;
-class IColorBuffer;
-class IDepthBuffer;
-class IGpuBuffer;
 class IPixelBuffer;
 
 } // namespace Luna
@@ -35,7 +32,6 @@ namespace Luna::VK
 // Forward declarations
 class ComputeContext;
 class GraphicsContext;
-class IDescriptorSetVK;
 
 
 struct TextureBarrier
@@ -84,11 +80,12 @@ public:
 	void BeginFrame() override;
 	uint64_t Finish(bool bWaitForCompletion) override;
 
+	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
-	void ClearUAV(IGpuBuffer* gpuBuffer) override;
+	void ClearUAV(GpuBuffer& gpuBuffer) override;
 	//void ClearUAV(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
@@ -121,8 +118,8 @@ public:
 	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) override;
 	void SetResources(ResourceSet& resourceSet) override;
 
-	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
-	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+	void SetIndexBuffer(const GpuBuffer& gpuBuffer) override;
+	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) override;
 
 	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
@@ -131,7 +128,7 @@ public:
 
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
-	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
 
 	void BindDescriptorHeaps() {}

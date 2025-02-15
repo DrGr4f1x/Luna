@@ -44,7 +44,7 @@ void DescriptorSet::SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depth
 }
 
 
-void DescriptorSet::SetSRV(int slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetSRV(int slot, const GpuBuffer& gpuBuffer)
 {
 	GetDescriptorSetPool()->SetSRV(m_handle.get(), slot, gpuBuffer);
 }
@@ -62,13 +62,13 @@ void DescriptorSet::SetUAV(int slot, const IDepthBuffer* depthBuffer)
 }
 
 
-void DescriptorSet::SetUAV(int slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetUAV(int slot, const GpuBuffer& gpuBuffer)
 {
 	GetDescriptorSetPool()->SetUAV(m_handle.get(), slot, gpuBuffer);
 }
 
 
-void DescriptorSet::SetCBV(int slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetCBV(int slot, const GpuBuffer& gpuBuffer)
 {
 	GetDescriptorSetPool()->SetCBV(m_handle.get(), slot, gpuBuffer);
 }

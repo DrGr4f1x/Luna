@@ -15,6 +15,8 @@ namespace Luna
 
 // Forward declarations (new)
 class IDescriptorSetPool;
+class GpuBufferHandleType;
+class IGpuBufferPool;
 class PipelineStateHandleType;
 class IPipelineStatePool;
 class RootSignatureHandleType;
@@ -39,12 +41,12 @@ public:
 
 	virtual wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
 	virtual wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
-	virtual wil::com_ptr<IGpuBuffer> CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 
 	virtual wil::com_ptr<RootSignatureHandleType> CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 	virtual wil::com_ptr<PipelineStateHandleType> CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) = 0;
 
 	virtual IDescriptorSetPool* GetDescriptorSetPool() = 0;
+	virtual IGpuBufferPool* GetGpuBufferPool() = 0;
 	virtual IPipelineStatePool* GetPipelineStatePool() = 0;
 	virtual IRootSignaturePool* GetRootSignaturePool() = 0;
 };

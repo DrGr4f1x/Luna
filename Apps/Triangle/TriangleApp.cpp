@@ -61,7 +61,7 @@ void TriangleApp::Startup()
 		.elementSize	= sizeof(Vertex),
 		.initialData	= vertexData.data()
 	};
-	m_vertexBuffer = graphicsDevice->CreateGpuBuffer(vertexBufferDesc);
+	m_vertexBuffer.Initialize(vertexBufferDesc);
 
 	// Setup indices
 	vector<uint32_t> indexData = { 0, 1, 2 };
@@ -73,7 +73,7 @@ void TriangleApp::Startup()
 		.elementSize	= sizeof(uint32_t),
 		.initialData	= indexData.data()
 	};
-	m_indexBuffer = graphicsDevice->CreateGpuBuffer(indexBufferDesc);
+	m_indexBuffer.Initialize(indexBufferDesc);
 
 	// Setup constant buffer
 	GpuBufferDesc constantBufferDesc{
@@ -84,7 +84,7 @@ void TriangleApp::Startup()
 		.elementSize	= sizeof(m_vsConstants),
 		.initialData	= nullptr
 	};
-	m_constantBuffer = graphicsDevice->CreateGpuBuffer(constantBufferDesc);
+	m_constantBuffer.Initialize(constantBufferDesc);
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
 
 	// Setup camera
@@ -152,11 +152,11 @@ void TriangleApp::Render()
 	};
 	context.SetDynamicVB(0, 3, sizeof(Vertex), vertexData.data());*/
 
-	context.SetVertexBuffer(0, m_vertexBuffer.get());
+	context.SetVertexBuffer(0, m_vertexBuffer);
 	
-	context.SetIndexBuffer(m_indexBuffer.get());
+	context.SetIndexBuffer(m_indexBuffer);
 
-	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
+	context.DrawIndexed((uint32_t)m_indexBuffer.GetElementCount());
 
 	context.EndRendering();
 	context.TransitionResource(GetColorBuffer().get(), ResourceState::Present);
@@ -239,7 +239,7 @@ void TriangleApp::InitPipelineState()
 void TriangleApp::InitResources()
 {
 	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer.get());
+	m_resources.SetCBV(0, 0, m_constantBuffer);
 }
 
 
@@ -248,5 +248,5 @@ void TriangleApp::UpdateConstantBuffer()
 	// Update matrices
 	m_vsConstants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
 
-	m_constantBuffer->Update(sizeof(m_vsConstants), &m_vsConstants);
+	m_constantBuffer.Update(sizeof(m_vsConstants), &m_vsConstants);
 }

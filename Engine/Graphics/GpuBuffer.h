@@ -40,18 +40,68 @@ struct GpuBufferDesc
 };
 
 
-class __declspec(uuid("0647BE9E-5C85-49E3-B4D1-0DBAB5ED1C06")) IGpuBuffer : public IGpuResource
+class IGpuBufferPool;
+
+
+class __declspec(uuid("3BC9117D-D567-4D21-9AFC-ACFF5D17C167")) GpuBufferHandleType : public RefCounted<GpuBufferHandleType>
 {
 public:
-	virtual size_t GetSize() const noexcept = 0;
-	virtual size_t GetElementCount() const noexcept = 0;
-	virtual size_t GetElementSize() const noexcept = 0;
-	// TODO: Sweep the code for this stuff and use std::span (or a view?)
-	virtual void Update(size_t sizeInBytes, const void* data) = 0;
-	virtual void Update(size_t sizeInBytes, size_t offset, const void* data) = 0;
+	GpuBufferHandleType(uint32_t index, IGpuBufferPool* pool)
+		: m_index{ index }
+		, m_pool{ pool }
+	{}
+	~GpuBufferHandleType();
+
+	uint32_t GetIndex() const { return m_index; }
+
+private:
+	uint32_t m_index{ 0 };
+	IGpuBufferPool* m_pool{ nullptr };
 };
 
-using GpuBufferHandle = wil::com_ptr<IGpuBuffer>;
+using GpuBufferHandle = wil::com_ptr<GpuBufferHandleType>;
 
+
+class IGpuBufferPool
+{
+public:
+	// Create/Destroy GpuBuffer
+	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
+	virtual void DestroyHandle(GpuBufferHandleType* handle) = 0;
+
+	// Platform agnostic functions
+	virtual ResourceType GetResourceType(GpuBufferHandleType* handle) const = 0;
+	virtual ResourceState GetUsageState(GpuBufferHandleType* handle) const = 0;
+	virtual void SetUsageState(GpuBufferHandleType* handle, ResourceState newState) = 0;
+	virtual size_t GetSize(GpuBufferHandleType* handle) const = 0;
+	virtual size_t GetElementCount(GpuBufferHandleType* handle) const = 0;
+	virtual size_t GetElementSize(GpuBufferHandleType* handle) const = 0;
+	virtual void Update(GpuBufferHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const = 0;
+
+};
+
+
+class GpuBuffer
+{
+public:
+
+	void Initialize(const GpuBufferDesc& gpuBufferDesc);
+
+	GpuBufferHandle GetHandle() const { return m_handle; }
+
+	ResourceType GetResourceType() const;
+	ResourceState GetUsageState() const;
+	void SetUsageState(ResourceState newState);
+
+	size_t GetSize() const;
+	size_t GetElementCount() const;
+	size_t GetElementSize() const;
+	// TODO: Sweep the code for this stuff and use std::span (or a view?)
+	void Update(size_t sizeInBytes, const void* data);
+	void Update(size_t sizeInBytes, size_t offset, const void* data);
+
+private:
+	GpuBufferHandle m_handle;
+};
 
 } // namespace Luna

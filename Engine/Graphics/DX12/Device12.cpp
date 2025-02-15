@@ -23,7 +23,6 @@
 #include "DescriptorAllocator12.h"
 #include "DeviceCaps12.h"
 #include "Formats12.h"
-#include "GpuBuffer12.h"
 #include "Queue12.h"
 #include "Shader12.h"
 
@@ -154,6 +153,7 @@ GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc) noexcept
 	: m_desc{ desc }
 	, m_deviceRLDOHelper{ desc.dx12Device, desc.enableValidation }
 	, m_descriptorSetPool{ m_desc.dx12Device }
+	, m_gpuBufferPool{ m_desc.dx12Device, m_desc.d3d12maAllocator }
 	, m_pipelinePool{ m_desc.dx12Device }
 	, m_rootSignaturePool{ m_desc.dx12Device }
 {
@@ -447,148 +447,6 @@ DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depth
 		.SetStencilSrvHandle(stencilSrvHandle);
 
 	return Make<DepthBuffer12>(depthBufferDesc, depthBufferDescExt);
-}
-
-
-GpuBufferHandle GraphicsDevice::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
-{
-	GpuBufferDesc gpuBufferDesc2{ gpuBufferDesc };
-	if (gpuBufferDesc2.resourceType == ResourceType::ConstantBuffer)
-	{
-		gpuBufferDesc2.elementSize = Math::AlignUp(gpuBufferDesc2.elementSize, 256);
-	}
-	
-	ResourceState initialState = ResourceState::GenericRead;
-
-	wil::com_ptr<D3D12MA::Allocation> allocation = CreateGpuBuffer(gpuBufferDesc2, initialState);
-	ID3D12Resource* pResource = allocation->GetResource();
-
-	SetDebugName(pResource, gpuBufferDesc.name);
-
-	GpuBufferDescExt gpuBufferDescExt{
-		.resource		= pResource,
-		.allocation		= allocation.get()
-	};
-
-	const size_t bufferSize = gpuBufferDesc2.elementCount * gpuBufferDesc2.elementSize;
-
-	if (gpuBufferDesc2.resourceType == ResourceType::ByteAddressBuffer || gpuBufferDesc2.resourceType == ResourceType::IndirectArgsBuffer)
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-			.Format						= DXGI_FORMAT_R32_TYPELESS,
-			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
-			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-			.Buffer = {
-				.NumElements	= (uint32_t)bufferSize / 4,
-				.Flags			= D3D12_BUFFER_SRV_FLAG_RAW
-			}
-		};
-
-		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
-
-		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-			.Format		= DXGI_FORMAT_R32_TYPELESS,
-			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
-			.Buffer = {
-				.NumElements	= (uint32_t)bufferSize / 4,
-				.Flags			= D3D12_BUFFER_UAV_FLAG_RAW
-			}
-		};
-
-		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
-
-		gpuBufferDescExt.SetSrvHandle(srvHandle);
-		gpuBufferDescExt.SetUavHandle(uavHandle);
-	}
-
-	if (gpuBufferDesc2.resourceType == ResourceType::StructuredBuffer)
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-			.Format						= DXGI_FORMAT_UNKNOWN,
-			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
-			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-			.Buffer = {
-				.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
-				.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
-				.Flags					= D3D12_BUFFER_SRV_FLAG_NONE
-			}
-		};
-
-		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
-
-		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-			.Format			= DXGI_FORMAT_UNKNOWN,
-			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
-			.Buffer = {
-				.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
-				.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
-				.CounterOffsetInBytes	= 0,
-				.Flags					= D3D12_BUFFER_UAV_FLAG_NONE
-			}
-		};
-
-		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
-
-		gpuBufferDescExt.SetSrvHandle(srvHandle);
-		gpuBufferDescExt.SetUavHandle(uavHandle);
-	}
-
-	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-			.Format						= FormatToDxgi(gpuBufferDesc2.format).resourceFormat,
-			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
-			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-			.Buffer = {
-				.NumElements	= (uint32_t)gpuBufferDesc2.elementCount,
-				.Flags			= D3D12_BUFFER_SRV_FLAG_NONE
-			}
-		};
-
-		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
-
-		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-			.Format			= FormatToDxgi(gpuBufferDesc2.format).resourceFormat,
-			.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
-			.Buffer = {
-				.NumElements	= (uint32_t)gpuBufferDesc2.elementCount,
-				.Flags			= D3D12_BUFFER_UAV_FLAG_NONE
-			}
-		};
-
-		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
-
-		gpuBufferDescExt.SetSrvHandle(srvHandle);
-		gpuBufferDescExt.SetUavHandle(uavHandle);
-	}
-
-	if (gpuBufferDesc.resourceType == ResourceType::ConstantBuffer)
-	{
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{
-			.BufferLocation		= pResource->GetGPUVirtualAddress(),
-			.SizeInBytes		= (uint32_t)(gpuBufferDesc2.elementCount * gpuBufferDesc2.elementSize)
-		};
-
-		auto cbvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_dxDevice->CreateConstantBufferView(&cbvDesc, cbvHandle);
-
-		gpuBufferDescExt.SetCbvHandle(cbvHandle);
-	}
-
-	auto gpuBuffer = Make<GpuBuffer12>(gpuBufferDesc2, gpuBufferDescExt);
-
-	if (gpuBufferDesc2.initialData)
-	{
-		CommandContext::InitializeBuffer(gpuBuffer.Get(), gpuBufferDesc2.initialData, bufferSize);
-	}
-
-	return gpuBuffer;
 }
 
 

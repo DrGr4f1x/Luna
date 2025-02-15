@@ -20,7 +20,6 @@
 #include "DescriptorSetPoolVK.h"
 #include "DeviceVK.h"
 #include "DeviceManagerVK.h"
-#include "GpuBufferVK.h"
 #include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
@@ -222,6 +221,29 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 }
 
 
+void CommandContextVK::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	GpuBufferPool* pool = GetVulkanGpuBufferPool();
+	GpuBufferHandle handle = gpuBuffer.GetHandle();
+
+	BufferBarrier barrier{
+		.buffer			= pool->GetBuffer(handle.get()),
+		.beforeState	= gpuBuffer.GetUsageState(),
+		.afterState		= newState,
+		.size			= gpuBuffer.GetSize()
+	};
+
+	m_bufferBarriers.push_back(barrier);
+
+	gpuBuffer.SetUsageState(newState);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
 void CommandContextVK::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
 {
 	auto resourceType = gpuResource->GetResourceType();
@@ -251,22 +273,7 @@ void CommandContextVK::TransitionResource(IGpuResource* gpuResource, ResourceSta
 
 		didInsertBarrier = true;
 	}
-	else if (IsBufferResource(resourceType))
-	{
-		GpuBufferHandle gpuBuffer;
-		gpuResource->QueryInterface(IID_PPV_ARGS(&gpuBuffer));
-		assert(gpuBuffer);
-
-		BufferBarrier barrier{
-			.buffer			= gpuResource->GetNativeObject(NativeObjectType::VK_Buffer),
-			.beforeState	= gpuResource->GetUsageState(),
-			.afterState		= newState,
-			.size			= gpuBuffer->GetSize()
-		};
-
-		m_bufferBarriers.push_back(barrier);
-	}
-	
+		
 	if (didInsertBarrier)
 	{
 		gpuResource->SetUsageState(newState);
@@ -348,10 +355,13 @@ void CommandContextVK::FlushResourceBarriers()
 }
 
 
-void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
+void CommandContextVK::ClearUAV(GpuBuffer& gpuBuffer)
 {
+	GpuBufferPool* pool = GetVulkanGpuBufferPool();
+	GpuBufferHandle handle = gpuBuffer.GetHandle();
+
 	uint32_t data = 0;
-	vkCmdFillBuffer(m_commandBuffer, gpuBuffer->GetNativeObject(NativeObjectType::VK_Buffer), 0, VK_WHOLE_SIZE, data);
+	vkCmdFillBuffer(m_commandBuffer, pool->GetBuffer(handle.get()), 0, VK_WHOLE_SIZE, data);
 }
 
 
@@ -716,18 +726,24 @@ void CommandContextVK::SetResources(ResourceSet& resourceSet)
 }
 
 
-void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 {
-	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
+	GpuBufferPool* pool = GetVulkanGpuBufferPool();
+	GpuBufferHandle handle = gpuBuffer.GetHandle();
+
+	const bool is16Bit = gpuBuffer.GetElementSize() == sizeof(uint16_t);
 	const VkIndexType indexType = is16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
-	vkCmdBindIndexBuffer(m_commandBuffer, gpuBuffer->GetNativeObject(NativeObjectType::VK_Buffer), 0, indexType);
+	vkCmdBindIndexBuffer(m_commandBuffer, pool->GetBuffer(handle.get()), 0, indexType);
 }
 
 
-void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
 {
+	GpuBufferPool* pool = GetVulkanGpuBufferPool();
+	GpuBufferHandle handle = gpuBuffer.GetHandle();
+
 	VkDeviceSize offsets[1] = { 0 };
-	VkBuffer buffers[1] = { gpuBuffer->GetNativeObject(NativeObjectType::VK_Buffer) };
+	VkBuffer buffers[1] = { pool->GetBuffer(handle.get()) };
 	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
 }
 
@@ -752,15 +768,18 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
-void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
+	GpuBufferPool* pool = GetVulkanGpuBufferPool();
+	GpuBufferHandle handle = destBuffer.GetHandle();
+
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, destBuffer->GetNativeObject(NativeObjectType::VK_Buffer), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, pool->GetBuffer(handle.get()), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 

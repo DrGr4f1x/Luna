@@ -20,6 +20,7 @@ namespace Luna
 class CommandContext;
 class ComputeContext;
 class DescriptorSet;
+class GpuBuffer;
 class GraphicsContext;
 class GraphicsPipelineState;
 class ResourceSet;
@@ -27,7 +28,6 @@ class RootSignature;
 
 class IColorBuffer;
 class IDepthBuffer;
-class IGpuBuffer;
 class IGpuResource;
 
 
@@ -54,12 +54,13 @@ public:
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
+	virtual void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void InsertUAVBarrier(IGpuResource* colorBuffer, bool bFlushImmediate) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	// Graphics context
-	virtual void ClearUAV(IGpuBuffer* gpuBuffer) = 0;
+	virtual void ClearUAV(GpuBuffer& gpuBuffer) = 0;
 	// TODO: Figure out how to implement this for Vulkan
 	//virtual void ClearUAV(IColorBuffer* colorBuffer) = 0;
 	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
@@ -94,8 +95,8 @@ public:
 	virtual void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) = 0;
 	virtual void SetResources(ResourceSet& resourceSet) = 0;
 
-	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
-	virtual void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetIndexBuffer(const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) = 0;
 
 	virtual void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) = 0;
@@ -105,7 +106,7 @@ public:
 	// Compute context
 	
 protected:
-	virtual void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
+	virtual void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
 };
 
 
@@ -141,11 +142,12 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
-	static void InitializeBuffer(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
+	static void InitializeBuffer(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
 
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
 
+	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate = false);
 	
 	void BeginFrame();
@@ -163,7 +165,7 @@ public:
 		return CommandContext::Begin(id).GetGraphicsContext();
 	}
 
-	void ClearUAV(IGpuBuffer* gpuBuffer);
+	void ClearUAV(GpuBuffer& gpuBuffer);
 	//void ClearUAV(IColorBuffer* colorBuffer);
 	void ClearColor(IColorBuffer* colorBuffer);
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
@@ -198,8 +200,8 @@ public:
 	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
-	void SetIndexBuffer(const IGpuBuffer* gpuBuffer);
-	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer);
+	void SetIndexBuffer(const GpuBuffer& gpuBuffer);
+	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer);
 
 	void Draw(uint32_t vertexCount, uint32_t vertexStartOffset = 0);
 	void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation = 0, int32_t baseVertexLocation = 0);
@@ -259,6 +261,12 @@ inline void CommandContext::Initialize()
 }
 
 
+inline void CommandContext::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
+}
+
+
 inline void CommandContext::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(gpuResource, newState, bFlushImmediate);
@@ -271,7 +279,7 @@ inline void CommandContext::BeginFrame()
 }
 
 
-inline void GraphicsContext::ClearUAV(IGpuBuffer* gpuBuffer)
+inline void GraphicsContext::ClearUAV(GpuBuffer& gpuBuffer)
 {
 	m_contextImpl->ClearUAV(gpuBuffer);
 }
@@ -452,13 +460,13 @@ inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 }
 
 
-inline void GraphicsContext::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+inline void GraphicsContext::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 {
 	m_contextImpl->SetIndexBuffer(gpuBuffer);
 }
 
 
-inline void GraphicsContext::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+inline void GraphicsContext::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
 {
 	m_contextImpl->SetVertexBuffer(slot, gpuBuffer);
 }

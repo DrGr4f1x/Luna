@@ -57,13 +57,13 @@ public:
 	// Platform agnostic functions
 	void SetSRV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer) override;
 	void SetSRV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) override;
-	void SetSRV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer) override;
+	void SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
 
 	void SetUAV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) override;
 	void SetUAV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer) override;
-	void SetUAV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer) override;
+	void SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
 
-	void SetCBV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer) override;
+	void SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
 
 	void SetDynamicOffset(DescriptorSetHandleType* handle, uint32_t offset) override;
 

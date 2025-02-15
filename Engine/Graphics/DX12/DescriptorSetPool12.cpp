@@ -15,6 +15,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\DX12\GpuBufferPool12.h"
 
 
 namespace Luna::DX12
@@ -51,14 +52,6 @@ inline D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(const IGpuResource* gpuResource, uint3
 	D3D12_CPU_DESCRIPTOR_HANDLE uavHandle{ .ptr = gpuResource->GetNativeObject(NativeObjectType::DX12_UAV, uavIndex).integer };
 	ValidateDescriptor(uavHandle);
 	return uavHandle;
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetCBV(const IGpuBuffer* gpuBuffer)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle{ .ptr = gpuBuffer->GetNativeObject(NativeObjectType::DX12_CBV).integer };
-	ValidateDescriptor(cbvHandle);
-	return cbvHandle;
 }
 
 
@@ -150,21 +143,24 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
+	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
+
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
+		data.gpuAddress = gpuBufferPool->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, GetSRV(gpuBuffer));
+		SetDescriptor(data, slot, gpuBufferPool->GetSRV(gpuBufferHandle.get()));
 	}
 }
 
@@ -191,40 +187,46 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
+	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
+
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
+		data.gpuAddress = gpuBufferPool->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, GetUAV(gpuBuffer, 0));
+		SetDescriptor(data, slot, gpuBufferPool->GetUAV(gpuBufferHandle.get()));
 	}
 }
 
 
-void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
+	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
+
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBuffer->GetNativeObject(NativeObjectType::DX12_GpuVirtualAddress).integer;
+		data.gpuAddress = gpuBufferPool->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, GetCBV(gpuBuffer));
+		SetDescriptor(data, slot, gpuBufferPool->GetCBV(gpuBufferHandle.get()));
 	}
 }
 

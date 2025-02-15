@@ -49,7 +49,7 @@ void ResourceSet::SetSRV(int param, int slot, const IDepthBuffer* depthBuffer, b
 }
 
 
-void ResourceSet::SetSRV(int param, int slot, const IGpuBuffer* gpuBuffer)
+void ResourceSet::SetSRV(int param, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetSRV(slot, gpuBuffer);
@@ -70,14 +70,14 @@ void ResourceSet::SetUAV(int param, int slot, const IDepthBuffer* depthBuffer)
 }
 
 
-void ResourceSet::SetUAV(int param, int slot, const IGpuBuffer* gpuBuffer)
+void ResourceSet::SetUAV(int param, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetUAV(slot, gpuBuffer);
 }
 
 
-void ResourceSet::SetCBV(int param, int slot, const IGpuBuffer* gpuBuffer)
+void ResourceSet::SetCBV(int param, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetCBV(slot, gpuBuffer);
