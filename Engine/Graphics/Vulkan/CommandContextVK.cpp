@@ -166,6 +166,11 @@ void CommandContextVK::Initialize()
 {
 	assert(m_commandBuffer == VK_NULL_HANDLE);
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
+
+	m_descriptorSetPool = GetVulkanDescriptorSetPool();
+	m_gpuBufferPool = GetVulkanGpuBufferPool();
+	m_pipelineStatePool = GetVulkanPipelineStatePool();
+	m_rootSignaturePool = GetVulkanRootSignaturePool();
 }
 
 
@@ -223,11 +228,10 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 
 void CommandContextVK::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	GpuBufferPool* pool = GetVulkanGpuBufferPool();
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	BufferBarrier barrier{
-		.buffer			= pool->GetBuffer(handle.get()),
+		.buffer			= m_gpuBufferPool->GetBuffer(handle.get()),
 		.beforeState	= gpuBuffer.GetUsageState(),
 		.afterState		= newState,
 		.size			= gpuBuffer.GetSize()
@@ -357,11 +361,10 @@ void CommandContextVK::FlushResourceBarriers()
 
 void CommandContextVK::ClearUAV(GpuBuffer& gpuBuffer)
 {
-	GpuBufferPool* pool = GetVulkanGpuBufferPool();
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	uint32_t data = 0;
-	vkCmdFillBuffer(m_commandBuffer, pool->GetBuffer(handle.get()), 0, VK_WHOLE_SIZE, data);
+	vkCmdFillBuffer(m_commandBuffer, m_gpuBufferPool->GetBuffer(handle.get()), 0, VK_WHOLE_SIZE, data);
 }
 
 
@@ -552,7 +555,7 @@ void CommandContextVK::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	VkPipelineLayout pipelineLayout = GetVulkanRootSignaturePool()->GetPipelineLayout(rootSignature.GetHandle().get());
+	VkPipelineLayout pipelineLayout = m_rootSignaturePool->GetPipelineLayout(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{
@@ -579,7 +582,7 @@ void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	VkPipeline vkPipeline = GetVulkanPipelineStatePool()->GetPipeline(graphicsPipeline.GetHandle().get());
+	VkPipeline vkPipeline = m_pipelineStatePool->GetPipeline(graphicsPipeline.GetHandle().get());
 
 	if (vkPipeline != m_graphicsPipeline)
 	{
@@ -728,22 +731,20 @@ void CommandContextVK::SetResources(ResourceSet& resourceSet)
 
 void CommandContextVK::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 {
-	GpuBufferPool* pool = GetVulkanGpuBufferPool();
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	const bool is16Bit = gpuBuffer.GetElementSize() == sizeof(uint16_t);
 	const VkIndexType indexType = is16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
-	vkCmdBindIndexBuffer(m_commandBuffer, pool->GetBuffer(handle.get()), 0, indexType);
+	vkCmdBindIndexBuffer(m_commandBuffer, m_gpuBufferPool->GetBuffer(handle.get()), 0, indexType);
 }
 
 
 void CommandContextVK::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
 {
-	GpuBufferPool* pool = GetVulkanGpuBufferPool();
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	VkDeviceSize offsets[1] = { 0 };
-	VkBuffer buffers[1] = { pool->GetBuffer(handle.get()) };
+	VkBuffer buffers[1] = { m_gpuBufferPool->GetBuffer(handle.get()) };
 	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
 }
 
@@ -775,11 +776,10 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
-	GpuBufferPool* pool = GetVulkanGpuBufferPool();
 	GpuBufferHandle handle = destBuffer.GetHandle();
 
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, pool->GetBuffer(handle.get()), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, m_gpuBufferPool->GetBuffer(handle.get()), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
@@ -791,19 +791,17 @@ void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	auto* pool = GetVulkanDescriptorSetPool();
-
-	if (!pool->HasDescriptors(descriptorSetHandle))
+	if (!m_descriptorSetPool->HasDescriptors(descriptorSetHandle))
 		return;
 
-	pool->UpdateGpuDescriptors(descriptorSetHandle);
+	m_descriptorSetPool->UpdateGpuDescriptors(descriptorSetHandle);
 
-	VkDescriptorSet vkDescriptorSet = pool->GetDescriptorSet(descriptorSetHandle);
+	VkDescriptorSet vkDescriptorSet = m_descriptorSetPool->GetDescriptorSet(descriptorSetHandle);
 	if (vkDescriptorSet == VK_NULL_HANDLE)
 		return;
 
-	uint32_t dynamicOffset = pool->GetDynamicOffset(descriptorSetHandle);
-	bool isDynamicBuffer = pool->IsDynamicBuffer(descriptorSetHandle);
+	const uint32_t dynamicOffset = m_descriptorSetPool->GetDynamicOffset(descriptorSetHandle);
+	const bool isDynamicBuffer = m_descriptorSetPool->IsDynamicBuffer(descriptorSetHandle);
 
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,

@@ -137,6 +137,11 @@ void CommandContext12::Reset()
 void CommandContext12::Initialize()
 {
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
+
+	m_descriptorSetPool = GetD3D12DescriptorSetPool();
+	m_gpuBufferPool = GetD3D12GpuBufferPool();
+	m_pipelineStatePool = GetD3D12PipelineStatePool();
+	m_rootSignaturePool = GetD3D12RootSignaturePool();
 }
 
 
@@ -195,10 +200,9 @@ void CommandContext12::TransitionResource(GpuBuffer& gpuBuffer, ResourceState ne
 		assert(IsValidComputeResourceState(newState));
 	}
 
-	GpuBufferPool* pool = GetD3D12GpuBufferPool();
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
-	ID3D12Resource* resource = pool->GetResource(handle.get());
+	ID3D12Resource* resource = m_gpuBufferPool->GetResource(handle.get());
 
 	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
 
@@ -391,7 +395,7 @@ void CommandContext12::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	ID3D12RootSignature* d3d12RootSignature = GetD3D12RootSignaturePool()->GetRootSignature(rootSignature.GetHandle().get());
+	ID3D12RootSignature* d3d12RootSignature = m_rootSignaturePool->GetRootSignature(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{
@@ -423,7 +427,7 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 	m_computePipelineState = nullptr;
 
 	// TODO: Pass handle in as function parameter
-	ID3D12PipelineState* graphicsPSO = GetD3D12PipelineStatePool()->GetPipelineState(graphicsPipeline.GetHandle().get());
+	ID3D12PipelineState* graphicsPSO = m_pipelineStatePool->GetPipelineState(graphicsPipeline.GetHandle().get());
 
 	if (m_graphicsPipelineState != graphicsPSO)
 	{
@@ -611,13 +615,12 @@ void CommandContext12::SetResources(ResourceSet& resourceSet)
 
 void CommandContext12::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 {
-	auto gpuBufferPool = GetD3D12GpuBufferPool();
 	auto handle = gpuBuffer.GetHandle();
 
-	const bool is16Bit = gpuBufferPool->GetElementSize(handle.get()) == sizeof(uint16_t);
+	const bool is16Bit = m_gpuBufferPool->GetElementSize(handle.get()) == sizeof(uint16_t);
 	D3D12_INDEX_BUFFER_VIEW ibv{
-		.BufferLocation		= gpuBufferPool->GetGpuAddress(handle.get()),
-		.SizeInBytes		= (uint32_t)gpuBufferPool->GetSize(handle.get()),
+		.BufferLocation		= m_gpuBufferPool->GetGpuAddress(handle.get()),
+		.SizeInBytes		= (uint32_t)gpuBuffer.GetSize(),
 		.Format				= is16Bit ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
 	};
 	m_commandList->IASetIndexBuffer(&ibv);
@@ -626,13 +629,12 @@ void CommandContext12::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 
 void CommandContext12::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
 {
-	auto gpuBufferPool = GetD3D12GpuBufferPool();
 	auto handle = gpuBuffer.GetHandle();
 
 	D3D12_VERTEX_BUFFER_VIEW vbv{
-		.BufferLocation		= gpuBufferPool->GetGpuAddress(handle.get()),
-		.SizeInBytes		= (uint32_t)gpuBufferPool->GetSize(handle.get()),
-		.StrideInBytes		= (uint32_t)gpuBufferPool->GetElementSize(handle.get())
+		.BufferLocation		= m_gpuBufferPool->GetGpuAddress(handle.get()),
+		.SizeInBytes		= (uint32_t)gpuBuffer.GetSize(),
+		.StrideInBytes		= (uint32_t)gpuBuffer.GetElementSize()
 	};
 	m_commandList->IASetVertexBuffers(slot, 1, &vbv);
 }
@@ -704,14 +706,13 @@ void CommandContext12::InsertUAVBarrier_Internal(ID3D12Resource* resource, bool 
 
 void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
-	auto gpuBufferPool = GetD3D12GpuBufferPool();
 	auto handle = destBuffer.GetHandle();
 
 	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
 
 	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(gpuBufferPool->GetResource(handle.get()), offset, stagingAllocation->GetResource(), 0, numBytes);
+	m_commandList->CopyBufferRegion(m_gpuBufferPool->GetResource(handle.get()), offset, stagingAllocation->GetResource(), 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
@@ -722,15 +723,13 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	auto* pool = GetD3D12DescriptorSetPool();
-
-	if (!pool->HasBindableDescriptors(descriptorSetHandle))
+	if (!m_descriptorSetPool->HasBindableDescriptors(descriptorSetHandle))
 		return;
 
 	// Copy descriptors
-	pool->UpdateGpuDescriptors(descriptorSetHandle);
+	m_descriptorSetPool->UpdateGpuDescriptors(descriptorSetHandle);
 
-	auto gpuDescriptor = pool->GetGpuDescriptorHandle(descriptorSetHandle);
+	auto gpuDescriptor = m_descriptorSetPool->GetGpuDescriptorHandle(descriptorSetHandle);
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
 		if (m_type == CommandListType::Direct)
@@ -742,9 +741,9 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 			m_commandList->SetComputeRootDescriptorTable(rootIndex, gpuDescriptor);
 		}
 	}
-	else if (pool->GetGpuAddress(descriptorSetHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	else if (m_descriptorSetPool->GetGpuAddress(descriptorSetHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = pool->GetGpuAddressWithOffset(descriptorSetHandle);
+		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = m_descriptorSetPool->GetGpuAddressWithOffset(descriptorSetHandle);
 		if (m_type == CommandListType::Direct)
 		{
 			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);

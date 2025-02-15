@@ -31,7 +31,11 @@ namespace Luna::VK
 
 // Forward declarations
 class ComputeContext;
+class DescriptorSetPool;
+class GpuBufferPool;
 class GraphicsContext;
+class PipelineStatePool;
+class RootSignaturePool;
 
 
 struct TextureBarrier
@@ -149,6 +153,12 @@ private:
 	bool m_bInvertedViewport{ true };
 	bool m_hasPendingDebugEvent{ false };
 	bool m_isRendering{ false };
+
+	// Pools
+	DescriptorSetPool* m_descriptorSetPool{ nullptr };
+	GpuBufferPool* m_gpuBufferPool{ nullptr };
+	PipelineStatePool* m_pipelineStatePool{ nullptr };
+	RootSignaturePool* m_rootSignaturePool{ nullptr };
 
 	// Resource barriers
 	std::vector<TextureBarrier> m_textureBarriers;

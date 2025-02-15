@@ -28,6 +28,13 @@ class DescriptorSetHandleType;
 namespace Luna::DX12
 {
 
+// Forward declarations
+class DescriptorSetPool;
+class GpuBufferPool;
+class PipelineStatePool;
+class RootSignaturePool;
+
+
 class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
 {
@@ -129,6 +136,12 @@ private:
 	uint32_t m_numBarriersToFlush{ 0 };
 
 	bool m_bHasPendingDebugEvent{ false };
+
+	// Pools
+	DescriptorSetPool* m_descriptorSetPool{ nullptr };
+	GpuBufferPool* m_gpuBufferPool{ nullptr };
+	PipelineStatePool* m_pipelineStatePool{ nullptr };
+	RootSignaturePool* m_rootSignaturePool{ nullptr };
 
 	// Render target state
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 8> m_rtvs;
