@@ -3,13 +3,12 @@ TODO:
 -- Proper Vulkan extension support
 -- Clean up ShaderCompiler code organization
 -- Proper DX12 feature support
--- Dynamic descriptors / push descriptors (e.g. SetSRV, SetUAV etc on command context)
+-- DX12: Dynamic descriptors (e.g. SetSRV, SetUAV etc on command context)
+-- Vulkan: Dynamic descriptors / push descriptors (e.g. SetSRV, SetUAV etc on command context)
 -- Command context linear allocator for dynamic buffers
 -- Handles and pools for:
     -- ColorBuffer
     -- DepthBuffer
-    -- GpuBuffer
-    -- RootSignature
     -- ComputePipelineState
     -- MeshletPipelineState
     -- RayTracing (??)
@@ -41,6 +40,9 @@ TODO:
 DONE:
 -- Handles and pools for:
     -- GraphicsPipelineState
+    -- DescriptorSet
+    -- GpuBuffer
+    -- RootSignature
 -- Backbuffer count (3) is hardcoded - handle this a different way
 
 
