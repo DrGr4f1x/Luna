@@ -127,6 +127,12 @@ IGraphicsDevice* GetGraphicsDevice()
 }
 
 
+IDepthBufferPool* GetDepthBufferPool()
+{
+	return GetGraphicsDevice()->GetDepthBufferPool();
+}
+
+
 IDescriptorSetPool* GetDescriptorSetPool()
 {
 	return GetGraphicsDevice()->GetDescriptorSetPool();

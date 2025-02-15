@@ -79,4 +79,10 @@ void GpuBuffer::Update(size_t sizeInBytes, const void* data)
 	GetGpuBufferPool()->Update(m_handle.get(), sizeInBytes, 0, data);
 }
 
+
+void GpuBuffer::Update(size_t sizeInBytes, size_t offset, const void* data)
+{
+	GetGpuBufferPool()->Update(m_handle.get(), sizeInBytes, offset, data);
+}
+
 } // namespace Luna

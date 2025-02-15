@@ -44,13 +44,75 @@ struct DepthBufferDesc
 };
 
 
-class __declspec(uuid("6F7CB4D1-353E-4F29-A9EB-31A662587331")) IDepthBuffer : public IPixelBuffer
+class IDepthBufferPool;
+
+
+class __declspec(uuid("BFA0209B-629D-4A01-9E6E-5A4D2F8D884D")) DepthBufferHandleType : public RefCounted<DepthBufferHandleType>
 {
 public:
-	virtual float GetClearDepth() const noexcept = 0;
-	virtual uint8_t GetClearStencil() const noexcept = 0;
+	DepthBufferHandleType(uint32_t index, IDepthBufferPool* pool)
+		: m_index{ index }
+		, m_pool{ pool }
+	{}
+	~DepthBufferHandleType();
+
+	uint32_t GetIndex() const { return m_index; }
+
+private:
+	uint32_t m_index{ 0 };
+	IDepthBufferPool* m_pool{ nullptr };
 };
 
-using DepthBufferHandle = wil::com_ptr<IDepthBuffer>;
+using DepthBufferHandle = wil::com_ptr<DepthBufferHandleType>;
+
+
+class IDepthBufferPool
+{
+public:
+	// Create/Destroy DepthBuffer
+	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
+	virtual void DestroyHandle(DepthBufferHandleType* handle) = 0;
+
+	// Platform agnostic functions
+	virtual ResourceType GetResourceType(DepthBufferHandleType* handle) const = 0;
+	virtual ResourceState GetUsageState(DepthBufferHandleType* handle) const = 0;
+	virtual void SetUsageState(DepthBufferHandleType* handle, ResourceState newState) = 0;
+	virtual uint64_t GetWidth(DepthBufferHandleType* handle) const = 0;
+	virtual uint32_t GetHeight(DepthBufferHandleType* handle) const = 0;
+	virtual uint32_t GetDepthOrArraySize(DepthBufferHandleType* handle) const = 0;
+	virtual uint32_t GetNumMips(DepthBufferHandleType* handle) const = 0;
+	virtual uint32_t GetNumSamples(DepthBufferHandleType* handle) const = 0;
+	virtual uint32_t GetPlaneCount(DepthBufferHandleType* handle) const = 0;
+	virtual Format GetFormat(DepthBufferHandleType* handle) const = 0;
+	virtual float GetClearDepth(DepthBufferHandleType* handle) const = 0;
+	virtual uint8_t GetClearStencil(DepthBufferHandleType* handle) const = 0;
+};
+
+
+class DepthBuffer
+{
+public:
+	void Initialize(const DepthBufferDesc& depthBufferDesc);
+
+	ResourceType GetResourceType() const;
+	ResourceState GetUsageState() const;
+	void SetUsageState(ResourceState newState);
+	uint64_t GetWidth() const;
+	uint32_t GetHeight() const;
+	uint32_t GetDepth() const;
+	uint32_t GetArraySize() const;
+	uint32_t GetNumMips() const;
+	uint32_t GetNumSamples() const;
+	uint32_t GetPlaneCount() const;
+	Format GetFormat() const;
+	TextureDimension GetDimension() const;
+	float GetClearDepth() const;
+	uint8_t GetClearStencil() const;
+
+	DepthBufferHandle GetHandle() const { return m_handle; }
+
+private:
+	DepthBufferHandle m_handle;
+};
 
 } // namespace Luna

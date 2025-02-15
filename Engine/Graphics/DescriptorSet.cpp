@@ -38,7 +38,7 @@ void DescriptorSet::SetSRV(int slot, const IColorBuffer* colorBuffer)
 }
 
 
-void DescriptorSet::SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void DescriptorSet::SetSRV(int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	GetDescriptorSetPool()->SetSRV(m_handle.get(), slot, depthBuffer, depthSrv);
 }
@@ -56,7 +56,7 @@ void DescriptorSet::SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t u
 }
 
 
-void DescriptorSet::SetUAV(int slot, const IDepthBuffer* depthBuffer)
+void DescriptorSet::SetUAV(int slot, const DepthBuffer& depthBuffer)
 {
 	GetDescriptorSetPool()->SetUAV(m_handle.get(), slot, depthBuffer);
 }

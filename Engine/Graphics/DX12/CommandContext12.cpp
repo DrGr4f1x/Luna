@@ -15,7 +15,7 @@
 #include "Graphics\ResourceSet.h"
 
 #include "ColorBuffer12.h"
-#include "DepthBuffer12.h"
+#include "DepthBufferPool12.h"
 #include "DescriptorSetPool12.h"
 #include "Device12.h"
 #include "DeviceManager12.h"
@@ -53,30 +53,6 @@ inline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const IColorBuffer* colorBuffer)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{ .ptr = colorBuffer->GetNativeObject(NativeObjectType::DX12_RTV).integer };
 	return rtvHandle;
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle{};
-
-	switch (depthStencilAspect)
-	{
-	case DepthStencilAspect::ReadWrite:
-		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV).integer };
-		break;
-	case DepthStencilAspect::ReadOnly:
-		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV_ReadOnly).integer };
-		break;
-	case DepthStencilAspect::DepthReadOnly:
-		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV_DepthReadOnly).integer };
-		break;
-	case DepthStencilAspect::StencilReadOnly:
-		dsvHandle = D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = depthBuffer->GetNativeObject(NativeObjectType::DX12_DSV_StencilReadOnly).integer };
-		break;
-	}
-
-	return dsvHandle;
 }
 
 
@@ -138,6 +114,7 @@ void CommandContext12::Initialize()
 {
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 
+	m_depthBufferPool = GetD3D12DepthBufferPool();
 	m_descriptorSetPool = GetD3D12DescriptorSetPool();
 	m_gpuBufferPool = GetD3D12GpuBufferPool();
 	m_pipelineStatePool = GetD3D12PipelineStatePool();
@@ -187,6 +164,26 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 	}
 
 	return fenceValue;
+}
+
+
+void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	ResourceState oldState = depthBuffer.GetUsageState();
+
+	if (m_type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	DepthBufferHandle handle = depthBuffer.GetHandle();
+
+	ID3D12Resource* resource = m_depthBufferPool->GetResource(handle.get());
+
+	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
+
+	depthBuffer.SetUsageState(newState);
 }
 
 
@@ -266,24 +263,33 @@ void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 }
 
 
-void CommandContext12::ClearDepth(IDepthBuffer* depthBuffer)
+void CommandContext12::ClearDepth(DepthBuffer& depthBuffer)
 {
 	FlushResourceBarriers();
-	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+
+	DepthBufferHandle handle = depthBuffer.GetHandle();
+
+	m_commandList->ClearDepthStencilView(m_depthBufferPool->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearStencil(IDepthBuffer* depthBuffer)
+void CommandContext12::ClearStencil(DepthBuffer& depthBuffer)
 {
 	FlushResourceBarriers();
-	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+
+	DepthBufferHandle handle = depthBuffer.GetHandle();
+
+	m_commandList->ClearDepthStencilView(m_depthBufferPool->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
+void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 {
 	FlushResourceBarriers();
-	m_commandList->ClearDepthStencilView(GetDSV(depthBuffer), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+
+	DepthBufferHandle handle = depthBuffer.GetHandle();
+
+	m_commandList->ClearDepthStencilView(m_depthBufferPool->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 
@@ -302,7 +308,7 @@ void CommandContext12::BeginRendering(IColorBuffer* renderTarget)
 }
 
 
-void CommandContext12::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
@@ -311,8 +317,10 @@ void CommandContext12::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* 
 	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
-	m_dsv = GetDSV(depthTarget, depthStencilAspect);
-	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	DepthBufferHandle handle = depthTarget.GetHandle();
+
+	m_dsv = m_depthBufferPool->GetDSV(handle.get(), depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthTarget.GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
 	BindRenderTargets();
@@ -321,13 +329,15 @@ void CommandContext12::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* 
 }
 
 
-void CommandContext12::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
-	m_dsv = GetDSV(depthTarget, depthStencilAspect);
-	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	DepthBufferHandle handle = depthTarget.GetHandle();
+
+	m_dsv = m_depthBufferPool->GetDSV(handle.get(), depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthTarget.GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
 	BindRenderTargets();
@@ -358,7 +368,7 @@ void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
 }
 
 
-void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	assert(renderTargets.size() <= 8);
@@ -374,8 +384,10 @@ void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, ID
 	}
 	m_numRtvs = (uint32_t)renderTargets.size();
 
-	m_dsv = GetDSV(depthTarget, depthStencilAspect);
-	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	DepthBufferHandle handle = depthTarget.GetHandle();
+
+	m_dsv = m_depthBufferPool->GetDSV(handle.get(), depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthTarget.GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
 	BindRenderTargets();

@@ -66,9 +66,6 @@
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\CommandContext.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -106,9 +103,6 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp">
@@ -177,6 +171,15 @@
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\GpuBufferPoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DepthBuffer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\DepthBufferPool12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DepthBufferPoolVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
@@ -318,9 +321,6 @@
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\DepthBuffer12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\DepthBuffer.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -368,9 +368,6 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Core\RefCounted.h">
@@ -445,6 +442,12 @@
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\GpuBufferPoolVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\DepthBufferPool12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DepthBufferPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>

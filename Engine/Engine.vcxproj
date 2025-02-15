@@ -35,14 +35,15 @@
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
     <ClCompile Include="Graphics\CommonStates.cpp" />
+    <ClCompile Include="Graphics\DepthBuffer.cpp" />
     <ClCompile Include="Graphics\DescriptorSet.cpp" />
+    <ClCompile Include="Graphics\DX12\DepthBufferPool12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp" />
     <ClCompile Include="Graphics\DX12\GpuBufferPool12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
-    <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
@@ -62,6 +63,7 @@
     <ClCompile Include="Graphics\ResourceSet.cpp" />
     <ClCompile Include="Graphics\RootSignature.cpp" />
     <ClCompile Include="Graphics\Shader.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DepthBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\GpuBufferPoolVK.cpp" />
@@ -70,7 +72,6 @@
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp" />
@@ -127,13 +128,13 @@
     <ClInclude Include="Graphics\DepthBuffer.h" />
     <ClInclude Include="Graphics\DescriptorSet.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
+    <ClInclude Include="Graphics\DX12\DepthBufferPool12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h" />
     <ClInclude Include="Graphics\DX12\GpuBufferPool12.h" />
     <ClInclude Include="Graphics\DX12\PipelineStatePool12.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
     <ClInclude Include="Graphics\DX12\CommandContext12.h" />
-    <ClInclude Include="Graphics\DX12\DepthBuffer12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
     <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Graphics\ResourceSet.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
     <ClInclude Include="Graphics\Shader.h" />
+    <ClInclude Include="Graphics\Vulkan\DepthBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferPoolVK.h" />
@@ -167,7 +169,6 @@
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
-    <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceVK.h" />

@@ -12,6 +12,7 @@
 
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\DepthBufferPoolVK.h"
 #include "Graphics\Vulkan\DescriptorSetPoolVK.h"
 #include "Graphics\Vulkan\GpuBufferPoolVK.h"
 #include "Graphics\Vulkan\PipelineStatePoolVK.h"
@@ -24,7 +25,6 @@ using namespace Microsoft::WRL;
 namespace Luna
 {
 
-class GraphicsPSOData;
 class Shader;
 
 } // namespace Luna
@@ -148,6 +148,7 @@ class __declspec(uuid("402B61AE-0C51-46D3-B0EC-A2911B380181")) GraphicsDevice
 	friend class CommandContextVK;
 	friend class DeviceManager;
 	friend class Queue;
+	friend class DepthBufferPool;
 	friend class PipelineStatePool;
 
 public:
@@ -156,11 +157,11 @@ public:
 
 	// GraphicsDevice implementation
 	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
-	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 
 	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
+	IDepthBufferPool* GetDepthBufferPool() override { return &m_depthBufferPool; }
 	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
 	IGpuBufferPool* GetGpuBufferPool() override { return &m_gpuBufferPool; }
 	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
@@ -192,6 +193,7 @@ private:
 	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
 
 	// Platform data pools
+	DepthBufferPool m_depthBufferPool;
 	DescriptorSetPool m_descriptorSetPool;
 	GpuBufferPool m_gpuBufferPool;
 	PipelineStatePool m_pipelinePool;

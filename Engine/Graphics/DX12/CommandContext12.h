@@ -29,6 +29,7 @@ namespace Luna::DX12
 {
 
 // Forward declarations
+class DepthBufferPool;
 class DescriptorSetPool;
 class GpuBufferPool;
 class PipelineStatePool;
@@ -59,6 +60,7 @@ public:
 	void BeginFrame() override {}
 	uint64_t Finish(bool bWaitForCompletion) override;
 
+	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(IGpuResource* colorBuffer, bool bFlushImmediate) override;
@@ -69,15 +71,15 @@ public:
 	//void ClearUAV(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer) override;
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
-	void ClearDepth(IDepthBuffer* depthBuffer) override;
-	void ClearStencil(IDepthBuffer* depthBuffer) override;
-	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
+	void ClearDepth(DepthBuffer& depthBuffer) override;
+	void ClearStencil(DepthBuffer& depthBuffer) override;
+	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
 	void BeginRendering(IColorBuffer* renderTarget) override;
-	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void BeginRendering(std::span<IColorBuffer*> renderTargets) override;
-	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
 	void SetRootSignature(RootSignature& rootSignature) override;
@@ -138,6 +140,7 @@ private:
 	bool m_bHasPendingDebugEvent{ false };
 
 	// Pools
+	DepthBufferPool* m_depthBufferPool{ nullptr };
 	DescriptorSetPool* m_descriptorSetPool{ nullptr };
 	GpuBufferPool* m_gpuBufferPool{ nullptr };
 	PipelineStatePool* m_pipelineStatePool{ nullptr };

@@ -16,7 +16,6 @@
 
 #include "ColorBufferVK.h"
 #include "CommandContextVK.h"
-#include "DepthBufferVK.h"
 #include "DescriptorAllocatorVK.h"
 
 using namespace std;
@@ -52,6 +51,7 @@ bool QueryBufferFeature(VkFormatProperties properties, VkFormatFeatureFlagBits f
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
 	, m_vkDevice{ desc.device }
+	, m_depthBufferPool{ m_vkDevice.get() }
 	, m_descriptorSetPool{ m_vkDevice.get() }
 	, m_gpuBufferPool{ m_vkDevice.get() }
 	, m_pipelinePool{ m_vkDevice.get() }
@@ -153,97 +153,6 @@ ColorBufferHandle GraphicsDevice::CreateColorBuffer(const ColorBufferDesc& color
 }
 
 
-DepthBufferHandle GraphicsDevice::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
-{
-	// Create depth image
-	ImageDesc imageDesc{
-		.name				= depthBufferDesc.name,
-		.width				= depthBufferDesc.width,
-		.height				= depthBufferDesc.height,
-		.arraySizeOrDepth	= depthBufferDesc.arraySizeOrDepth,
-		.format				= depthBufferDesc.format,
-		.numMips			= depthBufferDesc.numMips,
-		.numSamples			= depthBufferDesc.numSamples,
-		.resourceType		= depthBufferDesc.resourceType,
-		.imageUsage			= GpuImageUsage::DepthBuffer,
-		.memoryAccess		= MemoryAccess::GpuReadWrite
-	};
-
-	auto image = CreateImage(imageDesc);
-
-	// Create image views and descriptors
-	const bool bHasStencil = IsStencilFormat(depthBufferDesc.format);
-
-	auto imageAspect = ImageAspect::Depth;
-	if (bHasStencil)
-	{
-		imageAspect |= ImageAspect::Stencil;
-	}
-
-	ImageViewDesc imageViewDesc{
-		.image				= image.get(),
-		.name				= depthBufferDesc.name,
-		.resourceType		= ResourceType::Texture2D,
-		.imageUsage			= GpuImageUsage::DepthStencilTarget,
-		.format				= depthBufferDesc.format,
-		.imageAspect		= imageAspect,
-		.baseMipLevel		= 0,
-		.mipCount			= depthBufferDesc.numMips,
-		.baseArraySlice		= 0,
-		.arraySize			= depthBufferDesc.arraySizeOrDepth
-	};
-
-	auto imageViewDepthStencil = CreateImageView(imageViewDesc);
-	wil::com_ptr<CVkImageView> imageViewDepthOnly;
-	wil::com_ptr<CVkImageView> imageViewStencilOnly;
-
-	if (bHasStencil)
-	{
-		imageViewDesc
-			.SetName(format("{} Depth Image View", depthBufferDesc.name))
-			.SetImageAspect(ImageAspect::Depth)
-			.SetViewType(TextureSubresourceViewType::DepthOnly);
-
-		imageViewDepthOnly = CreateImageView(imageViewDesc);
-
-		imageViewDesc
-			.SetName(format("{} Stencil Image View", depthBufferDesc.name))
-			.SetImageAspect(ImageAspect::Stencil)
-			.SetViewType(TextureSubresourceViewType::StencilOnly);
-
-		imageViewStencilOnly = CreateImageView(imageViewDesc);
-	}
-	else
-	{
-		imageViewDepthOnly = imageViewDepthStencil;
-		imageViewStencilOnly = imageViewDepthStencil;
-	}
-
-	auto imageInfoDepth = VkDescriptorImageInfo{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewDepthOnly,
-		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
-	};
-	auto imageInfoStencil = VkDescriptorImageInfo{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewStencilOnly,
-		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
-	};
-
-	DepthBufferDescExt depthBufferDescExt{
-		.image					= image.get(),
-		.imageViewDepthStencil	= imageViewDepthStencil.get(),
-		.imageViewDepthOnly		= imageViewDepthOnly.get(),
-		.imageViewStencilOnly	= imageViewStencilOnly.get(),
-		.imageInfoDepth			= imageInfoDepth,
-		.imageInfoStencil		= imageInfoStencil,
-		.usageState				= ResourceState::Undefined
-	};
-
-	return Make<DepthBufferVK>(depthBufferDesc, depthBufferDescExt);
-}
-
-
 RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
 	return m_rootSignaturePool.CreateRootSignature(rootSignatureDesc);
@@ -259,6 +168,7 @@ PipelineStateHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelin
 void GraphicsDevice::CreateResources()
 {
 	m_vmaAllocator = CreateVmaAllocator();
+	m_depthBufferPool.SetAllocator(m_vmaAllocator.get());
 	m_gpuBufferPool.SetAllocator(m_vmaAllocator.get());
 }
 

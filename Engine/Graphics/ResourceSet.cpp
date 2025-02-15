@@ -42,7 +42,7 @@ void ResourceSet::SetSRV(int param, int slot, const IColorBuffer* colorBuffer)
 }
 
 
-void ResourceSet::SetSRV(int param, int slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void ResourceSet::SetSRV(int param, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetSRV(slot, depthBuffer, depthSrv);
@@ -63,7 +63,7 @@ void ResourceSet::SetUAV(int param, int slot, const IColorBuffer* colorBuffer, u
 }
 
 
-void ResourceSet::SetUAV(int param, int slot, const IDepthBuffer* depthBuffer)
+void ResourceSet::SetUAV(int param, int slot, const DepthBuffer& depthBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetUAV(slot, depthBuffer);

@@ -14,9 +14,9 @@ namespace Luna
 {
 
 // Forward declarations
+class DepthBuffer;
 class GpuBuffer;
 class IColorBuffer;
-class IDepthBuffer;
 class IDescriptorSetPool;
 class RootSignature;
 
@@ -49,11 +49,11 @@ public:
 	// Platform agnostic functions
 	// TODO: change 'int slot' to uint32_t
 	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer) = 0;
-	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) = 0;
+	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv = true) = 0;
 	virtual void SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer) = 0;
 
 	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) = 0;
-	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer) = 0;
+	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer) = 0;
 	virtual void SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer) = 0;
 
 	virtual void SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer) = 0;
@@ -71,11 +71,11 @@ public:
 
 	// TODO: change 'int slot' to uint32_t
 	void SetSRV(int slot, const IColorBuffer* colorBuffer);
-	void SetSRV(int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true);
+	void SetSRV(int slot, const DepthBuffer& depthBuffer, bool depthSrv = true);
 	void SetSRV(int slot, const GpuBuffer& gpuBuffer);
 
 	void SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0);
-	void SetUAV(int slot, const IDepthBuffer* depthBuffer);
+	void SetUAV(int slot, const DepthBuffer& depthBuffer);
 	void SetUAV(int slot, const GpuBuffer& gpuBuffer);
 
 	void SetCBV(int slot, const GpuBuffer& gpuBuffer);

@@ -15,6 +15,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\DX12\DepthBufferPool12.h"
 #include "Graphics\DX12\GpuBufferPool12.h"
 
 
@@ -33,15 +34,6 @@ inline void ValidateDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE handle)
 inline D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const IGpuResource* gpuResource)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{ .ptr = gpuResource->GetNativeObject(NativeObjectType::DX12_SRV).integer };
-	ValidateDescriptor(srvHandle);
-	return srvHandle;
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const IDepthBuffer* depthBuffer, bool depthSrv)
-{
-	NativeObjectType type = depthSrv ? NativeObjectType::DX12_SRV_Depth : NativeObjectType::DX12_SRV_Stencil;
-	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{ .ptr = depthBuffer->GetNativeObject(type).integer };
 	ValidateDescriptor(srvHandle);
 	return srvHandle;
 }
@@ -132,14 +124,17 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	SetDescriptor(data, slot, GetSRV(depthBuffer, depthSrv));
+	auto depthBufferPool = GetD3D12DepthBufferPool();
+	auto depthBufferHandle = depthBuffer.GetHandle();
+
+	SetDescriptor(data, slot, depthBufferPool->GetSRV(depthBufferHandle.get(), depthSrv));
 }
 
 
@@ -176,12 +171,15 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* colorBuffer)
+void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
+
+	auto depthBufferPool = GetD3D12DepthBufferPool();
+	auto depthBufferHandle = depthBuffer.GetHandle();
 
 	assert_msg(false, "Depth UAVs not yet supported");
 }

@@ -41,7 +41,7 @@ class GpuBufferPool : public IGpuBufferPool
 	static const uint32_t MaxItems = (1 << 12);
 
 public:
-	explicit GpuBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator);
+	GpuBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator);
 	~GpuBufferPool();
 
 	// Create/Destroy GpuBuffer

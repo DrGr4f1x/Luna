@@ -50,7 +50,7 @@ private:
 	float m_zoom{ -2.5f };
 	Luna::CameraController m_controller;
 
-	Luna::DepthBufferHandle m_depthBuffer;
+	Luna::DepthBuffer m_depthBuffer;
 
 	// Vertex layout used in this example
 	struct Vertex

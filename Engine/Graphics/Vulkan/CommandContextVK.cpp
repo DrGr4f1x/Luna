@@ -16,7 +16,6 @@
 #include "Graphics\ResourceSet.h"
 
 #include "ColorBufferVK.h"
-#include "DepthBufferVK.h"
 #include "DescriptorSetPoolVK.h"
 #include "DeviceVK.h"
 #include "DeviceManagerVK.h"
@@ -66,30 +65,30 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IColorBuffer* renderTarget)
 }
 
 
-VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+VkRenderingAttachmentInfo GetRenderingAttachmentInfo(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	VkImageView imageView{ VK_NULL_HANDLE };
+	auto depthBufferPool = GetVulkanDepthBufferPool();
+	auto handle = depthTarget.GetHandle();
+
+	VkImageView imageView = depthBufferPool->GetImageView(handle.get(), depthStencilAspect);
+
 	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
 	{
 	case DepthStencilAspect::ReadWrite:
 		imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV);
 		break;
 
 	case DepthStencilAspect::ReadOnly:
 		imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV);
 		break;
 
 	case DepthStencilAspect::DepthReadOnly:
 		imageLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL;
-		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV_Depth);
 		break;
 
 	case DepthStencilAspect::StencilReadOnly:
 		imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
-		imageView = depthTarget->GetNativeObject(NativeObjectType::VK_ImageView_DSV_Stencil);
 		break;
 	}
 
@@ -100,7 +99,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(IDepthBuffer* depthTarget, 
 		.resolveMode = VK_RESOLVE_MODE_NONE,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
 		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		.clearValue = GetDepthStencilClearValue(depthTarget->GetClearDepth(), depthTarget->GetClearStencil())
+		.clearValue = GetDepthStencilClearValue(depthTarget.GetClearDepth(), depthTarget.GetClearStencil())
 	};
 
 	return info;
@@ -167,6 +166,7 @@ void CommandContextVK::Initialize()
 	assert(m_commandBuffer == VK_NULL_HANDLE);
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 
+	m_depthBufferPool = GetVulkanDepthBufferPool();
 	m_descriptorSetPool = GetVulkanDescriptorSetPool();
 	m_gpuBufferPool = GetVulkanGpuBufferPool();
 	m_pipelineStatePool = GetVulkanPipelineStatePool();
@@ -223,6 +223,34 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 	}
 
 	return fenceValue;
+}
+
+
+void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	DepthBufferHandle handle = depthBuffer.GetHandle();
+
+	TextureBarrier barrier{
+		.image				= m_depthBufferPool->GetImage(handle.get()),
+		.format				= FormatToVulkan(depthBuffer.GetFormat()),
+		.imageAspect		= GetImageAspect(depthBuffer.GetFormat()),
+		.beforeState		= depthBuffer.GetUsageState(),
+		.afterState			= newState,
+		.numMips			= depthBuffer.GetNumMips(),
+		.mipLevel			= 0,
+		.arraySizeOrDepth	= depthBuffer.GetArraySize(),
+		.arraySlice			= 0,
+		.bWholeTexture		= true
+	};
+
+	m_textureBarriers.push_back(barrier);
+
+	depthBuffer.SetUsageState(newState);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
 }
 
 
@@ -402,45 +430,48 @@ void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 }
 
 
-void CommandContextVK::ClearDepth(IDepthBuffer* depthBuffer)
+void CommandContextVK::ClearDepth(DepthBuffer& depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
-void CommandContextVK::ClearStencil(IDepthBuffer* depthBuffer)
+void CommandContextVK::ClearStencil(DepthBuffer& depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
+void CommandContextVK::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags)
+void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags)
 {
-	ResourceState oldState = depthBuffer->GetUsageState();
+	ResourceState oldState = depthBuffer.GetUsageState();
 
 	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
 
 	VkClearDepthStencilValue depthVal{
-		.depth		= depthBuffer->GetClearDepth(),
-		.stencil	= depthBuffer->GetClearStencil()
+		.depth		= depthBuffer.GetClearDepth(),
+		.stencil	= depthBuffer.GetClearStencil()
 	};
 
 	VkImageSubresourceRange range{
 		.aspectMask			= flags,
 		.baseMipLevel		= 0,
-		.levelCount			= depthBuffer->GetNumMips(),
+		.levelCount			= depthBuffer.GetNumMips(),
 		.baseArrayLayer		= 0,
-		.layerCount			= depthBuffer->GetArraySize()
+		.layerCount			= depthBuffer.GetArraySize()
 	};
 
 	FlushResourceBarriers();
-	vkCmdClearDepthStencilImage(m_commandBuffer, depthBuffer->GetNativeObject(NativeObjectType::VK_Image), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+
+	DepthBufferHandle handle = depthBuffer.GetHandle();
+
+	vkCmdClearDepthStencilImage(m_commandBuffer, m_depthBufferPool->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
 
 	TransitionResource(depthBuffer, oldState, false);
 }
@@ -460,7 +491,7 @@ void CommandContextVK::BeginRendering(IColorBuffer* renderTarget)
 }
 
 
-void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
@@ -470,7 +501,7 @@ void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* 
 
 	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
 	m_hasDsv = true;
-	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+	m_dsvFormat = FormatToVulkan(depthTarget.GetFormat());
 
 	SetRenderingArea(renderTarget);
 	SetRenderingArea(depthTarget);
@@ -479,13 +510,13 @@ void CommandContextVK::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* 
 }
 
 
-void CommandContextVK::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
 	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
 	m_hasDsv = true;
-	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+	m_dsvFormat = FormatToVulkan(depthTarget.GetFormat());
 
 	SetRenderingArea(depthTarget);
 
@@ -514,7 +545,7 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets)
 }
 
 
-void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 	assert(renderTargets.size() <= 8);
@@ -533,7 +564,7 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> renderTargets, ID
 
 	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
 	m_hasDsv = true;
-	m_dsvFormat = FormatToVulkan(depthTarget->GetFormat());
+	m_dsvFormat = FormatToVulkan(depthTarget.GetFormat());
 
 	SetRenderingArea(depthTarget);
 
@@ -829,6 +860,23 @@ void CommandContextVK::SetRenderingArea(IPixelBuffer* pixelBuffer)
 
 	m_renderingArea.extent.width = (uint32_t)pixelBuffer->GetWidth();
 	m_renderingArea.extent.height = pixelBuffer->GetHeight();
+}
+
+
+void CommandContextVK::SetRenderingArea(const DepthBuffer& depthBuffer)
+{
+	m_renderingArea.offset.x = 0;
+	m_renderingArea.offset.y = 0;
+
+	if (m_renderingArea.extent.width != 0 || m_renderingArea.extent.height != 0)
+	{
+		// Validate dimensions
+		assert(m_renderingArea.extent.width == (uint32_t)depthBuffer.GetWidth());
+		assert(m_renderingArea.extent.height == depthBuffer.GetHeight());
+	}
+
+	m_renderingArea.extent.width = (uint32_t)depthBuffer.GetWidth();
+	m_renderingArea.extent.height = depthBuffer.GetHeight();
 }
 
 

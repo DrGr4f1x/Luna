@@ -21,7 +21,6 @@ namespace Luna
 
 // Forward declarations
 class RootSignatureHandleType;
-class GraphicsPSOData;
 
 
 struct RenderTargetBlendDesc

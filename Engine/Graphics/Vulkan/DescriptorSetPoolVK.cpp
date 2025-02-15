@@ -15,6 +15,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\Vulkan\DepthBufferPoolVK.h"
 #include "Graphics\Vulkan\GpuBufferPoolVK.h"
 
 
@@ -33,13 +34,6 @@ const VkDescriptorImageInfo* GetImageInfo(const IGpuResource* gpuResource)
 const VkDescriptorImageInfo* GetImageInfoUAV(const IGpuResource* gpuResource, uint32_t index)
 {
 	return gpuResource->GetNativeObject(NativeObjectType::VK_ImageInfo_UAV, index);
-}
-
-
-const VkDescriptorImageInfo* GetImageInfoDepth(const IDepthBuffer* depthBuffer, bool depthSrv)
-{
-	NativeObjectType type = depthSrv ? NativeObjectType::VK_ImageInfo_SRV_Depth : NativeObjectType::VK_ImageInfo_SRV_Stencil;
-	return depthBuffer->GetNativeObject(type);
 }
 
 
@@ -155,7 +149,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	assert(handle != 0);
 
@@ -164,17 +158,17 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
 
-	const VkDescriptorImageInfo* imageInfo = GetImageInfoDepth(depthBuffer, depthSrv);
-
-	if (writeSet.pImageInfo == imageInfo)
-		return;
+	auto depthBufferPool = GetVulkanDepthBufferPool();
+	auto depthBufferHandle = depthBuffer.GetHandle();
 
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = data.descriptorSet;
 	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
 	writeSet.dstArrayElement = 0;
-	writeSet.pImageInfo = imageInfo;
+
+	data.descriptorData[slot] = depthBufferPool->GetImageInfo(depthBufferHandle.get(), depthSrv);
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);
 }
@@ -243,7 +237,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const IDepthBuffer* depthBuffer)
+void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer)
 {
 	assert(handle != 0);
 

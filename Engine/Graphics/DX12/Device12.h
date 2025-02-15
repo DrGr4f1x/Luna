@@ -13,18 +13,13 @@
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Shader.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\DepthBufferPool12.h"
 #include "Graphics\DX12\DescriptorSetPool12.h"
 #include "Graphics\DX12\GpuBufferPool12.h"
 #include "Graphics\DX12\PipelineStatePool12.h"
 #include "Graphics\DX12\RootSignaturePool12.h"
 
 using namespace Microsoft::WRL;
-
-
-namespace Luna
-{
-class GraphicsPSOData;
-}
 
 
 namespace Luna::DX12
@@ -110,6 +105,7 @@ class __declspec(uuid("017DADC6-170C-4F84-AB6A-CA0938AB6A3F")) GraphicsDevice
 	friend class CommandContext12;
 	friend class DeviceManager;
 	friend class UserDescriptorHeap;
+	friend class DepthBufferPool;
 	friend class GpuBufferPool;
 	friend class PipelineStatePool;
 
@@ -119,11 +115,11 @@ public:
 
 	// GraphicsDevice implementation
 	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
-	wil::com_ptr<IDepthBuffer> CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 
 	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
 
+	IDepthBufferPool* GetDepthBufferPool() override { return &m_depthBufferPool; }
 	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
 	IGpuBufferPool* GetGpuBufferPool() override { return &m_gpuBufferPool; }
 	IPipelineStatePool* GetPipelineStatePool() override { return &m_pipelinePool; }
@@ -166,6 +162,7 @@ private:
 	std::unordered_map<DXGI_FORMAT, uint8_t> m_dxgiFormatPlaneCounts;
 
 	// Platform data pools
+	DepthBufferPool m_depthBufferPool;
 	DescriptorSetPool m_descriptorSetPool;
 	GpuBufferPool m_gpuBufferPool;
 	PipelineStatePool m_pipelinePool;

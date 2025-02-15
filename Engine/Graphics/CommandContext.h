@@ -19,6 +19,7 @@ namespace Luna
 // Forward declarations
 class CommandContext;
 class ComputeContext;
+class DepthBuffer;
 class DescriptorSet;
 class GpuBuffer;
 class GraphicsContext;
@@ -27,7 +28,6 @@ class ResourceSet;
 class RootSignature;
 
 class IColorBuffer;
-class IDepthBuffer;
 class IGpuResource;
 
 
@@ -54,6 +54,7 @@ public:
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
+	virtual void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void InsertUAVBarrier(IGpuResource* colorBuffer, bool bFlushImmediate) = 0;
@@ -65,15 +66,15 @@ public:
 	//virtual void ClearUAV(IColorBuffer* colorBuffer) = 0;
 	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
 	virtual void ClearColor(IColorBuffer* colorBuffer, Color clearColor) = 0;
-	virtual void ClearDepth(IDepthBuffer* depthBuffer) = 0;
-	virtual void ClearStencil(IDepthBuffer* depthBuffer) = 0;
-	virtual void ClearDepthAndStencil(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearDepth(DepthBuffer& depthBuffer) = 0;
+	virtual void ClearStencil(DepthBuffer& depthBuffer) = 0;
+	virtual void ClearDepthAndStencil(DepthBuffer& depthBuffer) = 0;
 
 	virtual void BeginRendering(IColorBuffer* renderTarget) = 0;
-	virtual void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
-	virtual void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets) = 0;
-	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
 	virtual void SetRootSignature(RootSignature& rootSignature) = 0;
@@ -147,6 +148,7 @@ public:
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
 
+	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate = false);
 	
@@ -169,15 +171,15 @@ public:
 	//void ClearUAV(IColorBuffer* colorBuffer);
 	void ClearColor(IColorBuffer* colorBuffer);
 	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
-	void ClearDepth(IDepthBuffer* depthBuffer);
-	void ClearStencil(IDepthBuffer* depthBuffer);
-	void ClearDepthAndStencil(IDepthBuffer* depthBuffer);
+	void ClearDepth(DepthBuffer& depthBuffer);
+	void ClearStencil(DepthBuffer& depthBuffer);
+	void ClearDepthAndStencil(DepthBuffer& depthBuffer);
 
 	void BeginRendering(IColorBuffer* renderTarget);
-	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
-	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void BeginRendering(std::span<IColorBuffer*> renderTargets);
-	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
 	void SetRootSignature(RootSignature& rootSignature);
@@ -261,6 +263,12 @@ inline void CommandContext::Initialize()
 }
 
 
+inline void CommandContext::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	m_contextImpl->TransitionResource(depthBuffer, newState, bFlushImmediate);
+}
+
+
 inline void CommandContext::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
@@ -303,19 +311,19 @@ inline void GraphicsContext::ClearColor(IColorBuffer* colorBuffer, Color clearCo
 }
 
 
-inline void GraphicsContext::ClearDepth(IDepthBuffer* depthBuffer)
+inline void GraphicsContext::ClearDepth(DepthBuffer& depthBuffer)
 {
 	m_contextImpl->ClearDepth(depthBuffer);
 }
 
 
-inline void GraphicsContext::ClearStencil(IDepthBuffer* depthBuffer)
+inline void GraphicsContext::ClearStencil(DepthBuffer& depthBuffer)
 {
 	m_contextImpl->ClearStencil(depthBuffer);
 }
 
 
-inline void GraphicsContext::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
+inline void GraphicsContext::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 {
 	m_contextImpl->ClearDepthAndStencil(depthBuffer);
 }
@@ -327,13 +335,13 @@ inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget)
 }
 
 
-inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	m_contextImpl->BeginRendering(renderTarget, depthTarget, depthStencilAspect);
 }
 
 
-inline void GraphicsContext::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	m_contextImpl->BeginRendering(depthTarget, depthStencilAspect);
 }
@@ -345,7 +353,7 @@ inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTarge
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	m_contextImpl->BeginRendering(renderTargets, depthTarget, depthStencilAspect);
 }

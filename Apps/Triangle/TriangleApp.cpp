@@ -128,10 +128,10 @@ void TriangleApp::Render()
 	Color clearColor{ DirectX::Colors::CornflowerBlue };
 	context.ClearColor(GetColorBuffer().get(), clearColor);
 
-	context.TransitionResource(m_depthBuffer.get(), ResourceState::DepthWrite);
-	context.ClearDepth(m_depthBuffer.get());
+	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(GetColorBuffer().get(), m_depthBuffer.get());
+	context.BeginRendering(GetColorBuffer().get(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -187,7 +187,7 @@ void TriangleApp::InitDepthBuffer()
 		.format			= GetDepthFormat()
 	};
 
-	m_depthBuffer = GetGraphicsDevice()->CreateDepthBuffer(depthBufferDesc);
+	m_depthBuffer.Initialize(depthBufferDesc);
 }
 
 
