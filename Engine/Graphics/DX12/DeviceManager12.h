@@ -59,9 +59,7 @@ public:
 	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
 	void FreeContext(CommandContext* usedContext) final;
 
-	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex) final;
-
-	ColorBufferHandle GetColorBuffer() final;
+	ColorBuffer& GetColorBuffer() final;
 
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
@@ -103,7 +101,7 @@ private:
 
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
-	std::vector<ColorBufferHandle> m_swapChainBuffers;
+	std::vector<ColorBuffer> m_swapChainBuffers;
 	wil::com_ptr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
 	Format m_swapChainFormat;

@@ -20,6 +20,7 @@ namespace Luna
 {
 
 // Forward declarations
+class IColorBufferPool;
 class IDepthBufferPool;
 class IDescriptorSetPool;
 class IGpuBufferPool;
@@ -102,6 +103,7 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 IDeviceManager* GetDeviceManager();
 IGraphicsDevice* GetGraphicsDevice();
 
+IColorBufferPool* GetColorBufferPool();
 IDepthBufferPool* GetDepthBufferPool();
 IDescriptorSetPool* GetDescriptorSetPool();
 IGpuBufferPool* GetGpuBufferPool();

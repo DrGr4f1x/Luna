@@ -31,6 +31,7 @@ DepthBufferPool::DepthBufferPool(ID3D12Device* device, D3D12MA::Allocator* alloc
 	{
 		m_freeList.push(i);
 		m_descs[i] = DepthBufferDesc{};
+		m_depthBufferData[i] = DepthBufferData{};
 	}
 
 	g_depthBufferPool = this;

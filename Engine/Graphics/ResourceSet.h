@@ -18,10 +18,9 @@ namespace Luna
 {
 
 // Forward declarations
+class ColorBuffer;
 class DepthBuffer;
 class GpuBuffer;
-class IColorBuffer;
-class IDescriptorSet;
 class RootSignature;
 
 
@@ -31,11 +30,11 @@ public:
 	void Initialize(const RootSignature& rootSignature);
 
 	// TODO: change 'int param' and 'int slot' to uint32_t
-	void SetSRV(int param, int slot, const IColorBuffer* colorBuffer);
+	void SetSRV(int param, int slot, const ColorBuffer& colorBuffer);
 	void SetSRV(int param, int slot, const DepthBuffer& depthBuffer, bool depthSrv = true);
 	void SetSRV(int param, int slot, const GpuBuffer& gpuBuffer);
 
-	void SetUAV(int param, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0);
+	void SetUAV(int param, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex = 0);
 	void SetUAV(int param, int slot, const DepthBuffer& depthBuffer);
 	void SetUAV(int param, int slot, const GpuBuffer& gpuBuffer);
 

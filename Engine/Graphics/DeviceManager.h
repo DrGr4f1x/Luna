@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Graphics\ColorBuffer.h"
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 
@@ -101,9 +102,7 @@ public:
 	virtual CommandContext* AllocateContext(CommandListType commandListType) = 0;
 	virtual void FreeContext(CommandContext* usedContext) = 0;
 
-	virtual wil::com_ptr<IColorBuffer> CreateColorBufferFromSwapChain(uint32_t imageIndex) = 0;
-
-	virtual wil::com_ptr<IColorBuffer> GetColorBuffer() = 0;
+	virtual ColorBuffer& GetColorBuffer() = 0;
 
 	virtual Format GetColorFormat() = 0;
 	virtual Format GetDepthFormat() = 0;

@@ -30,6 +30,7 @@ DepthBufferPool::DepthBufferPool(CVkDevice* device)
 	{
 		m_freeList.push(i);
 		m_descs[i] = DepthBufferDesc{};
+		m_depthBufferData[i] = DepthBufferData{};
 	}
 
 	g_depthBufferPool = this;
@@ -267,14 +268,14 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 	}
 
 	auto imageInfoDepth = VkDescriptorImageInfo{
-		.sampler = VK_NULL_HANDLE,
-		.imageView = *imageViewDepthOnly,
-		.imageLayout = GetImageLayout(ResourceState::ShaderResource)
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewDepthOnly,
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
 	};
 	auto imageInfoStencil = VkDescriptorImageInfo{
-		.sampler = VK_NULL_HANDLE,
-		.imageView = *imageViewStencilOnly,
-		.imageLayout = GetImageLayout(ResourceState::ShaderResource)
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= *imageViewStencilOnly,
+		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
 	};
 
 	DepthBufferData data{

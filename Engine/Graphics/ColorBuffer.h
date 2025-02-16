@@ -47,13 +47,74 @@ struct ColorBufferDesc
 };
 
 
-class __declspec(uuid("DA01EF5A-F28E-4B50-83DD-98D93211CEF2")) IColorBuffer : public IPixelBuffer
+class IColorBufferPool;
+
+
+class __declspec(uuid("06E5178C-0CD1-491E-BBA4-8C445CBA2E34")) ColorBufferHandleType : public RefCounted<ColorBufferHandleType>
 {
 public:
-	virtual Color GetClearColor() const noexcept = 0;
-	virtual void SetClearColor(Color clearColor) noexcept = 0;
+	ColorBufferHandleType(uint32_t index, IColorBufferPool* pool)
+		: m_index{ index }
+		, m_pool{ pool }
+	{}
+	~ColorBufferHandleType();
+
+	uint32_t GetIndex() const { return m_index; }
+
+private:
+	uint32_t m_index{ 0 };
+	IColorBufferPool* m_pool{ nullptr };
 };
 
-using ColorBufferHandle = wil::com_ptr<IColorBuffer>;
+using ColorBufferHandle = wil::com_ptr<ColorBufferHandleType>;
+
+
+class IColorBufferPool
+{
+public:
+	// Create/Destroy ColorBuffer
+	virtual ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
+	virtual void DestroyHandle(ColorBufferHandleType* handle) = 0;
+
+	// Platform agnostic functions
+	virtual ResourceType GetResourceType(ColorBufferHandleType* handle) const = 0;
+	virtual ResourceState GetUsageState(ColorBufferHandleType* handle) const = 0;
+	virtual void SetUsageState(ColorBufferHandleType* handle, ResourceState newState) = 0;
+	virtual uint64_t GetWidth(ColorBufferHandleType* handle) const = 0;
+	virtual uint32_t GetHeight(ColorBufferHandleType* handle) const = 0;
+	virtual uint32_t GetDepthOrArraySize(ColorBufferHandleType* handle) const = 0;
+	virtual uint32_t GetNumMips(ColorBufferHandleType* handle) const = 0;
+	virtual uint32_t GetNumSamples(ColorBufferHandleType* handle) const = 0;
+	virtual uint32_t GetPlaneCount(ColorBufferHandleType* handle) const = 0;
+	virtual Format GetFormat(ColorBufferHandleType* handle) const = 0;
+	virtual Color GetClearColor(ColorBufferHandleType* handle) const = 0;
+};
+
+
+class ColorBuffer
+{
+public:
+	void Initialize(const ColorBufferDesc& colorBufferDesc);
+
+	ResourceType GetResourceType() const;
+	ResourceState GetUsageState() const;
+	void SetUsageState(ResourceState newState);
+	uint64_t GetWidth() const;
+	uint32_t GetHeight() const;
+	uint32_t GetDepth() const;
+	uint32_t GetArraySize() const;
+	uint32_t GetNumMips() const;
+	uint32_t GetNumSamples() const;
+	uint32_t GetPlaneCount() const;
+	Format GetFormat() const;
+	TextureDimension GetDimension() const;
+	Color GetClearColor() const;
+
+	void SetHandle(ColorBufferHandleType* handle) { m_handle = handle; }
+	ColorBufferHandle GetHandle() const { return m_handle; }
+
+private:
+	ColorBufferHandle m_handle;
+};
 
 } // namespace Luna

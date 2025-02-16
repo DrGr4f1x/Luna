@@ -12,6 +12,7 @@
 
 #include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\ColorBufferPoolVK.h"
 #include "Graphics\Vulkan\DepthBufferPoolVK.h"
 #include "Graphics\Vulkan\DescriptorSetPoolVK.h"
 #include "Graphics\Vulkan\GpuBufferPoolVK.h"
@@ -145,6 +146,7 @@ class __declspec(uuid("402B61AE-0C51-46D3-B0EC-A2911B380181")) GraphicsDevice
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IGraphicsDevice>
 	, public NonCopyable
 {
+	friend class ColorBufferPool;
 	friend class CommandContextVK;
 	friend class DeviceManager;
 	friend class Queue;
@@ -155,12 +157,7 @@ public:
 	GraphicsDevice(const GraphicsDeviceDesc& desc);
 	virtual ~GraphicsDevice();
 
-	// GraphicsDevice implementation
-	wil::com_ptr<IColorBuffer> CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
-
-	RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
-	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& graphicsPipelineDesc) override;
-
+	IColorBufferPool* GetColorBufferPool() override { return &m_colorBufferPool; }
 	IDepthBufferPool* GetDepthBufferPool() override { return &m_depthBufferPool; }
 	IDescriptorSetPool* GetDescriptorSetPool() override { return &m_descriptorSetPool; }
 	IGpuBufferPool* GetGpuBufferPool() override { return &m_gpuBufferPool; }
@@ -193,6 +190,7 @@ private:
 	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
 
 	// Platform data pools
+	ColorBufferPool m_colorBufferPool;
 	DepthBufferPool m_depthBufferPool;
 	DescriptorSetPool m_descriptorSetPool;
 	GpuBufferPool m_gpuBufferPool;

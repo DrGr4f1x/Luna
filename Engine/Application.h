@@ -13,6 +13,8 @@
 #include "StepTimer.h"
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\Camera.h"
+#include "Graphics\ColorBuffer.h"
+
 
 // Forward declarations
 struct GLFWwindow;
@@ -23,7 +25,6 @@ namespace Luna
 
 // Forward declarations
 class FileSystem;
-class IColorBuffer;
 class InputSystem;
 class LogSystem;
 enum class GraphicsApi;
@@ -80,7 +81,7 @@ public:
 
 	void Run();
 
-	wil::com_ptr<IColorBuffer> GetColorBuffer() const;
+	ColorBuffer& GetColorBuffer() const;
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 

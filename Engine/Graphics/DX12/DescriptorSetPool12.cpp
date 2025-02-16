@@ -12,9 +12,7 @@
 
 #include "DescriptorSetPool12.h"
 
-#include "Graphics\ColorBuffer.h"
-#include "Graphics\DepthBuffer.h"
-#include "Graphics\GpuBuffer.h"
+#include "Graphics\DX12\ColorBufferPool12.h"
 #include "Graphics\DX12\DepthBufferPool12.h"
 #include "Graphics\DX12\GpuBufferPool12.h"
 
@@ -113,14 +111,17 @@ void DescriptorSetPool::DestroyHandle(DescriptorSetHandleType* handle)
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer)
+void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	SetDescriptor(data, slot, GetSRV(colorBuffer));
+	auto colorBufferPool = GetD3D12ColorBufferPool();
+	auto colorBufferHandle = colorBuffer.GetHandle();
+
+	SetDescriptor(data, slot, colorBufferPool->GetSRV(colorBufferHandle.get()));
 }
 
 
@@ -160,14 +161,17 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
 	assert(handle != 0);
 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	SetDescriptor(data, slot, GetUAV(colorBuffer, uavIndex));
+	auto colorBufferPool = GetD3D12ColorBufferPool();
+	auto colorBufferHandle = colorBuffer.GetHandle();
+
+	SetDescriptor(data, slot, colorBufferPool->GetUAV(colorBufferHandle.get(), uavIndex));
 }
 
 

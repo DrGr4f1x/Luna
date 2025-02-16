@@ -14,7 +14,7 @@
 
 #include "Graphics\ResourceSet.h"
 
-#include "ColorBuffer12.h"
+#include "ColorBufferPool12.h"
 #include "DepthBufferPool12.h"
 #include "DescriptorSetPool12.h"
 #include "Device12.h"
@@ -46,13 +46,6 @@ static bool IsValidComputeResourceState(ResourceState state)
 	default:
 		return false;
 	}
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const IColorBuffer* colorBuffer)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{ .ptr = colorBuffer->GetNativeObject(NativeObjectType::DX12_RTV).integer };
-	return rtvHandle;
 }
 
 
@@ -114,6 +107,7 @@ void CommandContext12::Initialize()
 {
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 
+	m_colorBufferPool = GetD3D12ColorBufferPool();
 	m_depthBufferPool = GetD3D12DepthBufferPool();
 	m_descriptorSetPool = GetD3D12DescriptorSetPool();
 	m_gpuBufferPool = GetD3D12GpuBufferPool();
@@ -167,6 +161,26 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 }
 
 
+void CommandContext12::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+{
+	ResourceState oldState = colorBuffer.GetUsageState();
+
+	if (m_type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	ColorBufferHandle handle = colorBuffer.GetHandle();
+
+	ID3D12Resource* resource = m_colorBufferPool->GetResource(handle.get());
+
+	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
+
+	colorBuffer.SetUsageState(newState);
+}
+
+
 void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	ResourceState oldState = depthBuffer.GetUsageState();
@@ -207,32 +221,6 @@ void CommandContext12::TransitionResource(GpuBuffer& gpuBuffer, ResourceState ne
 }
 
 
-void CommandContext12::TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate)
-{
-	ResourceState oldState = gpuResource->GetUsageState();
-
-	if (m_type == CommandListType::Compute)
-	{
-		assert(IsValidComputeResourceState(oldState));
-		assert(IsValidComputeResourceState(newState));
-	}
-
-	ID3D12Resource* resource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
-
-	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
-
-	gpuResource->SetUsageState(newState);
-}
-
-
-void CommandContext12::InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate)
-{
-	ID3D12Resource* resource = gpuResource->GetNativeObject(NativeObjectType::DX12_Resource);
-
-	InsertUAVBarrier_Internal(resource, bFlushImmediate);
-}
-
-
 void CommandContext12::FlushResourceBarriers()
 {
 	if (m_numBarriersToFlush > 0)
@@ -249,17 +237,23 @@ void CommandContext12::ClearUAV(GpuBuffer& gpuBuffer)
 }
 
 
-void CommandContext12::ClearColor(IColorBuffer* colorBuffer)
+void CommandContext12::ClearColor(ColorBuffer& colorBuffer)
 {
 	FlushResourceBarriers();
-	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
+
+	ColorBufferHandle colorBufferHandle = colorBuffer.GetHandle();
+
+	m_commandList->ClearRenderTargetView(m_colorBufferPool->GetRTV(colorBufferHandle.get()), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+void CommandContext12::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
-	m_commandList->ClearRenderTargetView(GetRTV(colorBuffer), clearColor.GetPtr(), 0, nullptr);
+
+	ColorBufferHandle colorBufferHandle = colorBuffer.GetHandle();
+
+	m_commandList->ClearRenderTargetView(m_colorBufferPool->GetRTV(colorBufferHandle.get()), clearColor.GetPtr(), 0, nullptr);
 }
 
 
@@ -293,13 +287,15 @@ void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 }
 
 
-void CommandContext12::BeginRendering(IColorBuffer* renderTarget)
+void CommandContext12::BeginRendering(ColorBuffer& renderTarget)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
-	m_rtvs[0] = GetRTV(renderTarget);
-	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+	ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
+
+	m_rtvs[0] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+	m_rtvFormats[0] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
 	BindRenderTargets();
@@ -308,13 +304,15 @@ void CommandContext12::BeginRendering(IColorBuffer* renderTarget)
 }
 
 
-void CommandContext12::BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(ColorBuffer& renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
-	m_rtvs[0] = GetRTV(renderTarget);
-	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+	ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
+
+	m_rtvs[0] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+	m_rtvFormats[0] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
 	DepthBufferHandle handle = depthTarget.GetHandle();
@@ -346,7 +344,7 @@ void CommandContext12::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspe
 }
 
 
-void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
+void CommandContext12::BeginRendering(std::span<ColorBuffer> renderTargets)
 {
 	assert(!m_isRendering);
 	assert(renderTargets.size() <= 8);
@@ -354,10 +352,12 @@ void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
 	ResetRenderTargets();
 
 	uint32_t i = 0;
-	for (IColorBuffer* renderTarget : renderTargets)
+	for (const ColorBuffer& renderTarget : renderTargets)
 	{
-		m_rtvs[i] = GetRTV(renderTarget);
-		m_rtvFormats[i] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+		ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
+
+		m_rtvs[i] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+		m_rtvFormats[i] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 		++i;
 	}
 	m_numRtvs = (uint32_t)renderTargets.size();
@@ -368,7 +368,7 @@ void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
 }
 
 
-void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(std::span<ColorBuffer> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	assert(renderTargets.size() <= 8);
@@ -376,10 +376,12 @@ void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, De
 	ResetRenderTargets();
 
 	uint32_t i = 0;
-	for (IColorBuffer* renderTarget : renderTargets)
+	for (const ColorBuffer& renderTarget : renderTargets)
 	{
-		m_rtvs[i] = GetRTV(renderTarget);
-		m_rtvFormats[i] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+		ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
+
+		m_rtvs[i] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+		m_rtvFormats[i] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 		++i;
 	}
 	m_numRtvs = (uint32_t)renderTargets.size();

@@ -46,7 +46,7 @@ DescriptorSetHandle RootSignature::CreateDescriptorSet(uint32_t index) const
 
 void RootSignature::Initialize(RootSignatureDesc& desc)
 {
-	m_handle = GetGraphicsDevice()->CreateRootSignature(desc);
+	m_handle = GetRootSignaturePool()->CreateRootSignature(desc);
 }
 
 

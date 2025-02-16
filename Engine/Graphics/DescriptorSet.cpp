@@ -32,7 +32,7 @@ void DescriptorSet::Initialize(const RootSignature& rootSignature, uint32_t root
 }
 
 
-void DescriptorSet::SetSRV(int slot, const IColorBuffer* colorBuffer)
+void DescriptorSet::SetSRV(int slot, const ColorBuffer& colorBuffer)
 {
 	GetDescriptorSetPool()->SetSRV(m_handle.get(), slot, colorBuffer);
 }
@@ -50,7 +50,7 @@ void DescriptorSet::SetSRV(int slot, const GpuBuffer& gpuBuffer)
 }
 
 
-void DescriptorSet::SetUAV(int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void DescriptorSet::SetUAV(int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
 	GetDescriptorSetPool()->SetUAV(m_handle.get(), slot, colorBuffer, uavIndex);
 }

@@ -14,7 +14,6 @@
 
 #include "FileSystem.h"
 
-#include "ColorBufferVK.h"
 #include "CommandContextVK.h"
 #include "DescriptorAllocatorVK.h"
 
@@ -51,6 +50,7 @@ bool QueryBufferFeature(VkFormatProperties properties, VkFormatFeatureFlagBits f
 GraphicsDevice::GraphicsDevice(const GraphicsDeviceDesc& desc)
 	: m_desc{ desc }
 	, m_vkDevice{ desc.device }
+	, m_colorBufferPool{ m_vkDevice.get() }
 	, m_depthBufferPool{ m_vkDevice.get() }
 	, m_descriptorSetPool{ m_vkDevice.get() }
 	, m_gpuBufferPool{ m_vkDevice.get() }
@@ -73,101 +73,10 @@ GraphicsDevice::~GraphicsDevice()
 }
 
 
-ColorBufferHandle GraphicsDevice::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
-{
-	// Create image
-	ImageDesc imageDesc{
-		.name				= colorBufferDesc.name,
-		.width				= colorBufferDesc.width,
-		.height				= colorBufferDesc.height,
-		.arraySizeOrDepth	= colorBufferDesc.arraySizeOrDepth,
-		.format				= colorBufferDesc.format,
-		.numMips			= colorBufferDesc.numMips,
-		.numSamples			= colorBufferDesc.numSamples,
-		.resourceType		= colorBufferDesc.resourceType,
-		.imageUsage			= GpuImageUsage::ColorBuffer,
-		.memoryAccess		= MemoryAccess::GpuReadWrite
-	};
-
-	if (HasFlag(colorBufferDesc.resourceType, ResourceType::Texture3D))
-	{
-		imageDesc.SetNumMips(1);
-		imageDesc.SetDepth(colorBufferDesc.arraySizeOrDepth);
-	}
-	else if (HasAnyFlag(colorBufferDesc.resourceType, ResourceType::Texture2D_Type))
-	{
-		if (HasAnyFlag(colorBufferDesc.resourceType, ResourceType::TextureArray_Type))
-		{
-			imageDesc.SetResourceType(colorBufferDesc.numSamples == 1 ? ResourceType::Texture2D_Array : ResourceType::Texture2DMS_Array);
-			imageDesc.SetArraySize(colorBufferDesc.arraySizeOrDepth);
-		}
-		else
-		{
-			imageDesc.SetResourceType(colorBufferDesc.numSamples == 1 ? ResourceType::Texture2D : ResourceType::Texture2DMS_Array);
-		}
-	}
-
-	auto image = CreateImage(imageDesc);
-
-	// Render target view
-	ImageViewDesc imageViewDesc{
-		.image				= image.get(),
-		.name				= colorBufferDesc.name,
-		.resourceType		= ResourceType::Texture2D,
-		.imageUsage			= GpuImageUsage::RenderTarget,
-		.format				= colorBufferDesc.format,
-		.imageAspect		= ImageAspect::Color,
-		.baseMipLevel		= 0,
-		.mipCount			= colorBufferDesc.numMips,
-		.baseArraySlice		= 0,
-		.arraySize			= colorBufferDesc.arraySizeOrDepth
-	};
-	auto imageViewRtv = CreateImageView(imageViewDesc);
-
-	// Shader resource view
-	imageViewDesc.SetImageUsage(GpuImageUsage::ShaderResource);
-	auto imageViewSrv = CreateImageView(imageViewDesc);
-
-	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewSrv,
-		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
-	};
-	VkDescriptorImageInfo imageInfoUav{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewSrv,
-		.imageLayout	= GetImageLayout(ResourceState::UnorderedAccess)
-	};
-
-	ColorBufferDescExt colorBufferDescExt{
-		.image			= image.get(),
-		.imageViewRtv	= imageViewRtv.get(),
-		.imageViewSrv	= imageViewSrv.get(),
-		.imageInfoSrv	= imageInfoSrv,
-		.imageInfoUav	= imageInfoUav,
-		.usageState		= ResourceState::Common
-	};
-
-	return Make<ColorBufferVK>(colorBufferDesc, colorBufferDescExt);
-}
-
-
-RootSignatureHandle GraphicsDevice::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
-{
-	return m_rootSignaturePool.CreateRootSignature(rootSignatureDesc);
-}
-
-
-PipelineStateHandle GraphicsDevice::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
-{
-	return m_pipelinePool.CreateGraphicsPipeline(pipelineDesc);
-}
-
-
 void GraphicsDevice::CreateResources()
 {
 	m_vmaAllocator = CreateVmaAllocator();
+	m_colorBufferPool.SetAllocator(m_vmaAllocator.get());
 	m_depthBufferPool.SetAllocator(m_vmaAllocator.get());
 	m_gpuBufferPool.SetAllocator(m_vmaAllocator.get());
 }

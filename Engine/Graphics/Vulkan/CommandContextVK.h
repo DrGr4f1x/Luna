@@ -21,7 +21,6 @@ namespace Luna
 
 // Forward declarations
 class DescriptorSetHandleType;
-class IPixelBuffer;
 
 } // namespace Luna
 
@@ -30,6 +29,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
+class ColorBufferPool;
 class ComputeContext;
 class DepthBufferPool;
 class DescriptorSetPool;
@@ -85,25 +85,24 @@ public:
 	void BeginFrame() override;
 	uint64_t Finish(bool bWaitForCompletion) override;
 
+	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newSTate, bool bFlushImmediate) override;
 	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(IGpuResource* gpuResource, ResourceState newState, bool bFlushImmediate) override;
-	void InsertUAVBarrier(IGpuResource* gpuResource, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	void ClearUAV(GpuBuffer& gpuBuffer) override;
-	//void ClearUAV(IColorBuffer* colorBuffer) override;
-	void ClearColor(IColorBuffer* colorBuffer) override;
-	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
+	//void ClearUAV(ColorBuffer& colorBuffer) override;
+	void ClearColor(ColorBuffer& colorBuffer) override;
+	void ClearColor(ColorBuffer& colorBuffer, Color clearColor) override;
 	void ClearDepth(DepthBuffer& depthBuffer) override;
 	void ClearStencil(DepthBuffer& depthBuffer) override;
 	void ClearDepthAndStencil(DepthBuffer& depthBuffer) override;
 
-	void BeginRendering(IColorBuffer* renderTarget) override;
-	void BeginRendering(IColorBuffer* renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(ColorBuffer& renderTarget) override;
+	void BeginRendering(ColorBuffer& renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(std::span<IColorBuffer*> renderTargets) override;
-	void BeginRendering(std::span<IColorBuffer*> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<ColorBuffer> renderTargets) override;
+	void BeginRendering(std::span<ColorBuffer> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
 	void SetRootSignature(RootSignature& rootSignature) override;
@@ -138,7 +137,7 @@ private:
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
 
 	void BindDescriptorHeaps() {}
-	void SetRenderingArea(IPixelBuffer* pixelBuffer);
+	void SetRenderingArea(const ColorBuffer& colorBuffer);
 	void SetRenderingArea(const DepthBuffer& depthBuffer);
 	void BeginRenderingBlock();
 	void ResetRenderTargets();
@@ -158,6 +157,7 @@ private:
 	bool m_isRendering{ false };
 
 	// Pools
+	ColorBufferPool* m_colorBufferPool{ nullptr };
 	DepthBufferPool* m_depthBufferPool{ nullptr };
 	DescriptorSetPool* m_descriptorSetPool{ nullptr };
 	GpuBufferPool* m_gpuBufferPool{ nullptr };

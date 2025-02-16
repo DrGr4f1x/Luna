@@ -33,7 +33,7 @@ PrimitiveTopology GraphicsPipelineState::GetPrimitiveTopology() const
 
 void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
-	m_handle = GetGraphicsDevice()->CreateGraphicsPipeline(desc);
+	m_handle = GetPipelineStatePool()->CreateGraphicsPipeline(desc);
 }
 
 

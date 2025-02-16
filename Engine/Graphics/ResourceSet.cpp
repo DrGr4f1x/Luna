@@ -35,7 +35,7 @@ void ResourceSet::Initialize(const RootSignature& rootSignature)
 }
 
 
-void ResourceSet::SetSRV(int param, int slot, const IColorBuffer* colorBuffer)
+void ResourceSet::SetSRV(int param, int slot, const ColorBuffer& colorBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetSRV(slot, colorBuffer);
@@ -56,7 +56,7 @@ void ResourceSet::SetSRV(int param, int slot, const GpuBuffer& gpuBuffer)
 }
 
 
-void ResourceSet::SetUAV(int param, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void ResourceSet::SetUAV(int param, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param].SetUAV(slot, colorBuffer, uavIndex);

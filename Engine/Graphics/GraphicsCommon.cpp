@@ -126,6 +126,11 @@ IGraphicsDevice* GetGraphicsDevice()
 	return g_graphicsDevice;
 }
 
+IColorBufferPool* GetColorBufferPool()
+{
+	return GetGraphicsDevice()->GetColorBufferPool();
+}
+
 
 IDepthBufferPool* GetDepthBufferPool()
 {

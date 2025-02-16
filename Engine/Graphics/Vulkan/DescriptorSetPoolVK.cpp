@@ -12,9 +12,7 @@
 
 #include "DescriptorSetPoolVK.h"
 
-#include "Graphics\ColorBuffer.h"
-#include "Graphics\DepthBuffer.h"
-#include "Graphics\GpuBuffer.h"
+#include "Graphics\Vulkan\ColorBufferPoolVK.h"
 #include "Graphics\Vulkan\DepthBufferPoolVK.h"
 #include "Graphics\Vulkan\GpuBufferPoolVK.h"
 
@@ -124,7 +122,7 @@ void DescriptorSetPool::DestroyHandle(DescriptorSetHandleType* handle)
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer)
+void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer)
 {
 	assert(handle != 0);
 
@@ -133,17 +131,17 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
 
-	const VkDescriptorImageInfo* imageInfo = GetImageInfo(colorBuffer);
-
-	if (writeSet.pImageInfo == imageInfo)
-		return;
+	auto colorBufferPool = GetVulkanColorBufferPool();
+	auto colorBufferHandle = colorBuffer.GetHandle();
 
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = data.descriptorSet;
 	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
 	writeSet.dstArrayElement = 0;
-	writeSet.pImageInfo = imageInfo;
+	
+	data.descriptorData[slot] = colorBufferPool->GetImageInfoSrv(colorBufferHandle.get());
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);
 }
@@ -213,7 +211,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
 	assert(handle != 0);
 
@@ -222,16 +220,17 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
 
-	const VkDescriptorImageInfo* imageInfo = GetImageInfoUAV(colorBuffer, uavIndex);
-	if (writeSet.pImageInfo == imageInfo)
-		return;
+	auto colorBufferPool = GetVulkanColorBufferPool();
+	auto colorBufferHandle = colorBuffer.GetHandle();
 
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	writeSet.dstSet = data.descriptorSet;
 	writeSet.dstBinding = slot + data.bindingOffsets.unorderedAccess;
 	writeSet.dstArrayElement = 0;
-	writeSet.pImageInfo = imageInfo;
+	
+	data.descriptorData[slot] = colorBufferPool->GetImageInfoUav(colorBufferHandle.get());
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);
 }

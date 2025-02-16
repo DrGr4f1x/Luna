@@ -49,9 +49,7 @@ public:
 	CommandContext* AllocateContext(CommandListType commandListType) final;
 	void FreeContext(CommandContext* usedContext) final;
 
-	ColorBufferHandle CreateColorBufferFromSwapChain(uint32_t imageIndex) final;
-
-	ColorBufferHandle GetColorBuffer() final;
+	ColorBuffer& GetColorBuffer() final;
 
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
@@ -110,7 +108,7 @@ private:
 	Format m_swapChainFormat;
 
 	// Swapchain color buffers
-	std::vector<ColorBufferHandle> m_swapChainBuffers;
+	std::vector<ColorBuffer> m_swapChainBuffers;
 
 	// Queues and queue families
 	std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;
