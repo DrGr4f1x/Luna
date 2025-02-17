@@ -11,38 +11,16 @@
 #pragma once
 
 #include "Graphics\PipelineState.h"
-#include "Graphics\ResourcePool.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 
 namespace Luna::DX12
 {
 
-struct PipelineStateData
+class PipelineStatePool : public IPipelineStatePool
 {
-	wil::com_ptr<ID3D12PipelineState> pipelineState;
-};
+	static const uint32_t MaxItems = (1 << 12);
 
-
-class PipelineStateFactory
-{
-public:
-	void SetDevice(ID3D12Device* device) { m_device = device; }
-	PipelineStateData Create(const GraphicsPipelineDesc& pipelineDesc);
-
-private:
-	wil::com_ptr<ID3D12Device> m_device;
-
-	// Pipeline state map
-	std::mutex m_pipelineStateMutex;
-	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
-};
-
-
-class PipelineStatePool 
-	: public IPipelineStatePool
-	, public ResourcePool1<PipelineStateFactory, GraphicsPipelineDesc, PipelineStateData, 4096>
-{
 public:
 	explicit PipelineStatePool(ID3D12Device* device);
 	~PipelineStatePool();
@@ -58,7 +36,26 @@ public:
 	ID3D12PipelineState* GetPipelineState(PipelineStateHandleType* handle) const;
 
 private:
+	wil::com_ptr<ID3D12PipelineState> FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
+
+private:
 	wil::com_ptr<ID3D12Device> m_device;
+
+	// Allocation mutex
+	std::mutex m_allocationMutex;
+
+	// Free list
+	std::queue<uint32_t> m_freeList;
+
+	// Hot data: ID3D12PipelineState
+	std::array<wil::com_ptr<ID3D12PipelineState>, MaxItems> m_pipelines;
+
+	// Cold data: GraphicsPipelineDesc
+	std::array<GraphicsPipelineDesc, MaxItems> m_descs;
+
+	// Pipeline state map
+	std::mutex m_pipelineStateMutex;
+	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
 };
 
 

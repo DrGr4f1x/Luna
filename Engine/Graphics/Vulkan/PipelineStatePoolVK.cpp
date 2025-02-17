@@ -82,21 +82,88 @@ void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo, VkSh
 }
 
 
-PipelineStateFactory::~PipelineStateFactory()
+PipelineStatePool::PipelineStatePool(CVkDevice* device)
+	: m_device{ device }
+{
+	assert(g_pipelineStatePool == nullptr);
+
+	// Populate free list and data arrays
+	for (uint32_t i = 0; i < MaxItems; ++i)
+	{
+		m_freeList.push(i);
+		m_pipelines[i].reset();
+		m_descs[i] = GraphicsPipelineDesc{};
+	}
+
+	m_pipelineCache = CreatePipelineCache();
+
+	g_pipelineStatePool = this;
+}
+
+
+PipelineStatePool::~PipelineStatePool()
 {
 	Shader::DestroyAll();
+
+	g_pipelineStatePool = nullptr;
 }
 
 
-void PipelineStateFactory::SetDevice(CVkDevice* device)
+PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
-	m_device = device;
-	m_pipelineCache = CreatePipelineCache();
+	std::lock_guard guard(m_allocationMutex);
+
+	assert(!m_freeList.empty());
+
+	uint32_t index = m_freeList.front();
+	m_freeList.pop();
+
+	m_descs[index] = pipelineDesc;
+
+	m_pipelines[index] = FindOrCreateGraphicsPipelineState(pipelineDesc);
+
+	return Create<PipelineStateHandleType>(index, this);
 }
 
 
-PipelineStateData PipelineStateFactory::Create(const GraphicsPipelineDesc& pipelineDesc)
+void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
 {
+	assert(handle != nullptr);
+
+	std::lock_guard guard(m_allocationMutex);
+
+	// TODO: queue this up to execute in one big deallocation batch, e.g. at the end of the frame
+
+	uint32_t index = handle->GetIndex();
+	m_descs[index] = GraphicsPipelineDesc{};
+	m_pipelines[index].reset();
+
+	m_freeList.push(index);
+}
+
+
+const GraphicsPipelineDesc& PipelineStatePool::GetDesc(PipelineStateHandleType* handle) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+	return m_descs[index];
+}
+
+
+VkPipeline PipelineStatePool::GetPipeline(PipelineStateHandleType* handle) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+	return m_pipelines[index]->Get();
+}
+
+
+wil::com_ptr<CVkPipeline> PipelineStatePool::FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+{
+	//return GetVulkanGraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
+
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
@@ -325,19 +392,19 @@ PipelineStateData PipelineStateFactory::Create(const GraphicsPipelineDesc& pipel
 	VkPipeline vkPipeline{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateGraphicsPipelines(*m_device, *m_pipelineCache, 1, &pipelineCreateInfo, nullptr, &vkPipeline)))
 	{
-		auto pipeline = Luna::Create<CVkPipeline>(m_device.get(), vkPipeline);
-		return PipelineStateData{ .pipeline = pipeline };
+		auto pipeline = Create<CVkPipeline>(m_device.get(), vkPipeline);
+		return pipeline;
 	}
 	else
 	{
 		LogError(LogVulkan) << "Failed to create VkPipeline (graphics).  Error code: " << res << endl;
 	}
 
-	return PipelineStateData{};
+	return nullptr;
 }
 
 
-wil::com_ptr<CVkShaderModule> PipelineStateFactory::CreateShaderModule(Shader* shader)
+wil::com_ptr<CVkShaderModule> PipelineStatePool::CreateShaderModule(Shader* shader)
 {
 	CVkShaderModule** ppShaderModule = nullptr;
 	bool firstCompile = false;
@@ -370,7 +437,7 @@ wil::com_ptr<CVkShaderModule> PipelineStateFactory::CreateShaderModule(Shader* s
 		VkShaderModule vkShaderModule{ VK_NULL_HANDLE };
 		vkCreateShaderModule(*m_device, &createInfo, nullptr, &vkShaderModule);
 
-		wil::com_ptr<CVkShaderModule> shaderModule = Luna::Create<CVkShaderModule>(m_device.get(), vkShaderModule);
+		wil::com_ptr<CVkShaderModule> shaderModule = Create<CVkShaderModule>(m_device.get(), vkShaderModule);
 
 		*ppShaderModule = shaderModule.get();
 
@@ -381,7 +448,7 @@ wil::com_ptr<CVkShaderModule> PipelineStateFactory::CreateShaderModule(Shader* s
 }
 
 
-wil::com_ptr<CVkPipelineCache> PipelineStateFactory::CreatePipelineCache()
+wil::com_ptr<CVkPipelineCache> PipelineStatePool::CreatePipelineCache() const
 {
 	VkPipelineCacheCreateInfo createInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
@@ -392,7 +459,7 @@ wil::com_ptr<CVkPipelineCache> PipelineStateFactory::CreatePipelineCache()
 	VkPipelineCache vkPipelineCache{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreatePipelineCache(*m_device, &createInfo, nullptr, &vkPipelineCache)))
 	{
-		return Luna::Create<CVkPipelineCache>(m_device.get(), vkPipelineCache);
+		return Create<CVkPipelineCache>(m_device.get(), vkPipelineCache);
 	}
 	else
 	{
@@ -400,56 +467,6 @@ wil::com_ptr<CVkPipelineCache> PipelineStateFactory::CreatePipelineCache()
 	}
 
 	return nullptr;
-}
-
-
-PipelineStatePool::PipelineStatePool(CVkDevice* device)
-	: m_device{ device }
-{
-	m_factory.SetDevice(device);
-
-	assert(g_pipelineStatePool == nullptr);
-	g_pipelineStatePool = this;
-}
-
-
-PipelineStatePool::~PipelineStatePool()
-{
-	g_pipelineStatePool = nullptr;
-}
-
-
-PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
-{
-	uint32_t index = AllocateIndex(pipelineDesc);
-
-	return Create<PipelineStateHandleType>(index, this);
-}
-
-
-void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
-{
-	assert(handle != nullptr);
-
-	FreeIndex(handle->GetIndex());
-}
-
-
-const GraphicsPipelineDesc& PipelineStatePool::GetDesc(PipelineStateHandleType* handle) const
-{
-	assert(handle != nullptr);
-
-	uint32_t index = handle->GetIndex();
-	return m_descs[index];
-}
-
-
-VkPipeline PipelineStatePool::GetPipeline(PipelineStateHandleType* handle) const
-{
-	assert(handle != nullptr);
-
-	uint32_t index = handle->GetIndex();
-	return m_dataItems[index].pipeline->Get();
 }
 
 
