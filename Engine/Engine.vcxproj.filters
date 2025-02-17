@@ -453,6 +453,9 @@
     <ClInclude Include="Graphics\Vulkan\ColorBufferPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\ResourcePool.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
