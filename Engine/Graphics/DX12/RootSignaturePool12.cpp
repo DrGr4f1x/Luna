@@ -77,12 +77,18 @@ void RootSignaturePool::DestroyHandle(RootSignatureHandleType* handle)
 }
 
 
-const RootSignatureDesc& RootSignaturePool::GetDesc(RootSignatureHandleType* handle) const
+const RootSignatureDesc& RootSignaturePool::GetDesc(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
 	uint32_t index = handle->GetIndex();
 	return m_descs[index];
+}
+
+
+uint32_t RootSignaturePool::GetNumRootParameters(const RootSignatureHandleType* handle) const
+{
+	return (uint32_t)GetDesc(handle).rootParameters.size();
 }
 
 
@@ -115,12 +121,39 @@ DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleTy
 }
 
 
-ID3D12RootSignature* RootSignaturePool::GetRootSignature(RootSignatureHandleType* handle) const
+ID3D12RootSignature* RootSignaturePool::GetRootSignature(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
 	uint32_t index = handle->GetIndex();
 	return m_rootSignatureData[index].rootSignature.get();
+}
+
+
+uint32_t RootSignaturePool::GetDescriptorTableBitmap(const RootSignatureHandleType* handle) const
+{
+	return GetData(handle).descriptorTableBitmap;
+}
+
+
+uint32_t RootSignaturePool::GetSamplerTableBitmap(const RootSignatureHandleType* handle) const
+{
+	return GetData(handle).samplerTableBitmap;
+}
+
+
+const vector<uint32_t>& RootSignaturePool::GetDescriptorTableSize(const RootSignatureHandleType* handle) const
+{
+	return GetData(handle).descriptorTableSizes;
+}
+
+
+const RootSignatureData& RootSignaturePool::GetData(const RootSignatureHandleType* handle) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+	return m_rootSignatureData[index];
 }
 
 

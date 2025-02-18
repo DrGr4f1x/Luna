@@ -41,9 +41,7 @@ class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
 {
 public:
-	explicit CommandContext12(CommandListType type)
-		: m_type{ type }
-	{}
+	explicit CommandContext12(CommandListType type);
 
 	~CommandContext12();
 
@@ -109,6 +107,10 @@ public:
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 
+	// Platform-specific functions
+	void SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, ID3D12DescriptorHeap* heapPtr);
+	void SetDescriptorHeaps(uint32_t heapCount, D3D12_DESCRIPTOR_HEAP_TYPE types[], ID3D12DescriptorHeap* heapPtrs[]);
+
 protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
@@ -136,6 +138,8 @@ private:
 
 	D3D12_RESOURCE_BARRIER m_resourceBarrierBuffer[16];
 	uint32_t m_numBarriersToFlush{ 0 };
+
+	ID3D12DescriptorHeap* m_currentDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
 
 	bool m_bHasPendingDebugEvent{ false };
 

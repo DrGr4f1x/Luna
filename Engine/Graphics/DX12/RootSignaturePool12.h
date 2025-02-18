@@ -39,13 +39,18 @@ public:
 	void DestroyHandle(RootSignatureHandleType* handle) override;
 
 	// Platform agnostic functions
-	const RootSignatureDesc& GetDesc(RootSignatureHandleType* handle) const override;
+	const RootSignatureDesc& GetDesc(const RootSignatureHandleType* handle) const override;
+	uint32_t GetNumRootParameters(const RootSignatureHandleType* handle) const override;
 	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const;
 
 	// Getters
-	ID3D12RootSignature* GetRootSignature(RootSignatureHandleType* handle) const;
+	ID3D12RootSignature* GetRootSignature(const RootSignatureHandleType* handle) const;
+	uint32_t GetDescriptorTableBitmap(const RootSignatureHandleType* handle) const;
+	uint32_t GetSamplerTableBitmap(const RootSignatureHandleType* handle) const;
+	const std::vector<uint32_t>& GetDescriptorTableSize(const RootSignatureHandleType* handle) const;
 
 private:
+	const RootSignatureData& GetData(const RootSignatureHandleType* handle) const;
 	RootSignatureData FindOrCreateRootSignatureData(const RootSignatureDesc& rootSignatureDesc);
 
 private:

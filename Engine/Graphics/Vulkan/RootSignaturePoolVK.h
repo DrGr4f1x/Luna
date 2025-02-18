@@ -37,7 +37,8 @@ public:
 	void DestroyHandle(RootSignatureHandleType* handle) override;
 
 	// Platform agnostic getters
-	const RootSignatureDesc& GetDesc(RootSignatureHandleType* handle) const override;
+	const RootSignatureDesc& GetDesc(const RootSignatureHandleType* handle) const override;
+	uint32_t GetNumRootParameters(const RootSignatureHandleType* handle) const override;
 	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const;
 
 	// Getters

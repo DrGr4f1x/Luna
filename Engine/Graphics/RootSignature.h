@@ -388,7 +388,8 @@ public:
 	virtual void DestroyHandle(RootSignatureHandleType* handle) = 0;
 
 	// Platform agnostic functions
-	virtual const RootSignatureDesc& GetDesc(RootSignatureHandleType* handle) const = 0;
+	virtual const RootSignatureDesc& GetDesc(const RootSignatureHandleType* handle) const = 0;
+	virtual uint32_t GetNumRootParameters(const RootSignatureHandleType* handle) const = 0;
 	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const = 0;
 };
 

@@ -41,6 +41,7 @@
     <ClCompile Include="Graphics\DX12\ColorBufferPool12.cpp" />
     <ClCompile Include="Graphics\DX12\DepthBufferPool12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp" />
+    <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
     <ClCompile Include="Graphics\DX12\GpuBufferPool12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
@@ -132,6 +133,7 @@
     <ClInclude Include="Graphics\DX12\ColorBufferPool12.h" />
     <ClInclude Include="Graphics\DX12\DepthBufferPool12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h" />
+    <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
     <ClInclude Include="Graphics\DX12\GpuBufferPool12.h" />
     <ClInclude Include="Graphics\DX12\PipelineStatePool12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />

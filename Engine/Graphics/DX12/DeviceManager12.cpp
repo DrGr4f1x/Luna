@@ -187,6 +187,12 @@ void DeviceManager::WaitForFence(uint64_t fenceValue)
 }
 
 
+bool DeviceManager::IsFenceComplete(uint64_t fenceValue)
+{
+	return GetQueue(static_cast<CommandListType>(fenceValue >> 56)).IsFenceComplete(fenceValue);
+}
+
+
 void DeviceManager::SetWindowSize(uint32_t width, uint32_t height)
 {
 	if (m_desc.backBufferWidth != width || m_desc.backBufferHeight != height)
@@ -445,7 +451,6 @@ void DeviceManager::HandleDeviceLost()
 	}*/
 
 	m_swapChainBuffers.clear();
-	m_depthStencil.reset();
 
 	m_queues[(uint32_t)QueueType::Graphics].reset();
 	m_queues[(uint32_t)QueueType::Compute].reset();

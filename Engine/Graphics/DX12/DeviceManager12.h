@@ -50,6 +50,7 @@ public:
 
 	void WaitForGpu() final;
 	void WaitForFence(uint64_t fenceValue);
+	bool IsFenceComplete(uint64_t fenceValue);
 
 	void SetWindowSize(uint32_t width, uint32_t height) final;
 	void CreateDeviceResources() final;
@@ -102,7 +103,6 @@ private:
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
 	std::vector<ColorBuffer> m_swapChainBuffers;
-	wil::com_ptr<ID3D12Resource> m_depthStencil;
 	uint32_t m_backBufferIndex{ 0 };
 	Format m_swapChainFormat;
 

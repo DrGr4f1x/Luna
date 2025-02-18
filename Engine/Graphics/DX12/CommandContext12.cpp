@@ -49,6 +49,13 @@ static bool IsValidComputeResourceState(ResourceState state)
 }
 
 
+CommandContext12::CommandContext12(CommandListType type)
+	: m_type{ type }
+{
+	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
+}
+
+
 CommandContext12::~CommandContext12()
 {
 	if (m_commandList != nullptr)
@@ -676,6 +683,35 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
+void CommandContext12::SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, ID3D12DescriptorHeap* heapPtr)
+{
+	if (m_currentDescriptorHeaps[type] != heapPtr)
+	{
+		m_currentDescriptorHeaps[type] = heapPtr;
+		BindDescriptorHeaps();
+	}
+}
+
+
+void CommandContext12::SetDescriptorHeaps(uint32_t heapCount, D3D12_DESCRIPTOR_HEAP_TYPE types[], ID3D12DescriptorHeap* heapPtrs[])
+{
+	bool anyChanged = false;
+	for (uint32_t i = 0; i < heapCount; ++i)
+	{
+		if (m_currentDescriptorHeaps[types[i]] != heapPtrs[i])
+		{
+			m_currentDescriptorHeaps[types[i]] = heapPtrs[i];
+			anyChanged = true;
+		}
+	}
+
+	if (anyChanged)
+	{
+		BindDescriptorHeaps();
+	}
+}
+
+
 void CommandContext12::TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate)
 {
 	if (oldState != newState)
@@ -772,7 +808,21 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 
 void CommandContext12::BindDescriptorHeaps()
 {
-	// TODO
+	uint32_t nonNullHeaps = 0;
+	ID3D12DescriptorHeap* heapsToBind[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+	for (uint32_t i = 0; i < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++i)
+	{
+		auto heapIter = m_currentDescriptorHeaps[i];
+		if (heapIter != nullptr)
+		{
+			heapsToBind[nonNullHeaps++] = heapIter;
+		}
+	}
+
+	if (nonNullHeaps > 0)
+	{
+		m_commandList->SetDescriptorHeaps(nonNullHeaps, heapsToBind);
+	}
 }
 
 

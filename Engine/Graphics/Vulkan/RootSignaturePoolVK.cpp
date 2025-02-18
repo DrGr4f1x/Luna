@@ -78,12 +78,18 @@ void RootSignaturePool::DestroyHandle(RootSignatureHandleType* handle)
 }
 
 
-const RootSignatureDesc& RootSignaturePool::GetDesc(RootSignatureHandleType* handle) const
+const RootSignatureDesc& RootSignaturePool::GetDesc(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
 	uint32_t index = handle->GetIndex();
 	return m_descs[index];
+}
+
+
+uint32_t RootSignaturePool::GetNumRootParameters(const RootSignatureHandleType* handle) const
+{
+	return (uint32_t)GetDesc(handle).rootParameters.size();
 }
 
 

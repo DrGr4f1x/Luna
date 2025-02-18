@@ -7,8 +7,6 @@ TODO:
 -- Vulkan: Dynamic descriptors / push descriptors (e.g. SetSRV, SetUAV etc on command context)
 -- Command context linear allocator for dynamic buffers
 -- Handles and pools for:
-    -- ColorBuffer
-    -- DepthBuffer
     -- ComputePipelineState
     -- MeshletPipelineState
     -- RayTracing (??)
@@ -29,13 +27,14 @@ TODO:
 -- Handle WindowSize better in the DeviceManagers
 -- DX12 device removed (look for TODO in DeviceManager12.cpp)
 -- OnDeviceLost/OnDeviceRestored in DeviceManagers - do I actually need this?
--- All platform resources (e.g. ColorBuffer, GpuBuffer) should store their creation Descs.  Actually the corresponding Pool should hold the Descs.
 -- Try out std::span for IGpuBuffer::Update
 -- Move Reset logic into CommandManager::AllocateContext (?)
 -- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
 -- Take another look at Shaders.  Not super happy with how things are.
 -- Trim GraphicsDeviceDesc - most of that stuff is on the DeviceManager, unneeded by the GraphicsDevice itself
+-- Integrate vk-bootstrap.  Will need to be a git submodule, with source files compiled in to the engine
+
 
 DONE:
 -- Handles and pools for:
@@ -43,7 +42,10 @@ DONE:
     -- DescriptorSet
     -- GpuBuffer
     -- RootSignature
+    -- ColorBuffer
+    -- DepthBuffer
 -- Backbuffer count (3) is hardcoded - handle this a different way
+-- All platform resources (e.g. ColorBuffer, GpuBuffer) should store their creation Descs.  Actually the corresponding Pool should hold the Descs.
 
 
 WON'T DO:
