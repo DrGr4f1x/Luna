@@ -23,7 +23,7 @@
 #include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
-#include "VUlkanUtil.h"
+#include "VulkanUtil.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
