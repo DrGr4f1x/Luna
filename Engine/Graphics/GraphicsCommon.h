@@ -11,7 +11,6 @@
 #pragma once
 
 #include "Graphics\DeviceManager.h"
-#include "Graphics\GraphicsDevice.h"
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 
@@ -101,7 +100,6 @@ struct AdapterInfo
 wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
-IGraphicsDevice* GetGraphicsDevice();
 
 IColorBufferPool* GetColorBufferPool();
 IDepthBufferPool* GetDepthBufferPool();

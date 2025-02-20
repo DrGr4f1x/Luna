@@ -52,7 +52,6 @@
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
-    <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
@@ -81,7 +80,6 @@
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\EnumsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ExtensionManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\FormatsVK.cpp" />
@@ -89,6 +87,7 @@
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VersionVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanCommon.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="LogSystem.cpp" />
     <ClCompile Include="Stdafx.cpp">
@@ -146,7 +145,6 @@
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
     <ClInclude Include="Graphics\DX12\CommandContext12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
-    <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />
     <ClInclude Include="Graphics\DX12\DeviceManager12.h" />
     <ClInclude Include="Graphics\DX12\DirectXCommon.h" />
@@ -163,7 +161,6 @@
     <ClInclude Include="Graphics\GpuBuffer.h" />
     <ClInclude Include="Graphics\GpuResource.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
-    <ClInclude Include="Graphics\GraphicsDevice.h" />
     <ClInclude Include="Graphics\InputLayout.h" />
     <ClInclude Include="Graphics\PipelineState.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
@@ -181,7 +178,6 @@
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />
-    <ClInclude Include="Graphics\Vulkan\DeviceVK.h" />
     <ClInclude Include="Graphics\Vulkan\EnumsVK.h" />
     <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
@@ -191,6 +187,7 @@
     <ClInclude Include="Graphics\Vulkan\StringsVK.h" />
     <ClInclude Include="Graphics\Vulkan\VersionVK.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanCommon.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanUtil.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="LogSystem.h" />
     <ClInclude Include="Stdafx.h" />

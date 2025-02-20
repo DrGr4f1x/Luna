@@ -12,7 +12,7 @@
 
 #include "DepthBufferPoolVK.h"
 
-#include "DeviceVK.h"
+#include "VulkanUtil.h"
 
 
 namespace Luna::VK
@@ -21,8 +21,9 @@ namespace Luna::VK
 DepthBufferPool* g_depthBufferPool{ nullptr };
 
 
-DepthBufferPool::DepthBufferPool(CVkDevice* device)
+DepthBufferPool::DepthBufferPool(CVkDevice* device, CVmaAllocator* allocator)
 	: m_device{ device }
+	, m_allocator{ allocator }
 {
 	assert(g_depthBufferPool == nullptr);
 
@@ -200,9 +201,6 @@ const DepthBufferData& DepthBufferPool::GetData(DepthBufferHandleType* handle) c
 
 DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc)
 {
-	// TODO: Figure out another way to do this.
-	auto device = GetVulkanGraphicsDevice();
-
 	// Create depth image
 	ImageDesc imageDesc{
 		.name				= depthBufferDesc.name,
@@ -217,7 +215,7 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 		.memoryAccess		= MemoryAccess::GpuReadWrite
 	};
 
-	auto image = device->CreateImage(imageDesc);
+	auto image = CreateImage(m_device.get(), m_allocator.get(), imageDesc);
 
 	// Create image views and descriptors
 	const bool bHasStencil = IsStencilFormat(depthBufferDesc.format);
@@ -241,7 +239,7 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 		.arraySize			= depthBufferDesc.arraySizeOrDepth
 	};
 
-	auto imageViewDepthStencil = device->CreateImageView(imageViewDesc);
+	auto imageViewDepthStencil = CreateImageView(m_device.get(), imageViewDesc);
 	wil::com_ptr<CVkImageView> imageViewDepthOnly;
 	wil::com_ptr<CVkImageView> imageViewStencilOnly;
 
@@ -252,14 +250,14 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 			.SetImageAspect(ImageAspect::Depth)
 			.SetViewType(TextureSubresourceViewType::DepthOnly);
 
-		imageViewDepthOnly = device->CreateImageView(imageViewDesc);
+		imageViewDepthOnly = CreateImageView(m_device.get(), imageViewDesc);
 
 		imageViewDesc
 			.SetName(format("{} Stencil Image View", depthBufferDesc.name))
 			.SetImageAspect(ImageAspect::Stencil)
 			.SetViewType(TextureSubresourceViewType::StencilOnly);
 
-		imageViewStencilOnly = device->CreateImageView(imageViewDesc);
+		imageViewStencilOnly = CreateImageView(m_device.get(), imageViewDesc);
 	}
 	else
 	{

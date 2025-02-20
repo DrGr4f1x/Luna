@@ -13,7 +13,6 @@
 #include "DynamicDescriptorHeap12.h"
 
 #include "CommandContext12.h"
-#include "Device12.h"
 #include "DeviceManager12.h"
 #include "RootSignaturePool12.h"
 
@@ -36,7 +35,7 @@ DynamicDescriptorHeap::DynamicDescriptorHeap(CommandContext12& owningContext, D3
 {
 	m_currentHeapPtr = nullptr;
 	m_currentOffset = 0;
-	m_descriptorSize = GetD3D12GraphicsDevice()->GetD3D12Device()->GetDescriptorHandleIncrementSize(heapType);
+	m_descriptorSize = GetDescriptorHandleIncrementSize(heapType);
 }
 
 
@@ -62,7 +61,9 @@ D3D12_GPU_DESCRIPTOR_HANDLE DynamicDescriptorHeap::UploadDirect(D3D12_CPU_DESCRI
 	DescriptorHandle destHandle = m_firstDescriptor + m_currentOffset * m_descriptorSize;
 	m_currentOffset += 1;
 
-	GetD3D12GraphicsDevice()->GetD3D12Device()->CopyDescriptorsSimple(1, destHandle.GetCpuHandle(), handle, m_descriptorType);
+	auto device = GetD3D12DeviceManager()->GetDevice();
+
+	device->CopyDescriptorsSimple(1, destHandle.GetCpuHandle(), handle, m_descriptorType);
 
 	return destHandle.GetGpuHandle();
 }
@@ -93,10 +94,11 @@ D3D12_GPU_DESCRIPTOR_HANDLE DynamicDescriptorHeap::UploadDirect(D3D12_CPU_DESCRI
 		heapDesc.NumDescriptors = NumDescriptorsPerHeap;
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDesc.NodeMask = 1;
-		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> heapPtr;
-		assert_succeeded(GetD3D12GraphicsDevice()->GetD3D12Device()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heapPtr)));
+		wil::com_ptr<ID3D12DescriptorHeap> heapPtr;
+		auto device = GetD3D12DeviceManager()->GetDevice();
+		assert_succeeded(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heapPtr)));
 		sm_descriptorHeapPool[idx].emplace_back(heapPtr);
-		return heapPtr.Get();
+		return heapPtr.get();
 	}
 }
 
@@ -238,7 +240,7 @@ void DynamicDescriptorHeap::DescriptorHandleCache::CopyAndBindStaleTables(
 	D3D12_CPU_DESCRIPTOR_HANDLE srcDescriptorRangeStarts[kMaxDescriptorsPerCopy];
 	uint32_t srcDescriptorRangeSizes[kMaxDescriptorsPerCopy];
 
-	auto device = GetD3D12GraphicsDevice()->GetD3D12Device();
+	auto device = GetD3D12DeviceManager()->GetDevice();
 
 	for (uint32_t i = 0; i < staleParamCount; ++i)
 	{

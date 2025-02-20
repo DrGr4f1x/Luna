@@ -19,8 +19,9 @@ namespace Luna::VK
 GpuBufferPool* g_gpuBufferPool{ nullptr };
 
 
-GpuBufferPool::GpuBufferPool(CVkDevice* device)
+GpuBufferPool::GpuBufferPool(CVkDevice* device, CVmaAllocator* allocator)
 	: m_device{ device }
+	, m_allocator{ allocator }
 {
 	assert(g_gpuBufferPool == nullptr);
 

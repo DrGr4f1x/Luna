@@ -14,8 +14,8 @@
 
 #include "FileSystem.h"
 
-#include "Device12.h"
 #include "RootSignaturePool12.h"
+#include "Shader12.h"
 
 using namespace std;
 

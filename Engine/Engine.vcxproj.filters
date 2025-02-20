@@ -51,9 +51,6 @@
     <ClCompile Include="Graphics\DX12\Enums12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\Device12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\DX12\Queue12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
@@ -88,9 +85,6 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp">
@@ -183,6 +177,11 @@
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\ColorBufferPoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\vk-bootstrap\src\VkBootstrap.cpp" />
+    <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
+    <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
@@ -300,12 +299,6 @@
     <ClInclude Include="Graphics\DX12\Strings12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\GraphicsDevice.h">
-      <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\DX12\Device12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\DX12\Queue12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
@@ -356,9 +349,6 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DeviceVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h">
@@ -451,6 +441,12 @@
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\ColorBufferPoolVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrap.h" />
+    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrapDispatch.h" />
+    <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanUtil.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>

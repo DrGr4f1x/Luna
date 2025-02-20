@@ -17,8 +17,9 @@
 #include "ColorBufferPool12.h"
 #include "DepthBufferPool12.h"
 #include "DescriptorSetPool12.h"
-#include "Device12.h"
 #include "DeviceManager12.h"
+#include "DirectXCommon.h"
+#include "GpuBufferPool12.h"
 #include "PipelineStatePool12.h"
 #include "Queue12.h"
 #include "RootSignaturePool12.h"
@@ -758,7 +759,9 @@ void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 { 
 	auto handle = destBuffer.GetHandle();
 
-	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = GetD3D12GraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
+	auto deviceManager = GetD3D12DeviceManager();
+
+	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = CreateStagingBuffer(deviceManager->GetAllocator(), bufferData, numBytes);
 
 	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);

@@ -20,7 +20,6 @@ using namespace std;
 using namespace Microsoft::WRL;
 
 Luna::IDeviceManager* g_deviceManager{ nullptr };
-Luna::IGraphicsDevice* g_graphicsDevice{ nullptr };
 
 namespace
 {
@@ -121,44 +120,39 @@ IDeviceManager* GetDeviceManager()
 }
 
 
-IGraphicsDevice* GetGraphicsDevice()
-{
-	return g_graphicsDevice;
-}
-
 IColorBufferPool* GetColorBufferPool()
 {
-	return GetGraphicsDevice()->GetColorBufferPool();
+	return GetDeviceManager()->GetColorBufferPool();
 }
 
 
 IDepthBufferPool* GetDepthBufferPool()
 {
-	return GetGraphicsDevice()->GetDepthBufferPool();
+	return GetDeviceManager()->GetDepthBufferPool();
 }
 
 
 IDescriptorSetPool* GetDescriptorSetPool()
 {
-	return GetGraphicsDevice()->GetDescriptorSetPool();
+	return GetDeviceManager()->GetDescriptorSetPool();
 }
 
 
 IGpuBufferPool* GetGpuBufferPool()
 {
-	return GetGraphicsDevice()->GetGpuBufferPool();
+	return GetDeviceManager()->GetGpuBufferPool();
 }
 
 
 IPipelineStatePool* GetPipelineStatePool()
 {
-	return GetGraphicsDevice()->GetPipelineStatePool();
+	return GetDeviceManager()->GetPipelineStatePool();
 }
 
 
 IRootSignaturePool* GetRootSignaturePool()
 {
-	return GetGraphicsDevice()->GetRootSignaturePool();
+	return GetDeviceManager()->GetRootSignaturePool();
 }
 
 } // namespace Luna

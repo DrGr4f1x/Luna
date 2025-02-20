@@ -12,9 +12,7 @@
 
 #include "DescriptorAllocator12.h"
 
-#include "Device12.h"
-#include "Strings12.h"
-
+#include "DeviceManager12.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -42,7 +40,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DescriptorAllocator::Allocate(ID3D12Device* device, 
 
 		if (m_descriptorSize == 0)
 		{
-			m_descriptorSize = device->GetDescriptorHandleIncrementSize(m_type);
+			m_descriptorSize = GetDescriptorHandleIncrementSize(m_type);
 		}
 	}
 
@@ -76,13 +74,13 @@ ID3D12DescriptorHeap* DescriptorAllocator::RequestNewHeap(ID3D12Device* device)
 
 void UserDescriptorHeap::Create(const string& debugHeapName)
 {
-	auto device = GetD3D12GraphicsDevice()->GetD3D12Device();
+	auto device = GetD3D12DeviceManager()->GetDevice();
 
 	ThrowIfFailed(device->CreateDescriptorHeap(&m_heapDesc, IID_PPV_ARGS(&m_heap)));
 
 	SetDebugName(m_heap.get(), debugHeapName);
 
-	m_descriptorSize = device->GetDescriptorHandleIncrementSize(m_heapDesc.Type);
+	m_descriptorSize = GetDescriptorHandleIncrementSize(m_heapDesc.Type);
 	m_numFreeDescriptors = m_heapDesc.NumDescriptors;
 	m_firstHandle = DescriptorHandle(m_heap->GetCPUDescriptorHandleForHeapStart(), m_heap->GetGPUDescriptorHandleForHeapStart());
 	m_nextFreeHandle = m_firstHandle;

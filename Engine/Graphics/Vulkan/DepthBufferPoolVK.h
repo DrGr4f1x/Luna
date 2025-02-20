@@ -35,11 +35,8 @@ class DepthBufferPool : public IDepthBufferPool
 	static const uint32_t MaxItems = (1 << 8);
 
 public:
-	explicit DepthBufferPool(CVkDevice* device);
+	explicit DepthBufferPool(CVkDevice* device, CVmaAllocator* allocator);
 	~DepthBufferPool();
-
-	// TODO: put this in the constructor
-	void SetAllocator(CVmaAllocator* allocator) { m_allocator = allocator; }
 
 	// Create/Destroy DepthBuffer
 	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;

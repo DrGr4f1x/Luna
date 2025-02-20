@@ -33,11 +33,8 @@ class ColorBufferPool : public IColorBufferPool
 	static const uint32_t MaxItems = (1 << 8);
 
 public:
-	explicit ColorBufferPool(CVkDevice* device);
+	explicit ColorBufferPool(CVkDevice* device, CVmaAllocator* allocator);
 	~ColorBufferPool();
-
-	// TODO: put this in the constructor
-	void SetAllocator(CVmaAllocator* allocator) { m_allocator = allocator; }
 
 	// Create/Destroy ColorBuffer
 	ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;

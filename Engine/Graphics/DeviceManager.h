@@ -20,7 +20,13 @@ namespace Luna
 
 // Forward declarations
 class CommandContext;
-class IColorBuffer;
+class IColorBufferPool;
+class IDepthBufferPool;
+class IDescriptorSetPool;
+class IGpuBufferPool;
+class IPipelineStatePool;
+class IRootSignaturePool;
+
 
 struct DeviceManagerDesc
 {
@@ -106,6 +112,13 @@ public:
 
 	virtual Format GetColorFormat() = 0;
 	virtual Format GetDepthFormat() = 0;
+
+	virtual IColorBufferPool* GetColorBufferPool() = 0;
+	virtual IDepthBufferPool* GetDepthBufferPool() = 0;
+	virtual IDescriptorSetPool* GetDescriptorSetPool() = 0;
+	virtual IGpuBufferPool* GetGpuBufferPool() = 0;
+	virtual IPipelineStatePool* GetPipelineStatePool() = 0;
+	virtual IRootSignaturePool* GetRootSignaturePool() = 0;
 };
 
 } // namespace Luna

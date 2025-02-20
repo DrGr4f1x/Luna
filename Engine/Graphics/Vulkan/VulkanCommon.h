@@ -29,6 +29,7 @@
 #include "External\VulkanMemoryAllocator\include\vk_mem_alloc.h"
 
 #include "Graphics\GraphicsCommon.h"
+
 #include "Graphics\Vulkan\EnumsVK.h"
 #include "Graphics\Vulkan\FormatsVK.h"
 #include "Graphics\Vulkan\RefCountingImplVK.h"
@@ -84,6 +85,7 @@ constexpr bool operator==(const VkImageSubresourceRange& a, const VkImageSubreso
 		a.levelCount == b.levelCount;
 }
 
-class GraphicsDevice* GetVulkanGraphicsDevice();
+
+VkFormatProperties GetFormatProperties(VkPhysicalDevice physicalDevice, Format format);
 
 } // namespace Luna::VK

@@ -12,9 +12,6 @@
 
 #include "DepthBufferPool12.h"
 
-#include "Graphics\DX12\Device12.h"
-
-
 namespace Luna::DX12
 {
 
@@ -248,11 +245,8 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 		handle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
 	}
 
-	// TODO: this is just for allocating descriptor handles.  Think of another way to achieve this.
-	auto device = GetD3D12GraphicsDevice();
-
-	dsvHandles[0] = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	dsvHandles[1] = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	dsvHandles[0] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	dsvHandles[1] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	m_device->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[0]);
@@ -263,8 +257,8 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 	auto stencilReadFormat = GetStencilFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
 	{
-		dsvHandles[2] = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-		dsvHandles[3] = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		dsvHandles[2] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		dsvHandles[3] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_STENCIL;
 		m_device->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[2]);
@@ -279,7 +273,7 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 	}
 
 
-	auto depthSrvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto depthSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	D3D12_CPU_DESCRIPTOR_HANDLE stencilSrvHandle{};
 	stencilSrvHandle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
 
@@ -300,14 +294,14 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 
 	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
 	{
-		stencilSrvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		stencilSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 		srvDesc.Format = stencilReadFormat;
 		srvDesc.Texture2D.PlaneSlice = (srvDesc.Format == DXGI_FORMAT_X32_TYPELESS_G8X24_UINT) ? 1 : 0;
 		m_device->CreateShaderResourceView(resource.get(), &srvDesc, stencilSrvHandle);
 	}
 
-	const uint8_t planeCount = device->GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
+	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 
 	DepthBufferData data{
 		.resource			= resource,

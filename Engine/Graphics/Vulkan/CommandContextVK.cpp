@@ -16,12 +16,14 @@
 #include "Graphics\ResourceSet.h"
 
 #include "ColorBufferPoolVK.h"
+#include "DepthBufferPoolVK.h"
 #include "DescriptorSetPoolVK.h"
-#include "DeviceVK.h"
 #include "DeviceManagerVK.h"
+#include "GpuBufferPoolVK.h"
 #include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
+#include "VulkanUtil.h"
 
 using namespace std;
 
@@ -786,7 +788,8 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 
 void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
-	auto stagingBuffer = GetVulkanGraphicsDevice()->CreateStagingBuffer(bufferData, numBytes);
+	auto deviceManager = GetVulkanDeviceManager();
+	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetDevice(), deviceManager->GetAllocator(), bufferData, numBytes);
 
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);

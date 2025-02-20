@@ -12,7 +12,7 @@
 
 #include "DescriptorAllocatorVK.h"
 
-#include "Graphics\Vulkan\DeviceVK.h"
+#include "DeviceManagerVK.h"
 
 using namespace std;
 
@@ -34,8 +34,6 @@ VkDescriptorSet DescriptorSetAllocator::Allocate(VkDescriptorSetLayout layout)
 		m_descriptorPool = RequestNewPool();
 	}
 
-	VkDevice device = GetVulkanGraphicsDevice()->GetDevice();
-
 	VkDescriptorSetAllocateInfo allocInfo{
 		.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 		.descriptorPool			= m_descriptorPool,
@@ -43,8 +41,10 @@ VkDescriptorSet DescriptorSetAllocator::Allocate(VkDescriptorSetLayout layout)
 		.pSetLayouts			= &layout
 	};
 
+	auto device = GetVulkanDeviceManager()->GetDevice();
+
 	VkDescriptorSet descSet{ VK_NULL_HANDLE };
-	auto res = vkAllocateDescriptorSets(device, &allocInfo, &descSet);
+	auto res = vkAllocateDescriptorSets(device->Get(), &allocInfo, &descSet);
 
 	if (res != VK_SUCCESS)
 	{
@@ -52,7 +52,7 @@ VkDescriptorSet DescriptorSetAllocator::Allocate(VkDescriptorSetLayout layout)
 		allocInfo.descriptorPool = m_descriptorPool;
 	}
 
-	ThrowIfFailed(vkAllocateDescriptorSets(device, &allocInfo, &descSet));
+	ThrowIfFailed(vkAllocateDescriptorSets(device->Get(), &allocInfo, &descSet));
 
 	return descSet;
 }
@@ -62,12 +62,12 @@ void DescriptorSetAllocator::DestroyAll()
 {
 	lock_guard<mutex> CS(sm_allocationMutex);
 
-	VkDevice device = GetVulkanGraphicsDevice()->GetDevice();
+	auto device = GetVulkanDeviceManager()->GetDevice();
 
 	for (auto& pool : sm_descriptorPoolList)
 	{
-		vkResetDescriptorPool(device, pool, 0);
-		vkDestroyDescriptorPool(device, pool, nullptr);
+		vkResetDescriptorPool(device->Get(), pool, 0);
+		vkDestroyDescriptorPool(device->Get(), pool, nullptr);
 	}
 	sm_descriptorPoolList.clear();
 }
@@ -101,10 +101,10 @@ VkDescriptorPool DescriptorSetAllocator::RequestNewPool()
 		.pPoolSizes		= typeCounts
 	};
 
-	auto device = GetVulkanGraphicsDevice()->GetDevice();
+	auto device = GetVulkanDeviceManager()->GetDevice();
 
 	VkDescriptorPool pool{ VK_NULL_HANDLE };
-	ThrowIfFailed(vkCreateDescriptorPool(device, &createInfo, nullptr, &pool));
+	ThrowIfFailed(vkCreateDescriptorPool(device->Get(), &createInfo, nullptr, &pool));
 
 	sm_descriptorPoolList.emplace_back(pool);
 

@@ -32,11 +32,8 @@ class GpuBufferPool : public IGpuBufferPool
 	static const uint32_t MaxItems = (1 << 12);
 
 public:
-	explicit GpuBufferPool(CVkDevice* device);
+	explicit GpuBufferPool(CVkDevice* device, CVmaAllocator* allocator);
 	~GpuBufferPool();
-
-	// TODO: put this in the constructor
-	void SetAllocator(CVmaAllocator* allocator) { m_allocator = allocator; }
 
 	// Create/Destroy GpuBuffer
 	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;

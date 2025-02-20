@@ -23,7 +23,7 @@ class GraphicsDevice;
 class Queue
 {
 public:
-	Queue(GraphicsDevice* device, VkQueue queue, QueueType queueType);
+	Queue(CVkDevice* device, VkQueue queue, QueueType queueType, uint32_t queueFamilyIndex);
 
 	void AddWaitSemaphore(VkSemaphore semaphore, uint64_t value);
 	void AddSignalSemaphore(VkSemaphore semaphore, uint64_t value);
@@ -48,11 +48,15 @@ public:
 	void DiscardCommandBuffer(uint64_t fenceValueForReset, VkCommandBuffer commandBuffer);
 
 private:
+	wil::com_ptr<CVkCommandPool> CreateCommandPool();
 	void ClearSemaphores();
 
 private:
+	wil::com_ptr<CVkDevice> m_device;
+
 	VkQueue m_vkQueue{};
 	QueueType m_queueType{};
+	uint32_t m_queueFamilyIndex{ 0 };
 
 	CommandBufferPool m_commandBufferPool;
 	std::mutex m_fenceMutex;

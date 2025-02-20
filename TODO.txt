@@ -34,6 +34,8 @@ TODO:
 -- Take another look at Shaders.  Not super happy with how things are.
 -- Trim GraphicsDeviceDesc - most of that stuff is on the DeviceManager, unneeded by the GraphicsDevice itself
 -- Integrate vk-bootstrap.  Will need to be a git submodule, with source files compiled in to the engine
+-- Do a const pass on the Handle* parameters passed into the various Pool member functions
+-- Get rid of the GraphicsDevice class altogether.  It serves no purpose at this point.
 
 
 DONE:

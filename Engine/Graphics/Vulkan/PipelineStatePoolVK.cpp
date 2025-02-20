@@ -16,7 +16,7 @@
 
 #include "Graphics\Shader.h"
 
-#include "DeviceVK.h"
+#include "DeviceManagerVK.h"
 #include "RootSignaturePoolVK.h"
 
 using namespace std;

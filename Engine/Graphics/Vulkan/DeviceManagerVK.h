@@ -12,19 +12,21 @@
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
-#include "Graphics\GraphicsDevice.h"
 #include "Graphics\Vulkan\DeviceCapsVK.h"
 #include "Graphics\Vulkan\ExtensionManagerVK.h"
-
 using namespace Microsoft::WRL;
-
 
 namespace Luna::VK
 {
 
 // Forward declarations
-class GraphicsDevice;
+class ColorBufferPool;
+class DepthBufferPool;
+class DescriptorSetPool;
+class GpuBufferPool;
+class PipelineStatePool;
 class Queue;
+class RootSignaturePool;
 
 
 class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
@@ -54,8 +56,18 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
+	IColorBufferPool* GetColorBufferPool() override;
+	IDepthBufferPool* GetDepthBufferPool() override;
+	IDescriptorSetPool* GetDescriptorSetPool() override;
+	IGpuBufferPool* GetGpuBufferPool() override;
+	IPipelineStatePool* GetPipelineStatePool() override;
+	IRootSignaturePool* GetRootSignaturePool() override;
+
 	void ReleaseImage(CVkImage* image);
 	void ReleaseBuffer(CVkBuffer* buffer);
+
+	CVkDevice* GetDevice() const;
+	CVmaAllocator* GetAllocator() const;
 
 private:
 	void SetRequiredInstanceLayersAndExtensions();
@@ -64,6 +76,7 @@ private:
 	void CreateSurface();
 	void SelectPhysicalDevice();
 	void CreateDevice();
+	void CreateResourcePools();
 	void CreateQueue(QueueType queueType);
 
 	void ResizeSwapChain();
@@ -94,9 +107,15 @@ private:
 	wil::com_ptr<CVkSurface> m_vkSurface;
 	wil::com_ptr<CVkPhysicalDevice> m_vkPhysicalDevice;
 	wil::com_ptr<CVkDevice> m_vkDevice;
+	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
 
-	// Luna objects
-	wil::com_ptr<GraphicsDevice> m_device;
+	// Vulkan resource pools
+	std::unique_ptr<ColorBufferPool> m_colorBufferPool;
+	std::unique_ptr<DepthBufferPool> m_depthBufferPool;
+	std::unique_ptr<DescriptorSetPool> m_descriptorSetPool;
+	std::unique_ptr<GpuBufferPool> m_gpuBufferPool;
+	std::unique_ptr<PipelineStatePool> m_pipelineStatePool;
+	std::unique_ptr<RootSignaturePool> m_rootSignaturePool;
 
 	// Swapchain
 	wil::com_ptr<CVkSwapchain> m_vkSwapChain;

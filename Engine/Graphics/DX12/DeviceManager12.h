@@ -22,8 +22,14 @@ namespace Luna::DX12
 
 // Forward declarations
 struct DeviceCaps;
-class GraphicsDevice;
+class ColorBufferPool;
+class DepthBufferPool;
+class DescriptorAllocator;
+class DescriptorSetPool;
+class GpuBufferPool;
+class PipelineStatePool;
 class Queue;
+class RootSignaturePool;
 
 
 struct DxgiRLOHelper
@@ -32,6 +38,20 @@ struct DxgiRLOHelper
 
 	DxgiRLOHelper() noexcept = default;
 	~DxgiRLOHelper();
+};
+
+
+struct DeviceRLDOHelper
+{
+	ID3D12Device* device{ nullptr };
+	const bool doReport{ false };
+
+	DeviceRLDOHelper(bool bDoReport) noexcept
+		: doReport{ bDoReport }
+	{
+	}
+
+	~DeviceRLDOHelper();
 };
 
 
@@ -65,18 +85,37 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
+	IColorBufferPool* GetColorBufferPool() override;
+	IDepthBufferPool* GetDepthBufferPool() override;
+	IDescriptorSetPool* GetDescriptorSetPool() override;
+	IGpuBufferPool* GetGpuBufferPool() override;
+	IPipelineStatePool* GetPipelineStatePool() override;
+	IRootSignaturePool* GetRootSignaturePool() override;
+
+	// Texture formats
+	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
+
 	void HandleDeviceLost();
 
 	void ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation = nullptr);
 	void ReleaseAllocation(D3D12MA::Allocation* allocation);
 
+	ID3D12Device* GetDevice() { return m_dxDevice.get(); }
+	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
+
 private:
 	void CreateDevice();
+	void CreateResourcePools();
 	std::vector<AdapterInfo> EnumerateAdapters();
 	HRESULT EnumAdapter(int32_t adapterIdx, DXGI_GPU_PREFERENCE gpuPreference, IDXGIFactory6* dxgiFactory6, IDXGIAdapter** adapter);
 
 	Queue& GetQueue(QueueType queueType);
 	Queue& GetQueue(CommandListType commandListType);
+
+	void InstallDebugCallback();
+	void ReadCaps();
 
 	void UpdateColorSpace();
 
@@ -94,11 +133,28 @@ private:
 	D3D_FEATURE_LEVEL m_bestFeatureLevel{ D3D_FEATURE_LEVEL_12_2 };
 	D3D_SHADER_MODEL m_bestShaderModel{ D3D_SHADER_MODEL_6_7 };
 
+	// DirectX objects
 	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
 	wil::com_ptr<IDXGIAdapter> m_dxgiAdapter;
+	wil::com_ptr<ID3D12Device> m_dxDevice;
+	DeviceRLDOHelper m_deviceRLDOHelper;
+	wil::com_ptr<ID3D12InfoQueue1> m_dxInfoQueue;
+	wil::com_ptr<D3D12MA::Allocator> m_d3d12maAllocator;
+	DWORD m_callbackCookie{ 0 };
 
-	// Luna objects
-	wil::com_ptr<GraphicsDevice> m_device;
+	// Descriptor allocators
+	std::array<std::unique_ptr<DescriptorAllocator>, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_descriptorAllocators;
+
+	// DirectX caps
+	std::unique_ptr<DeviceCaps> m_caps;
+
+	// DirectX resource pools
+	std::unique_ptr<ColorBufferPool> m_colorBufferPool;
+	std::unique_ptr<DepthBufferPool> m_depthBufferPool;
+	std::unique_ptr<DescriptorSetPool> m_descriptorSetPool;
+	std::unique_ptr<GpuBufferPool> m_gpuBufferPool;
+	std::unique_ptr<PipelineStatePool> m_pipelineStatePool;
+	std::unique_ptr<RootSignaturePool> m_rootSignaturePool;
 
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
@@ -113,6 +169,9 @@ private:
 
 	// HDR Support
 	DXGI_COLOR_SPACE_TYPE m_colorSpace;
+
+	// Format properties
+	std::unordered_map<DXGI_FORMAT, uint8_t> m_dxgiFormatPlaneCounts;
 
 	bool m_bIsWarpAdapter{ false };
 	bool m_bIsTearingSupported{ false };

@@ -12,7 +12,7 @@
 
 #include "ColorBufferPool12.h"
 
-#include "Device12.h"
+using namespace std;
 
 
 namespace Luna::DX12
@@ -165,15 +165,13 @@ ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChain(IDXGISwapChain
 		.format				= DxgiToFormat(resourceDesc.Format)
 	};
 
-	auto device = GetD3D12GraphicsDevice();
-
-	auto rtvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	auto rtvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_device->CreateRenderTargetView(displayPlane.get(), nullptr, rtvHandle);
 
-	auto srvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	m_device->CreateShaderResourceView(displayPlane.get(), nullptr, srvHandle);
 
-	const uint8_t planeCount = device->GetFormatPlaneCount(resourceDesc.Format);
+	const uint8_t planeCount = GetFormatPlaneCount(resourceDesc.Format);
 	colorBufferDesc.planeCount = planeCount;
 
 	ColorBufferData data{
@@ -242,9 +240,6 @@ const ColorBufferData& ColorBufferPool::GetData(ColorBufferHandleType* handle) c
 
 ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc)
 {
-	// TODO: Figure out a better way to do this.
-	auto device = GetD3D12GraphicsDevice();
-
 	// Create resource
 	auto numMips = colorBufferDesc.numMips == 0 ? ComputeNumMips(colorBufferDesc.width, colorBufferDesc.height) : colorBufferDesc.numMips;
 	auto flags = CombineResourceFlags(colorBufferDesc.numSamples);
@@ -344,8 +339,8 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 		srvDesc.Texture2D.MostDetailedMip = 0;
 	}
 
-	auto rtvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	auto srvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	auto rtvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	// Create the render target view
 	m_device->CreateRenderTargetView(resource, &rtvDesc, rtvHandle);
@@ -364,7 +359,7 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 
 		for (uint32_t i = 0; i < numMips; ++i)
 		{
-			uavHandles[i] = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			uavHandles[i] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 			m_device->CreateUnorderedAccessView(resource, nullptr, &uavDesc, uavHandles[i]);
 
@@ -372,7 +367,7 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 		}
 	}
 
-	const uint8_t planeCount = device->GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
+	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
 
 	ColorBufferData data{
 		.resource		= resource,

@@ -13,10 +13,17 @@
 #include "DeviceManager12.h"
 
 #include "Graphics\GraphicsCommon.h"
-#include "Graphics\DX12\CommandContext12.h"
-#include "Graphics\DX12\DeviceCaps12.h"
-#include "Graphics\DX12\Device12.h"
-#include "Graphics\DX12\Queue12.h"
+
+#include "ColorBufferPool12.h"
+#include "CommandContext12.h"
+#include "DepthBufferPool12.h"
+#include "DescriptorSetPool12.h"
+#include "DeviceCaps12.h"
+#include "GpuBufferPool12.h"
+#include "PipelineStatePool12.h"
+#include "Queue12.h"
+#include "RootSignaturePool12.h"
+#include "Shader12.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -85,6 +92,34 @@ inline long ComputeIntersectionArea(
 }
 
 
+void DebugMessageCallback(
+	D3D12_MESSAGE_CATEGORY category,
+	D3D12_MESSAGE_SEVERITY severity,
+	D3D12_MESSAGE_ID id,
+	LPCSTR pDescription,
+	void* pContext)
+{
+	string debugMessage = format("[{}] Code {} : {}", category, (uint32_t)id, pDescription);
+
+	switch (severity)
+	{
+	case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+		LogFatal(LogDirectX) << debugMessage << endl;
+		break;
+	case D3D12_MESSAGE_SEVERITY_ERROR:
+		LogError(LogDirectX) << debugMessage << endl;
+		break;
+	case D3D12_MESSAGE_SEVERITY_WARNING:
+		LogWarning(LogDirectX) << debugMessage << endl;
+		break;
+	case D3D12_MESSAGE_SEVERITY_INFO:
+	case D3D12_MESSAGE_SEVERITY_MESSAGE:
+		LogInfo(LogDirectX) << debugMessage << endl;
+		break;
+	}
+}
+
+
 DxgiRLOHelper::~DxgiRLOHelper()
 {
 	if (doReport)
@@ -98,8 +133,22 @@ DxgiRLOHelper::~DxgiRLOHelper()
 }
 
 
+DeviceRLDOHelper::~DeviceRLDOHelper()
+{
+	if (device && doReport)
+	{
+		wil::com_ptr<ID3D12DebugDevice> debugInterface;
+		if (SUCCEEDED(device->QueryInterface(debugInterface.addressof())))
+		{
+			debugInterface->ReportLiveDeviceObjects(D3D12_RLDO_SUMMARY | D3D12_RLDO_DETAIL | D3D12_RLDO_IGNORE_INTERNAL);
+		}
+	}
+}
+
+
 DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	: m_desc{ desc }
+	, m_deviceRLDOHelper{ desc.enableValidation }
 {
 	m_bIsDeveloperModeEnabled = IsDeveloperModeEnabled();
 	m_bIsRenderDocAvailable = IsRenderDocAvailable();
@@ -123,6 +172,10 @@ DeviceManager::~DeviceManager()
 	// Flush pending deferred resources here
 	ReleaseDeferredResources();
 	assert(m_deferredResources.empty());
+
+	Shader::DestroyAll();
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Destroy();
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Destroy();
 
 	extern Luna::IDeviceManager* g_deviceManager;
 	g_deviceManager = nullptr;
@@ -257,21 +310,40 @@ void DeviceManager::CreateDeviceResources()
 
 	CreateDevice();
 	
+	CreateResourcePools();
+
 	// Create queues
-	m_queues[(uint32_t)QueueType::Graphics] = make_unique<Queue>(m_device->GetD3D12Device(), QueueType::Graphics);
-	m_queues[(uint32_t)QueueType::Compute] = make_unique<Queue>(m_device->GetD3D12Device(), QueueType::Compute);
-	m_queues[(uint32_t)QueueType::Copy] = make_unique<Queue>(m_device->GetD3D12Device(), QueueType::Copy);
+	m_queues[(uint32_t)QueueType::Graphics] = make_unique<Queue>(m_dxDevice.get(), QueueType::Graphics);
+	m_queues[(uint32_t)QueueType::Compute] = make_unique<Queue>(m_dxDevice.get(), QueueType::Compute);
+	m_queues[(uint32_t)QueueType::Copy] = make_unique<Queue>(m_dxDevice.get(), QueueType::Copy);
 	m_bQueuesCreated = true;
 
 	// Create a fence for tracking GPU execution progress
-	auto d3d12Device = m_device->GetD3D12Device();
-	ThrowIfFailed(d3d12Device->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+	ThrowIfFailed(m_dxDevice->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 
 	m_fenceValues[m_backBufferIndex]++;
 
 	m_fence->SetName(L"DeviceResources");
 
 	m_fenceEvent.Attach(CreateEventEx(nullptr, nullptr, 0, EVENT_MODIFY_STATE | SYNCHRONIZE));
+
+	if (m_desc.enableValidation)
+	{
+		InstallDebugCallback();
+	}
+
+	// Create descriptor allocators
+	m_descriptorAllocators[0] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_descriptorAllocators[1] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+	m_descriptorAllocators[2] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_descriptorAllocators[3] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Create("User Descriptor Heap, CBV_SRV_UAV");
+	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Create("User Descriptor Heap, SAMPLER");
+
+	m_caps = make_unique<DeviceCaps>();
+	ReadCaps();
+	m_caps->LogCaps();
 }
 
 
@@ -304,7 +376,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 		if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
 		{
 			LogWarning(LogDirectX) << format("Device lost on ResizeBuffers: Reason code {}",
-				static_cast<uint32_t>((hr == DXGI_ERROR_DEVICE_REMOVED) ? m_device->GetD3D12Device()->GetDeviceRemovedReason() : hr)) << endl;
+				static_cast<uint32_t>((hr == DXGI_ERROR_DEVICE_REMOVED) ? m_dxDevice->GetDeviceRemovedReason() : hr)) << endl;
 
 			// If the device was removed for any reason, a new device and swap chain will need to be created.
 			HandleDeviceLost();
@@ -409,7 +481,7 @@ void DeviceManager::CreateNewCommandList(CommandListType commandListType, ID3D12
 
 	*allocator = GetQueue(commandListType).RequestAllocator();
 
-	assert_succeeded(m_device->GetD3D12Device()->CreateCommandList(1, CommandListTypeToDX12(commandListType), *allocator, nullptr, IID_PPV_ARGS(commandList)));
+	assert_succeeded(m_dxDevice->CreateCommandList(1, CommandListTypeToDX12(commandListType), *allocator, nullptr, IID_PPV_ARGS(commandList)));
 
 	(*commandList)->SetName(L"CommandList");
 }
@@ -442,6 +514,75 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
+IColorBufferPool* DeviceManager::GetColorBufferPool()
+{
+	return m_colorBufferPool.get();
+}
+
+
+IDepthBufferPool* DeviceManager::GetDepthBufferPool()
+{
+	return m_depthBufferPool.get();
+}
+
+
+IDescriptorSetPool* DeviceManager::GetDescriptorSetPool()
+{
+	return m_descriptorSetPool.get();
+}
+
+
+IGpuBufferPool* DeviceManager::GetGpuBufferPool()
+{
+	return m_gpuBufferPool.get();
+}
+
+
+IPipelineStatePool* DeviceManager::GetPipelineStatePool()
+{
+	return m_pipelineStatePool.get();
+}
+
+
+IRootSignaturePool* DeviceManager::GetRootSignaturePool()
+{
+	return m_rootSignaturePool.get();
+}
+
+
+uint8_t DeviceManager::GetFormatPlaneCount(DXGI_FORMAT format)
+{
+	uint8_t& planeCount = m_dxgiFormatPlaneCounts[format];
+	if (planeCount == 0)
+	{
+		D3D12_FEATURE_DATA_FORMAT_INFO formatInfo{ format, 1 };
+		if (FAILED(m_dxDevice->CheckFeatureSupport(D3D12_FEATURE_FORMAT_INFO, &formatInfo, sizeof(formatInfo))))
+		{
+			// Format not supported, store a special value in the cache to avoid querying later
+			planeCount = 255;
+		}
+		else
+		{
+			// Format supported - store the plane count in the cache
+			planeCount = formatInfo.PlaneCount;
+		}
+	}
+
+	if (planeCount == 255)
+	{
+		return 0;
+	}
+
+	return planeCount;
+}
+
+
+D3D12_CPU_DESCRIPTOR_HANDLE DeviceManager::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count)
+{
+	return m_descriptorAllocators[type]->Allocate(m_dxDevice.get(), count);
+}
+
+
 void DeviceManager::HandleDeviceLost()
 { 
 	// TODO
@@ -456,7 +597,7 @@ void DeviceManager::HandleDeviceLost()
 	m_queues[(uint32_t)QueueType::Compute].reset();
 	m_queues[(uint32_t)QueueType::Copy].reset();
 
-	m_device.reset();
+	m_dxDevice.reset();
 
 	m_fence.reset();
 	m_dxSwapChain.reset();
@@ -598,8 +739,11 @@ void DeviceManager::CreateDevice()
 	}
 #endif
 
+	m_dxDevice = device;
+
+	m_deviceRLDOHelper.device = device.get();
+
 	// Create D3D12 Memory Allocator
-	wil::com_ptr<D3D12MA::Allocator> d3d12maAllocator;
 	auto allocatorDesc = D3D12MA::ALLOCATOR_DESC{
 		.Flags					= D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED | D3D12MA::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED,
 		.pDevice				= device.get(),
@@ -607,32 +751,20 @@ void DeviceManager::CreateDevice()
 		.pAllocationCallbacks	= nullptr,
 		.pAdapter				= m_dxgiAdapter.get()
 	};
-	assert_succeeded(D3D12MA::CreateAllocator(&allocatorDesc, &d3d12maAllocator));
+	assert_succeeded(D3D12MA::CreateAllocator(&allocatorDesc, &m_d3d12maAllocator));
+
+	// TODO: Create descriptor allocators
+}
 
 
-	// Create Luna GraphicsDevice
-	auto deviceDesc = GraphicsDeviceDesc{
-		.dxgiFactory				= m_dxgiFactory.get(),
-		.dx12Device					= device.get(),
-		.d3d12maAllocator			= d3d12maAllocator.get(),
-		.backBufferWidth			= m_desc.backBufferWidth,
-		.backBufferHeight			= m_desc.backBufferHeight,
-		.numSwapChainBuffers		= m_desc.numSwapChainBuffers,
-		.swapChainFormat			= m_desc.swapChainFormat,
-		.swapChainSampleCount		= m_desc.swapChainSampleCount,
-		.swapChainSampleQuality		= m_desc.swapChainSampleQuality,
-		.allowModeSwitch			= m_desc.allowModeSwitch,
-		.isTearingSupported			= m_bIsTearingSupported,
-		.enableVSync				= m_desc.enableVSync,
-		.maxFramesInFlight			= m_desc.maxFramesInFlight,
-		.hwnd						= m_desc.hwnd,
-		.enableValidation			= m_desc.enableValidation,
-		.enableDebugMarkers			= m_desc.enableDebugMarkers
-	};
-
-	m_device = Make<GraphicsDevice>(deviceDesc);
-
-	m_device->CreateResources();
+void DeviceManager::CreateResourcePools()
+{
+	m_colorBufferPool = make_unique<ColorBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
+	m_depthBufferPool = make_unique<DepthBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
+	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_dxDevice.get());
+	m_gpuBufferPool = make_unique<GpuBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
+	m_pipelineStatePool = make_unique<PipelineStatePool>(m_dxDevice.get());
+	m_rootSignaturePool = make_unique<RootSignaturePool>(m_dxDevice.get());
 }
 
 
@@ -728,6 +860,79 @@ Queue& DeviceManager::GetQueue(CommandListType commandListType)
 {
 	const auto queueType = CommandListTypeToQueueType(commandListType);
 	return GetQueue(queueType);
+}
+
+
+void DeviceManager::InstallDebugCallback()
+{
+	if (SUCCEEDED(m_dxDevice->QueryInterface(IID_PPV_ARGS(&m_dxInfoQueue))))
+	{
+		// Suppress whole categories of messages
+		//D3D12_MESSAGE_CATEGORY Categories[] = {};
+
+		// Suppress messages based on their severity level
+		D3D12_MESSAGE_SEVERITY severities[] =
+		{
+			D3D12_MESSAGE_SEVERITY_INFO
+		};
+
+		// Suppress individual messages by their ID
+		D3D12_MESSAGE_ID denyIds[] =
+		{
+			// This occurs when there are uninitialized descriptors in a descriptor table, even when a
+			// shader does not access the missing descriptors.  I find this is common when switching
+			// shader permutations and not wanting to change much code to reorder resources.
+			D3D12_MESSAGE_ID_INVALID_DESCRIPTOR_HANDLE,
+
+			// Triggered when a shader does not export all color components of a render target, such as
+			// when only writing RGB to an R10G10B10A2 buffer, ignoring alpha.
+			D3D12_MESSAGE_ID_CREATEGRAPHICSPIPELINESTATE_PS_OUTPUT_RT_OUTPUT_MISMATCH,
+
+			// This occurs when a descriptor table is unbound even when a shader does not access the missing
+			// descriptors.  This is common with a root signature shared between disparate shaders that
+			// don't all need the same types of resources.
+			D3D12_MESSAGE_ID_COMMAND_LIST_DESCRIPTOR_TABLE_NOT_SET,
+
+			D3D12_MESSAGE_ID_COPY_DESCRIPTORS_INVALID_RANGES,
+
+			// Silence complaints about shaders not being signed by DXIL.dll.  We don't care about this.
+			D3D12_MESSAGE_ID_NON_RETAIL_SHADER_MODEL_WONT_VALIDATE,
+
+			// RESOURCE_BARRIER_DUPLICATE_SUBRESOURCE_TRANSITIONS
+			(D3D12_MESSAGE_ID)1008,
+		};
+
+		D3D12_INFO_QUEUE_FILTER newFilter = {};
+		//newFilter.DenyList.NumCategories = _countof(Categories);
+		//newFilter.DenyList.pCategoryList = Categories;
+		newFilter.DenyList.NumSeverities = _countof(severities);
+		newFilter.DenyList.pSeverityList = severities;
+		newFilter.DenyList.NumIDs = _countof(denyIds);
+		newFilter.DenyList.pIDList = denyIds;
+
+#ifdef _DEBUG
+		m_dxInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+		m_dxInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+#endif
+		m_dxInfoQueue->PushStorageFilter(&newFilter);
+		m_dxInfoQueue->RegisterMessageCallback(DebugMessageCallback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &m_callbackCookie);
+	}
+}
+
+
+void DeviceManager::ReadCaps()
+{
+	const D3D_FEATURE_LEVEL minFeatureLevel{ D3D_FEATURE_LEVEL_12_0 };
+	const D3D_SHADER_MODEL maxShaderModel{ D3D_SHADER_MODEL_6_8 };
+
+	m_caps->ReadFullCaps(m_dxDevice.get(), minFeatureLevel, maxShaderModel);
+
+	// TODO
+	//if (g_graphicsDeviceOptions.logDeviceFeatures)
+	if (false)
+	{
+		m_caps->LogCaps();
+	}
 }
 
 
@@ -874,6 +1079,24 @@ void DeviceManager::ReleaseDeferredResources()
 DeviceManager* GetD3D12DeviceManager()
 {
 	return g_d3d12DeviceManager;
+}
+
+
+D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count)
+{
+	return GetD3D12DeviceManager()->AllocateDescriptor(type, count);
+}
+
+
+uint8_t GetFormatPlaneCount(DXGI_FORMAT format)
+{
+	return GetD3D12DeviceManager()->GetFormatPlaneCount(format);
+}
+
+
+uint32_t GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE type)
+{
+	return GetD3D12DeviceManager()->GetDevice()->GetDescriptorHandleIncrementSize(type);
 }
 
 } // namespace Luna::DX12

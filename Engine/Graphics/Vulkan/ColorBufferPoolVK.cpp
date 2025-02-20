@@ -12,7 +12,11 @@
 
 #include "ColorBufferPoolVK.h"
 
-#include "DeviceVK.h"
+#include "DeviceManagerVK.h"
+#include "VulkanUtil.h"
+
+
+using namespace std;
 
 
 namespace Luna::VK
@@ -21,8 +25,9 @@ namespace Luna::VK
 ColorBufferPool* g_colorBufferPool{ nullptr };
 
 
-ColorBufferPool::ColorBufferPool(CVkDevice* device)
+ColorBufferPool::ColorBufferPool(CVkDevice* device, CVmaAllocator* allocator)
 	: m_device{ device }
+	, m_allocator{ allocator }
 {
 	assert(g_colorBufferPool == nullptr);
 
@@ -146,8 +151,6 @@ Color ColorBufferPool::GetClearColor(ColorBufferHandleType* handle) const
 
 ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex)
 {
-	auto device = GetVulkanGraphicsDevice();
-
 	const string name = std::format("Primary Swapchain Image {}", imageIndex);
 
 	// Swapchain image
@@ -177,14 +180,14 @@ ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChainImage(CVkImage*
 		.arraySize			= 1
 	};
 
-	auto imageViewRtv = device->CreateImageView(imageViewDesc);
+	auto imageViewRtv = CreateImageView(m_device.get(), imageViewDesc);
 
 	// SRV view
 	imageViewDesc
 		.SetImageUsage(GpuImageUsage::ShaderResource)
 		.SetName(std::format("Primary SwapChain {} SRV Image View", imageIndex));
 
-	auto imageViewSrv = device->CreateImageView(imageViewDesc);
+	auto imageViewSrv = CreateImageView(m_device.get(), imageViewDesc);
 
 	// Descriptors
 	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
@@ -263,8 +266,6 @@ const ColorBufferData& ColorBufferPool::GetData(ColorBufferHandleType* handle) c
 
 ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc)
 {
-	auto device = GetVulkanGraphicsDevice();
-
 	// Create image
 	ImageDesc imageDesc{
 		.name				= colorBufferDesc.name,
@@ -297,7 +298,7 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 		}
 	}
 
-	auto image = device->CreateImage(imageDesc);
+	auto image = CreateImage(m_device.get(), m_allocator.get(), imageDesc);
 
 	// Render target view
 	ImageViewDesc imageViewDesc{
@@ -312,11 +313,11 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 		.baseArraySlice		= 0,
 		.arraySize			= colorBufferDesc.arraySizeOrDepth
 	};
-	auto imageViewRtv = device->CreateImageView(imageViewDesc);
+	auto imageViewRtv = CreateImageView(m_device.get(), imageViewDesc);
 
 	// Shader resource view
 	imageViewDesc.SetImageUsage(GpuImageUsage::ShaderResource);
-	auto imageViewSrv = device->CreateImageView(imageViewDesc);
+	auto imageViewSrv = CreateImageView(m_device.get(), imageViewDesc);
 
 	// Descriptors
 	VkDescriptorImageInfo imageInfoSrv{

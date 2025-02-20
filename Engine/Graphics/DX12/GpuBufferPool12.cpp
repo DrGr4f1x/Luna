@@ -12,10 +12,6 @@
 
 #include "GpuBufferPool12.h"
 
-#include "DescriptorAllocator12.h"
-#include "Device12.h"
-
-
 namespace Luna::DX12
 {
 
@@ -208,9 +204,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetCBV(GpuBufferHandleType* handle) c
 
 GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBufferDesc) const
 {
-	// TODO: this is just for allocating descriptor handles.  Think of another way to achieve this.
-	auto device = GetD3D12GraphicsDevice();
-
 	ResourceState initialState = ResourceState::GenericRead;
 
 	wil::com_ptr<D3D12MA::Allocation> allocation = AllocateBuffer(gpuBufferDesc);
@@ -238,7 +231,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			}
 		};
 
-		auto srvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
@@ -250,7 +243,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			}
 		};
 
-		auto uavHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
 
 		gpuBufferData.SetSrvHandle(srvHandle);
@@ -270,7 +263,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			}
 		};
 
-		auto srvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
@@ -284,7 +277,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			}
 		};
 
-		auto uavHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
 
 		gpuBufferData.SetSrvHandle(srvHandle);
@@ -303,7 +296,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			}
 		};
 
-		auto srvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
@@ -315,7 +308,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			}
 		};
 
-		auto uavHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
 
 		gpuBufferData.SetSrvHandle(srvHandle);
@@ -329,7 +322,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 			.SizeInBytes		= (uint32_t)(gpuBufferDesc.elementCount * gpuBufferDesc.elementSize)
 		};
 
-		auto cbvHandle = device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		auto cbvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
 		gpuBufferData.SetCbvHandle(cbvHandle);

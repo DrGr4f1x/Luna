@@ -13,12 +13,24 @@
 #include "DeviceManagerVK.h"
 
 #include "Graphics\GraphicsCommon.h"
-#include "Graphics\Vulkan\CommandContextVK.h"
-#include "Graphics\Vulkan\DeviceVK.h"
-#include "Graphics\Vulkan\QueueVK.h"
+
+#include "ColorBufferPoolVK.h"
+#include "CommandContextVK.h"
+#include "DepthBufferPoolVK.h"
+#include "DescriptorAllocatorVK.h"
+#include "DescriptorSetPoolVK.h"
+#include "GpuBufferPoolVK.h"
+#include "PipelineStatePoolVK.h"
+#include "QueueVK.h"
+#include "RootSignaturePoolVK.h"
+#include "VUlkanUtil.h"
 
 using namespace std;
 using namespace Microsoft::WRL;
+
+#ifdef CreateSemaphore
+#undef CreateSemaphore
+#endif
 
 
 namespace Luna::VK
@@ -114,6 +126,8 @@ DeviceManager::~DeviceManager()
 	// Flush pending deferred resources here
 	ReleaseDeferredResources();
 	assert(m_deferredResources.empty());
+
+	DescriptorSetAllocator::DestroyAll();
 
 	extern Luna::IDeviceManager* g_deviceManager;
 	g_deviceManager = nullptr;
@@ -258,6 +272,8 @@ void DeviceManager::CreateDeviceResources()
 
 	CreateDevice();
 
+	CreateResourcePools();
+
 	// Create queues
 	CreateQueue(QueueType::Graphics);
 	CreateQueue(QueueType::Compute);
@@ -271,7 +287,7 @@ void DeviceManager::CreateDeviceResources()
 	{
 		// Create present-complete semaphore
 		{
-			auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
+			auto semaphore = CreateSemaphore(m_vkDevice.get(), VK_SEMAPHORE_TYPE_BINARY, 0);
 			assert(semaphore);
 			m_presentCompleteSemaphores.push_back(semaphore);
 			SetDebugName(*m_vkDevice, semaphore->Get(), format("Present Complete Semaphore {}", i));
@@ -279,14 +295,14 @@ void DeviceManager::CreateDeviceResources()
 
 		// Create render-complete semaphore
 		{
-			auto semaphore = m_device->CreateSemaphore(VK_SEMAPHORE_TYPE_BINARY, 0);
+			auto semaphore = CreateSemaphore(m_vkDevice.get(), VK_SEMAPHORE_TYPE_BINARY, 0);
 			assert(semaphore);
 			m_renderCompleteSemaphores.push_back(semaphore);
 			SetDebugName(*m_vkDevice, semaphore->Get(), format("Render Complete Semaphore {}", i));
 		}
 
 		// Create fence
-		auto fence = m_device->CreateFence(true);
+		auto fence = CreateFence(m_vkDevice.get(), true);
 		assert(fence);
 		m_presentFences.push_back(fence);
 		SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
@@ -391,7 +407,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < imageCount; ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(GetVulkanColorBufferPool()->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
+		swapChainBuffer.SetHandle(m_colorBufferPool->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
 		m_swapChainBuffers.push_back(swapChainBuffer);
 	}
 }
@@ -452,6 +468,42 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
+IColorBufferPool* DeviceManager::GetColorBufferPool()
+{
+	return m_colorBufferPool.get();
+}
+
+
+IDepthBufferPool* DeviceManager::GetDepthBufferPool()
+{
+	return m_depthBufferPool.get();
+}
+
+
+IDescriptorSetPool* DeviceManager::GetDescriptorSetPool()
+{
+	return m_descriptorSetPool.get();
+}
+
+
+IGpuBufferPool* DeviceManager::GetGpuBufferPool()
+{
+	return m_gpuBufferPool.get();
+}
+
+
+IPipelineStatePool* DeviceManager::GetPipelineStatePool()
+{
+	return m_pipelineStatePool.get();
+}
+
+
+IRootSignaturePool* DeviceManager::GetRootSignaturePool()
+{
+	return m_rootSignaturePool.get();
+}
+
+
 void DeviceManager::ReleaseImage(CVkImage* image)
 {
 	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
@@ -467,6 +519,18 @@ void DeviceManager::ReleaseBuffer(CVkBuffer* buffer)
 
 	DeferredReleaseResource resource{ nextFence, nullptr, buffer };
 	m_deferredResources.emplace_back(resource);
+}
+
+
+CVkDevice* DeviceManager::GetDevice() const
+{
+	return m_vkDevice.get();
+}
+
+
+CVmaAllocator* DeviceManager::GetAllocator() const
+{
+	return m_vmaAllocator.get();
 }
 
 
@@ -732,38 +796,55 @@ void DeviceManager::CreateDevice()
 
 	m_vkDevice = Create<CVkDevice>(m_vkPhysicalDevice.get(), device);
 
-	// Create Luna GraphicsDevice
-	auto deviceDesc = GraphicsDeviceDesc{
-		.instance				= *m_vkInstance,
-		.physicalDevice			= m_vkPhysicalDevice.get(),
-		.device					= m_vkDevice.get(),
-		.queueFamilyIndices		= { 
-			.graphics	= m_queueFamilyIndices.graphics,
-			.compute	= m_queueFamilyIndices.compute,
-			.transfer	= m_queueFamilyIndices.transfer,
-			.present	= m_queueFamilyIndices.present },
-		.backBufferWidth		= m_desc.backBufferWidth,
-		.backBufferHeight		= m_desc.backBufferHeight,
-		.numSwapChainBuffers	= m_desc.numSwapChainBuffers,
-		.swapChainFormat		= m_desc.swapChainFormat,
-		.surface				= *m_vkSurface,
-		.enableVSync			= m_desc.enableVSync,
-		.maxFramesInFlight		= m_desc.maxFramesInFlight,
-		.enableValidation		= m_desc.enableValidation,
-		.enableDebugMarkers		= m_desc.enableDebugMarkers
-	};
+	// Create VmaAllocator
+	VmaVulkanFunctions vmaFunctions{};
+	vmaFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+	vmaFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
 
-	m_device = Make<GraphicsDevice>(deviceDesc);
+	VmaAllocatorCreateInfo allocatorCreateInfo{};
+	allocatorCreateInfo.physicalDevice = *m_vkPhysicalDevice;
+	allocatorCreateInfo.device = *m_vkDevice;
+	allocatorCreateInfo.instance = *m_vkInstance;
+	allocatorCreateInfo.pVulkanFunctions = &vmaFunctions;
 
-	m_device->CreateResources();
+	VmaAllocator vmaAllocator{ VK_NULL_HANDLE };
+	if (VK_SUCCEEDED(vmaCreateAllocator(&allocatorCreateInfo, &vmaAllocator)))
+	{
+		m_vmaAllocator = Create<CVmaAllocator>(m_vkDevice.get(), vmaAllocator);
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to create VmaAllocator.  Error code: " << res << endl;
+	}
+}
+
+
+void DeviceManager::CreateResourcePools()
+{
+	m_colorBufferPool = make_unique<ColorBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_depthBufferPool = make_unique<DepthBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_vkDevice.get());
+	m_gpuBufferPool = make_unique<GpuBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_pipelineStatePool = make_unique<PipelineStatePool>(m_vkDevice.get());
+	m_rootSignaturePool = make_unique<RootSignaturePool>(m_vkDevice.get());
 }
 
 
 void DeviceManager::CreateQueue(QueueType queueType)
 {
 	VkQueue vkQueue{ VK_NULL_HANDLE };
-	vkGetDeviceQueue(*m_vkDevice, m_queueFamilyIndices.graphics, 0, &vkQueue);
-	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_device.get(), vkQueue, queueType);
+	
+	uint32_t queueFamilyIndex{ 0 };
+	switch (queueType)
+	{
+	case QueueType::Graphics:	queueFamilyIndex = m_queueFamilyIndices.graphics; break;
+	case QueueType::Compute:	queueFamilyIndex = m_queueFamilyIndices.compute; break;
+	case QueueType::Copy:		queueFamilyIndex = m_queueFamilyIndices.transfer; break;
+	default:					queueFamilyIndex = m_queueFamilyIndices.present; break;
+	}
+
+	vkGetDeviceQueue(*m_vkDevice, queueFamilyIndex, 0, &vkQueue);
+	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_vkDevice.get(), vkQueue, queueType, queueFamilyIndex);
 }
 
 

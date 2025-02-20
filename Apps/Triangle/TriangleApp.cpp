@@ -43,8 +43,6 @@ void TriangleApp::Configure()
 
 void TriangleApp::Startup()
 {
-	auto graphicsDevice = GetGraphicsDevice();
-
 	// Setup vertices
 	vector<Vertex> vertexData =
 	{

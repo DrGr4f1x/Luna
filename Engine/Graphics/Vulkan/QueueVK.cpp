@@ -12,26 +12,32 @@
 
 #include "QueueVK.h"
 
-#include "DeviceVK.h"
+#include "VulkanUtil.h"
 
 using namespace std;
 
+#ifdef CreateSemaphore
+#undef CreateSemaphore
+#endif
 
 namespace Luna::VK
 {
-Queue::Queue(GraphicsDevice* device, VkQueue queue, QueueType queueType)
-	: m_vkQueue{ queue }
+
+Queue::Queue(CVkDevice* device, VkQueue queue, QueueType queueType, uint32_t queueFamilyIndex)
+	: m_device{ device }
+	, m_vkQueue  { queue }
 	, m_queueType{ queueType }
+	, m_queueFamilyIndex{ queueFamilyIndex }
 	, m_nextFenceValue{ (uint64_t)queueType << 56 | 1 }
 	, m_lastCompletedFenceValue{ (uint64_t)queueType << 56 }
 	, m_lastSubmittedFenceValue{ (uint64_t)queueType << 56 }
 {
-	m_vkTimelineSemaphore = device->CreateSemaphore(VK_SEMAPHORE_TYPE_TIMELINE, m_lastCompletedFenceValue);
+	m_vkTimelineSemaphore = CreateSemaphore(device, VK_SEMAPHORE_TYPE_TIMELINE, m_lastCompletedFenceValue);
 	assert(m_vkTimelineSemaphore);
 
 	const auto commandListType = QueueTypeToCommandListType(queueType);
 
-	auto commandPool = device->CreateCommandPool(commandListType);
+	auto commandPool = CreateCommandPool();
 	assert(commandPool);
 
 	m_commandBufferPool.Initialize(commandPool.get(), commandListType);
@@ -172,6 +178,24 @@ VkCommandBuffer Queue::RequestCommandBuffer()
 void Queue::DiscardCommandBuffer(uint64_t fenceValueForReset, VkCommandBuffer commandBuffer)
 {
 	m_commandBufferPool.DiscardCommandBuffer(fenceValueForReset, commandBuffer);
+}
+
+
+wil::com_ptr<CVkCommandPool> Queue::CreateCommandPool()
+{
+	VkCommandPoolCreateInfo createInfo{
+		.sType				= VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.flags				= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.queueFamilyIndex	= m_queueFamilyIndex
+	};
+
+	VkCommandPool vkCommandPool{ VK_NULL_HANDLE };
+	if (VK_SUCCEEDED(vkCreateCommandPool(*m_device, &createInfo, nullptr, &vkCommandPool)))
+	{
+		return Create<CVkCommandPool>(m_device.get(), vkCommandPool);
+	}
+
+	return nullptr;
 }
 
 
