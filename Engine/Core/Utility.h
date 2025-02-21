@@ -74,7 +74,6 @@ void ExitFatal(const std::string& message, const std::string& caption);
 #define assert_msg( isTrue, ... ) (void)(isTrue)
 #define warn_once_if( isTrue, ... ) (void)(isTrue)
 #define warn_once_if_not( isTrue, ... ) (void)(isTrue)
-#define error( msg, ... )
 #define debugprint( msg, ... ) do {} while(0)
 #define assert_succeeded( hr, ... ) (void)(hr)
 
@@ -116,11 +115,6 @@ void ExitFatal(const std::string& message, const std::string& caption);
 }
 
 #define warn_once_if_not( isTrue, ... ) warn_once_if(!(isTrue), __VA_ARGS__)
-
-#define error( ... ) \
-	Utility::Print("\nError reported in " STRINGIFY_BUILTIN(__FILE__) " @ " STRINGIFY_BUILTIN(__LINE__) "\n"); \
-	Utility::PrintSubMessage(__VA_ARGS__); \
-	Utility::Print("\n");
 
 #define debugprint( msg, ... ) \
 Utility::Printf( msg "\n", ##__VA_ARGS__ );

@@ -14,7 +14,10 @@
 #include "Graphics\DeviceManager.h"
 #include "Graphics\Vulkan\DeviceCapsVK.h"
 #include "Graphics\Vulkan\ExtensionManagerVK.h"
+#include "Graphics\Vulkan\VulkanCommon.h"
+
 using namespace Microsoft::WRL;
+
 
 namespace Luna::VK
 {
@@ -70,18 +73,18 @@ public:
 	CVmaAllocator* GetAllocator() const;
 
 private:
-	void SetRequiredInstanceLayersAndExtensions();
-	void InstallDebugMessenger();
+	void SetRequiredInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder);
+	void SetRequiredDeviceExtensions(vkb::PhysicalDevice& physicalDevice);
+	void InstallDebugMessenger(vkb::InstanceBuilder& instanceBuilder);
 
 	void CreateSurface();
-	void SelectPhysicalDevice();
 	void CreateDevice();
+	void CreateDevice2();
 	void CreateResourcePools();
 	void CreateQueue(QueueType queueType);
 
 	void ResizeSwapChain();
 
-	std::vector<std::pair<AdapterInfo, VkPhysicalDevice>> EnumeratePhysicalDevices();
 	void GetQueueFamilyIndices();
 	int32_t GetQueueFamilyIndex(VkQueueFlags queueFlags);
 
@@ -108,6 +111,11 @@ private:
 	wil::com_ptr<CVkPhysicalDevice> m_vkPhysicalDevice;
 	wil::com_ptr<CVkDevice> m_vkDevice;
 	wil::com_ptr<CVmaAllocator> m_vmaAllocator;
+
+	// vk-boostrap
+	vkb::Instance m_vkbInstance;
+	vkb::PhysicalDevice m_vkbPhysicalDevice;
+	vkb::Device m_vkbDevice;
 
 	// Vulkan resource pools
 	std::unique_ptr<ColorBufferPool> m_colorBufferPool;

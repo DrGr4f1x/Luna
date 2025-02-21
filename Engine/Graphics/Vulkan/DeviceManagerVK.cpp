@@ -12,8 +12,6 @@
 
 #include "DeviceManagerVK.h"
 
-#include "Graphics\GraphicsCommon.h"
-
 #include "ColorBufferPoolVK.h"
 #include "CommandContextVK.h"
 #include "DepthBufferPoolVK.h"
@@ -212,37 +210,37 @@ void DeviceManager::CreateDeviceResources()
 		return;
 	}
 
-	if (!m_extensionManager.InitializeInstance())
+	if (!m_extensionManager.InitializeSystem())
 	{
-		LogFatal(LogVulkan) << "Failed to initialize instance extensions." << endl;
+		LogFatal(LogVulkan) << "Failed to get Vulkan system info." << endl;
 		return;
 	}
 
-	SetRequiredInstanceLayersAndExtensions();
-
-	VkApplicationInfo appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
-	appInfo.pApplicationName = m_desc.appName.c_str();
-	appInfo.pEngineName = s_engineVersionStr.c_str();
-	appInfo.apiVersion = VK_API_VERSION_1_3;
-
-	vector<const char*> instanceExtensions;
-	vector<const char*> instanceLayers;
-	m_extensionManager.GetEnabledInstanceExtensions(instanceExtensions);
-	m_extensionManager.GetEnabledInstanceLayers(instanceLayers);
-
-	VkInstanceCreateInfo createInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-	createInfo.pApplicationInfo = &appInfo;
-	createInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
-	createInfo.ppEnabledExtensionNames = instanceExtensions.data();
-	createInfo.enabledLayerCount = (uint32_t)instanceLayers.size();
-	createInfo.ppEnabledLayerNames = instanceLayers.data();
-
-	VkInstance vkInstance{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateInstance(&createInfo, nullptr, &vkInstance)))
+	// Create Vulkan instance
+	vkb::InstanceBuilder instanceBuilder;
+	instanceBuilder.set_app_name(m_desc.appName.c_str());
+	instanceBuilder.set_engine_name(s_engineVersionStr.c_str());
+	instanceBuilder.require_api_version(VK_API_VERSION_1_3);
+	instanceBuilder.request_validation_layers(m_desc.enableValidation);
+	if (m_desc.enableValidation)
 	{
-		LogFatal(LogVulkan) << "Failed to create Vulkan instance.  Error code: " << res << endl;
+		InstallDebugMessenger(instanceBuilder);
+	}
+
+	SetRequiredInstanceLayersAndExtensions(instanceBuilder);
+	m_extensionManager.EnableInstanceExtensions(instanceBuilder);
+	m_extensionManager.EnableInstanceLayers(instanceBuilder);
+
+	auto instanceRet = instanceBuilder.build();
+	if (!instanceRet)
+	{
+		LogFatal(LogVulkan) << "Failed to create Vulkan instance." << endl;
 		return;
 	}
+	m_vkbInstance = instanceRet.value();
+
+	m_vkInstance = Create<CVkInstance>(m_vkbInstance.instance);
+	m_vkDebugMessenger = Create<CVkDebugUtilsMessenger>(m_vkInstance.get(), m_vkbInstance.debug_messenger);
 
 	uint32_t instanceVersion{ 0 };
 	if (VK_SUCCEEDED(vkEnumerateInstanceVersion(&instanceVersion)))
@@ -257,20 +255,45 @@ void DeviceManager::CreateDeviceResources()
 		LogInfo(LogVulkan) << "Created Vulkan instance, but failed to enumerate version.  Error code: " << res << endl;
 	}
 
-	volkLoadInstanceOnly(vkInstance);
-
-	m_vkInstance = Create<CVkInstance>(vkInstance);
-
-	if (m_desc.enableValidation)
-	{
-		InstallDebugMessenger();
-	}
+	// Load instance functions
+	volkLoadInstanceOnly(m_vkInstance->Get());
 
 	CreateSurface();
 
-	SelectPhysicalDevice();
+	vkb::PhysicalDeviceSelector physicalDeviceSelector(m_vkbInstance);
+	physicalDeviceSelector.set_surface(m_vkSurface->Get());
+	auto physicalDeviceRet = physicalDeviceSelector.select();
+	if (!physicalDeviceRet)
+	{
+		LogFatal(LogVulkan) << "Failed to select Vulkan physical device." << endl;
+		return;
+	}
 
-	CreateDevice();
+	m_vkbPhysicalDevice = physicalDeviceRet.value();
+	m_vkPhysicalDevice = Create<CVkPhysicalDevice>(m_vkInstance.get(), m_vkbPhysicalDevice.physical_device);	
+
+	// Get available queue family properties
+	uint32_t queueCount{ 0 };
+	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, nullptr);
+	assert(queueCount >= 1);
+
+	m_queueFamilyProperties.resize(queueCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, m_queueFamilyProperties.data());
+
+	GetQueueFamilyIndices();
+
+	// TODO
+	m_caps.ReadCaps(*m_vkPhysicalDevice);
+	//if (g_graphicsDeviceOptions.logDeviceFeatures)
+	if (true)
+	{
+		m_caps.LogCaps();
+	}
+
+	m_extensionManager.InitializeDevice(m_vkbPhysicalDevice);
+	SetRequiredDeviceExtensions(m_vkbPhysicalDevice);
+
+	CreateDevice2();
 
 	CreateResourcePools();
 
@@ -534,7 +557,7 @@ CVmaAllocator* DeviceManager::GetAllocator() const
 }
 
 
-void DeviceManager::SetRequiredInstanceLayersAndExtensions()
+void DeviceManager::SetRequiredInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder)
 {
 	vector<string> requiredLayers{};
 	if (m_desc.enableValidation)
@@ -542,6 +565,10 @@ void DeviceManager::SetRequiredInstanceLayersAndExtensions()
 		requiredLayers.push_back("VK_LAYER_KHRONOS_validation");
 	}
 	m_extensionManager.SetRequiredInstanceLayers(requiredLayers);
+	if (!m_extensionManager.EnableInstanceLayers(instanceBuilder))
+	{
+		LogFatal(LogVulkan) << "Failed to enable required instance layers." << endl;
+	}
 
 	vector<string> requiredExtensions{
 		"VK_EXT_debug_utils",
@@ -549,30 +576,40 @@ void DeviceManager::SetRequiredInstanceLayersAndExtensions()
 		"VK_KHR_surface"
 	};
 	m_extensionManager.SetRequiredInstanceExtensions(requiredExtensions);
+	if (!m_extensionManager.EnableInstanceExtensions(instanceBuilder))
+	{
+		LogFatal(LogVulkan) << "Failed to enable required instance extensions." << endl;
+	}
 }
 
 
-void DeviceManager::InstallDebugMessenger()
+void DeviceManager::SetRequiredDeviceExtensions(vkb::PhysicalDevice& physicalDevice)
 {
-	VkDebugUtilsMessengerCreateInfoEXT createInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-	createInfo.messageSeverity =
+	vector<string> requiredExtensions{ 
+		"VK_KHR_swapchain",
+		"VK_KHR_swapchain_mutable_format",
+		"VK_EXT_descriptor_buffer"
+	};
+	m_extensionManager.SetRequiredDeviceExtensions(requiredExtensions);
+	if (!m_extensionManager.EnableDeviceExtensions(physicalDevice))
+	{
+		LogFatal(LogVulkan) << "Failed to enable required device extensions." << endl;
+	}
+}
+
+
+void DeviceManager::InstallDebugMessenger(vkb::InstanceBuilder& instanceBuilder)
+{
+	instanceBuilder.set_debug_callback(DebugMessageCallback);
+	instanceBuilder.set_debug_messenger_severity(
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-		VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
-	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT);
+	instanceBuilder.set_debug_messenger_type(
+		VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
 		VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
-		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
-	createInfo.pfnUserCallback = DebugMessageCallback;
-
-	VkDebugUtilsMessengerEXT messenger{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateDebugUtilsMessengerEXT(*m_vkInstance, &createInfo, nullptr, &messenger)))
-	{
-		LogWarning(LogVulkan) << "Failed to create Vulkan debug messenger.  Error Code: " << res << endl;
-		return;
-	}
-
-	m_vkDebugMessenger = Create<CVkDebugUtilsMessenger>(m_vkInstance.get(), messenger);
+		VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT);
 }
 
 
@@ -589,123 +626,6 @@ void DeviceManager::CreateSurface()
 		return;
 	}
 	m_vkSurface = Create<CVkSurface>(m_vkInstance.get(), vkSurface);
-}
-
-
-void DeviceManager::SelectPhysicalDevice()
-{ 
-	using enum AdapterType;
-
-	vector<pair<AdapterInfo, VkPhysicalDevice>> physicalDevices = EnumeratePhysicalDevices();
-
-	if (physicalDevices.empty())
-	{
-		LogFatal(LogVulkan) << "Failed to enumerate any physical devices." << endl;
-		return;
-	}
-
-	int32_t firstDiscreteAdapterIdx{ -1 };
-	int32_t bestMemoryAdapterIdx{ -1 };
-	int32_t firstAdapterIdx{ -1 };
-	int32_t softwareAdapterIdx{ -1 };
-	int32_t chosenAdapterIdx{ -1 };
-	size_t maxMemory{ 0 };
-
-	int32_t adapterIdx{ 0 };
-	for (const auto& adapterPair : physicalDevices)
-	{
-		// Skip adapters that don't support the required Vulkan API version
-		if (adapterPair.first.apiVersion < g_requiredVulkanApiVersion)
-		{
-			continue;
-		}
-
-		// Skip adapters of type 'Other'
-		if (adapterPair.first.adapterType == Other)
-		{
-			continue;
-		}
-
-		// Skip software adapters if we disallow them
-		if (adapterPair.first.adapterType == Software && !m_desc.allowSoftwareDevice)
-		{
-			continue;
-		}
-
-		if (firstAdapterIdx == -1)
-		{
-			firstAdapterIdx = adapterIdx;
-		}
-
-		if (adapterPair.first.adapterType == Discrete && firstDiscreteAdapterIdx == -1)
-		{
-			firstDiscreteAdapterIdx = adapterIdx;
-		}
-
-		if (adapterPair.first.adapterType == Software && softwareAdapterIdx == -1 && m_desc.allowSoftwareDevice)
-		{
-			softwareAdapterIdx = adapterIdx;
-		}
-
-		if (adapterPair.first.dedicatedVideoMemory > maxMemory)
-		{
-			maxMemory = adapterPair.first.dedicatedVideoMemory;
-			bestMemoryAdapterIdx = adapterIdx;
-		}
-
-		++adapterIdx;
-	}
-
-
-	// Now choose our best adapter
-	if (m_desc.preferDiscreteDevice)
-	{
-		if (bestMemoryAdapterIdx != -1)
-		{
-			chosenAdapterIdx = bestMemoryAdapterIdx;
-		}
-		else if (firstDiscreteAdapterIdx != -1)
-		{
-			chosenAdapterIdx = firstDiscreteAdapterIdx;
-		}
-		else
-		{
-			chosenAdapterIdx = firstAdapterIdx;
-		}
-	}
-	else
-	{
-		chosenAdapterIdx = firstAdapterIdx;
-	}
-
-	if (chosenAdapterIdx == -1)
-	{
-		LogFatal(LogVulkan) << "Failed to select a Vulkan physical device." << endl;
-		return;
-	}
-
-	m_vkPhysicalDevice = Create<CVkPhysicalDevice>(m_vkInstance.get(), physicalDevices[chosenAdapterIdx].second);
-	LogInfo(LogVulkan) << "Selected physical device " << chosenAdapterIdx << endl;
-
-	// TODO
-	m_caps.ReadCaps(*m_vkPhysicalDevice);
-	//if (g_graphicsDeviceOptions.logDeviceFeatures)
-	if (true)
-	{
-		m_caps.LogCaps();
-	}
-
-	m_extensionManager.InitializeDevice(*m_vkPhysicalDevice);
-
-	// Get available queue family properties
-	uint32_t queueCount{ 0 };
-	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, nullptr);
-	assert(queueCount >= 1);
-
-	m_queueFamilyProperties.resize(queueCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, m_queueFamilyProperties.data());
-
-	GetQueueFamilyIndices();
 }
 
 
@@ -780,7 +700,7 @@ void DeviceManager::CreateDevice()
 	createInfo.pQueueCreateInfos = queueCreateInfos.data();
 	createInfo.pEnabledFeatures = nullptr;
 	// TODO - device extensions
-	createInfo.enabledExtensionCount = (uint32_t)extensions.size();;
+	createInfo.enabledExtensionCount = (uint32_t)extensions.size();
 	createInfo.ppEnabledExtensionNames = extensions.data();
 	createInfo.enabledLayerCount = 0;
 	createInfo.ppEnabledLayerNames = nullptr;
@@ -795,6 +715,85 @@ void DeviceManager::CreateDevice()
 	volkLoadDevice(device);
 
 	m_vkDevice = Create<CVkDevice>(m_vkPhysicalDevice.get(), device);
+
+	// Create VmaAllocator
+	VmaVulkanFunctions vmaFunctions{};
+	vmaFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+	vmaFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
+	VmaAllocatorCreateInfo allocatorCreateInfo{};
+	allocatorCreateInfo.physicalDevice = *m_vkPhysicalDevice;
+	allocatorCreateInfo.device = *m_vkDevice;
+	allocatorCreateInfo.instance = *m_vkInstance;
+	allocatorCreateInfo.pVulkanFunctions = &vmaFunctions;
+
+	VmaAllocator vmaAllocator{ VK_NULL_HANDLE };
+	if (VK_SUCCEEDED(vmaCreateAllocator(&allocatorCreateInfo, &vmaAllocator)))
+	{
+		m_vmaAllocator = Create<CVmaAllocator>(m_vkDevice.get(), vmaAllocator);
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to create VmaAllocator.  Error code: " << res << endl;
+	}
+}
+
+
+void DeviceManager::CreateDevice2()
+{
+	auto deviceBuilder = vkb::DeviceBuilder(m_vkbPhysicalDevice);
+
+	vector<vkb::CustomQueueDescription> queueDescriptions;
+
+	// Graphics queue
+	if (m_queueFamilyIndices.graphics != -1)
+	{
+		queueDescriptions.push_back(vkb::CustomQueueDescription(m_queueFamilyIndices.graphics, { 0.0f }));
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to find graphics queue." << endl;
+	}
+
+	// Dedicated compute queue
+	if (m_queueFamilyIndices.compute != -1)
+	{
+		if (m_queueFamilyIndices.compute != m_queueFamilyIndices.graphics)
+		{
+			queueDescriptions.push_back(vkb::CustomQueueDescription(m_queueFamilyIndices.compute, { 0.0f }));
+		}
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to find compute queue." << endl;
+	}
+
+	// Dedicated transfer queue
+	if (m_queueFamilyIndices.transfer != -1)
+	{
+		if ((m_queueFamilyIndices.transfer != m_queueFamilyIndices.graphics) && (m_queueFamilyIndices.transfer != m_queueFamilyIndices.compute))
+		{
+			queueDescriptions.push_back(vkb::CustomQueueDescription(m_queueFamilyIndices.transfer, { 0.0f }));
+		}
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to find transfer queue." << endl;
+	}
+
+	deviceBuilder.add_pNext(m_caps.GetPhysicalDeviceFeatures2());
+
+	auto deviceRet = deviceBuilder.build();
+	if (!deviceRet)
+	{
+		LogFatal(LogVulkan) << "Failed to create Vulkan device." << endl;
+	}
+
+	m_vkbDevice = deviceRet.value();
+
+	m_vkDevice = Create<CVkDevice>(m_vkPhysicalDevice.get(), m_vkbDevice.device);
+
+	volkLoadDevice(m_vkDevice->Get());
 
 	// Create VmaAllocator
 	VmaVulkanFunctions vmaFunctions{};
@@ -857,63 +856,6 @@ void DeviceManager::ResizeSwapChain()
 	m_swapChainBuffers.clear();
 
 	CreateWindowSizeDependentResources();
-}
-
-
-vector<pair<AdapterInfo, VkPhysicalDevice>> DeviceManager::EnumeratePhysicalDevices()
-{
-	vector<pair<AdapterInfo, VkPhysicalDevice>> adapters;
-
-	uint32_t gpuCount{ 0 };
-
-	// Get number of available physical devices
-	if (VK_FAILED(vkEnumeratePhysicalDevices(*m_vkInstance, &gpuCount, nullptr)))
-	{
-		LogError(LogVulkan) << "Failed to get physical device count.  Error code: " << res << endl;
-		return adapters;
-	}
-
-	// Enumerate physical devices
-	vector<VkPhysicalDevice> physicalDevices(gpuCount);
-	if (VK_FAILED(vkEnumeratePhysicalDevices(*m_vkInstance, &gpuCount, physicalDevices.data())))
-	{
-		LogError(LogVulkan) << "Failed to enumerate physical devices.  Error code: " << res << endl;
-		return adapters;
-	}
-
-	LogInfo(LogVulkan) << "Enumerating Vulkan physical devices" << endl;
-
-	for (size_t deviceIdx = 0; deviceIdx < physicalDevices.size(); ++deviceIdx)
-	{
-		DeviceCaps caps{};
-		caps.ReadCaps(physicalDevices[deviceIdx]);
-
-		AdapterInfo adapterInfo{};
-		adapterInfo.name = caps.properties.deviceName;
-		adapterInfo.deviceId = caps.properties.deviceID;
-		adapterInfo.vendorId = caps.properties.vendorID;
-		adapterInfo.dedicatedVideoMemory = GetDedicatedVideoMemory(physicalDevices[deviceIdx]);
-		adapterInfo.vendor = VendorIdToHardwareVendor(adapterInfo.vendorId);
-		adapterInfo.adapterType = VkPhysicalDeviceTypeToEngine(caps.properties.deviceType);
-		adapterInfo.apiVersion = caps.properties.apiVersion;
-
-		LogInfo(LogVulkan) << format("  {} physical device {} is Vulkan-capable: {} (VendorId: {:#x}, DeviceId: {:#x}, API version: {})",
-			AdapterTypeToString(adapterInfo.adapterType),
-			deviceIdx,
-			adapterInfo.name,
-			adapterInfo.vendorId, adapterInfo.deviceId, VulkanVersionToString(adapterInfo.apiVersion))
-			<< endl;
-
-		LogInfo(LogVulkan) << format("    Physical device memory: {} MB dedicated video memory, {} MB dedicated system memory, {} MB shared memory",
-			(uint32_t)(adapterInfo.dedicatedVideoMemory >> 20),
-			(uint32_t)(adapterInfo.dedicatedSystemMemory >> 20),
-			(uint32_t)(adapterInfo.sharedSystemMemory >> 20))
-			<< endl;
-
-		adapters.push_back(make_pair(adapterInfo, physicalDevices[deviceIdx]));
-	}
-
-	return adapters;
 }
 
 

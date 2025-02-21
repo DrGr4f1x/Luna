@@ -28,6 +28,8 @@
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
 #include "External\VulkanMemoryAllocator\include\vk_mem_alloc.h"
 
+#include "External/vk-bootstrap/src/VkBootstrap.h"
+
 #include "Graphics\GraphicsCommon.h"
 
 #include "Graphics\Vulkan\EnumsVK.h"

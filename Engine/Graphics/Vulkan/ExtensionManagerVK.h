@@ -29,19 +29,19 @@ struct ExtensionSet
 class ExtensionManager
 {
 public:
-	bool InitializeInstance();
-	bool InitializeDevice(VkPhysicalDevice device);
+	bool InitializeSystem();
+	bool InitializeDevice(vkb::PhysicalDevice& physicalDevice);
 
-	bool GetEnabledInstanceLayers(std::vector<const char*>& layers);
-	bool GetEnabledInstanceExtensions(std::vector<const char*>& extensions);
-	bool GetEnabledDeviceExtensions(std::vector<const char*>& extensions);
+	bool EnableInstanceLayers(vkb::InstanceBuilder& instanceBuilder);
+	bool EnableInstanceExtensions(vkb::InstanceBuilder& instanceBuilder);
+	bool EnableDeviceExtensions(vkb::PhysicalDevice& physicalDevice);;
 
-	void SetRequiredInstanceLayer(const std::string& layer) { requiredExtensions.instanceLayers.insert(layer); }
-	void SetRequiredInstanceLayers(const std::vector<std::string>& layers) { requiredExtensions.instanceLayers.insert(layers.begin(), layers.end()); }
-	void SetRequiredInstanceExtension(const std::string& extension) { requiredExtensions.instanceExtensions.insert(extension); }
-	void SetRequiredInstanceExtensions(const std::vector<std::string>& extensions) { requiredExtensions.instanceExtensions.insert(extensions.begin(), extensions.end()); }
-	void SetRequiredDeviceExtension(const std::string& extension) { requiredExtensions.deviceExtensions.insert(extension); }
-	void SetRequiredDeviceExtensions(const std::vector<std::string>& extensions) { requiredExtensions.deviceExtensions.insert(extensions.begin(), extensions.end()); }
+	void SetRequiredInstanceLayer(const std::string& layer) { requiredExtensions.instanceLayers.insert(layer); m_instanceLayersValidated = false; }
+	void SetRequiredInstanceLayers(const std::vector<std::string>& layers) { requiredExtensions.instanceLayers.insert(layers.begin(), layers.end()); m_instanceLayersValidated = false; }
+	void SetRequiredInstanceExtension(const std::string& extension) { requiredExtensions.instanceExtensions.insert(extension); m_instanceExtensionsValidated = false; }
+	void SetRequiredInstanceExtensions(const std::vector<std::string>& extensions) { requiredExtensions.instanceExtensions.insert(extensions.begin(), extensions.end()); m_instanceExtensionsValidated = false; }
+	void SetRequiredDeviceExtension(const std::string& extension) { requiredExtensions.deviceExtensions.insert(extension); m_deviceExtensionsValidated = false; }
+	void SetRequiredDeviceExtensions(const std::vector<std::string>& extensions) { requiredExtensions.deviceExtensions.insert(extensions.begin(), extensions.end()); m_deviceExtensionsValidated = false; }
 
 	void SetOptionalInstanceLayer(const std::string& layer) { optionalExtensions.instanceLayers.insert(layer); }
 	void SetOptionalInstanceLayers(const std::vector<std::string>& layers) { optionalExtensions.instanceLayers.insert(layers.begin(), layers.end()); }
@@ -58,9 +58,6 @@ public:
 	ExtensionSet optionalExtensions;
 
 private:
-	bool EnumerateInstanceLayers();
-	bool EnumerateInstanceExtensions();
-
 	bool ValidateInstanceLayers();
 	bool ValidateInstanceExtensions();
 	bool ValidateDeviceExtensions();
