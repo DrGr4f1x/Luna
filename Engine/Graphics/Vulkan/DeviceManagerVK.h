@@ -115,6 +115,7 @@ private:
 	vkb::Instance m_vkbInstance;
 	vkb::PhysicalDevice m_vkbPhysicalDevice;
 	vkb::Device m_vkbDevice;
+	vkb::Swapchain m_vkbSwapchain;
 
 	// Vulkan resource pools
 	std::unique_ptr<ColorBufferPool> m_colorBufferPool;

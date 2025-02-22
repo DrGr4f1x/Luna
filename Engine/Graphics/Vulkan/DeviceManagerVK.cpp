@@ -262,6 +262,8 @@ void DeviceManager::CreateDeviceResources()
 
 	vkb::PhysicalDeviceSelector physicalDeviceSelector(m_vkbInstance);
 	physicalDeviceSelector.set_surface(m_vkSurface->Get());
+	physicalDeviceSelector.require_separate_compute_queue();
+	physicalDeviceSelector.require_separate_transfer_queue();
 	auto physicalDeviceRet = physicalDeviceSelector.select();
 	if (!physicalDeviceRet)
 	{
@@ -271,12 +273,6 @@ void DeviceManager::CreateDeviceResources()
 
 	m_vkbPhysicalDevice = physicalDeviceRet.value();
 	m_vkPhysicalDevice = Create<CVkPhysicalDevice>(m_vkInstance.get(), m_vkbPhysicalDevice.physical_device);	
-
-	m_queueFamilyProperties = m_vkbPhysicalDevice.get_queue_families();
-	for (const auto& queueFamily : m_queueFamilyProperties)
-	{
-		LogInfo(LogVulkan) << "Queue family: " << queueFamily.queueFlags << " " << VkQueueFlagsToString(queueFamily.queueFlags) << endl;
-	}
 
 	GetQueueFamilyIndices();
 
@@ -333,44 +329,30 @@ void DeviceManager::CreateDeviceResources()
 
 
 void DeviceManager::CreateWindowSizeDependentResources()
-{ 
+{
 	m_swapChainFormat = RemoveSrgb(m_desc.swapChainFormat);
 	m_swapChainSurfaceFormat = { FormatToVulkan(m_swapChainFormat), VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
 
-	VkExtent2D extent{
-		m_desc.backBufferWidth,
-		m_desc.backBufferHeight };
-
-	unordered_set<uint32_t> uniqueQueues{
-		(uint32_t)m_queueFamilyIndices.graphics,
-		(uint32_t)m_queueFamilyIndices.present };
-	vector<uint32_t> queues(uniqueQueues.begin(), uniqueQueues.end());
+	vkb::SwapchainBuilder swapchainBuilder(m_vkbDevice, m_vkSurface->Get());
+	swapchainBuilder.set_desired_extent(m_desc.backBufferWidth, m_desc.backBufferHeight);
+	swapchainBuilder.set_desired_format(m_swapChainSurfaceFormat);
+	swapchainBuilder.set_desired_present_mode(m_desc.enableVSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR);
 
 	VkImageUsageFlags usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
+	swapchainBuilder.set_image_usage_flags(usage);
+	swapchainBuilder.set_desired_min_image_count(m_desc.numSwapChainBuffers);
+
+	// TODO: Use an optional extension to enable this
 	m_swapChainMutableFormatSupported = true;
-
-	const bool enableSwapChainSharing = queues.size() > 1;
-
-	VkSwapchainCreateInfoKHR createInfo{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-	createInfo.surface = *m_vkSurface;
-	createInfo.minImageCount = m_desc.numSwapChainBuffers;
-	createInfo.imageFormat = m_swapChainSurfaceFormat.format;
-	createInfo.imageColorSpace = m_swapChainSurfaceFormat.colorSpace;
-	createInfo.imageExtent = extent;
-	createInfo.imageArrayLayers = 1;
-	createInfo.imageUsage = usage;
-	createInfo.imageSharingMode = enableSwapChainSharing ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
-	createInfo.flags = m_swapChainMutableFormatSupported ? VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR : 0;
-	createInfo.queueFamilyIndexCount = enableSwapChainSharing ? (uint32_t)queues.size() : 0;
-	createInfo.pQueueFamilyIndices = enableSwapChainSharing ? queues.data() : nullptr;
-	createInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = m_desc.enableVSync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
-	createInfo.clipped = true;
-	createInfo.oldSwapchain = nullptr;
-
+	if (m_swapChainMutableFormatSupported)
+	{
+		swapchainBuilder.set_create_flags(VK_SWAPCHAIN_CREATE_MUTABLE_FORMAT_BIT_KHR);
+	}
+	swapchainBuilder.set_pre_transform_flags(VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR);
+	swapchainBuilder.set_composite_alpha_flags(VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+	
 	vector<VkFormat> imageFormats{ m_swapChainSurfaceFormat.format };
 	switch (m_swapChainSurfaceFormat.format)
 	{
@@ -394,39 +376,30 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 	if (m_swapChainMutableFormatSupported)
 	{
-		createInfo.pNext = &imageFormatListCreateInfo;
+		swapchainBuilder.add_pNext(&imageFormatListCreateInfo);
 	}
 
-	VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateSwapchainKHR(*m_vkDevice, &createInfo, nullptr, &swapchain)))
+	auto swapchainRet = swapchainBuilder.build();
+	if (!swapchainRet)
 	{
-		LogError(LogVulkan) << "Failed to create Vulkan swapchain.  Error code: " << res << endl;
-		return;
-	}
-	m_vkSwapChain = Create<CVkSwapchain>(m_vkDevice.get(), swapchain);
-
-	// Get swapchain images
-	uint32_t imageCount{ 0 };
-	if (VK_FAILED(vkGetSwapchainImagesKHR(*m_vkDevice, *m_vkSwapChain, &imageCount, nullptr)))
-	{
-		LogError(LogVulkan) << "Failed to get swapchain image count.  Error code: " << res << endl;
+		LogFatal(LogVulkan) << "Failed to create swapchain." << endl;
 		return;
 	}
 
-	vector<VkImage> images{ imageCount };
-	if (VK_FAILED(vkGetSwapchainImagesKHR(*m_vkDevice, *m_vkSwapChain, &imageCount, images.data())))
-	{
-		LogError(LogVulkan) << "Failed to get swapchain images.  Error code: " << res << endl;
-		return;
-	}
-	m_vkSwapChainImages.reserve(imageCount);
+	m_vkbSwapchain = swapchainRet.value();
+
+	m_vkSwapChain = Create<CVkSwapchain>(m_vkDevice.get(), m_vkbSwapchain.swapchain);
+
+	vector<VkImage> images = m_vkbSwapchain.get_images().value();
+
+	m_vkSwapChainImages.reserve(images.size());
 	for (auto image : images)
 	{
 		m_vkSwapChainImages.push_back(Create<CVkImage>(m_vkDevice.get(), image));
 	}
 
-	m_swapChainBuffers.reserve(imageCount);
-	for (uint32_t i = 0; i < imageCount; ++i)
+	m_swapChainBuffers.reserve(images.size());
+	for (uint32_t i = 0; i < (uint32_t)images.size(); ++i)
 	{
 		ColorBuffer swapChainBuffer;
 		swapChainBuffer.SetHandle(m_colorBufferPool->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
@@ -632,44 +605,6 @@ void DeviceManager::CreateDevice()
 {
 	auto deviceBuilder = vkb::DeviceBuilder(m_vkbPhysicalDevice);
 
-	vector<vkb::CustomQueueDescription> queueDescriptions;
-
-	// Graphics queue
-	if (m_queueFamilyIndices.graphics != -1)
-	{
-		queueDescriptions.push_back(vkb::CustomQueueDescription(m_queueFamilyIndices.graphics, { 0.0f }));
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to find graphics queue." << endl;
-	}
-
-	// Dedicated compute queue
-	if (m_queueFamilyIndices.compute != -1)
-	{
-		if (m_queueFamilyIndices.compute != m_queueFamilyIndices.graphics)
-		{
-			queueDescriptions.push_back(vkb::CustomQueueDescription(m_queueFamilyIndices.compute, { 0.0f }));
-		}
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to find compute queue." << endl;
-	}
-
-	// Dedicated transfer queue
-	if (m_queueFamilyIndices.transfer != -1)
-	{
-		if ((m_queueFamilyIndices.transfer != m_queueFamilyIndices.graphics) && (m_queueFamilyIndices.transfer != m_queueFamilyIndices.compute))
-		{
-			queueDescriptions.push_back(vkb::CustomQueueDescription(m_queueFamilyIndices.transfer, { 0.0f }));
-		}
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to find transfer queue." << endl;
-	}
-
 	deviceBuilder.add_pNext(m_caps.GetPhysicalDeviceFeatures2());
 
 	auto deviceRet = deviceBuilder.build();
@@ -721,18 +656,32 @@ void DeviceManager::CreateResourcePools()
 void DeviceManager::CreateQueue(QueueType queueType)
 {
 	VkQueue vkQueue{ VK_NULL_HANDLE };
-	
-	uint32_t queueFamilyIndex{ 0 };
+	uint32_t queueIndex{ 0 };
+
 	switch (queueType)
 	{
-	case QueueType::Graphics:	queueFamilyIndex = m_queueFamilyIndices.graphics; break;
-	case QueueType::Compute:	queueFamilyIndex = m_queueFamilyIndices.compute; break;
-	case QueueType::Copy:		queueFamilyIndex = m_queueFamilyIndices.transfer; break;
-	default:					queueFamilyIndex = m_queueFamilyIndices.present; break;
+	case QueueType::Graphics:
+		queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+		vkQueue = m_vkbDevice.get_queue(vkb::QueueType::graphics).value(); 
+		break;
+
+	case QueueType::Compute:
+		queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::compute).value();
+		vkQueue = m_vkbDevice.get_queue(vkb::QueueType::compute).value();
+		break;
+
+	case QueueType::Copy:
+		queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::transfer).value();
+		vkQueue = m_vkbDevice.get_queue(vkb::QueueType::transfer).value();
+		break;
+
+	default:
+		queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::present).value();
+		vkQueue = m_vkbDevice.get_queue(vkb::QueueType::present).value();
+		break;
 	}
 
-	vkGetDeviceQueue(*m_vkDevice, queueFamilyIndex, 0, &vkQueue);
-	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_vkDevice.get(), vkQueue, queueType, queueFamilyIndex);
+	m_queues[(uint32_t)queueType] = make_unique<Queue>(m_vkDevice.get(), vkQueue, queueType, queueIndex);
 }
 
 
