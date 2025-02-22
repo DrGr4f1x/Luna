@@ -529,6 +529,12 @@ CVmaAllocator* DeviceManager::GetAllocator() const
 }
 
 
+bool DeviceManager::IsDeviceExtensionEnabled(const string& extensionName) const
+{
+	return m_extensionManager.enabledExtensions.deviceExtensions.contains(extensionName);
+}
+
+
 void DeviceManager::SetRequiredInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder)
 {
 	vector<string> requiredLayers{};

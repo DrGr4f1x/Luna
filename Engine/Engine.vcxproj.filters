@@ -179,10 +179,14 @@
     <ClCompile Include="Graphics\Vulkan\ColorBufferPoolVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\vk-bootstrap\src\VkBootstrap.cpp" />
-    <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp">
       <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\vk-bootstrap\src\VkBootstrap.cpp">
+      <Filter>External\vk-bootstrap</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -443,11 +447,17 @@
     <ClInclude Include="Graphics\Vulkan\ColorBufferPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrap.h" />
-    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrapDispatch.h" />
-    <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanUtil.h">
       <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrapDispatch.h">
+      <Filter>External\vk-bootstrap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrap.h">
+      <Filter>External\vk-bootstrap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -471,6 +481,9 @@
     </Filter>
     <Filter Include="External\D3D12MemoryAllocator">
       <UniqueIdentifier>{59823768-1df6-473b-92a4-bf53b64cf05b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\vk-bootstrap">
+      <UniqueIdentifier>{06149bfa-c211-4463-bb4a-52bf5cc8fab2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

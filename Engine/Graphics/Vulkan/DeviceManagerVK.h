@@ -72,6 +72,9 @@ public:
 	CVkDevice* GetDevice() const;
 	CVmaAllocator* GetAllocator() const;
 
+	// Extensions
+	bool IsDeviceExtensionEnabled(const std::string& extensionName) const;
+
 private:
 	void SetRequiredInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder);
 	void SetRequiredDeviceExtensions(vkb::PhysicalDevice& physicalDevice);

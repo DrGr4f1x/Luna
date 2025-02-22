@@ -89,9 +89,8 @@ private:
 
 
 // TODO: Refactor all of this.
-// Put an Allocator on to of this to create new UserDescriptorHeaps when they fill up (same as DescriptorAllocator above).
+// Put an Allocator on top of this to create new UserDescriptorHeaps when they fill up (same as DescriptorAllocator above).
 // The main difference is the UserDescriptorHeap is shader-visible, and the other one isn't.
-// Maybe roll this whole thing into GraphicsDevice?
 class UserDescriptorHeap
 {
 public:
