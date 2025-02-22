@@ -272,13 +272,11 @@ void DeviceManager::CreateDeviceResources()
 	m_vkbPhysicalDevice = physicalDeviceRet.value();
 	m_vkPhysicalDevice = Create<CVkPhysicalDevice>(m_vkInstance.get(), m_vkbPhysicalDevice.physical_device);	
 
-	// Get available queue family properties
-	uint32_t queueCount{ 0 };
-	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, nullptr);
-	assert(queueCount >= 1);
-
-	m_queueFamilyProperties.resize(queueCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(*m_vkPhysicalDevice, &queueCount, m_queueFamilyProperties.data());
+	m_queueFamilyProperties = m_vkbPhysicalDevice.get_queue_families();
+	for (const auto& queueFamily : m_queueFamilyProperties)
+	{
+		LogInfo(LogVulkan) << "Queue family: " << queueFamily.queueFlags << " " << VkQueueFlagsToString(queueFamily.queueFlags) << endl;
+	}
 
 	GetQueueFamilyIndices();
 
@@ -290,10 +288,11 @@ void DeviceManager::CreateDeviceResources()
 		m_caps.LogCaps();
 	}
 
+	// Device extensions
 	m_extensionManager.InitializeDevice(m_vkbPhysicalDevice);
 	SetRequiredDeviceExtensions(m_vkbPhysicalDevice);
 
-	CreateDevice2();
+	CreateDevice();
 
 	CreateResourcePools();
 
@@ -630,116 +629,6 @@ void DeviceManager::CreateSurface()
 
 
 void DeviceManager::CreateDevice()
-{ 
-	// Desired queues need to be requested upon logical device creation
-	// Due to differing queue family configurations of Vulkan implementations this can be a bit tricky, especially if the application
-	// requests different queue types
-
-	vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
-
-	// Get queue family indices for the requested queue family types
-	// Note that the indices may overlap depending on the implementation
-
-	const float defaultQueuePriority = 0.0f;
-
-	// Graphics queue
-	if (m_queueFamilyIndices.graphics != -1)
-	{
-		VkDeviceQueueCreateInfo queueInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-		queueInfo.queueFamilyIndex = m_queueFamilyIndices.graphics;
-		queueInfo.queueCount = 1;
-		queueInfo.pQueuePriorities = &defaultQueuePriority;
-		queueCreateInfos.push_back(queueInfo);
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to find graphics queue." << endl;
-	}
-
-	// Dedicated compute queue
-	if (m_queueFamilyIndices.compute != -1)
-	{
-		if (m_queueFamilyIndices.compute != m_queueFamilyIndices.graphics)
-		{
-			// If compute family index differs, we need an additional queue create info for the compute queue
-			VkDeviceQueueCreateInfo queueInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-			queueInfo.queueFamilyIndex = m_queueFamilyIndices.compute;
-			queueInfo.queueCount = 1;
-			queueInfo.pQueuePriorities = &defaultQueuePriority;
-			queueCreateInfos.push_back(queueInfo);
-		}
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to find compute queue." << endl;
-	}
-
-	// Dedicated transfer queue
-	if (m_queueFamilyIndices.transfer != -1)
-	{
-		if ((m_queueFamilyIndices.transfer != m_queueFamilyIndices.graphics) && (m_queueFamilyIndices.transfer != m_queueFamilyIndices.compute))
-		{
-			// If compute family index differs, we need an additional queue create info for the transfer queue
-			VkDeviceQueueCreateInfo queueInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
-			queueInfo.queueFamilyIndex = m_queueFamilyIndices.transfer;
-			queueInfo.queueCount = 1;
-			queueInfo.pQueuePriorities = &defaultQueuePriority;
-			queueCreateInfos.push_back(queueInfo);
-		}
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to find transfer queue." << endl;
-	}
-
-	// HACK - replace with real device extension handling
-	vector<const char*> extensions{ "VK_KHR_swapchain", "VK_KHR_swapchain_mutable_format" };
-
-	VkDeviceCreateInfo createInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-	createInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
-	createInfo.pQueueCreateInfos = queueCreateInfos.data();
-	createInfo.pEnabledFeatures = nullptr;
-	// TODO - device extensions
-	createInfo.enabledExtensionCount = (uint32_t)extensions.size();
-	createInfo.ppEnabledExtensionNames = extensions.data();
-	createInfo.enabledLayerCount = 0;
-	createInfo.ppEnabledLayerNames = nullptr;
-	createInfo.pNext = m_caps.GetPhysicalDeviceFeatures2();
-
-	VkDevice device{ VK_NULL_HANDLE };
-	if (VK_FAILED(vkCreateDevice(*m_vkPhysicalDevice, &createInfo, nullptr, &device)))
-	{
-		LogError(LogVulkan) << "Failed to create Vulkan device.  Error code: " << res << endl;
-	}
-
-	volkLoadDevice(device);
-
-	m_vkDevice = Create<CVkDevice>(m_vkPhysicalDevice.get(), device);
-
-	// Create VmaAllocator
-	VmaVulkanFunctions vmaFunctions{};
-	vmaFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
-	vmaFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
-
-	VmaAllocatorCreateInfo allocatorCreateInfo{};
-	allocatorCreateInfo.physicalDevice = *m_vkPhysicalDevice;
-	allocatorCreateInfo.device = *m_vkDevice;
-	allocatorCreateInfo.instance = *m_vkInstance;
-	allocatorCreateInfo.pVulkanFunctions = &vmaFunctions;
-
-	VmaAllocator vmaAllocator{ VK_NULL_HANDLE };
-	if (VK_SUCCEEDED(vmaCreateAllocator(&allocatorCreateInfo, &vmaAllocator)))
-	{
-		m_vmaAllocator = Create<CVmaAllocator>(m_vkDevice.get(), vmaAllocator);
-	}
-	else
-	{
-		LogError(LogVulkan) << "Failed to create VmaAllocator.  Error code: " << res << endl;
-	}
-}
-
-
-void DeviceManager::CreateDevice2()
 {
 	auto deviceBuilder = vkb::DeviceBuilder(m_vkbPhysicalDevice);
 

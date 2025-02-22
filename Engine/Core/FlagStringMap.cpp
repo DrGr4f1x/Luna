@@ -42,7 +42,7 @@ string FlagStringMap32::BuildString(uint32_t flags, char separator) const
 		{
 			if (bStringEmitted)
 			{
-				result += format("{} {}", separator, bitKey.second);
+				result += format(" {} {}", separator, bitKey.second);
 			}
 			else
 			{
@@ -62,7 +62,7 @@ string FlagStringMap32::BuildString(uint32_t flags, char separator) const
 		{
 			if (bStringEmitted)
 			{
-				result += format("{} {}", separator, bitKey.second);
+				result += format(" {} {}", separator, bitKey.second);
 			}
 			else
 			{

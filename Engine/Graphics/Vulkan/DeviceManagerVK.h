@@ -79,7 +79,6 @@ private:
 
 	void CreateSurface();
 	void CreateDevice();
-	void CreateDevice2();
 	void CreateResourcePools();
 	void CreateQueue(QueueType queueType);
 

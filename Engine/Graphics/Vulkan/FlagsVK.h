@@ -16,9 +16,14 @@ namespace Luna::VK
 {
 
 inline static const FlagStringMap32 g_queueFlagsMap{
-	{ VK_QUEUE_GRAPHICS_BIT,	"Graphics" },
-	{ VK_QUEUE_COMPUTE_BIT,		"Compute" },
-	{ VK_QUEUE_TRANSFER_BIT,	"Transfer" }
+	{ VK_QUEUE_GRAPHICS_BIT,			"Graphics" },
+	{ VK_QUEUE_COMPUTE_BIT,				"Compute" },
+	{ VK_QUEUE_TRANSFER_BIT,			"Transfer" },
+	{ VK_QUEUE_SPARSE_BINDING_BIT,		"Sparse Binding" },
+	{ VK_QUEUE_PROTECTED_BIT,			"Protected" },
+	{ VK_QUEUE_VIDEO_DECODE_BIT_KHR,	"Video Decode" },
+	{ VK_QUEUE_VIDEO_ENCODE_BIT_KHR,	"Video Encode" },
+	{ VK_QUEUE_OPTICAL_FLOW_BIT_NV,		"Optical Flow" }
 };
 
 
