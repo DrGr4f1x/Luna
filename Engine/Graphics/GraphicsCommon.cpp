@@ -138,9 +138,9 @@ IDescriptorSetPool* GetDescriptorSetPool()
 }
 
 
-IGpuBufferPool* GetGpuBufferPool()
+IGpuBufferManager* GetGpuBufferManager()
 {
-	return GetDeviceManager()->GetGpuBufferPool();
+	return GetDeviceManager()->GetGpuBufferManager();
 }
 
 

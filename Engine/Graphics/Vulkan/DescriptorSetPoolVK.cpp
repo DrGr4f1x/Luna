@@ -14,7 +14,7 @@
 
 #include "Graphics\Vulkan\ColorBufferManagerVK.h"
 #include "Graphics\Vulkan\DepthBufferManagerVK.h"
-#include "Graphics\Vulkan\GpuBufferPoolVK.h"
+#include "Graphics\Vulkan\GpuBufferManagerVK.h"
 
 
 namespace Luna::VK
@@ -184,7 +184,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 		assert(slot == 0);
 	}
 
-	auto gpuBufferPool = GetVulkanGpuBufferPool();
+	auto gpuBufferManager = GetVulkanGpuBufferManager();
 	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
@@ -197,13 +197,13 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
 	{
 		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-		data.descriptorData[slot] = gpuBufferPool->GetBufferView(gpuBufferHandle.get());
+		data.descriptorData[slot] = gpuBufferManager->GetBufferView(gpuBufferHandle.get());
 		writeSet.pTexelBufferView = std::get_if<VkBufferView>(&data.descriptorData[slot]);
 	}
 	else
 	{
 		writeSet.descriptorType = data.isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		data.descriptorData[slot] = gpuBufferPool->GetBufferInfo(gpuBufferHandle.get());
+		data.descriptorData[slot] = gpuBufferManager->GetBufferInfo(gpuBufferHandle.get());
 		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&data.descriptorData[slot]);
 	}
 
@@ -259,7 +259,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 		assert(slot == 0);
 	}
 
-	auto gpuBufferPool = GetVulkanGpuBufferPool();
+	auto gpuBufferManager = GetVulkanGpuBufferManager();
 	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
@@ -272,13 +272,13 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
 	{
 		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
-		data.descriptorData[slot] = gpuBufferPool->GetBufferView(gpuBufferHandle.get());
+		data.descriptorData[slot] = gpuBufferManager->GetBufferView(gpuBufferHandle.get());
 		writeSet.pTexelBufferView = std::get_if<VkBufferView>(&data.descriptorData[slot]);
 	}
 	else
 	{
 		writeSet.descriptorType = data.isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		data.descriptorData[slot] = gpuBufferPool->GetBufferInfo(gpuBufferHandle.get());
+		data.descriptorData[slot] = gpuBufferManager->GetBufferInfo(gpuBufferHandle.get());
 		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&data.descriptorData[slot]);
 	}
 
@@ -298,7 +298,7 @@ void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const 
 		assert(slot == 0);
 	}
 
-	auto gpuBufferPool = GetVulkanGpuBufferPool();
+	auto gpuBufferManager = GetVulkanGpuBufferManager();
 	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
@@ -308,7 +308,7 @@ void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const 
 	writeSet.dstSet = data.descriptorSet;
 	writeSet.dstBinding = slot + data.bindingOffsets.constantBuffer;
 	writeSet.dstArrayElement = 0;
-	data.descriptorData[slot] = gpuBufferPool->GetBufferInfo(gpuBufferHandle.get());
+	data.descriptorData[slot] = gpuBufferManager->GetBufferInfo(gpuBufferHandle.get());
 	writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);

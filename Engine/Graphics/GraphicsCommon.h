@@ -22,7 +22,7 @@ namespace Luna
 class IColorBufferManager;
 class IDepthBufferManager;
 class IDescriptorSetPool;
-class IGpuBufferPool;
+class IGpuBufferManager;
 class IPipelineStatePool;
 class IRootSignaturePool;
 
@@ -104,7 +104,7 @@ IDeviceManager* GetDeviceManager();
 IColorBufferManager* GetColorBufferManager();
 IDepthBufferManager* GetDepthBufferManager();
 IDescriptorSetPool* GetDescriptorSetPool();
-IGpuBufferPool* GetGpuBufferPool();
+IGpuBufferManager* GetGpuBufferManager();
 IPipelineStatePool* GetPipelineStatePool();
 IRootSignaturePool* GetRootSignaturePool();
 

@@ -17,7 +17,7 @@
 #include "DepthBufferManagerVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "DescriptorSetPoolVK.h"
-#include "GpuBufferPoolVK.h"
+#include "GpuBufferManagerVK.h"
 #include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
@@ -481,9 +481,9 @@ IDescriptorSetPool* DeviceManager::GetDescriptorSetPool()
 }
 
 
-IGpuBufferPool* DeviceManager::GetGpuBufferPool()
+IGpuBufferManager* DeviceManager::GetGpuBufferManager()
 {
-	return m_gpuBufferPool.get();
+	return m_gpuBufferManager.get();
 }
 
 
@@ -653,7 +653,7 @@ void DeviceManager::CreateResourcePools()
 	m_colorBufferManager = make_unique<ColorBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_depthBufferManager = make_unique<DepthBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_vkDevice.get());
-	m_gpuBufferPool = make_unique<GpuBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_gpuBufferManager = make_unique<GpuBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_pipelineStatePool = make_unique<PipelineStatePool>(m_vkDevice.get());
 	m_rootSignaturePool = make_unique<RootSignaturePool>(m_vkDevice.get());
 }

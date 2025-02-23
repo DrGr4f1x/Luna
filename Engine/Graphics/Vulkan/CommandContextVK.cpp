@@ -19,7 +19,7 @@
 #include "DepthBufferManagerVK.h"
 #include "DescriptorSetPoolVK.h"
 #include "DeviceManagerVK.h"
-#include "GpuBufferPoolVK.h"
+#include "GpuBufferManagerVK.h"
 #include "PipelineStatePoolVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
@@ -174,7 +174,7 @@ void CommandContextVK::Initialize()
 	m_colorBufferManager = GetVulkanColorBufferManager();
 	m_depthBufferManager = GetVulkanDepthBufferManager();
 	m_descriptorSetPool = GetVulkanDescriptorSetPool();
-	m_gpuBufferPool = GetVulkanGpuBufferPool();
+	m_gpuBufferManager = GetVulkanGpuBufferManager();
 	m_pipelineStatePool = GetVulkanPipelineStatePool();
 	m_rootSignaturePool = GetVulkanRootSignaturePool();
 }
@@ -293,7 +293,7 @@ void CommandContextVK::TransitionResource(GpuBuffer& gpuBuffer, ResourceState ne
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	BufferBarrier barrier{
-		.buffer			= m_gpuBufferPool->GetBuffer(handle.get()),
+		.buffer			= m_gpuBufferManager->GetBuffer(handle.get()),
 		.beforeState	= gpuBuffer.GetUsageState(),
 		.afterState		= newState,
 		.size			= gpuBuffer.GetSize()
@@ -376,7 +376,7 @@ void CommandContextVK::ClearUAV(GpuBuffer& gpuBuffer)
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	uint32_t data = 0;
-	vkCmdFillBuffer(m_commandBuffer, m_gpuBufferPool->GetBuffer(handle.get()), 0, VK_WHOLE_SIZE, data);
+	vkCmdFillBuffer(m_commandBuffer, m_gpuBufferManager->GetBuffer(handle.get()), 0, VK_WHOLE_SIZE, data);
 }
 
 
@@ -800,7 +800,7 @@ void CommandContextVK::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 
 	const bool is16Bit = gpuBuffer.GetElementSize() == sizeof(uint16_t);
 	const VkIndexType indexType = is16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
-	vkCmdBindIndexBuffer(m_commandBuffer, m_gpuBufferPool->GetBuffer(handle.get()), 0, indexType);
+	vkCmdBindIndexBuffer(m_commandBuffer, m_gpuBufferManager->GetBuffer(handle.get()), 0, indexType);
 }
 
 
@@ -809,7 +809,7 @@ void CommandContextVK::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
 	VkDeviceSize offsets[1] = { 0 };
-	VkBuffer buffers[1] = { m_gpuBufferPool->GetBuffer(handle.get()) };
+	VkBuffer buffers[1] = { m_gpuBufferManager->GetBuffer(handle.get()) };
 	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
 }
 
@@ -845,7 +845,7 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 	GpuBufferHandle handle = destBuffer.GetHandle();
 
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, m_gpuBufferPool->GetBuffer(handle.get()), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, m_gpuBufferManager->GetBuffer(handle.get()), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 

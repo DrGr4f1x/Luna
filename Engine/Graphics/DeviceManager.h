@@ -23,7 +23,7 @@ class CommandContext;
 class IColorBufferManager;
 class IDepthBufferManager;
 class IDescriptorSetPool;
-class IGpuBufferPool;
+class IGpuBufferManager;
 class IPipelineStatePool;
 class IRootSignaturePool;
 
@@ -116,7 +116,7 @@ public:
 	virtual IColorBufferManager* GetColorBufferManager() = 0;
 	virtual IDepthBufferManager* GetDepthBufferManager() = 0;
 	virtual IDescriptorSetPool* GetDescriptorSetPool() = 0;
-	virtual IGpuBufferPool* GetGpuBufferPool() = 0;
+	virtual IGpuBufferManager* GetGpuBufferManager() = 0;
 	virtual IPipelineStatePool* GetPipelineStatePool() = 0;
 	virtual IRootSignaturePool* GetRootSignaturePool() = 0;
 };

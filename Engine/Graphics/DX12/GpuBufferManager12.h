@@ -36,13 +36,13 @@ struct GpuBufferData
 };
 
 
-class GpuBufferPool : public IGpuBufferPool
+class GpuBufferManager : public IGpuBufferManager
 {
 	static const uint32_t MaxItems = (1 << 12);
 
 public:
-	GpuBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator);
-	~GpuBufferPool();
+	GpuBufferManager(ID3D12Device* device, D3D12MA::Allocator* allocator);
+	~GpuBufferManager();
 
 	// Create/Destroy GpuBuffer
 	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
@@ -86,6 +86,6 @@ private:
 };
 
 
-GpuBufferPool* const GetD3D12GpuBufferPool();
+GpuBufferManager* const GetD3D12GpuBufferManager();
 
 } // namespace Luna::DX12

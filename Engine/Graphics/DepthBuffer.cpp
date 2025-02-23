@@ -20,8 +20,8 @@ namespace Luna
 
 DepthBufferHandleType::~DepthBufferHandleType()
 {
-	assert(m_pool);
-	m_pool->DestroyHandle(this);
+	assert(m_manager);
+	m_manager->DestroyHandle(this);
 }
 
 

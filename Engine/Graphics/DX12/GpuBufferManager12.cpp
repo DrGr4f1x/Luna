@@ -10,19 +10,19 @@
 
 #include "Stdafx.h"
 
-#include "GpuBufferPool12.h"
+#include "GpuBufferManager12.h"
 
 namespace Luna::DX12
 {
 
-GpuBufferPool* g_gpuBufferPool{ nullptr };
+GpuBufferManager* g_gpuBufferManager{ nullptr };
 
 
-GpuBufferPool::GpuBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator)
+GpuBufferManager::GpuBufferManager(ID3D12Device* device, D3D12MA::Allocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
-	assert(g_gpuBufferPool == nullptr);
+	assert(g_gpuBufferManager == nullptr);
 
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -31,17 +31,17 @@ GpuBufferPool::GpuBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator
 		m_gpuBufferData[i] = GpuBufferData{};
 	}
 
-	g_gpuBufferPool = this;
+	g_gpuBufferManager = this;
 }
 
 
-GpuBufferPool::~GpuBufferPool()
+GpuBufferManager::~GpuBufferManager()
 {
-	g_gpuBufferPool = nullptr;
+	g_gpuBufferManager = nullptr;
 }
 
 
-GpuBufferHandle GpuBufferPool::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+GpuBufferHandle GpuBufferManager::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -64,7 +64,7 @@ GpuBufferHandle GpuBufferPool::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDes
 }
 
 
-void GpuBufferPool::DestroyHandle(GpuBufferHandleType* handle)
+void GpuBufferManager::DestroyHandle(GpuBufferHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -80,7 +80,7 @@ void GpuBufferPool::DestroyHandle(GpuBufferHandleType* handle)
 }
 
 
-ResourceType GpuBufferPool::GetResourceType(GpuBufferHandleType* handle) const
+ResourceType GpuBufferManager::GetResourceType(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -89,7 +89,7 @@ ResourceType GpuBufferPool::GetResourceType(GpuBufferHandleType* handle) const
 }
 
 
-ResourceState GpuBufferPool::GetUsageState(GpuBufferHandleType* handle) const
+ResourceState GpuBufferManager::GetUsageState(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -98,7 +98,7 @@ ResourceState GpuBufferPool::GetUsageState(GpuBufferHandleType* handle) const
 }
 
 
-void GpuBufferPool::SetUsageState(GpuBufferHandleType* handle, ResourceState newState)
+void GpuBufferManager::SetUsageState(GpuBufferHandleType* handle, ResourceState newState)
 {
 	assert(handle != nullptr);
 
@@ -107,7 +107,7 @@ void GpuBufferPool::SetUsageState(GpuBufferHandleType* handle, ResourceState new
 }
 
 
-size_t GpuBufferPool::GetSize(GpuBufferHandleType* handle) const
+size_t GpuBufferManager::GetSize(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -116,7 +116,7 @@ size_t GpuBufferPool::GetSize(GpuBufferHandleType* handle) const
 }
 
 
-size_t GpuBufferPool::GetElementCount(GpuBufferHandleType* handle) const
+size_t GpuBufferManager::GetElementCount(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -125,7 +125,7 @@ size_t GpuBufferPool::GetElementCount(GpuBufferHandleType* handle) const
 }
 
 
-size_t GpuBufferPool::GetElementSize(GpuBufferHandleType* handle) const
+size_t GpuBufferManager::GetElementSize(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -134,7 +134,7 @@ size_t GpuBufferPool::GetElementSize(GpuBufferHandleType* handle) const
 }
 
 
-void GpuBufferPool::Update(GpuBufferHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const
+void GpuBufferManager::Update(GpuBufferHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const
 {
 	assert(handle != nullptr);
 
@@ -157,7 +157,7 @@ void GpuBufferPool::Update(GpuBufferHandleType* handle, size_t sizeInBytes, size
 }
 
 
-ID3D12Resource* GpuBufferPool::GetResource(GpuBufferHandleType* handle) const
+ID3D12Resource* GpuBufferManager::GetResource(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -166,7 +166,7 @@ ID3D12Resource* GpuBufferPool::GetResource(GpuBufferHandleType* handle) const
 }
 
 
-uint64_t GpuBufferPool::GetGpuAddress(GpuBufferHandleType* handle) const
+uint64_t GpuBufferManager::GetGpuAddress(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -175,7 +175,7 @@ uint64_t GpuBufferPool::GetGpuAddress(GpuBufferHandleType* handle) const
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetSRV(GpuBufferHandleType* handle) const
+D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferManager::GetSRV(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -184,7 +184,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetSRV(GpuBufferHandleType* handle) c
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetUAV(GpuBufferHandleType* handle) const
+D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferManager::GetUAV(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -193,7 +193,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetUAV(GpuBufferHandleType* handle) c
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetCBV(GpuBufferHandleType* handle) const
+D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferManager::GetCBV(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -202,7 +202,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE GpuBufferPool::GetCBV(GpuBufferHandleType* handle) c
 }
 
 
-GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBufferDesc) const
+GpuBufferData GpuBufferManager::CreateBuffer_Internal(const GpuBufferDesc& gpuBufferDesc) const
 {
 	ResourceState initialState = ResourceState::GenericRead;
 
@@ -332,7 +332,7 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 }
 
 
-wil::com_ptr<D3D12MA::Allocation> GpuBufferPool::AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const
+wil::com_ptr<D3D12MA::Allocation> GpuBufferManager::AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const
 {
 	const UINT64 bufferSize = gpuBufferDesc.elementSize * gpuBufferDesc.elementCount;
 
@@ -372,9 +372,9 @@ wil::com_ptr<D3D12MA::Allocation> GpuBufferPool::AllocateBuffer(const GpuBufferD
 }
 
 
-GpuBufferPool* const GetD3D12GpuBufferPool()
+GpuBufferManager* const GetD3D12GpuBufferManager()
 {
-	return g_gpuBufferPool;
+	return g_gpuBufferManager;
 }
 
 } // namespace Luna::DX12

@@ -10,20 +10,20 @@
 
 #include "Stdafx.h"
 
-#include "GpuBufferPoolVK.h"
+#include "GpuBufferManagerVK.h"
 
 
 namespace Luna::VK
 {
 
-GpuBufferPool* g_gpuBufferPool{ nullptr };
+GpuBufferManager* g_gpuBufferManager{ nullptr };
 
 
-GpuBufferPool::GpuBufferPool(CVkDevice* device, CVmaAllocator* allocator)
+GpuBufferManager::GpuBufferManager(CVkDevice* device, CVmaAllocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
-	assert(g_gpuBufferPool == nullptr);
+	assert(g_gpuBufferManager == nullptr);
 
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -32,17 +32,17 @@ GpuBufferPool::GpuBufferPool(CVkDevice* device, CVmaAllocator* allocator)
 		m_gpuBufferData[i] = GpuBufferData{};
 	}
 
-	g_gpuBufferPool = this;
+	g_gpuBufferManager = this;
 }
 
 
-GpuBufferPool::~GpuBufferPool()
+GpuBufferManager::~GpuBufferManager()
 {
-	g_gpuBufferPool = nullptr;
+	g_gpuBufferManager = nullptr;
 }
 
 
-GpuBufferHandle GpuBufferPool::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+GpuBufferHandle GpuBufferManager::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -59,7 +59,7 @@ GpuBufferHandle GpuBufferPool::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDes
 }
 
 
-void GpuBufferPool::DestroyHandle(GpuBufferHandleType* handle)
+void GpuBufferManager::DestroyHandle(GpuBufferHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -75,7 +75,7 @@ void GpuBufferPool::DestroyHandle(GpuBufferHandleType* handle)
 }
 
 
-ResourceType GpuBufferPool::GetResourceType(GpuBufferHandleType* handle) const
+ResourceType GpuBufferManager::GetResourceType(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -84,7 +84,7 @@ ResourceType GpuBufferPool::GetResourceType(GpuBufferHandleType* handle) const
 }
 
 
-ResourceState GpuBufferPool::GetUsageState(GpuBufferHandleType* handle) const
+ResourceState GpuBufferManager::GetUsageState(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -93,7 +93,7 @@ ResourceState GpuBufferPool::GetUsageState(GpuBufferHandleType* handle) const
 }
 
 
-void GpuBufferPool::SetUsageState(GpuBufferHandleType* handle, ResourceState newState)
+void GpuBufferManager::SetUsageState(GpuBufferHandleType* handle, ResourceState newState)
 {
 	assert(handle != nullptr);
 
@@ -102,7 +102,7 @@ void GpuBufferPool::SetUsageState(GpuBufferHandleType* handle, ResourceState new
 }
 
 
-size_t GpuBufferPool::GetSize(GpuBufferHandleType* handle) const
+size_t GpuBufferManager::GetSize(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -111,7 +111,7 @@ size_t GpuBufferPool::GetSize(GpuBufferHandleType* handle) const
 }
 
 
-size_t GpuBufferPool::GetElementCount(GpuBufferHandleType* handle) const
+size_t GpuBufferManager::GetElementCount(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -120,7 +120,7 @@ size_t GpuBufferPool::GetElementCount(GpuBufferHandleType* handle) const
 }
 
 
-size_t GpuBufferPool::GetElementSize(GpuBufferHandleType* handle) const
+size_t GpuBufferManager::GetElementSize(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -129,7 +129,7 @@ size_t GpuBufferPool::GetElementSize(GpuBufferHandleType* handle) const
 }
 
 
-void GpuBufferPool::Update(GpuBufferHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const
+void GpuBufferManager::Update(GpuBufferHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const
 {
 	assert(handle != nullptr);
 
@@ -150,7 +150,7 @@ void GpuBufferPool::Update(GpuBufferHandleType* handle, size_t sizeInBytes, size
 }
 
 
-VkBuffer GpuBufferPool::GetBuffer(GpuBufferHandleType* handle) const
+VkBuffer GpuBufferManager::GetBuffer(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -159,7 +159,7 @@ VkBuffer GpuBufferPool::GetBuffer(GpuBufferHandleType* handle) const
 }
 
 
-VkDescriptorBufferInfo GpuBufferPool::GetBufferInfo(GpuBufferHandleType* handle) const
+VkDescriptorBufferInfo GpuBufferManager::GetBufferInfo(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -168,7 +168,7 @@ VkDescriptorBufferInfo GpuBufferPool::GetBufferInfo(GpuBufferHandleType* handle)
 }
 
 
-VkBufferView GpuBufferPool::GetBufferView(GpuBufferHandleType* handle) const
+VkBufferView GpuBufferManager::GetBufferView(GpuBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -177,7 +177,7 @@ VkBufferView GpuBufferPool::GetBufferView(GpuBufferHandleType* handle) const
 }
 
 
-GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBufferDesc) const
+GpuBufferData GpuBufferManager::CreateBuffer_Internal(const GpuBufferDesc& gpuBufferDesc) const
 {
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
@@ -231,9 +231,9 @@ GpuBufferData GpuBufferPool::CreateBuffer_Internal(const GpuBufferDesc& gpuBuffe
 }
 
 
-GpuBufferPool* const GetVulkanGpuBufferPool()
+GpuBufferManager* const GetVulkanGpuBufferManager()
 {
-	return g_gpuBufferPool;
+	return g_gpuBufferManager;
 }
 
 } // namespace Luna::VK

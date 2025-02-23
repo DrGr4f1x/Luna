@@ -53,9 +53,9 @@ class IColorBufferManager;
 class __declspec(uuid("06E5178C-0CD1-491E-BBA4-8C445CBA2E34")) ColorBufferHandleType : public RefCounted<ColorBufferHandleType>
 {
 public:
-	ColorBufferHandleType(uint32_t index, IColorBufferManager* pool)
+	ColorBufferHandleType(uint32_t index, IColorBufferManager* manager)
 		: m_index{ index }
-		, m_pool{ pool }
+		, m_manager{ manager }
 	{}
 	~ColorBufferHandleType();
 
@@ -63,7 +63,7 @@ public:
 
 private:
 	uint32_t m_index{ 0 };
-	IColorBufferManager* m_pool{ nullptr };
+	IColorBufferManager* m_manager{ nullptr };
 };
 
 using ColorBufferHandle = wil::com_ptr<ColorBufferHandleType>;

@@ -21,14 +21,14 @@ namespace Luna
 
 GpuBufferHandleType::~GpuBufferHandleType()
 {
-	assert(m_pool);
-	m_pool->DestroyHandle(this);
+	assert(m_manager);
+	m_manager->DestroyHandle(this);
 }
 
 
 void GpuBuffer::Initialize(const GpuBufferDesc& gpuBufferDesc)
 {
-	m_handle = GetGpuBufferPool()->CreateGpuBuffer(gpuBufferDesc);
+	m_handle = GetGpuBufferManager()->CreateGpuBuffer(gpuBufferDesc);
 
 	if (gpuBufferDesc.initialData != nullptr)
 	{
@@ -39,50 +39,50 @@ void GpuBuffer::Initialize(const GpuBufferDesc& gpuBufferDesc)
 
 ResourceType GpuBuffer::GetResourceType() const
 {
-	return GetGpuBufferPool()->GetResourceType(m_handle.get());
+	return GetGpuBufferManager()->GetResourceType(m_handle.get());
 }
 
 
 ResourceState GpuBuffer::GetUsageState() const
 {
-	return GetGpuBufferPool()->GetUsageState(m_handle.get());
+	return GetGpuBufferManager()->GetUsageState(m_handle.get());
 }
 
 
 void GpuBuffer::SetUsageState(ResourceState newState)
 {
-	GetGpuBufferPool()->SetUsageState(m_handle.get(), newState);
+	GetGpuBufferManager()->SetUsageState(m_handle.get(), newState);
 }
 
 
 size_t GpuBuffer::GetSize() const
 {
-	return GetGpuBufferPool()->GetSize(m_handle.get());
+	return GetGpuBufferManager()->GetSize(m_handle.get());
 }
 
 
 
 size_t GpuBuffer::GetElementCount() const
 {
-	return GetGpuBufferPool()->GetElementCount(m_handle.get());
+	return GetGpuBufferManager()->GetElementCount(m_handle.get());
 }
 
 
 size_t GpuBuffer::GetElementSize() const
 {
-	return GetGpuBufferPool()->GetElementSize(m_handle.get());
+	return GetGpuBufferManager()->GetElementSize(m_handle.get());
 }
 
 
 void GpuBuffer::Update(size_t sizeInBytes, const void* data)
 {
-	GetGpuBufferPool()->Update(m_handle.get(), sizeInBytes, 0, data);
+	GetGpuBufferManager()->Update(m_handle.get(), sizeInBytes, 0, data);
 }
 
 
 void GpuBuffer::Update(size_t sizeInBytes, size_t offset, const void* data)
 {
-	GetGpuBufferPool()->Update(m_handle.get(), sizeInBytes, offset, data);
+	GetGpuBufferManager()->Update(m_handle.get(), sizeInBytes, offset, data);
 }
 
 } // namespace Luna

@@ -26,7 +26,7 @@ class ColorBufferManager;
 class DepthBufferManager;
 class DescriptorAllocator;
 class DescriptorSetPool;
-class GpuBufferPool;
+class GpuBufferManager;
 class PipelineStatePool;
 class Queue;
 class RootSignaturePool;
@@ -88,7 +88,7 @@ public:
 	IColorBufferManager* GetColorBufferManager() override;
 	IDepthBufferManager* GetDepthBufferManager() override;
 	IDescriptorSetPool* GetDescriptorSetPool() override;
-	IGpuBufferPool* GetGpuBufferPool() override;
+	IGpuBufferManager* GetGpuBufferManager() override;
 	IPipelineStatePool* GetPipelineStatePool() override;
 	IRootSignaturePool* GetRootSignaturePool() override;
 
@@ -152,7 +152,7 @@ private:
 	std::unique_ptr<ColorBufferManager> m_colorBufferManager;
 	std::unique_ptr<DepthBufferManager> m_depthBufferManager;
 	std::unique_ptr<DescriptorSetPool> m_descriptorSetPool;
-	std::unique_ptr<GpuBufferPool> m_gpuBufferPool;
+	std::unique_ptr<GpuBufferManager> m_gpuBufferManager;
 	std::unique_ptr<PipelineStatePool> m_pipelineStatePool;
 	std::unique_ptr<RootSignaturePool> m_rootSignaturePool;
 

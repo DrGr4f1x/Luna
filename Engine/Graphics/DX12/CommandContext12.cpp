@@ -19,7 +19,7 @@
 #include "DescriptorSetPool12.h"
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
-#include "GpuBufferPool12.h"
+#include "GpuBufferManager12.h"
 #include "PipelineStatePool12.h"
 #include "Queue12.h"
 #include "RootSignaturePool12.h"
@@ -120,7 +120,7 @@ void CommandContext12::Initialize()
 	m_colorBufferManager = GetD3D12ColorBufferManager();
 	m_depthBufferManager = GetD3D12DepthBufferManager();
 	m_descriptorSetPool = GetD3D12DescriptorSetPool();
-	m_gpuBufferPool = GetD3D12GpuBufferPool();
+	m_gpuBufferManager = GetD3D12GpuBufferManager();
 	m_pipelineStatePool = GetD3D12PipelineStatePool();
 	m_rootSignaturePool = GetD3D12RootSignaturePool();
 }
@@ -223,7 +223,7 @@ void CommandContext12::TransitionResource(GpuBuffer& gpuBuffer, ResourceState ne
 
 	GpuBufferHandle handle = gpuBuffer.GetHandle();
 
-	ID3D12Resource* resource = m_gpuBufferPool->GetResource(handle.get());
+	ID3D12Resource* resource = m_gpuBufferManager->GetResource(handle.get());
 
 	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
 
@@ -622,7 +622,7 @@ void CommandContext12::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gp
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	auto handle = gpuBuffer.GetHandle();
-	uint64_t gpuAddress = m_gpuBufferPool->GetGpuAddress(handle.get());
+	uint64_t gpuAddress = m_gpuBufferManager->GetGpuAddress(handle.get());
 
 	if (m_type == CommandListType::Direct)
 	{
@@ -680,7 +680,7 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBu
 void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
 {
 	auto handle = gpuBuffer.GetHandle();
-	auto descriptor = m_gpuBufferPool->GetSRV(handle.get());
+	auto descriptor = m_gpuBufferManager->GetSRV(handle.get());
 
 	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
 }
@@ -706,7 +706,7 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBu
 void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
 {
 	auto handle = gpuBuffer.GetHandle();
-	auto descriptor = m_gpuBufferPool->GetUAV(handle.get());
+	auto descriptor = m_gpuBufferManager->GetUAV(handle.get());
 
 	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
 }
@@ -715,7 +715,7 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuff
 void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
 {
 	auto handle = gpuBuffer.GetHandle();
-	auto descriptor = m_gpuBufferPool->GetCBV(handle.get());
+	auto descriptor = m_gpuBufferManager->GetCBV(handle.get());
 
 	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
 }
@@ -725,9 +725,9 @@ void CommandContext12::SetIndexBuffer(const GpuBuffer& gpuBuffer)
 {
 	auto handle = gpuBuffer.GetHandle();
 
-	const bool is16Bit = m_gpuBufferPool->GetElementSize(handle.get()) == sizeof(uint16_t);
+	const bool is16Bit = m_gpuBufferManager->GetElementSize(handle.get()) == sizeof(uint16_t);
 	D3D12_INDEX_BUFFER_VIEW ibv{
-		.BufferLocation		= m_gpuBufferPool->GetGpuAddress(handle.get()),
+		.BufferLocation		= m_gpuBufferManager->GetGpuAddress(handle.get()),
 		.SizeInBytes		= (uint32_t)gpuBuffer.GetSize(),
 		.Format				= is16Bit ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
 	};
@@ -740,7 +740,7 @@ void CommandContext12::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer
 	auto handle = gpuBuffer.GetHandle();
 
 	D3D12_VERTEX_BUFFER_VIEW vbv{
-		.BufferLocation		= m_gpuBufferPool->GetGpuAddress(handle.get()),
+		.BufferLocation		= m_gpuBufferManager->GetGpuAddress(handle.get()),
 		.SizeInBytes		= (uint32_t)gpuBuffer.GetSize(),
 		.StrideInBytes		= (uint32_t)gpuBuffer.GetElementSize()
 	};
@@ -849,7 +849,7 @@ void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 
 	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(m_gpuBufferPool->GetResource(handle.get()), offset, stagingAllocation->GetResource(), 0, numBytes);
+	m_commandList->CopyBufferRegion(m_gpuBufferManager->GetResource(handle.get()), offset, stagingAllocation->GetResource(), 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());

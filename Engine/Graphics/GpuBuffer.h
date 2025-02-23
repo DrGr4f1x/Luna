@@ -40,15 +40,15 @@ struct GpuBufferDesc
 };
 
 
-class IGpuBufferPool;
+class IGpuBufferManager;
 
 
 class __declspec(uuid("3BC9117D-D567-4D21-9AFC-ACFF5D17C167")) GpuBufferHandleType : public RefCounted<GpuBufferHandleType>
 {
 public:
-	GpuBufferHandleType(uint32_t index, IGpuBufferPool* pool)
+	GpuBufferHandleType(uint32_t index, IGpuBufferManager* manager)
 		: m_index{ index }
-		, m_pool{ pool }
+		, m_manager{ manager }
 	{}
 	~GpuBufferHandleType();
 
@@ -56,13 +56,13 @@ public:
 
 private:
 	uint32_t m_index{ 0 };
-	IGpuBufferPool* m_pool{ nullptr };
+	IGpuBufferManager* m_manager{ nullptr };
 };
 
 using GpuBufferHandle = wil::com_ptr<GpuBufferHandleType>;
 
 
-class IGpuBufferPool
+class IGpuBufferManager
 {
 public:
 	// Create/Destroy GpuBuffer

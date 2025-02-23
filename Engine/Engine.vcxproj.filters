@@ -155,10 +155,10 @@
     <ClCompile Include="Graphics\GpuBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\GpuBufferPool12.cpp">
+    <ClCompile Include="Graphics\DX12\GpuBufferManager12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\GpuBufferPoolVK.cpp">
+    <ClCompile Include="Graphics\Vulkan\GpuBufferManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\DepthBuffer.cpp">
@@ -432,10 +432,10 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\GpuBufferPool12.h">
+    <ClInclude Include="Graphics\DX12\GpuBufferManager12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\GpuBufferPoolVK.h">
+    <ClInclude Include="Graphics\Vulkan\GpuBufferManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\DepthBufferManager12.h">

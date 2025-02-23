@@ -14,7 +14,7 @@
 
 #include "Graphics\DX12\ColorBufferManager12.h"
 #include "Graphics\DX12\DepthBufferManager12.h"
-#include "Graphics\DX12\GpuBufferPool12.h"
+#include "Graphics\DX12\GpuBufferManager12.h"
 
 
 namespace Luna::DX12
@@ -146,17 +146,17 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	auto gpuBufferManager = GetD3D12GpuBufferManager();
 	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
 
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBufferPool->GetGpuAddress(gpuBufferHandle.get());
+		data.gpuAddress = gpuBufferManager->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, gpuBufferPool->GetSRV(gpuBufferHandle.get()));
+		SetDescriptor(data, slot, gpuBufferManager->GetSRV(gpuBufferHandle.get()));
 	}
 }
 
@@ -196,17 +196,17 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	auto gpuBufferManager = GetD3D12GpuBufferManager();
 	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
 
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBufferPool->GetGpuAddress(gpuBufferHandle.get());
+		data.gpuAddress = gpuBufferManager->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, gpuBufferPool->GetUAV(gpuBufferHandle.get()));
+		SetDescriptor(data, slot, gpuBufferManager->GetUAV(gpuBufferHandle.get()));
 	}
 }
 
@@ -218,17 +218,17 @@ void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto gpuBufferPool = GetD3D12GpuBufferPool();
+	auto gpuBufferManager = GetD3D12GpuBufferManager();
 	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
 
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBufferPool->GetGpuAddress(gpuBufferHandle.get());
+		data.gpuAddress = gpuBufferManager->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, gpuBufferPool->GetCBV(gpuBufferHandle.get()));
+		SetDescriptor(data, slot, gpuBufferManager->GetCBV(gpuBufferHandle.get()));
 	}
 }
 

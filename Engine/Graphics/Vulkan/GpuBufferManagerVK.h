@@ -27,13 +27,13 @@ struct GpuBufferData
 };
 
 
-class GpuBufferPool : public IGpuBufferPool
+class GpuBufferManager : public IGpuBufferManager
 {
 	static const uint32_t MaxItems = (1 << 12);
 
 public:
-	explicit GpuBufferPool(CVkDevice* device, CVmaAllocator* allocator);
-	~GpuBufferPool();
+	explicit GpuBufferManager(CVkDevice* device, CVmaAllocator* allocator);
+	~GpuBufferManager();
 
 	// Create/Destroy GpuBuffer
 	GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
@@ -75,6 +75,6 @@ private:
 };
 
 
-GpuBufferPool* const GetVulkanGpuBufferPool();
+GpuBufferManager* const GetVulkanGpuBufferManager();
 
 } // namespace Luna::VK
