@@ -27,13 +27,13 @@ struct ColorBufferData
 };
 
 
-class ColorBufferPool : public IColorBufferPool
+class ColorBufferManager : public IColorBufferManager
 {
 	static const uint32_t MaxItems = (1 << 8);
 
 public:
-	ColorBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator);
-	~ColorBufferPool();
+	ColorBufferManager(ID3D12Device* device, D3D12MA::Allocator* allocator);
+	~ColorBufferManager();
 
 	// Create/Destroy ColorBuffer
 	ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
@@ -82,6 +82,6 @@ private:
 };
 
 
-ColorBufferPool* const GetD3D12ColorBufferPool();
+ColorBufferManager* const GetD3D12ColorBufferManager();
 
 } // namespace Luna::DX12

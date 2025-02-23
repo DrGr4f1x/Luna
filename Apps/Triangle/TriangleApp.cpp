@@ -136,7 +136,8 @@ void TriangleApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetResources(m_resources);
+	//context.SetResources(m_resources);
+	context.SetConstantBuffer(0, m_constantBuffer);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 

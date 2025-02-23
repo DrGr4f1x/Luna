@@ -47,13 +47,13 @@ struct ColorBufferDesc
 };
 
 
-class IColorBufferPool;
+class IColorBufferManager;
 
 
 class __declspec(uuid("06E5178C-0CD1-491E-BBA4-8C445CBA2E34")) ColorBufferHandleType : public RefCounted<ColorBufferHandleType>
 {
 public:
-	ColorBufferHandleType(uint32_t index, IColorBufferPool* pool)
+	ColorBufferHandleType(uint32_t index, IColorBufferManager* pool)
 		: m_index{ index }
 		, m_pool{ pool }
 	{}
@@ -63,13 +63,13 @@ public:
 
 private:
 	uint32_t m_index{ 0 };
-	IColorBufferPool* m_pool{ nullptr };
+	IColorBufferManager* m_pool{ nullptr };
 };
 
 using ColorBufferHandle = wil::com_ptr<ColorBufferHandleType>;
 
 
-class IColorBufferPool
+class IColorBufferManager
 {
 public:
 	// Create/Destroy ColorBuffer

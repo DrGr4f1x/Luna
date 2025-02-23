@@ -15,7 +15,7 @@
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceSet.h"
 
-#include "ColorBufferPoolVK.h"
+#include "ColorBufferManagerVK.h"
 #include "DepthBufferPoolVK.h"
 #include "DescriptorSetPoolVK.h"
 #include "DeviceManagerVK.h"
@@ -54,7 +54,7 @@ VkClearValue GetDepthStencilClearValue(float depth, uint32_t stencil)
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTarget)
 {
 	ColorBufferHandle handle = renderTarget.GetHandle();
-	VkImageView imageView = GetVulkanColorBufferPool()->GetImageViewRtv(handle.get());
+	VkImageView imageView = GetVulkanColorBufferManager()->GetImageViewRtv(handle.get());
 
 	VkRenderingAttachmentInfo info{
 		.sType			= VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -171,7 +171,7 @@ void CommandContextVK::Initialize()
 	assert(m_commandBuffer == VK_NULL_HANDLE);
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 
-	m_colorBufferPool = GetVulkanColorBufferPool();
+	m_colorBufferManager = GetVulkanColorBufferManager();
 	m_depthBufferPool = GetVulkanDepthBufferPool();
 	m_descriptorSetPool = GetVulkanDescriptorSetPool();
 	m_gpuBufferPool = GetVulkanGpuBufferPool();
@@ -237,7 +237,7 @@ void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceStat
 	ColorBufferHandle handle = colorBuffer.GetHandle();
 
 	TextureBarrier barrier{
-		.image				= m_colorBufferPool->GetImage(handle.get()),
+		.image				= m_colorBufferManager->GetImage(handle.get()),
 		.format				= FormatToVulkan(colorBuffer.GetFormat()),
 		.imageAspect		= GetImageAspect(colorBuffer.GetFormat()),
 		.beforeState		= colorBuffer.GetUsageState(),
@@ -410,7 +410,7 @@ void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 
 	ColorBufferHandle handle = colorBuffer.GetHandle();
 
-	vkCmdClearColorImage(m_commandBuffer, m_colorBufferPool->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
+	vkCmdClearColorImage(m_commandBuffer, m_colorBufferManager->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
 }
@@ -730,6 +730,12 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
+void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer)
+{
+	assert(false);
+}
+
+
 void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
 {
 	SetDescriptors_Internal(rootIndex, descriptorSet.GetHandle().get());
@@ -743,6 +749,48 @@ void CommandContextVK::SetResources(ResourceSet& resourceSet)
 	{
 		SetDescriptors_Internal(i, resourceSet[i].GetHandle().get());
 	}
+}
+
+
+void CommandContextVK::SetSRV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	assert(false);
+}
+
+
+void CommandContextVK::SetSRV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+{
+	assert(false);
+}
+
+
+void CommandContextVK::SetSRV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	assert(false);
+}
+
+
+void CommandContextVK::SetUAV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	assert(false);
+}
+
+
+void CommandContextVK::SetUAV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer)
+{
+	assert(false);
+}
+
+
+void CommandContextVK::SetUAV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	assert(false);
+}
+
+
+void CommandContextVK::SetCBV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	assert(false);
 }
 
 

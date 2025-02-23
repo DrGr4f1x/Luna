@@ -12,7 +12,7 @@
 
 #include "DescriptorSetPool12.h"
 
-#include "Graphics\DX12\ColorBufferPool12.h"
+#include "Graphics\DX12\ColorBufferManager12.h"
 #include "Graphics\DX12\DepthBufferPool12.h"
 #include "Graphics\DX12\GpuBufferPool12.h"
 
@@ -118,10 +118,10 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto colorBufferPool = GetD3D12ColorBufferPool();
+	auto colorBufferManager = GetD3D12ColorBufferManager();
 	auto colorBufferHandle = colorBuffer.GetHandle();
 
-	SetDescriptor(data, slot, colorBufferPool->GetSRV(colorBufferHandle.get()));
+	SetDescriptor(data, slot, colorBufferManager->GetSRV(colorBufferHandle.get()));
 }
 
 
@@ -168,10 +168,10 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto colorBufferPool = GetD3D12ColorBufferPool();
+	auto colorBufferManager = GetD3D12ColorBufferManager();
 	auto colorBufferHandle = colorBuffer.GetHandle();
 
-	SetDescriptor(data, slot, colorBufferPool->GetUAV(colorBufferHandle.get(), uavIndex));
+	SetDescriptor(data, slot, colorBufferManager->GetUAV(colorBufferHandle.get(), uavIndex));
 }
 
 

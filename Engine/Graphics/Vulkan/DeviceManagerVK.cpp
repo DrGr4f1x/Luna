@@ -12,7 +12,7 @@
 
 #include "DeviceManagerVK.h"
 
-#include "ColorBufferPoolVK.h"
+#include "ColorBufferManagerVK.h"
 #include "CommandContextVK.h"
 #include "DepthBufferPoolVK.h"
 #include "DescriptorAllocatorVK.h"
@@ -402,7 +402,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < (uint32_t)images.size(); ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(m_colorBufferPool->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
+		swapChainBuffer.SetHandle(m_colorBufferManager->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
 		m_swapChainBuffers.push_back(swapChainBuffer);
 	}
 }
@@ -463,9 +463,9 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IColorBufferPool* DeviceManager::GetColorBufferPool()
+IColorBufferManager* DeviceManager::GetColorBufferManager()
 {
-	return m_colorBufferPool.get();
+	return m_colorBufferManager.get();
 }
 
 
@@ -650,7 +650,7 @@ void DeviceManager::CreateDevice()
 
 void DeviceManager::CreateResourcePools()
 {
-	m_colorBufferPool = make_unique<ColorBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_colorBufferManager = make_unique<ColorBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_depthBufferPool = make_unique<DepthBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_vkDevice.get());
 	m_gpuBufferPool = make_unique<GpuBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());

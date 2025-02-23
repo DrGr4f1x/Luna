@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "ColorBufferPool12.h"
+#include "ColorBufferManager12.h"
 
 using namespace std;
 
@@ -18,14 +18,14 @@ using namespace std;
 namespace Luna::DX12
 {
 
-ColorBufferPool* g_colorBufferPool{ nullptr };
+ColorBufferManager* g_colorBufferManager{ nullptr };
 
 
-ColorBufferPool::ColorBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator)
+ColorBufferManager::ColorBufferManager(ID3D12Device* device, D3D12MA::Allocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
-	assert(g_colorBufferPool == nullptr);
+	assert(g_colorBufferManager == nullptr);
 
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -34,17 +34,17 @@ ColorBufferPool::ColorBufferPool(ID3D12Device* device, D3D12MA::Allocator* alloc
 		m_colorBufferData[i] = ColorBufferData{};
 	}
 
-	g_colorBufferPool = this;
+	g_colorBufferManager = this;
 }
 
 
-ColorBufferPool::~ColorBufferPool()
+ColorBufferManager::~ColorBufferManager()
 {
-	g_colorBufferPool = nullptr;
+	g_colorBufferManager = nullptr;
 }
 
 
-ColorBufferHandle ColorBufferPool::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
+ColorBufferHandle ColorBufferManager::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -60,7 +60,7 @@ ColorBufferHandle ColorBufferPool::CreateColorBuffer(const ColorBufferDesc& colo
 }
 
 
-void ColorBufferPool::DestroyHandle(ColorBufferHandleType* handle)
+void ColorBufferManager::DestroyHandle(ColorBufferHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -76,19 +76,19 @@ void ColorBufferPool::DestroyHandle(ColorBufferHandleType* handle)
 }
 
 
-ResourceType ColorBufferPool::GetResourceType(ColorBufferHandleType* handle) const
+ResourceType ColorBufferManager::GetResourceType(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).resourceType;
 }
 
 
-ResourceState ColorBufferPool::GetUsageState(ColorBufferHandleType* handle) const
+ResourceState ColorBufferManager::GetUsageState(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).usageState;
 }
 
 
-void ColorBufferPool::SetUsageState(ColorBufferHandleType* handle, ResourceState newState)
+void ColorBufferManager::SetUsageState(ColorBufferHandleType* handle, ResourceState newState)
 {
 	assert(handle != nullptr);
 
@@ -97,55 +97,55 @@ void ColorBufferPool::SetUsageState(ColorBufferHandleType* handle, ResourceState
 }
 
 
-uint64_t ColorBufferPool::GetWidth(ColorBufferHandleType* handle) const
+uint64_t ColorBufferManager::GetWidth(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).width;
 }
 
 
-uint32_t ColorBufferPool::GetHeight(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetHeight(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).height;
 }
 
 
-uint32_t ColorBufferPool::GetDepthOrArraySize(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetDepthOrArraySize(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).arraySizeOrDepth;
 }
 
 
-uint32_t ColorBufferPool::GetNumMips(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetNumMips(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).numMips;
 }
 
 
-uint32_t ColorBufferPool::GetNumSamples(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetNumSamples(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).numSamples;
 }
 
 
-uint32_t ColorBufferPool::GetPlaneCount(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetPlaneCount(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).planeCount;
 }
 
 
-Format ColorBufferPool::GetFormat(ColorBufferHandleType* handle) const
+Format ColorBufferManager::GetFormat(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).format;
 }
 
 
-Color ColorBufferPool::GetClearColor(ColorBufferHandleType* handle) const
+Color ColorBufferManager::GetClearColor(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).clearColor;
 }
 
 
-ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex)
+ColorBufferHandle ColorBufferManager::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex)
 {
 	wil::com_ptr<ID3D12Resource> displayPlane;
 	assert_succeeded(swapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
@@ -196,31 +196,31 @@ ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChain(IDXGISwapChain
 }
 
 
-ID3D12Resource* ColorBufferPool::GetResource(ColorBufferHandleType* handle) const
+ID3D12Resource* ColorBufferManager::GetResource(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).resource.get();
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE ColorBufferPool::GetSRV(ColorBufferHandleType* handle) const
+D3D12_CPU_DESCRIPTOR_HANDLE ColorBufferManager::GetSRV(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).srvHandle;
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE ColorBufferPool::GetRTV(ColorBufferHandleType* handle) const
+D3D12_CPU_DESCRIPTOR_HANDLE ColorBufferManager::GetRTV(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).rtvHandle;
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE ColorBufferPool::GetUAV(ColorBufferHandleType* handle, uint32_t uavIndex) const
+D3D12_CPU_DESCRIPTOR_HANDLE ColorBufferManager::GetUAV(ColorBufferHandleType* handle, uint32_t uavIndex) const
 {
 	return GetData(handle).uavHandles[uavIndex];
 }
 
 
-const ColorBufferDesc& ColorBufferPool::GetDesc(ColorBufferHandleType* handle) const
+const ColorBufferDesc& ColorBufferManager::GetDesc(ColorBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -229,7 +229,7 @@ const ColorBufferDesc& ColorBufferPool::GetDesc(ColorBufferHandleType* handle) c
 }
 
 
-const ColorBufferData& ColorBufferPool::GetData(ColorBufferHandleType* handle) const
+const ColorBufferData& ColorBufferManager::GetData(ColorBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -238,7 +238,7 @@ const ColorBufferData& ColorBufferPool::GetData(ColorBufferHandleType* handle) c
 }
 
 
-ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc)
+ColorBufferData ColorBufferManager::CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc)
 {
 	// Create resource
 	auto numMips = colorBufferDesc.numMips == 0 ? ComputeNumMips(colorBufferDesc.width, colorBufferDesc.height) : colorBufferDesc.numMips;
@@ -382,9 +382,9 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 }
 
 
-ColorBufferPool* const GetD3D12ColorBufferPool()
+ColorBufferManager* const GetD3D12ColorBufferManager()
 {
-	return g_colorBufferPool;
+	return g_colorBufferManager;
 }
 
 } // namespace Luna::DX12

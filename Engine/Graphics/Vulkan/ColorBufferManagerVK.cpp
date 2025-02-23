@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "ColorBufferPoolVK.h"
+#include "ColorBufferManagerVK.h"
 
 #include "DeviceManagerVK.h"
 #include "VulkanUtil.h"
@@ -22,14 +22,14 @@ using namespace std;
 namespace Luna::VK
 {
 
-ColorBufferPool* g_colorBufferPool{ nullptr };
+ColorBufferManager* g_colorBufferManager{ nullptr };
 
 
-ColorBufferPool::ColorBufferPool(CVkDevice* device, CVmaAllocator* allocator)
+ColorBufferManager::ColorBufferManager(CVkDevice* device, CVmaAllocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
-	assert(g_colorBufferPool == nullptr);
+	assert(g_colorBufferManager == nullptr);
 
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -38,17 +38,17 @@ ColorBufferPool::ColorBufferPool(CVkDevice* device, CVmaAllocator* allocator)
 		m_colorBufferData[i] = ColorBufferData{};
 	}
 
-	g_colorBufferPool = this;
+	g_colorBufferManager = this;
 }
 
 
-ColorBufferPool::~ColorBufferPool()
+ColorBufferManager::~ColorBufferManager()
 {
-	g_colorBufferPool = nullptr;
+	g_colorBufferManager = nullptr;
 }
 
 
-ColorBufferHandle ColorBufferPool::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
+ColorBufferHandle ColorBufferManager::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -64,7 +64,7 @@ ColorBufferHandle ColorBufferPool::CreateColorBuffer(const ColorBufferDesc& colo
 }
 
 
-void ColorBufferPool::DestroyHandle(ColorBufferHandleType* handle)
+void ColorBufferManager::DestroyHandle(ColorBufferHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -80,19 +80,19 @@ void ColorBufferPool::DestroyHandle(ColorBufferHandleType* handle)
 }
 
 
-ResourceType ColorBufferPool::GetResourceType(ColorBufferHandleType* handle) const
+ResourceType ColorBufferManager::GetResourceType(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).resourceType;
 }
 
 
-ResourceState ColorBufferPool::GetUsageState(ColorBufferHandleType* handle) const
+ResourceState ColorBufferManager::GetUsageState(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).usageState;
 }
 
 
-void ColorBufferPool::SetUsageState(ColorBufferHandleType* handle, ResourceState newState)
+void ColorBufferManager::SetUsageState(ColorBufferHandleType* handle, ResourceState newState)
 {
 	assert(handle != nullptr);
 
@@ -101,55 +101,55 @@ void ColorBufferPool::SetUsageState(ColorBufferHandleType* handle, ResourceState
 }
 
 
-uint64_t ColorBufferPool::GetWidth(ColorBufferHandleType* handle) const
+uint64_t ColorBufferManager::GetWidth(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).width;
 }
 
 
-uint32_t ColorBufferPool::GetHeight(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetHeight(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).height;
 }
 
 
-uint32_t ColorBufferPool::GetDepthOrArraySize(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetDepthOrArraySize(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).arraySizeOrDepth;
 }
 
 
-uint32_t ColorBufferPool::GetNumMips(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetNumMips(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).numMips;
 }
 
 
-uint32_t ColorBufferPool::GetNumSamples(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetNumSamples(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).numSamples;
 }
 
 
-uint32_t ColorBufferPool::GetPlaneCount(ColorBufferHandleType* handle) const
+uint32_t ColorBufferManager::GetPlaneCount(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).planeCount;
 }
 
 
-Format ColorBufferPool::GetFormat(ColorBufferHandleType* handle) const
+Format ColorBufferManager::GetFormat(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).format;
 }
 
 
-Color ColorBufferPool::GetClearColor(ColorBufferHandleType* handle) const
+Color ColorBufferManager::GetClearColor(ColorBufferHandleType* handle) const
 {
 	return GetDesc(handle).clearColor;
 }
 
 
-ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex)
+ColorBufferHandle ColorBufferManager::CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex)
 {
 	const string name = std::format("Primary Swapchain Image {}", imageIndex);
 
@@ -216,37 +216,37 @@ ColorBufferHandle ColorBufferPool::CreateColorBufferFromSwapChainImage(CVkImage*
 }
 
 
-VkImage ColorBufferPool::GetImage(ColorBufferHandleType* handle) const
+VkImage ColorBufferManager::GetImage(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).image->Get();
 }
 
 
-VkImageView ColorBufferPool::GetImageViewSrv(ColorBufferHandleType* handle) const
+VkImageView ColorBufferManager::GetImageViewSrv(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).imageViewSrv->Get();
 }
 
 
-VkImageView ColorBufferPool::GetImageViewRtv(ColorBufferHandleType* handle) const
+VkImageView ColorBufferManager::GetImageViewRtv(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).imageViewRtv->Get();
 }
 
 
-VkDescriptorImageInfo ColorBufferPool::GetImageInfoSrv(ColorBufferHandleType* handle) const
+VkDescriptorImageInfo ColorBufferManager::GetImageInfoSrv(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).imageInfoSrv;
 }
 
 
-VkDescriptorImageInfo ColorBufferPool::GetImageInfoUav(ColorBufferHandleType* handle) const
+VkDescriptorImageInfo ColorBufferManager::GetImageInfoUav(ColorBufferHandleType* handle) const
 {
 	return GetData(handle).imageInfoUav;
 }
 
 
-const ColorBufferDesc& ColorBufferPool::GetDesc(ColorBufferHandleType* handle) const
+const ColorBufferDesc& ColorBufferManager::GetDesc(ColorBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -255,7 +255,7 @@ const ColorBufferDesc& ColorBufferPool::GetDesc(ColorBufferHandleType* handle) c
 }
 
 
-const ColorBufferData& ColorBufferPool::GetData(ColorBufferHandleType* handle) const
+const ColorBufferData& ColorBufferManager::GetData(ColorBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -264,7 +264,7 @@ const ColorBufferData& ColorBufferPool::GetData(ColorBufferHandleType* handle) c
 }
 
 
-ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc)
+ColorBufferData ColorBufferManager::CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc)
 {
 	// Create image
 	ImageDesc imageDesc{
@@ -344,9 +344,9 @@ ColorBufferData ColorBufferPool::CreateColorBuffer_Internal(const ColorBufferDes
 }
 
 
-ColorBufferPool* const GetVulkanColorBufferPool()
+ColorBufferManager* const GetVulkanColorBufferManager()
 {
-	return g_colorBufferPool;
+	return g_colorBufferManager;
 }
 
 } // namespace Luna::VK

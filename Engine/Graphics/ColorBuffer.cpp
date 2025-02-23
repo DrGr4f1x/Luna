@@ -27,73 +27,73 @@ ColorBufferHandleType::~ColorBufferHandleType()
 
 void ColorBuffer::Initialize(const ColorBufferDesc& ColorBufferDesc)
 {
-	m_handle = GetColorBufferPool()->CreateColorBuffer(ColorBufferDesc);
+	m_handle = GetColorBufferManager()->CreateColorBuffer(ColorBufferDesc);
 }
 
 
 ResourceType ColorBuffer::GetResourceType() const
 {
-	return GetColorBufferPool()->GetResourceType(m_handle.get());
+	return GetColorBufferManager()->GetResourceType(m_handle.get());
 }
 
 
 ResourceState ColorBuffer::GetUsageState() const
 {
-	return GetColorBufferPool()->GetUsageState(m_handle.get());
+	return GetColorBufferManager()->GetUsageState(m_handle.get());
 }
 
 
 void ColorBuffer::SetUsageState(ResourceState newState)
 {
-	GetColorBufferPool()->SetUsageState(m_handle.get(), newState);
+	GetColorBufferManager()->SetUsageState(m_handle.get(), newState);
 }
 
 
 uint64_t ColorBuffer::GetWidth() const
 {
-	return GetColorBufferPool()->GetWidth(m_handle.get());
+	return GetColorBufferManager()->GetWidth(m_handle.get());
 }
 
 
 uint32_t ColorBuffer::GetHeight() const
 {
-	return GetColorBufferPool()->GetHeight(m_handle.get());
+	return GetColorBufferManager()->GetHeight(m_handle.get());
 }
 
 
 uint32_t ColorBuffer::GetDepth() const
 {
-	return GetColorBufferPool()->GetDepthOrArraySize(m_handle.get());
+	return GetColorBufferManager()->GetDepthOrArraySize(m_handle.get());
 }
 
 
 uint32_t ColorBuffer::GetArraySize() const
 {
-	return GetColorBufferPool()->GetDepthOrArraySize(m_handle.get());
+	return GetColorBufferManager()->GetDepthOrArraySize(m_handle.get());
 }
 
 
 uint32_t ColorBuffer::GetNumMips() const
 {
-	return GetColorBufferPool()->GetNumMips(m_handle.get());
+	return GetColorBufferManager()->GetNumMips(m_handle.get());
 }
 
 
 uint32_t ColorBuffer::GetNumSamples() const
 {
-	return GetColorBufferPool()->GetNumSamples(m_handle.get());
+	return GetColorBufferManager()->GetNumSamples(m_handle.get());
 }
 
 
 uint32_t ColorBuffer::GetPlaneCount() const
 {
-	return GetColorBufferPool()->GetPlaneCount(m_handle.get());
+	return GetColorBufferManager()->GetPlaneCount(m_handle.get());
 }
 
 
 Format ColorBuffer::GetFormat() const
 {
-	return GetColorBufferPool()->GetFormat(m_handle.get());
+	return GetColorBufferManager()->GetFormat(m_handle.get());
 }
 
 
@@ -105,7 +105,7 @@ TextureDimension ColorBuffer::GetDimension() const
 
 Color ColorBuffer::GetClearColor() const
 {
-	return GetColorBufferPool()->GetClearColor(m_handle.get());
+	return GetColorBufferManager()->GetClearColor(m_handle.get());
 }
 
 } // namespace Luna

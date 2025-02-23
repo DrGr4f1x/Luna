@@ -12,7 +12,7 @@
 
 #include "DescriptorSetPoolVK.h"
 
-#include "Graphics\Vulkan\ColorBufferPoolVK.h"
+#include "Graphics\Vulkan\ColorBufferManagerVK.h"
 #include "Graphics\Vulkan\DepthBufferPoolVK.h"
 #include "Graphics\Vulkan\GpuBufferPoolVK.h"
 
@@ -131,7 +131,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
 
-	auto colorBufferPool = GetVulkanColorBufferPool();
+	auto colorBufferManager = GetVulkanColorBufferManager();
 	auto colorBufferHandle = colorBuffer.GetHandle();
 
 	writeSet.descriptorCount = 1;
@@ -140,7 +140,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
 	writeSet.dstArrayElement = 0;
 	
-	data.descriptorData[slot] = colorBufferPool->GetImageInfoSrv(colorBufferHandle.get());
+	data.descriptorData[slot] = colorBufferManager->GetImageInfoSrv(colorBufferHandle.get());
 	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);
@@ -220,7 +220,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
 
-	auto colorBufferPool = GetVulkanColorBufferPool();
+	auto colorBufferManager = GetVulkanColorBufferManager();
 	auto colorBufferHandle = colorBuffer.GetHandle();
 
 	writeSet.descriptorCount = 1;
@@ -229,7 +229,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 	writeSet.dstBinding = slot + data.bindingOffsets.unorderedAccess;
 	writeSet.dstArrayElement = 0;
 	
-	data.descriptorData[slot] = colorBufferPool->GetImageInfoUav(colorBufferHandle.get());
+	data.descriptorData[slot] = colorBufferManager->GetImageInfoUav(colorBufferHandle.get());
 	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);

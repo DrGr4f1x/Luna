@@ -173,10 +173,10 @@
     <ClCompile Include="Graphics\ColorBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\ColorBufferPool12.cpp">
+    <ClCompile Include="Graphics\DX12\ColorBufferManager12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\ColorBufferPoolVK.cpp">
+    <ClCompile Include="Graphics\Vulkan\ColorBufferManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp">
@@ -187,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="..\External\vk-bootstrap\src\VkBootstrap.cpp">
       <Filter>External\vk-bootstrap</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -441,10 +444,10 @@
     <ClInclude Include="Graphics\Vulkan\DepthBufferPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\ColorBufferPool12.h">
+    <ClInclude Include="Graphics\DX12\ColorBufferManager12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\ColorBufferPoolVK.h">
+    <ClInclude Include="Graphics\Vulkan\ColorBufferManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\VulkanUtil.h">
@@ -458,6 +461,9 @@
     </ClInclude>
     <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrap.h">
       <Filter>External\vk-bootstrap</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h">
+      <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -28,13 +28,13 @@ struct ColorBufferData
 };
 
 
-class ColorBufferPool : public IColorBufferPool
+class ColorBufferManager : public IColorBufferManager
 {
 	static const uint32_t MaxItems = (1 << 8);
 
 public:
-	explicit ColorBufferPool(CVkDevice* device, CVmaAllocator* allocator);
-	~ColorBufferPool();
+	explicit ColorBufferManager(CVkDevice* device, CVmaAllocator* allocator);
+	~ColorBufferManager();
 
 	// Create/Destroy ColorBuffer
 	ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
@@ -84,6 +84,6 @@ private:
 };
 
 
-ColorBufferPool* const GetVulkanColorBufferPool();
+ColorBufferManager* const GetVulkanColorBufferManager();
 
 } // namespace Luna::VK

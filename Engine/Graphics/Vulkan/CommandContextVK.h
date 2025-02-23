@@ -29,7 +29,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class ColorBufferPool;
+class ColorBufferManager;
 class ComputeContext;
 class DepthBufferPool;
 class DescriptorSetPool;
@@ -120,8 +120,19 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
+	void SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer) override;
 	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) override;
 	void SetResources(ResourceSet& resourceSet) override;
+
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) override;
+
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) override;
+
+	void SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) override;
 
 	void SetIndexBuffer(const GpuBuffer& gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) override;
@@ -157,7 +168,7 @@ private:
 	bool m_isRendering{ false };
 
 	// Pools
-	ColorBufferPool* m_colorBufferPool{ nullptr };
+	ColorBufferManager* m_colorBufferManager{ nullptr };
 	DepthBufferPool* m_depthBufferPool{ nullptr };
 	DescriptorSetPool* m_descriptorSetPool{ nullptr };
 	GpuBufferPool* m_gpuBufferPool{ nullptr };

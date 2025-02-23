@@ -12,6 +12,7 @@
 
 #include "Graphics\CommandContext.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\DynamicDescriptorHeap12.h"
 
 using namespace Microsoft::WRL;
 
@@ -29,7 +30,7 @@ namespace Luna::DX12
 {
 
 // Forward declarations
-class ColorBufferPool;
+class ColorBufferManager;
 class DepthBufferPool;
 class DescriptorSetPool;
 class GpuBufferPool;
@@ -82,7 +83,6 @@ public:
 
 	void SetRootSignature(RootSignature& rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) override;
-	
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -96,8 +96,19 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
+	void SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer) override;
 	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) override;
 	void SetResources(ResourceSet& resourceSet) override;
+
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) override;
+
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) override;
+
+	void SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) override;
 
 	void SetIndexBuffer(const GpuBuffer& gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) override;
@@ -116,6 +127,7 @@ protected:
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
 	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
+	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 
 private:
 	void BindDescriptorHeaps();
@@ -134,6 +146,9 @@ private:
 	ID3D12PipelineState* m_graphicsPipelineState{ nullptr };
 	ID3D12PipelineState* m_computePipelineState{ nullptr };
 
+	DynamicDescriptorHeap m_dynamicViewDescriptorHeap;
+	DynamicDescriptorHeap m_dynamicSamplerDescriptorHeap;
+
 	D3D12_PRIMITIVE_TOPOLOGY m_primitiveTopology;
 
 	D3D12_RESOURCE_BARRIER m_resourceBarrierBuffer[16];
@@ -144,7 +159,7 @@ private:
 	bool m_bHasPendingDebugEvent{ false };
 
 	// Pools
-	ColorBufferPool* m_colorBufferPool{ nullptr };
+	ColorBufferManager* m_colorBufferManager{ nullptr };
 	DepthBufferPool* m_depthBufferPool{ nullptr };
 	DescriptorSetPool* m_descriptorSetPool{ nullptr };
 	GpuBufferPool* m_gpuBufferPool{ nullptr };

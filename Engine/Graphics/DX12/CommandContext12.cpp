@@ -14,7 +14,7 @@
 
 #include "Graphics\ResourceSet.h"
 
-#include "ColorBufferPool12.h"
+#include "ColorBufferManager12.h"
 #include "DepthBufferPool12.h"
 #include "DescriptorSetPool12.h"
 #include "DeviceManager12.h"
@@ -52,6 +52,8 @@ static bool IsValidComputeResourceState(ResourceState state)
 
 CommandContext12::CommandContext12(CommandListType type)
 	: m_type{ type }
+	, m_dynamicViewDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV }
+	, m_dynamicSamplerDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER }
 {
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 }
@@ -115,7 +117,7 @@ void CommandContext12::Initialize()
 {
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 
-	m_colorBufferPool = GetD3D12ColorBufferPool();
+	m_colorBufferManager = GetD3D12ColorBufferManager();
 	m_depthBufferPool = GetD3D12DepthBufferPool();
 	m_descriptorSetPool = GetD3D12DescriptorSetPool();
 	m_gpuBufferPool = GetD3D12GpuBufferPool();
@@ -157,8 +159,8 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 	// TODO
 	//m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
 	//m_gpuLinearAllocator.CleanupUsedPages(fenceValue);
-	//m_dynamicViewDescriptorHeap.CleanupUsedHeaps(fenceValue);
-	//m_dynamicSamplerDescriptorHeap.CleanupUsedHeaps(fenceValue);
+	m_dynamicViewDescriptorHeap.CleanupUsedHeaps(fenceValue);
+	m_dynamicSamplerDescriptorHeap.CleanupUsedHeaps(fenceValue);
 
 	if (bWaitForCompletion)
 	{
@@ -181,7 +183,7 @@ void CommandContext12::TransitionResource(ColorBuffer& colorBuffer, ResourceStat
 
 	ColorBufferHandle handle = colorBuffer.GetHandle();
 
-	ID3D12Resource* resource = m_colorBufferPool->GetResource(handle.get());
+	ID3D12Resource* resource = m_colorBufferManager->GetResource(handle.get());
 
 	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
 
@@ -251,7 +253,7 @@ void CommandContext12::ClearColor(ColorBuffer& colorBuffer)
 
 	ColorBufferHandle colorBufferHandle = colorBuffer.GetHandle();
 
-	m_commandList->ClearRenderTargetView(m_colorBufferPool->GetRTV(colorBufferHandle.get()), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(m_colorBufferManager->GetRTV(colorBufferHandle.get()), colorBuffer.GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
@@ -261,7 +263,7 @@ void CommandContext12::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 
 	ColorBufferHandle colorBufferHandle = colorBuffer.GetHandle();
 
-	m_commandList->ClearRenderTargetView(m_colorBufferPool->GetRTV(colorBufferHandle.get()), clearColor.GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(m_colorBufferManager->GetRTV(colorBufferHandle.get()), clearColor.GetPtr(), 0, nullptr);
 }
 
 
@@ -302,7 +304,7 @@ void CommandContext12::BeginRendering(ColorBuffer& renderTarget)
 
 	ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
 
-	m_rtvs[0] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+	m_rtvs[0] = m_colorBufferManager->GetRTV(colorBufferHandle.get());
 	m_rtvFormats[0] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
@@ -319,7 +321,7 @@ void CommandContext12::BeginRendering(ColorBuffer& renderTarget, DepthBuffer& de
 
 	ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
 
-	m_rtvs[0] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+	m_rtvs[0] = m_colorBufferManager->GetRTV(colorBufferHandle.get());
 	m_rtvFormats[0] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
@@ -364,7 +366,7 @@ void CommandContext12::BeginRendering(std::span<ColorBuffer> renderTargets)
 	{
 		ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
 
-		m_rtvs[i] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+		m_rtvs[i] = m_colorBufferManager->GetRTV(colorBufferHandle.get());
 		m_rtvFormats[i] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 		++i;
 	}
@@ -388,7 +390,7 @@ void CommandContext12::BeginRendering(std::span<ColorBuffer> renderTargets, Dept
 	{
 		ColorBufferHandle colorBufferHandle = renderTarget.GetHandle();
 
-		m_rtvs[i] = m_colorBufferPool->GetRTV(colorBufferHandle.get());
+		m_rtvs[i] = m_colorBufferManager->GetRTV(colorBufferHandle.get());
 		m_rtvFormats[i] = FormatToDxgi(renderTarget.GetFormat()).rtvFormat;
 		++i;
 	}
@@ -429,6 +431,8 @@ void CommandContext12::SetRootSignature(RootSignature& rootSignature)
 
 		m_commandList->SetGraphicsRootSignature(d3d12RootSignature);
 		m_graphicsRootSignature = d3d12RootSignature;
+		m_dynamicViewDescriptorHeap.ParseGraphicsRootSignature(rootSignature);
+		m_dynamicSamplerDescriptorHeap.ParseGraphicsRootSignature(rootSignature);
 	}
 	else
 	{
@@ -440,6 +444,8 @@ void CommandContext12::SetRootSignature(RootSignature& rootSignature)
 
 		m_commandList->SetComputeRootSignature(d3d12RootSignature);
 		m_computeRootSignature = d3d12RootSignature;
+		m_dynamicViewDescriptorHeap.ParseComputeRootSignature(rootSignature);
+		m_dynamicSamplerDescriptorHeap.ParseComputeRootSignature(rootSignature);
 	}
 }
 
@@ -611,6 +617,24 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
+void CommandContext12::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer)
+{
+	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+
+	auto handle = gpuBuffer.GetHandle();
+	uint64_t gpuAddress = m_gpuBufferPool->GetGpuAddress(handle.get());
+
+	if (m_type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuAddress);
+	}
+	else
+	{
+		m_commandList->SetComputeRootConstantBufferView(rootIndex, gpuAddress);
+	}
+}
+
+
 void CommandContext12::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
 {
 	SetDescriptors_Internal(rootIndex, descriptorSet.GetHandle().get());
@@ -632,6 +656,68 @@ void CommandContext12::SetResources(ResourceSet& resourceSet)
 	{
 		SetDescriptors_Internal(i, resourceSet[i].GetHandle().get());
 	}
+}
+
+
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	auto handle = colorBuffer.GetHandle();
+	auto descriptor = m_colorBufferManager->GetSRV(handle.get());
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+}
+
+
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+{
+	auto handle = depthBuffer.GetHandle();
+	auto descriptor = m_depthBufferPool->GetSRV(handle.get(), depthSrv);
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+}
+
+
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	auto handle = gpuBuffer.GetHandle();
+	auto descriptor = m_gpuBufferPool->GetSRV(handle.get());
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+}
+
+
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	auto handle = colorBuffer.GetHandle();
+	// TODO: Need a UAV index parameter
+	auto descriptor = m_colorBufferManager->GetUAV(handle.get(), 0);
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+}
+
+
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer)
+{
+	// TODO: support this
+	assert(false);
+}
+
+
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	auto handle = gpuBuffer.GetHandle();
+	auto descriptor = m_gpuBufferPool->GetUAV(handle.get());
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+}
+
+
+void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	auto handle = gpuBuffer.GetHandle();
+	auto descriptor = m_gpuBufferPool->GetCBV(handle.get());
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
 }
 
 
@@ -666,9 +752,8 @@ void CommandContext12::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t i
 	uint32_t startVertexLocation, uint32_t startInstanceLocation)
 {
 	FlushResourceBarriers();
-	// TODO
-	//m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
-	//m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
 	m_commandList->DrawInstanced(vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
 }
 
@@ -677,9 +762,8 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 	int32_t baseVertexLocation, uint32_t startInstanceLocation)
 {
 	FlushResourceBarriers();
-	// TODO
-	//m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
-	//m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
 	m_commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
@@ -805,6 +889,19 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 		{
 			m_commandList->SetComputeRootConstantBufferView(rootIndex, gpuFinalAddress);
 		}
+	}
+}
+
+
+void CommandContext12::SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[])
+{
+	if (m_type == CommandListType::Direct)
+	{
+		m_dynamicViewDescriptorHeap.SetGraphicsDescriptorHandles(rootIndex, offset, numDescriptors, handles);
+	}
+	else
+	{
+		m_dynamicViewDescriptorHeap.SetComputeDescriptorHandles(rootIndex, offset, numDescriptors, handles);
 	}
 }
 

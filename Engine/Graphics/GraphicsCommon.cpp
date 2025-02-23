@@ -120,9 +120,9 @@ IDeviceManager* GetDeviceManager()
 }
 
 
-IColorBufferPool* GetColorBufferPool()
+IColorBufferManager* GetColorBufferManager()
 {
-	return GetDeviceManager()->GetColorBufferPool();
+	return GetDeviceManager()->GetColorBufferManager();
 }
 
 

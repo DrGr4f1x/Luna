@@ -14,7 +14,7 @@
 
 #include "Graphics\GraphicsCommon.h"
 
-#include "ColorBufferPool12.h"
+#include "ColorBufferManager12.h"
 #include "CommandContext12.h"
 #include "DepthBufferPool12.h"
 #include "DescriptorSetPool12.h"
@@ -310,7 +310,7 @@ void DeviceManager::CreateDeviceResources()
 
 	CreateDevice();
 	
-	CreateResourcePools();
+	CreateResourceManagers();
 
 	// Create queues
 	m_queues[(uint32_t)QueueType::Graphics] = make_unique<Queue>(m_dxDevice.get(), QueueType::Graphics);
@@ -435,7 +435,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(GetD3D12ColorBufferPool()->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i).get());
+		swapChainBuffer.SetHandle(GetD3D12ColorBufferManager()->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i).get());
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 
@@ -514,9 +514,9 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IColorBufferPool* DeviceManager::GetColorBufferPool()
+IColorBufferManager* DeviceManager::GetColorBufferManager()
 {
-	return m_colorBufferPool.get();
+	return m_colorBufferManager.get();
 }
 
 
@@ -757,9 +757,9 @@ void DeviceManager::CreateDevice()
 }
 
 
-void DeviceManager::CreateResourcePools()
+void DeviceManager::CreateResourceManagers()
 {
-	m_colorBufferPool = make_unique<ColorBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
+	m_colorBufferManager = make_unique<ColorBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_depthBufferPool = make_unique<DepthBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_dxDevice.get());
 	m_gpuBufferPool = make_unique<GpuBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());

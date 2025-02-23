@@ -23,7 +23,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class ColorBufferPool;
+class ColorBufferManager;
 class DepthBufferPool;
 class DescriptorSetPool;
 class GpuBufferPool;
@@ -59,7 +59,7 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
-	IColorBufferPool* GetColorBufferPool() override;
+	IColorBufferManager* GetColorBufferManager() override;
 	IDepthBufferPool* GetDepthBufferPool() override;
 	IDescriptorSetPool* GetDescriptorSetPool() override;
 	IGpuBufferPool* GetGpuBufferPool() override;
@@ -121,7 +121,7 @@ private:
 	vkb::Swapchain m_vkbSwapchain;
 
 	// Vulkan resource pools
-	std::unique_ptr<ColorBufferPool> m_colorBufferPool;
+	std::unique_ptr<ColorBufferManager> m_colorBufferManager;
 	std::unique_ptr<DepthBufferPool> m_depthBufferPool;
 	std::unique_ptr<DescriptorSetPool> m_descriptorSetPool;
 	std::unique_ptr<GpuBufferPool> m_gpuBufferPool;

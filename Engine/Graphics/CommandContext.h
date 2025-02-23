@@ -90,8 +90,19 @@ public:
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
+	virtual void SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer) = 0;
 	virtual void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) = 0;
 	virtual void SetResources(ResourceSet& resourceSet) = 0;
+
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) = 0;
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv) = 0;
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) = 0;
+
+	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) = 0;
+	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer) = 0;
+	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) = 0;
+
+	virtual void SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) = 0;
 
 	virtual void SetIndexBuffer(const GpuBuffer& gpuBuffer) = 0;
 	virtual void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) = 0;
@@ -196,8 +207,19 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
+	void SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer);
 	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
+
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv = true);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer);
+
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer);
+
+	void SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer);
 
 	void SetIndexBuffer(const GpuBuffer& gpuBuffer);
 	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer);
@@ -453,6 +475,12 @@ inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam
 }
 
 
+inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer)
+{
+	m_contextImpl->SetConstantBuffer(rootIndex, gpuBuffer);
+}
+
+
 inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
 {
 	m_contextImpl->SetDescriptors(rootIndex, descriptorSet);
@@ -462,6 +490,48 @@ inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, DescriptorSet& d
 inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 {
 	m_contextImpl->SetResources(resourceSet);
+}
+
+
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	m_contextImpl->SetSRV(rootParam, offset, colorBuffer);
+}
+
+
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+{
+	m_contextImpl->SetSRV(rootParam, offset, depthBuffer, depthSrv);
+}
+
+
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	m_contextImpl->SetSRV(rootParam, offset, gpuBuffer);
+}
+
+
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	m_contextImpl->SetUAV(rootParam, offset, colorBuffer);
+}
+
+
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer)
+{
+	m_contextImpl->SetUAV(rootParam, offset, depthBuffer);
+}
+
+
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	m_contextImpl->SetUAV(rootParam, offset, gpuBuffer);
+}
+
+
+inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	m_contextImpl->SetCBV(rootParam, offset, gpuBuffer);
 }
 
 
