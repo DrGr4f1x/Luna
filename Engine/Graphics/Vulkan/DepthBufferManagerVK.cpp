@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "DepthBufferPoolVK.h"
+#include "DepthBufferManagerVK.h"
 
 #include "VulkanUtil.h"
 
@@ -18,14 +18,14 @@
 namespace Luna::VK
 {
 
-DepthBufferPool* g_depthBufferPool{ nullptr };
+DepthBufferManager* g_depthBufferManager{ nullptr };
 
 
-DepthBufferPool::DepthBufferPool(CVkDevice* device, CVmaAllocator* allocator)
+DepthBufferManager::DepthBufferManager(CVkDevice* device, CVmaAllocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
-	assert(g_depthBufferPool == nullptr);
+	assert(g_depthBufferManager == nullptr);
 
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -34,17 +34,17 @@ DepthBufferPool::DepthBufferPool(CVkDevice* device, CVmaAllocator* allocator)
 		m_depthBufferData[i] = DepthBufferData{};
 	}
 
-	g_depthBufferPool = this;
+	g_depthBufferManager = this;
 }
 
 
-DepthBufferPool::~DepthBufferPool()
+DepthBufferManager::~DepthBufferManager()
 {
-	g_depthBufferPool = nullptr;
+	g_depthBufferManager = nullptr;
 }
 
 
-DepthBufferHandle DepthBufferPool::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
+DepthBufferHandle DepthBufferManager::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -60,7 +60,7 @@ DepthBufferHandle DepthBufferPool::CreateDepthBuffer(const DepthBufferDesc& dept
 }
 
 
-void DepthBufferPool::DestroyHandle(DepthBufferHandleType* handle)
+void DepthBufferManager::DestroyHandle(DepthBufferHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -76,19 +76,19 @@ void DepthBufferPool::DestroyHandle(DepthBufferHandleType* handle)
 }
 
 
-ResourceType DepthBufferPool::GetResourceType(DepthBufferHandleType* handle) const
+ResourceType DepthBufferManager::GetResourceType(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).resourceType;
 }
 
 
-ResourceState DepthBufferPool::GetUsageState(DepthBufferHandleType* handle) const
+ResourceState DepthBufferManager::GetUsageState(DepthBufferHandleType* handle) const
 {
 	return GetData(handle).usageState;
 }
 
 
-void DepthBufferPool::SetUsageState(DepthBufferHandleType* handle, ResourceState newState)
+void DepthBufferManager::SetUsageState(DepthBufferHandleType* handle, ResourceState newState)
 {
 	assert(handle != nullptr);
 
@@ -97,67 +97,67 @@ void DepthBufferPool::SetUsageState(DepthBufferHandleType* handle, ResourceState
 }
 
 
-uint64_t DepthBufferPool::GetWidth(DepthBufferHandleType* handle) const
+uint64_t DepthBufferManager::GetWidth(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).width;
 }
 
 
-uint32_t DepthBufferPool::GetHeight(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetHeight(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).height;
 }
 
 
-uint32_t DepthBufferPool::GetDepthOrArraySize(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetDepthOrArraySize(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).arraySizeOrDepth;
 }
 
 
-uint32_t DepthBufferPool::GetNumMips(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetNumMips(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).numMips;
 }
 
 
-uint32_t DepthBufferPool::GetNumSamples(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetNumSamples(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).numSamples;
 }
 
 
-uint32_t DepthBufferPool::GetPlaneCount(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetPlaneCount(DepthBufferHandleType* handle) const
 {
 	return GetData(handle).planeCount;
 }
 
 
-Format DepthBufferPool::GetFormat(DepthBufferHandleType* handle) const
+Format DepthBufferManager::GetFormat(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).format;
 }
 
 
-float DepthBufferPool::GetClearDepth(DepthBufferHandleType* handle) const
+float DepthBufferManager::GetClearDepth(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).clearDepth;
 }
 
 
-uint8_t DepthBufferPool::GetClearStencil(DepthBufferHandleType* handle) const
+uint8_t DepthBufferManager::GetClearStencil(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).clearStencil;
 }
 
 
-VkImage DepthBufferPool::GetImage(DepthBufferHandleType* handle) const
+VkImage DepthBufferManager::GetImage(DepthBufferHandleType* handle) const
 {
 	return GetData(handle).image->Get();
 }
 
 
-VkImageView DepthBufferPool::GetImageView(DepthBufferHandleType* handle, DepthStencilAspect depthStencilAspect) const
+VkImageView DepthBufferManager::GetImageView(DepthBufferHandleType* handle, DepthStencilAspect depthStencilAspect) const
 {
 	assert(handle != nullptr);
 
@@ -172,7 +172,7 @@ VkImageView DepthBufferPool::GetImageView(DepthBufferHandleType* handle, DepthSt
 }
 
 
-VkDescriptorImageInfo DepthBufferPool::GetImageInfo(DepthBufferHandleType* handle, bool depthSrv) const
+VkDescriptorImageInfo DepthBufferManager::GetImageInfo(DepthBufferHandleType* handle, bool depthSrv) const
 {
 	assert(handle != nullptr);
 
@@ -181,7 +181,7 @@ VkDescriptorImageInfo DepthBufferPool::GetImageInfo(DepthBufferHandleType* handl
 }
 
 
-const DepthBufferDesc& DepthBufferPool::GetDesc(DepthBufferHandleType* handle) const
+const DepthBufferDesc& DepthBufferManager::GetDesc(DepthBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -190,7 +190,7 @@ const DepthBufferDesc& DepthBufferPool::GetDesc(DepthBufferHandleType* handle) c
 }
 
 
-const DepthBufferData& DepthBufferPool::GetData(DepthBufferHandleType* handle) const
+const DepthBufferData& DepthBufferManager::GetData(DepthBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -199,7 +199,7 @@ const DepthBufferData& DepthBufferPool::GetData(DepthBufferHandleType* handle) c
 }
 
 
-DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc)
+DepthBufferData DepthBufferManager::CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc)
 {
 	// Create depth image
 	ImageDesc imageDesc{
@@ -290,9 +290,9 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 }
 
 
-DepthBufferPool* const GetVulkanDepthBufferPool()
+DepthBufferManager* const GetVulkanDepthBufferManager()
 {
-	return g_depthBufferPool;
+	return g_depthBufferManager;
 }
 
 } // namespace Luna::VK

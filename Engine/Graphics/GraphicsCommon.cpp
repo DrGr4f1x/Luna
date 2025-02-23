@@ -126,9 +126,9 @@ IColorBufferManager* GetColorBufferManager()
 }
 
 
-IDepthBufferPool* GetDepthBufferPool()
+IDepthBufferManager* GetDepthBufferManager()
 {
-	return GetDeviceManager()->GetDepthBufferPool();
+	return GetDeviceManager()->GetDepthBufferManager();
 }
 
 

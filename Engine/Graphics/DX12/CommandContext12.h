@@ -31,7 +31,7 @@ namespace Luna::DX12
 
 // Forward declarations
 class ColorBufferManager;
-class DepthBufferPool;
+class DepthBufferManager;
 class DescriptorSetPool;
 class GpuBufferPool;
 class PipelineStatePool;
@@ -160,7 +160,7 @@ private:
 
 	// Pools
 	ColorBufferManager* m_colorBufferManager{ nullptr };
-	DepthBufferPool* m_depthBufferPool{ nullptr };
+	DepthBufferManager* m_depthBufferManager{ nullptr };
 	DescriptorSetPool* m_descriptorSetPool{ nullptr };
 	GpuBufferPool* m_gpuBufferPool{ nullptr };
 	PipelineStatePool* m_pipelineStatePool{ nullptr };

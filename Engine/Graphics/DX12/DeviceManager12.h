@@ -23,7 +23,7 @@ namespace Luna::DX12
 // Forward declarations
 struct DeviceCaps;
 class ColorBufferManager;
-class DepthBufferPool;
+class DepthBufferManager;
 class DescriptorAllocator;
 class DescriptorSetPool;
 class GpuBufferPool;
@@ -86,7 +86,7 @@ public:
 	Format GetDepthFormat() final;
 
 	IColorBufferManager* GetColorBufferManager() override;
-	IDepthBufferPool* GetDepthBufferPool() override;
+	IDepthBufferManager* GetDepthBufferManager() override;
 	IDescriptorSetPool* GetDescriptorSetPool() override;
 	IGpuBufferPool* GetGpuBufferPool() override;
 	IPipelineStatePool* GetPipelineStatePool() override;
@@ -150,7 +150,7 @@ private:
 
 	// DirectX resource managers
 	std::unique_ptr<ColorBufferManager> m_colorBufferManager;
-	std::unique_ptr<DepthBufferPool> m_depthBufferPool;
+	std::unique_ptr<DepthBufferManager> m_depthBufferManager;
 	std::unique_ptr<DescriptorSetPool> m_descriptorSetPool;
 	std::unique_ptr<GpuBufferPool> m_gpuBufferPool;
 	std::unique_ptr<PipelineStatePool> m_pipelineStatePool;

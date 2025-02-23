@@ -30,13 +30,13 @@ struct DepthBufferData
 };
 
 
-class DepthBufferPool : public IDepthBufferPool
+class DepthBufferManager : public IDepthBufferManager
 {
 	static const uint32_t MaxItems = (1 << 8);
 
 public:
-	explicit DepthBufferPool(CVkDevice* device, CVmaAllocator* allocator);
-	~DepthBufferPool();
+	explicit DepthBufferManager(CVkDevice* device, CVmaAllocator* allocator);
+	~DepthBufferManager();
 
 	// Create/Destroy DepthBuffer
 	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -84,6 +84,6 @@ private:
 };
 
 
-DepthBufferPool* const GetVulkanDepthBufferPool();
+DepthBufferManager* const GetVulkanDepthBufferManager();
 
 } // namespace Luna::VK

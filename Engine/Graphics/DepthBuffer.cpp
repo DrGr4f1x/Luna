@@ -27,73 +27,73 @@ DepthBufferHandleType::~DepthBufferHandleType()
 
 void DepthBuffer::Initialize(const DepthBufferDesc& depthBufferDesc)
 {
-	m_handle = GetDepthBufferPool()->CreateDepthBuffer(depthBufferDesc);
+	m_handle = GetDepthBufferManager()->CreateDepthBuffer(depthBufferDesc);
 }
 
 
 ResourceType DepthBuffer::GetResourceType() const
 {
-	return GetDepthBufferPool()->GetResourceType(m_handle.get());
+	return GetDepthBufferManager()->GetResourceType(m_handle.get());
 }
 
 
 ResourceState DepthBuffer::GetUsageState() const
 {
-	return GetDepthBufferPool()->GetUsageState(m_handle.get());
+	return GetDepthBufferManager()->GetUsageState(m_handle.get());
 }
 
 
 void DepthBuffer::SetUsageState(ResourceState newState)
 {
-	GetDepthBufferPool()->SetUsageState(m_handle.get(), newState);
+	GetDepthBufferManager()->SetUsageState(m_handle.get(), newState);
 }
 
 
 uint64_t DepthBuffer::GetWidth() const
 {
-	return GetDepthBufferPool()->GetWidth(m_handle.get());
+	return GetDepthBufferManager()->GetWidth(m_handle.get());
 }
 
 
 uint32_t DepthBuffer::GetHeight() const
 {
-	return GetDepthBufferPool()->GetHeight(m_handle.get());
+	return GetDepthBufferManager()->GetHeight(m_handle.get());
 }
 
 
 uint32_t DepthBuffer::GetDepth() const
 {
-	return GetDepthBufferPool()->GetDepthOrArraySize(m_handle.get());
+	return GetDepthBufferManager()->GetDepthOrArraySize(m_handle.get());
 }
 
 
 uint32_t DepthBuffer::GetArraySize() const
 {
-	return GetDepthBufferPool()->GetDepthOrArraySize(m_handle.get());
+	return GetDepthBufferManager()->GetDepthOrArraySize(m_handle.get());
 }
 
 
 uint32_t DepthBuffer::GetNumMips() const
 {
-	return GetDepthBufferPool()->GetNumMips(m_handle.get());
+	return GetDepthBufferManager()->GetNumMips(m_handle.get());
 }
 
 
 uint32_t DepthBuffer::GetNumSamples() const
 {
-	return GetDepthBufferPool()->GetNumSamples(m_handle.get());
+	return GetDepthBufferManager()->GetNumSamples(m_handle.get());
 }
 
 
 uint32_t DepthBuffer::GetPlaneCount() const
 {
-	return GetDepthBufferPool()->GetPlaneCount(m_handle.get());
+	return GetDepthBufferManager()->GetPlaneCount(m_handle.get());
 }
 
 
 Format DepthBuffer::GetFormat() const
 {
-	return GetDepthBufferPool()->GetFormat(m_handle.get());
+	return GetDepthBufferManager()->GetFormat(m_handle.get());
 }
 
 
@@ -105,13 +105,13 @@ TextureDimension DepthBuffer::GetDimension() const
 
 float DepthBuffer::GetClearDepth() const
 {
-	return GetDepthBufferPool()->GetClearDepth(m_handle.get());
+	return GetDepthBufferManager()->GetClearDepth(m_handle.get());
 }
 
 
 uint8_t DepthBuffer::GetClearStencil() const
 {
-	return GetDepthBufferPool()->GetClearStencil(m_handle.get());
+	return GetDepthBufferManager()->GetClearStencil(m_handle.get());
 }
 
 } // namespace Luna

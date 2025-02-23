@@ -13,7 +13,7 @@
 #include "DescriptorSetPoolVK.h"
 
 #include "Graphics\Vulkan\ColorBufferManagerVK.h"
-#include "Graphics\Vulkan\DepthBufferPoolVK.h"
+#include "Graphics\Vulkan\DepthBufferManagerVK.h"
 #include "Graphics\Vulkan\GpuBufferPoolVK.h"
 
 
@@ -156,7 +156,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 
 	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
 
-	auto depthBufferPool = GetVulkanDepthBufferPool();
+	auto depthBufferManager = GetVulkanDepthBufferManager();
 	auto depthBufferHandle = depthBuffer.GetHandle();
 
 	writeSet.descriptorCount = 1;
@@ -165,7 +165,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
 	writeSet.dstArrayElement = 0;
 
-	data.descriptorData[slot] = depthBufferPool->GetImageInfo(depthBufferHandle.get(), depthSrv);
+	data.descriptorData[slot] = depthBufferManager->GetImageInfo(depthBufferHandle.get(), depthSrv);
 	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
 
 	data.dirtyBits |= (1 << slot);

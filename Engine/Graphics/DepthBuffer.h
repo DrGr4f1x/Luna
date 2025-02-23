@@ -44,13 +44,13 @@ struct DepthBufferDesc
 };
 
 
-class IDepthBufferPool;
+class IDepthBufferManager;
 
 
 class __declspec(uuid("BFA0209B-629D-4A01-9E6E-5A4D2F8D884D")) DepthBufferHandleType : public RefCounted<DepthBufferHandleType>
 {
 public:
-	DepthBufferHandleType(uint32_t index, IDepthBufferPool* pool)
+	DepthBufferHandleType(uint32_t index, IDepthBufferManager* pool)
 		: m_index{ index }
 		, m_pool{ pool }
 	{}
@@ -60,13 +60,13 @@ public:
 
 private:
 	uint32_t m_index{ 0 };
-	IDepthBufferPool* m_pool{ nullptr };
+	IDepthBufferManager* m_pool{ nullptr };
 };
 
 using DepthBufferHandle = wil::com_ptr<DepthBufferHandleType>;
 
 
-class IDepthBufferPool
+class IDepthBufferManager
 {
 public:
 	// Create/Destroy DepthBuffer

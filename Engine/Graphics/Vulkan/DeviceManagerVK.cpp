@@ -14,7 +14,7 @@
 
 #include "ColorBufferManagerVK.h"
 #include "CommandContextVK.h"
-#include "DepthBufferPoolVK.h"
+#include "DepthBufferManagerVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "DescriptorSetPoolVK.h"
 #include "GpuBufferPoolVK.h"
@@ -469,9 +469,9 @@ IColorBufferManager* DeviceManager::GetColorBufferManager()
 }
 
 
-IDepthBufferPool* DeviceManager::GetDepthBufferPool()
+IDepthBufferManager* DeviceManager::GetDepthBufferManager()
 {
-	return m_depthBufferPool.get();
+	return m_depthBufferManager.get();
 }
 
 
@@ -651,7 +651,7 @@ void DeviceManager::CreateDevice()
 void DeviceManager::CreateResourcePools()
 {
 	m_colorBufferManager = make_unique<ColorBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
-	m_depthBufferPool = make_unique<DepthBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_depthBufferManager = make_unique<DepthBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_vkDevice.get());
 	m_gpuBufferPool = make_unique<GpuBufferPool>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_pipelineStatePool = make_unique<PipelineStatePool>(m_vkDevice.get());

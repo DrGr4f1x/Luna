@@ -28,13 +28,13 @@ struct DepthBufferData
 };
 
 
-class DepthBufferPool : public IDepthBufferPool
+class DepthBufferManager : public IDepthBufferManager
 {
 	static const uint32_t MaxItems = (1 << 8);
 
 public:
-	DepthBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator);
-	~DepthBufferPool();
+	DepthBufferManager(ID3D12Device* device, D3D12MA::Allocator* allocator);
+	~DepthBufferManager();
 
 	// Create/Destroy DepthBuffer
 	DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -82,6 +82,6 @@ private:
 };
 
 
-DepthBufferPool* const GetD3D12DepthBufferPool();
+DepthBufferManager* const GetD3D12DepthBufferManager();
 
 } // namespace Luna::DX12

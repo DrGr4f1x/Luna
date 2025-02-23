@@ -13,7 +13,7 @@
 #include "DescriptorSetPool12.h"
 
 #include "Graphics\DX12\ColorBufferManager12.h"
-#include "Graphics\DX12\DepthBufferPool12.h"
+#include "Graphics\DX12\DepthBufferManager12.h"
 #include "Graphics\DX12\GpuBufferPool12.h"
 
 
@@ -132,10 +132,10 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto depthBufferPool = GetD3D12DepthBufferPool();
+	auto depthBufferManager = GetD3D12DepthBufferManager();
 	auto depthBufferHandle = depthBuffer.GetHandle();
 
-	SetDescriptor(data, slot, depthBufferPool->GetSRV(depthBufferHandle.get(), depthSrv));
+	SetDescriptor(data, slot, depthBufferManager->GetSRV(depthBufferHandle.get(), depthSrv));
 }
 
 
@@ -182,7 +182,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto depthBufferPool = GetD3D12DepthBufferPool();
+	auto depthBufferManager = GetD3D12DepthBufferManager();
 	auto depthBufferHandle = depthBuffer.GetHandle();
 
 	assert_msg(false, "Depth UAVs not yet supported");

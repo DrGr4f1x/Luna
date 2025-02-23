@@ -10,19 +10,19 @@
 
 #include "Stdafx.h"
 
-#include "DepthBufferPool12.h"
+#include "DepthBufferManager12.h"
 
 namespace Luna::DX12
 {
 
-DepthBufferPool* g_depthBufferPool{ nullptr };
+DepthBufferManager* g_depthBufferManager{ nullptr };
 
 
-DepthBufferPool::DepthBufferPool(ID3D12Device* device, D3D12MA::Allocator* allocator)
+DepthBufferManager::DepthBufferManager(ID3D12Device* device, D3D12MA::Allocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
-	assert(g_depthBufferPool == nullptr);
+	assert(g_depthBufferManager == nullptr);
 
 	for (uint32_t i = 0; i < MaxItems; ++i)
 	{
@@ -31,17 +31,17 @@ DepthBufferPool::DepthBufferPool(ID3D12Device* device, D3D12MA::Allocator* alloc
 		m_depthBufferData[i] = DepthBufferData{};
 	}
 
-	g_depthBufferPool = this;
+	g_depthBufferManager = this;
 }
 
 
-DepthBufferPool::~DepthBufferPool()
+DepthBufferManager::~DepthBufferManager()
 {
-	g_depthBufferPool = nullptr;
+	g_depthBufferManager = nullptr;
 }
 
 
-DepthBufferHandle DepthBufferPool::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
+DepthBufferHandle DepthBufferManager::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -57,7 +57,7 @@ DepthBufferHandle DepthBufferPool::CreateDepthBuffer(const DepthBufferDesc& dept
 }
 
 
-void DepthBufferPool::DestroyHandle(DepthBufferHandleType* handle)
+void DepthBufferManager::DestroyHandle(DepthBufferHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -73,19 +73,19 @@ void DepthBufferPool::DestroyHandle(DepthBufferHandleType* handle)
 }
 
 
-ResourceType DepthBufferPool::GetResourceType(DepthBufferHandleType* handle) const
+ResourceType DepthBufferManager::GetResourceType(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).resourceType;
 }
 
 
-ResourceState DepthBufferPool::GetUsageState(DepthBufferHandleType* handle) const
+ResourceState DepthBufferManager::GetUsageState(DepthBufferHandleType* handle) const
 {
 	return GetData(handle).usageState;
 }
 
 
-void DepthBufferPool::SetUsageState(DepthBufferHandleType* handle, ResourceState newState)
+void DepthBufferManager::SetUsageState(DepthBufferHandleType* handle, ResourceState newState)
 {
 	assert(handle != nullptr);
 
@@ -94,67 +94,67 @@ void DepthBufferPool::SetUsageState(DepthBufferHandleType* handle, ResourceState
 }
 
 
-uint64_t DepthBufferPool::GetWidth(DepthBufferHandleType* handle) const
+uint64_t DepthBufferManager::GetWidth(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).width;
 }
 
 
-uint32_t DepthBufferPool::GetHeight(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetHeight(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).height;
 }
 
 
-uint32_t DepthBufferPool::GetDepthOrArraySize(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetDepthOrArraySize(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).arraySizeOrDepth;
 }
 
 
-uint32_t DepthBufferPool::GetNumMips(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetNumMips(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).numMips;
 }
 
 
-uint32_t DepthBufferPool::GetNumSamples(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetNumSamples(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).numSamples;
 }
 
 
-uint32_t DepthBufferPool::GetPlaneCount(DepthBufferHandleType* handle) const
+uint32_t DepthBufferManager::GetPlaneCount(DepthBufferHandleType* handle) const
 {
 	return GetData(handle).planeCount;
 }
 
 
-Format DepthBufferPool::GetFormat(DepthBufferHandleType* handle) const
+Format DepthBufferManager::GetFormat(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).format;
 }
 
 
-float DepthBufferPool::GetClearDepth(DepthBufferHandleType* handle) const
+float DepthBufferManager::GetClearDepth(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).clearDepth;
 }
 
 
-uint8_t DepthBufferPool::GetClearStencil(DepthBufferHandleType* handle) const
+uint8_t DepthBufferManager::GetClearStencil(DepthBufferHandleType* handle) const
 {
 	return GetDesc(handle).clearStencil;
 }
 
 
-ID3D12Resource* DepthBufferPool::GetResource(DepthBufferHandleType* handle) const
+ID3D12Resource* DepthBufferManager::GetResource(DepthBufferHandleType* handle) const
 {
 	return GetData(handle).resource.get();
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthBufferPool::GetSRV(DepthBufferHandleType* handle, bool depthSrv) const
+D3D12_CPU_DESCRIPTOR_HANDLE DepthBufferManager::GetSRV(DepthBufferHandleType* handle, bool depthSrv) const
 {
 	assert(handle != nullptr);
 
@@ -163,7 +163,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DepthBufferPool::GetSRV(DepthBufferHandleType* handl
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthBufferPool::GetDSV(DepthBufferHandleType* handle, DepthStencilAspect depthStencilAspect) const
+D3D12_CPU_DESCRIPTOR_HANDLE DepthBufferManager::GetDSV(DepthBufferHandleType* handle, DepthStencilAspect depthStencilAspect) const
 {
 	assert(handle != nullptr);
 
@@ -179,7 +179,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DepthBufferPool::GetDSV(DepthBufferHandleType* handl
 }
 
 
-const DepthBufferDesc& DepthBufferPool::GetDesc(DepthBufferHandleType* handle) const
+const DepthBufferDesc& DepthBufferManager::GetDesc(DepthBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -188,7 +188,7 @@ const DepthBufferDesc& DepthBufferPool::GetDesc(DepthBufferHandleType* handle) c
 }
 
 
-const DepthBufferData& DepthBufferPool::GetData(DepthBufferHandleType* handle) const
+const DepthBufferData& DepthBufferManager::GetData(DepthBufferHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -197,7 +197,7 @@ const DepthBufferData& DepthBufferPool::GetData(DepthBufferHandleType* handle) c
 }
 
 
-DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc)
+DepthBufferData DepthBufferManager::CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc)
 {
 	// Create resource
 	D3D12_RESOURCE_DESC resourceDesc{
@@ -316,9 +316,9 @@ DepthBufferData DepthBufferPool::CreateDepthBuffer_Internal(const DepthBufferDes
 }
 
 
-DepthBufferPool* const GetD3D12DepthBufferPool()
+DepthBufferManager* const GetD3D12DepthBufferManager()
 {
-	return g_depthBufferPool;
+	return g_depthBufferManager;
 }
 
 } // namespace Luna::DX12

@@ -16,7 +16,7 @@
 
 #include "ColorBufferManager12.h"
 #include "CommandContext12.h"
-#include "DepthBufferPool12.h"
+#include "DepthBufferManager12.h"
 #include "DescriptorSetPool12.h"
 #include "DeviceCaps12.h"
 #include "GpuBufferPool12.h"
@@ -520,9 +520,9 @@ IColorBufferManager* DeviceManager::GetColorBufferManager()
 }
 
 
-IDepthBufferPool* DeviceManager::GetDepthBufferPool()
+IDepthBufferManager* DeviceManager::GetDepthBufferManager()
 {
-	return m_depthBufferPool.get();
+	return m_depthBufferManager.get();
 }
 
 
@@ -760,7 +760,7 @@ void DeviceManager::CreateDevice()
 void DeviceManager::CreateResourceManagers()
 {
 	m_colorBufferManager = make_unique<ColorBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
-	m_depthBufferPool = make_unique<DepthBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
+	m_depthBufferManager = make_unique<DepthBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_dxDevice.get());
 	m_gpuBufferPool = make_unique<GpuBufferPool>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_pipelineStatePool = make_unique<PipelineStatePool>(m_dxDevice.get());

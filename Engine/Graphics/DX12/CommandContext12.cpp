@@ -15,7 +15,7 @@
 #include "Graphics\ResourceSet.h"
 
 #include "ColorBufferManager12.h"
-#include "DepthBufferPool12.h"
+#include "DepthBufferManager12.h"
 #include "DescriptorSetPool12.h"
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
@@ -118,7 +118,7 @@ void CommandContext12::Initialize()
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 
 	m_colorBufferManager = GetD3D12ColorBufferManager();
-	m_depthBufferPool = GetD3D12DepthBufferPool();
+	m_depthBufferManager = GetD3D12DepthBufferManager();
 	m_descriptorSetPool = GetD3D12DescriptorSetPool();
 	m_gpuBufferPool = GetD3D12GpuBufferPool();
 	m_pipelineStatePool = GetD3D12PipelineStatePool();
@@ -203,7 +203,7 @@ void CommandContext12::TransitionResource(DepthBuffer& depthBuffer, ResourceStat
 
 	DepthBufferHandle handle = depthBuffer.GetHandle();
 
-	ID3D12Resource* resource = m_depthBufferPool->GetResource(handle.get());
+	ID3D12Resource* resource = m_depthBufferManager->GetResource(handle.get());
 
 	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
 
@@ -273,7 +273,7 @@ void CommandContext12::ClearDepth(DepthBuffer& depthBuffer)
 
 	DepthBufferHandle handle = depthBuffer.GetHandle();
 
-	m_commandList->ClearDepthStencilView(m_depthBufferPool->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(m_depthBufferManager->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 
@@ -283,7 +283,7 @@ void CommandContext12::ClearStencil(DepthBuffer& depthBuffer)
 
 	DepthBufferHandle handle = depthBuffer.GetHandle();
 
-	m_commandList->ClearDepthStencilView(m_depthBufferPool->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(m_depthBufferManager->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 
@@ -293,7 +293,7 @@ void CommandContext12::ClearDepthAndStencil(DepthBuffer& depthBuffer)
 
 	DepthBufferHandle handle = depthBuffer.GetHandle();
 
-	m_commandList->ClearDepthStencilView(m_depthBufferPool->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(m_depthBufferManager->GetDSV(handle.get(), DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer.GetClearDepth(), depthBuffer.GetClearStencil(), 0, nullptr);
 }
 
 
@@ -327,7 +327,7 @@ void CommandContext12::BeginRendering(ColorBuffer& renderTarget, DepthBuffer& de
 
 	DepthBufferHandle handle = depthTarget.GetHandle();
 
-	m_dsv = m_depthBufferPool->GetDSV(handle.get(), depthStencilAspect);
+	m_dsv = m_depthBufferManager->GetDSV(handle.get(), depthStencilAspect);
 	m_dsvFormat = FormatToDxgi(depthTarget.GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -344,7 +344,7 @@ void CommandContext12::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspe
 
 	DepthBufferHandle handle = depthTarget.GetHandle();
 
-	m_dsv = m_depthBufferPool->GetDSV(handle.get(), depthStencilAspect);
+	m_dsv = m_depthBufferManager->GetDSV(handle.get(), depthStencilAspect);
 	m_dsvFormat = FormatToDxgi(depthTarget.GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -398,7 +398,7 @@ void CommandContext12::BeginRendering(std::span<ColorBuffer> renderTargets, Dept
 
 	DepthBufferHandle handle = depthTarget.GetHandle();
 
-	m_dsv = m_depthBufferPool->GetDSV(handle.get(), depthStencilAspect);
+	m_dsv = m_depthBufferManager->GetDSV(handle.get(), depthStencilAspect);
 	m_dsvFormat = FormatToDxgi(depthTarget.GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -671,7 +671,7 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBu
 void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	auto handle = depthBuffer.GetHandle();
-	auto descriptor = m_depthBufferPool->GetSRV(handle.get(), depthSrv);
+	auto descriptor = m_depthBufferManager->GetSRV(handle.get(), depthSrv);
 
 	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
 }

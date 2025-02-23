@@ -21,7 +21,7 @@ namespace Luna
 // Forward declarations
 class CommandContext;
 class IColorBufferManager;
-class IDepthBufferPool;
+class IDepthBufferManager;
 class IDescriptorSetPool;
 class IGpuBufferPool;
 class IPipelineStatePool;
@@ -114,7 +114,7 @@ public:
 	virtual Format GetDepthFormat() = 0;
 
 	virtual IColorBufferManager* GetColorBufferManager() = 0;
-	virtual IDepthBufferPool* GetDepthBufferPool() = 0;
+	virtual IDepthBufferManager* GetDepthBufferManager() = 0;
 	virtual IDescriptorSetPool* GetDescriptorSetPool() = 0;
 	virtual IGpuBufferPool* GetGpuBufferPool() = 0;
 	virtual IPipelineStatePool* GetPipelineStatePool() = 0;

@@ -16,7 +16,7 @@
 #include "Graphics\ResourceSet.h"
 
 #include "ColorBufferManagerVK.h"
-#include "DepthBufferPoolVK.h"
+#include "DepthBufferManagerVK.h"
 #include "DescriptorSetPoolVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferPoolVK.h"
@@ -72,10 +72,10 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTa
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	auto depthBufferPool = GetVulkanDepthBufferPool();
+	auto depthBufferManager = GetVulkanDepthBufferManager();
 	auto handle = depthTarget.GetHandle();
 
-	VkImageView imageView = depthBufferPool->GetImageView(handle.get(), depthStencilAspect);
+	VkImageView imageView = depthBufferManager->GetImageView(handle.get(), depthStencilAspect);
 
 	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
@@ -172,7 +172,7 @@ void CommandContextVK::Initialize()
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 
 	m_colorBufferManager = GetVulkanColorBufferManager();
-	m_depthBufferPool = GetVulkanDepthBufferPool();
+	m_depthBufferManager = GetVulkanDepthBufferManager();
 	m_descriptorSetPool = GetVulkanDescriptorSetPool();
 	m_gpuBufferPool = GetVulkanGpuBufferPool();
 	m_pipelineStatePool = GetVulkanPipelineStatePool();
@@ -265,7 +265,7 @@ void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceStat
 	DepthBufferHandle handle = depthBuffer.GetHandle();
 
 	TextureBarrier barrier{
-		.image				= m_depthBufferPool->GetImage(handle.get()),
+		.image				= m_depthBufferManager->GetImage(handle.get()),
 		.format				= FormatToVulkan(depthBuffer.GetFormat()),
 		.imageAspect		= GetImageAspect(depthBuffer.GetFormat()),
 		.beforeState		= depthBuffer.GetUsageState(),
@@ -457,7 +457,7 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, V
 
 	DepthBufferHandle handle = depthBuffer.GetHandle();
 
-	vkCmdClearDepthStencilImage(m_commandBuffer, m_depthBufferPool->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+	vkCmdClearDepthStencilImage(m_commandBuffer, m_depthBufferManager->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
 
 	TransitionResource(depthBuffer, oldState, false);
 }
