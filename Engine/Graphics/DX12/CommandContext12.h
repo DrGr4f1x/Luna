@@ -35,7 +35,7 @@ class DepthBufferManager;
 class DescriptorSetManager;
 class GpuBufferManager;
 class PipelineStateManager;
-class RootSignaturePool;
+class RootSignatureManager;
 
 
 class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
@@ -158,13 +158,13 @@ private:
 
 	bool m_bHasPendingDebugEvent{ false };
 
-	// Pools
+	// Managers
 	ColorBufferManager* m_colorBufferManager{ nullptr };
 	DepthBufferManager* m_depthBufferManager{ nullptr };
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	GpuBufferManager* m_gpuBufferManager{ nullptr };
 	PipelineStateManager* m_pipelineStateManager{ nullptr };
-	RootSignaturePool* m_rootSignaturePool{ nullptr };
+	RootSignatureManager* m_rootSignatureManager{ nullptr };
 
 	// Render target state
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 8> m_rtvs;

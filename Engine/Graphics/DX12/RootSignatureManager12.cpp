@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "RootSignaturePool12.h"
+#include "RootSignatureManager12.h"
 
 #include "DescriptorSetManager12.h"
 
@@ -18,13 +18,13 @@
 namespace Luna::DX12
 {
 
-RootSignaturePool* g_rootSignaturePool{ nullptr };
+RootSignatureManager* g_rootSignatureManager{ nullptr };
 
 
-RootSignaturePool::RootSignaturePool(ID3D12Device* device)
+RootSignatureManager::RootSignatureManager(ID3D12Device* device)
 	: m_device{ device }
 {
-	assert(g_rootSignaturePool == nullptr);
+	assert(g_rootSignatureManager == nullptr);
 
 	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
@@ -34,17 +34,17 @@ RootSignaturePool::RootSignaturePool(ID3D12Device* device)
 		m_descs[i] = RootSignatureDesc{};
 	}
 
-	g_rootSignaturePool = this;
+	g_rootSignatureManager = this;
 }
 
 
-RootSignaturePool::~RootSignaturePool()
+RootSignatureManager::~RootSignatureManager()
 {
-	g_rootSignaturePool = nullptr;
+	g_rootSignatureManager = nullptr;
 }
 
 
-RootSignatureHandle RootSignaturePool::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+RootSignatureHandle RootSignatureManager::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -61,7 +61,7 @@ RootSignatureHandle RootSignaturePool::CreateRootSignature(const RootSignatureDe
 }
 
 
-void RootSignaturePool::DestroyHandle(RootSignatureHandleType* handle)
+void RootSignatureManager::DestroyHandle(RootSignatureHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -77,7 +77,7 @@ void RootSignaturePool::DestroyHandle(RootSignatureHandleType* handle)
 }
 
 
-const RootSignatureDesc& RootSignaturePool::GetDesc(const RootSignatureHandleType* handle) const
+const RootSignatureDesc& RootSignatureManager::GetDesc(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -86,13 +86,13 @@ const RootSignatureDesc& RootSignaturePool::GetDesc(const RootSignatureHandleTyp
 }
 
 
-uint32_t RootSignaturePool::GetNumRootParameters(const RootSignatureHandleType* handle) const
+uint32_t RootSignatureManager::GetNumRootParameters(const RootSignatureHandleType* handle) const
 {
 	return (uint32_t)GetDesc(handle).rootParameters.size();
 }
 
 
-DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const
+DescriptorSetHandle RootSignatureManager::CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const
 {
 	const auto& rootSignatureDesc = GetDesc(handle);
 
@@ -121,7 +121,7 @@ DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleTy
 }
 
 
-ID3D12RootSignature* RootSignaturePool::GetRootSignature(const RootSignatureHandleType* handle) const
+ID3D12RootSignature* RootSignatureManager::GetRootSignature(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -130,25 +130,25 @@ ID3D12RootSignature* RootSignaturePool::GetRootSignature(const RootSignatureHand
 }
 
 
-uint32_t RootSignaturePool::GetDescriptorTableBitmap(const RootSignatureHandleType* handle) const
+uint32_t RootSignatureManager::GetDescriptorTableBitmap(const RootSignatureHandleType* handle) const
 {
 	return GetData(handle).descriptorTableBitmap;
 }
 
 
-uint32_t RootSignaturePool::GetSamplerTableBitmap(const RootSignatureHandleType* handle) const
+uint32_t RootSignatureManager::GetSamplerTableBitmap(const RootSignatureHandleType* handle) const
 {
 	return GetData(handle).samplerTableBitmap;
 }
 
 
-const vector<uint32_t>& RootSignaturePool::GetDescriptorTableSize(const RootSignatureHandleType* handle) const
+const vector<uint32_t>& RootSignatureManager::GetDescriptorTableSize(const RootSignatureHandleType* handle) const
 {
 	return GetData(handle).descriptorTableSizes;
 }
 
 
-const RootSignatureData& RootSignaturePool::GetData(const RootSignatureHandleType* handle) const
+const RootSignatureData& RootSignatureManager::GetData(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -157,7 +157,7 @@ const RootSignatureData& RootSignaturePool::GetData(const RootSignatureHandleTyp
 }
 
 
-RootSignatureData RootSignaturePool::FindOrCreateRootSignatureData(const RootSignatureDesc& rootSignatureDesc)
+RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const RootSignatureDesc& rootSignatureDesc)
 {
 	std::vector<D3D12_ROOT_PARAMETER1> d3d12RootParameters;
 
@@ -331,9 +331,9 @@ RootSignatureData RootSignaturePool::FindOrCreateRootSignatureData(const RootSig
 }
 
 
-RootSignaturePool* const GetD3D12RootSignaturePool()
+RootSignatureManager* const GetD3D12RootSignatureManager()
 {
-	return g_rootSignaturePool;
+	return g_rootSignatureManager;
 }
 
 } // namespace Luna::DX12

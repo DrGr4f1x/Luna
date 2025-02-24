@@ -150,9 +150,9 @@ IPipelineStateManager* GetPipelineStateManager()
 }
 
 
-IRootSignaturePool* GetRootSignaturePool()
+IRootSignatureManager* GetRootSignatureManager()
 {
-	return GetDeviceManager()->GetRootSignaturePool();
+	return GetDeviceManager()->GetRootSignatureManager();
 }
 
 } // namespace Luna

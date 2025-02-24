@@ -17,7 +17,7 @@
 #include "Graphics\Shader.h"
 
 #include "DeviceManagerVK.h"
-#include "RootSignaturePoolVK.h"
+#include "RootSignatureManagerVK.h"
 
 using namespace std;
 
@@ -380,7 +380,7 @@ wil::com_ptr<CVkPipeline> PipelineStateManager::FindOrCreateGraphicsPipelineStat
 		.pDepthStencilState		= &depthStencilInfo,
 		.pColorBlendState		= &blendStateInfo,
 		.pDynamicState			= &dynamicStateInfo,
-		.layout					= GetVulkanRootSignaturePool()->GetPipelineLayout(pipelineDesc.rootSignature.get()),
+		.layout					= GetVulkanRootSignatureManager()->GetPipelineLayout(pipelineDesc.rootSignature.get()),
 		.renderPass				= VK_NULL_HANDLE,
 		.subpass				= 0,
 		.basePipelineHandle		= VK_NULL_HANDLE,

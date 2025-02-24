@@ -14,7 +14,7 @@
 
 #include "FileSystem.h"
 
-#include "RootSignaturePool12.h"
+#include "RootSignatureManager12.h"
 #include "Shader12.h"
 
 using namespace std;
@@ -290,8 +290,7 @@ wil::com_ptr<ID3D12PipelineState> PipelineStateManager::FindOrCreateGraphicsPipe
 	}
 
 	// Make sure the root signature is finalized first
-	// TODO: RootSignature should be a Handle from the RootSignaturePool
-	d3d12PipelineDesc.pRootSignature = GetD3D12RootSignaturePool()->GetRootSignature(pipelineDesc.rootSignature.get());
+	d3d12PipelineDesc.pRootSignature = GetD3D12RootSignatureManager()->GetRootSignature(pipelineDesc.rootSignature.get());
 	assert(d3d12PipelineDesc.pRootSignature != nullptr);
 
 	d3d12PipelineDesc.InputLayout.pInputElementDescs = nullptr;

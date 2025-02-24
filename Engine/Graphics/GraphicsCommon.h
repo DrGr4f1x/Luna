@@ -24,7 +24,7 @@ class IDepthBufferManager;
 class IDescriptorSetManager;
 class IGpuBufferManager;
 class IPipelineStateManager;
-class IRootSignaturePool;
+class IRootSignatureManager;
 
 
 // Constants
@@ -106,7 +106,7 @@ IDepthBufferManager* GetDepthBufferManager();
 IDescriptorSetManager* GetDescriptorSetManager();
 IGpuBufferManager* GetGpuBufferManager();
 IPipelineStateManager* GetPipelineStateManager();
-IRootSignaturePool* GetRootSignaturePool();
+IRootSignatureManager* GetRootSignatureManager();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

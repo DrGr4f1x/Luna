@@ -29,7 +29,7 @@ class DescriptorSetManager;
 class GpuBufferManager;
 class PipelineStateManager;
 class Queue;
-class RootSignaturePool;
+class RootSignatureManager;
 
 
 class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
@@ -64,7 +64,7 @@ public:
 	IDescriptorSetManager* GetDescriptorSetManager() override;
 	IGpuBufferManager* GetGpuBufferManager() override;
 	IPipelineStateManager* GetPipelineStateManager() override;
-	IRootSignaturePool* GetRootSignaturePool() override;
+	IRootSignatureManager* GetRootSignatureManager() override;
 
 	void ReleaseImage(CVkImage* image);
 	void ReleaseBuffer(CVkBuffer* buffer);
@@ -120,13 +120,13 @@ private:
 	vkb::Device m_vkbDevice;
 	vkb::Swapchain m_vkbSwapchain;
 
-	// Vulkan resource pools
+	// Vulkan resource managers
 	std::unique_ptr<ColorBufferManager> m_colorBufferManager;
 	std::unique_ptr<DepthBufferManager> m_depthBufferManager;
 	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
 	std::unique_ptr<GpuBufferManager> m_gpuBufferManager;
 	std::unique_ptr<PipelineStateManager> m_pipelineStateManager;
-	std::unique_ptr<RootSignaturePool> m_rootSignaturePool;
+	std::unique_ptr<RootSignatureManager> m_rootSignatureManager;
 
 	// Swapchain
 	wil::com_ptr<CVkSwapchain> m_vkSwapChain;

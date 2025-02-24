@@ -14,7 +14,7 @@
 
 #include "CommandContext12.h"
 #include "DeviceManager12.h"
-#include "RootSignaturePool12.h"
+#include "RootSignatureManager12.h"
 
 using namespace std;
 
@@ -341,18 +341,18 @@ void DynamicDescriptorHeap::DescriptorHandleCache::ParseRootSignature(D3D12_DESC
 {
 	uint32_t currentOffset = 0;
 
-	auto pool = GetD3D12RootSignaturePool();
+	auto manager = GetD3D12RootSignatureManager();
 	auto handle = rootSig.GetHandle();
 
-	assert_msg(pool->GetNumRootParameters(handle.get()) <= 16, "Maybe we need to support something greater");
+	assert_msg(manager->GetNumRootParameters(handle.get()) <= 16, "Maybe we need to support something greater");
 
 	m_staleRootParamsBitMap = 0;
 	m_rootDescriptorTablesBitMap = (type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER ?
-		pool->GetSamplerTableBitmap(handle.get()) : pool->GetDescriptorTableBitmap(handle.get()));
+		manager->GetSamplerTableBitmap(handle.get()) : manager->GetDescriptorTableBitmap(handle.get()));
 
 	unsigned long tableParams = m_rootDescriptorTablesBitMap;
 	unsigned long rootIndex;
-	const vector<uint32_t> descriptorTableSize = pool->GetDescriptorTableSize(handle.get());
+	const vector<uint32_t> descriptorTableSize = manager->GetDescriptorTableSize(handle.get());
 	while (_BitScanForward(&rootIndex, tableParams))
 	{
 		tableParams ^= (1 << rootIndex);

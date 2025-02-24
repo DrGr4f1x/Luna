@@ -29,7 +29,7 @@ class DescriptorSetManager;
 class GpuBufferManager;
 class PipelineStateManager;
 class Queue;
-class RootSignaturePool;
+class RootSignatureManager;
 
 
 struct DxgiRLOHelper
@@ -90,7 +90,7 @@ public:
 	IDescriptorSetManager* GetDescriptorSetManager() override;
 	IGpuBufferManager* GetGpuBufferManager() override;
 	IPipelineStateManager* GetPipelineStateManager() override;
-	IRootSignaturePool* GetRootSignaturePool() override;
+	IRootSignatureManager* GetRootSignatureManager() override;
 
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
@@ -154,7 +154,7 @@ private:
 	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
 	std::unique_ptr<GpuBufferManager> m_gpuBufferManager;
 	std::unique_ptr<PipelineStateManager> m_pipelineStateManager;
-	std::unique_ptr<RootSignaturePool> m_rootSignaturePool;
+	std::unique_ptr<RootSignatureManager> m_rootSignatureManager;
 
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;

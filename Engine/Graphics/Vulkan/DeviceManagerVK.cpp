@@ -20,7 +20,7 @@
 #include "GpuBufferManagerVK.h"
 #include "PipelineStateManagerVK.h"
 #include "QueueVK.h"
-#include "RootSignaturePoolVK.h"
+#include "RootSignatureManagerVK.h"
 #include "VulkanUtil.h"
 
 using namespace std;
@@ -493,9 +493,9 @@ IPipelineStateManager* DeviceManager::GetPipelineStateManager()
 }
 
 
-IRootSignaturePool* DeviceManager::GetRootSignaturePool()
+IRootSignatureManager* DeviceManager::GetRootSignatureManager()
 {
-	return m_rootSignaturePool.get();
+	return m_rootSignatureManager.get();
 }
 
 
@@ -655,7 +655,7 @@ void DeviceManager::CreateResourceManagers()
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_vkDevice.get());
 	m_gpuBufferManager = make_unique<GpuBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_pipelineStateManager = make_unique<PipelineStateManager>(m_vkDevice.get());
-	m_rootSignaturePool = make_unique<RootSignaturePool>(m_vkDevice.get());
+	m_rootSignatureManager = make_unique<RootSignatureManager>(m_vkDevice.get());
 }
 
 

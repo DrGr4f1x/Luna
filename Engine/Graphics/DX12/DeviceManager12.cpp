@@ -22,7 +22,7 @@
 #include "GpuBufferManager12.h"
 #include "PipelineStateManager12.h"
 #include "Queue12.h"
-#include "RootSignaturePool12.h"
+#include "RootSignatureManager12.h"
 #include "Shader12.h"
 
 using namespace std;
@@ -544,9 +544,9 @@ IPipelineStateManager* DeviceManager::GetPipelineStateManager()
 }
 
 
-IRootSignaturePool* DeviceManager::GetRootSignaturePool()
+IRootSignatureManager* DeviceManager::GetRootSignatureManager()
 {
-	return m_rootSignaturePool.get();
+	return m_rootSignatureManager.get();
 }
 
 
@@ -764,7 +764,7 @@ void DeviceManager::CreateResourceManagers()
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_dxDevice.get());
 	m_gpuBufferManager = make_unique<GpuBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_pipelineStateManager = make_unique<PipelineStateManager>(m_dxDevice.get());
-	m_rootSignaturePool = make_unique<RootSignaturePool>(m_dxDevice.get());
+	m_rootSignatureManager = make_unique<RootSignatureManager>(m_dxDevice.get());
 }
 
 

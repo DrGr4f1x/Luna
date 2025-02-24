@@ -134,13 +134,13 @@
     <ClCompile Include="Graphics\DX12\PipelineStateManager12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\RootSignaturePool12.cpp">
+    <ClCompile Include="Graphics\DX12\RootSignatureManager12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\RootSignature.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\RootSignaturePoolVK.cpp">
+    <ClCompile Include="Graphics\Vulkan\RootSignatureManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp">
@@ -420,10 +420,10 @@
     <ClInclude Include="Graphics\DX12\PipelineStateManager12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\RootSignaturePool12.h">
+    <ClInclude Include="Graphics\DX12\RootSignatureManager12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\RootSignaturePoolVK.h">
+    <ClInclude Include="Graphics\Vulkan\RootSignatureManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h">

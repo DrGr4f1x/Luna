@@ -25,7 +25,7 @@ class IDepthBufferManager;
 class IDescriptorSetManager;
 class IGpuBufferManager;
 class IPipelineStateManager;
-class IRootSignaturePool;
+class IRootSignatureManager;
 
 
 struct DeviceManagerDesc
@@ -118,7 +118,7 @@ public:
 	virtual IDescriptorSetManager* GetDescriptorSetManager() = 0;
 	virtual IGpuBufferManager* GetGpuBufferManager() = 0;
 	virtual IPipelineStateManager* GetPipelineStateManager() = 0;
-	virtual IRootSignaturePool* GetRootSignaturePool() = 0;
+	virtual IRootSignatureManager* GetRootSignatureManager() = 0;
 };
 
 } // namespace Luna

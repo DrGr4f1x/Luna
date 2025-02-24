@@ -36,7 +36,7 @@ class DescriptorSetManager;
 class GpuBufferManager;
 class GraphicsContext;
 class PipelineStateManager;
-class RootSignaturePool;
+class RootSignatureManager;
 
 
 struct TextureBarrier
@@ -167,13 +167,13 @@ private:
 	bool m_hasPendingDebugEvent{ false };
 	bool m_isRendering{ false };
 
-	// Pools
+	// Managers
 	ColorBufferManager* m_colorBufferManager{ nullptr };
 	DepthBufferManager* m_depthBufferManager{ nullptr };
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	GpuBufferManager* m_gpuBufferManager{ nullptr };
 	PipelineStateManager* m_pipelineStateManager{ nullptr };
-	RootSignaturePool* m_rootSignaturePool{ nullptr };
+	RootSignatureManager* m_rootSignatureManager{ nullptr };
 
 	// Resource barriers
 	std::vector<TextureBarrier> m_textureBarriers;

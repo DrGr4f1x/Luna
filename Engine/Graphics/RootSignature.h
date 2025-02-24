@@ -357,15 +357,15 @@ struct RootSignatureDesc
 };
 
 
-class IRootSignaturePool;
+class IRootSignatureManager;
 
 
 class __declspec(uuid("03216DC0-6CCA-4E66-B35D-9B2CD19868BF")) RootSignatureHandleType : public RefCounted<RootSignatureHandleType>
 {
 public:
-	RootSignatureHandleType(uint32_t index, IRootSignaturePool* pool)
+	RootSignatureHandleType(uint32_t index, IRootSignatureManager* manager)
 		: m_index{ index }
-		, m_pool{ pool }
+		, m_manager{ manager }
 	{}
 
 	~RootSignatureHandleType();
@@ -374,13 +374,13 @@ public:
 
 private:
 	uint32_t m_index{ 0 };
-	IRootSignaturePool* m_pool{ nullptr };
+	IRootSignatureManager* m_manager{ nullptr };
 };
 
 using RootSignatureHandle = wil::com_ptr<RootSignatureHandleType>;
 
 
-class IRootSignaturePool
+class IRootSignatureManager
 {
 public:
 	// Create/Destroy RootSignature

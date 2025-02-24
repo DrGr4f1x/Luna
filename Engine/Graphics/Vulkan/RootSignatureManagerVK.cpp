@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "RootSignaturePoolVK.h"
+#include "RootSignatureManagerVK.h"
 
 #include "DescriptorAllocatorVK.h"
 #include "DescriptorSetManagerVK.h"
@@ -19,13 +19,13 @@
 namespace Luna::VK
 {
 
-RootSignaturePool* g_rootSignaturePool{ nullptr };
+RootSignatureManager* g_rootSignatureManager{ nullptr };
 
 
-RootSignaturePool::RootSignaturePool(CVkDevice* device)
+RootSignatureManager::RootSignatureManager(CVkDevice* device)
 	: m_device{ device }
 {
-	assert(g_rootSignaturePool == nullptr);
+	assert(g_rootSignatureManager == nullptr);
 
 	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
@@ -35,17 +35,17 @@ RootSignaturePool::RootSignaturePool(CVkDevice* device)
 		m_descs[i] = RootSignatureDesc{};
 	}
 
-	g_rootSignaturePool = this;
+	g_rootSignatureManager = this;
 }
 
 
-RootSignaturePool::~RootSignaturePool()
+RootSignatureManager::~RootSignatureManager()
 {
-	g_rootSignaturePool = nullptr;
+	g_rootSignatureManager = nullptr;
 }
 
 
-RootSignatureHandle RootSignaturePool::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+RootSignatureHandle RootSignatureManager::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -62,7 +62,7 @@ RootSignatureHandle RootSignaturePool::CreateRootSignature(const RootSignatureDe
 }
 
 
-void RootSignaturePool::DestroyHandle(RootSignatureHandleType* handle)
+void RootSignatureManager::DestroyHandle(RootSignatureHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -78,7 +78,7 @@ void RootSignaturePool::DestroyHandle(RootSignatureHandleType* handle)
 }
 
 
-const RootSignatureDesc& RootSignaturePool::GetDesc(const RootSignatureHandleType* handle) const
+const RootSignatureDesc& RootSignatureManager::GetDesc(const RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -87,13 +87,13 @@ const RootSignatureDesc& RootSignaturePool::GetDesc(const RootSignatureHandleTyp
 }
 
 
-uint32_t RootSignaturePool::GetNumRootParameters(const RootSignatureHandleType* handle) const
+uint32_t RootSignatureManager::GetNumRootParameters(const RootSignatureHandleType* handle) const
 {
 	return (uint32_t)GetDesc(handle).rootParameters.size();
 }
 
 
-DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const
+DescriptorSetHandle RootSignatureManager::CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const
 {
 	const auto& rootSignatureDesc = GetDesc(handle);
 	const auto& data = GetData(handle);
@@ -116,7 +116,7 @@ DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleTy
 }
 
 
-VkPipelineLayout RootSignaturePool::GetPipelineLayout(RootSignatureHandleType* handle) const
+VkPipelineLayout RootSignatureManager::GetPipelineLayout(RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -125,7 +125,7 @@ VkPipelineLayout RootSignaturePool::GetPipelineLayout(RootSignatureHandleType* h
 }
 
 
-const RootSignatureData& RootSignaturePool::GetData(RootSignatureHandleType* handle) const
+const RootSignatureData& RootSignatureManager::GetData(RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -134,7 +134,7 @@ const RootSignatureData& RootSignaturePool::GetData(RootSignatureHandleType* han
 }
 
 
-RootSignatureData RootSignaturePool::FindOrCreateRootSignatureData(const RootSignatureDesc& rootSignatureDesc)
+RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const RootSignatureDesc& rootSignatureDesc)
 {
 	// Validate RootSignatureDesc
 	if (!rootSignatureDesc.Validate())
@@ -348,9 +348,9 @@ RootSignatureData RootSignaturePool::FindOrCreateRootSignatureData(const RootSig
 }
 
 
-RootSignaturePool* const GetVulkanRootSignaturePool()
+RootSignatureManager* const GetVulkanRootSignatureManager()
 {
-	return g_rootSignaturePool;
+	return g_rootSignatureManager;
 }
 
 } // namespace Luna::VK

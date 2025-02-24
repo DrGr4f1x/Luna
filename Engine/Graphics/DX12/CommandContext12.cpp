@@ -22,7 +22,7 @@
 #include "GpuBufferManager12.h"
 #include "PipelineStateManager12.h"
 #include "Queue12.h"
-#include "RootSignaturePool12.h"
+#include "RootSignatureManager12.h"
 
 #if ENABLE_D3D12_DEBUG_MARKERS
 #include <pix3.h>
@@ -122,7 +122,7 @@ void CommandContext12::Initialize()
 	m_descriptorSetManager = GetD3D12DescriptorSetManager();
 	m_gpuBufferManager = GetD3D12GpuBufferManager();
 	m_pipelineStateManager = GetD3D12PipelineStateManager();
-	m_rootSignaturePool = GetD3D12RootSignaturePool();
+	m_rootSignatureManager = GetD3D12RootSignatureManager();
 }
 
 
@@ -419,7 +419,7 @@ void CommandContext12::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	ID3D12RootSignature* d3d12RootSignature = m_rootSignaturePool->GetRootSignature(rootSignature.GetHandle().get());
+	ID3D12RootSignature* d3d12RootSignature = m_rootSignatureManager->GetRootSignature(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{

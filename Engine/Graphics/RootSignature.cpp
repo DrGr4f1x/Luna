@@ -21,8 +21,8 @@ namespace Luna
 
 RootSignatureHandleType::~RootSignatureHandleType()
 {
-	assert(m_pool);
-	m_pool->DestroyHandle(this);
+	assert(m_manager);
+	m_manager->DestroyHandle(this);
 }
 
 
@@ -40,19 +40,19 @@ const RootParameter& RootSignature::GetRootParameter(uint32_t index) const
 
 DescriptorSetHandle RootSignature::CreateDescriptorSet(uint32_t index) const
 {
-	return GetRootSignaturePool()->CreateDescriptorSet(m_handle.get(), index);
+	return GetRootSignatureManager()->CreateDescriptorSet(m_handle.get(), index);
 }
 
 
 void RootSignature::Initialize(RootSignatureDesc& desc)
 {
-	m_handle = GetRootSignaturePool()->CreateRootSignature(desc);
+	m_handle = GetRootSignatureManager()->CreateRootSignature(desc);
 }
 
 
 const RootSignatureDesc& RootSignature::GetDesc() const
 {
-	return GetRootSignaturePool()->GetDesc(m_handle.get());
+	return GetRootSignatureManager()->GetDesc(m_handle.get());
 }
 
 } // using namespace Luna
