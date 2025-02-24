@@ -20,7 +20,7 @@
 #include "DescriptorSetPoolVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferManagerVK.h"
-#include "PipelineStatePoolVK.h"
+#include "PipelineStateManagerVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
 #include "VulkanUtil.h"
@@ -175,7 +175,7 @@ void CommandContextVK::Initialize()
 	m_depthBufferManager = GetVulkanDepthBufferManager();
 	m_descriptorSetPool = GetVulkanDescriptorSetPool();
 	m_gpuBufferManager = GetVulkanGpuBufferManager();
-	m_pipelineStatePool = GetVulkanPipelineStatePool();
+	m_pipelineStateManager = GetVulkanPipelineStateManager();
 	m_rootSignaturePool = GetVulkanRootSignaturePool();
 }
 
@@ -599,7 +599,7 @@ void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	VkPipeline vkPipeline = m_pipelineStatePool->GetPipeline(graphicsPipeline.GetHandle().get());
+	VkPipeline vkPipeline = m_pipelineStateManager->GetPipeline(graphicsPipeline.GetHandle().get());
 
 	if (vkPipeline != m_graphicsPipeline)
 	{

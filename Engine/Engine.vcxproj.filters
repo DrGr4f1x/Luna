@@ -131,7 +131,7 @@
     <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp">
+    <ClCompile Include="Graphics\DX12\PipelineStateManager12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\DX12\RootSignaturePool12.cpp">
@@ -143,7 +143,7 @@
     <ClCompile Include="Graphics\Vulkan\RootSignaturePoolVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\PipelineStatePoolVK.cpp">
+    <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp">
@@ -417,7 +417,7 @@
     <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\PipelineStatePool12.h">
+    <ClInclude Include="Graphics\DX12\PipelineStateManager12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\RootSignaturePool12.h">
@@ -426,7 +426,7 @@
     <ClInclude Include="Graphics\Vulkan\RootSignaturePoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\PipelineStatePoolVK.h">
+    <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h">

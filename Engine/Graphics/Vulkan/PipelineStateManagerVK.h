@@ -25,13 +25,13 @@ class Shader;
 namespace Luna::VK
 {
 
-class PipelineStatePool : public IPipelineStatePool
+class PipelineStateManager : public IPipelineStateManager
 {
 	static const uint32_t MaxItems = (1 << 12);
 
 public:
-	explicit PipelineStatePool(CVkDevice* device);
-	~PipelineStatePool();
+	explicit PipelineStateManager(CVkDevice* device);
+	~PipelineStateManager();
 
 	// Create/Destroy pipeline state
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
@@ -70,6 +70,6 @@ private:
 };
 
 
-PipelineStatePool* const GetVulkanPipelineStatePool();
+PipelineStateManager* const GetVulkanPipelineStateManager();
 
 } // namespace Luna::VK

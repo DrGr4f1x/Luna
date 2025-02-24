@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "PipelineStatePool12.h"
+#include "PipelineStateManager12.h"
 
 #include "FileSystem.h"
 
@@ -23,7 +23,7 @@ using namespace std;
 namespace Luna::DX12
 {
 
-PipelineStatePool* g_pipelineStatePool{ nullptr };
+PipelineStateManager* g_pipelineStateManager{ nullptr };
 
 
 pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
@@ -75,10 +75,10 @@ Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry
 }
 
 
-PipelineStatePool::PipelineStatePool(ID3D12Device* device)
+PipelineStateManager::PipelineStateManager(ID3D12Device* device)
 	: m_device{ device }
 {
-	assert(g_pipelineStatePool == nullptr);
+	assert(g_pipelineStateManager == nullptr);
 
 	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
@@ -88,17 +88,17 @@ PipelineStatePool::PipelineStatePool(ID3D12Device* device)
 		m_descs[i] = GraphicsPipelineDesc{};
 	}
 
-	g_pipelineStatePool = this;
+	g_pipelineStateManager = this;
 }
 
 
-PipelineStatePool::~PipelineStatePool()
+PipelineStateManager::~PipelineStateManager()
 {
-	g_pipelineStatePool = nullptr;
+	g_pipelineStateManager = nullptr;
 }
 
 
-PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+PipelineStateHandle PipelineStateManager::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -115,7 +115,7 @@ PipelineStateHandle PipelineStatePool::CreateGraphicsPipeline(const GraphicsPipe
 }
 
 
-void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
+void PipelineStateManager::DestroyHandle(PipelineStateHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -131,7 +131,7 @@ void PipelineStatePool::DestroyHandle(PipelineStateHandleType* handle)
 }
 
 
-const GraphicsPipelineDesc& PipelineStatePool::GetDesc(PipelineStateHandleType* handle) const
+const GraphicsPipelineDesc& PipelineStateManager::GetDesc(PipelineStateHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -140,7 +140,7 @@ const GraphicsPipelineDesc& PipelineStatePool::GetDesc(PipelineStateHandleType* 
 }
 
 
-ID3D12PipelineState* PipelineStatePool::GetPipelineState(PipelineStateHandleType* handle) const
+ID3D12PipelineState* PipelineStateManager::GetPipelineState(PipelineStateHandleType* handle) const
 {
 	assert(handle != nullptr);
 
@@ -149,10 +149,8 @@ ID3D12PipelineState* PipelineStatePool::GetPipelineState(PipelineStateHandleType
 }
 
 
-wil::com_ptr<ID3D12PipelineState> PipelineStatePool::FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+wil::com_ptr<ID3D12PipelineState> PipelineStateManager::FindOrCreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
 {
-	//return GetD3D12GraphicsDevice()->AllocateGraphicsPipeline(pipelineDesc);
-
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
 	d3d12PipelineDesc.SampleMask = pipelineDesc.sampleMask;
@@ -345,9 +343,9 @@ wil::com_ptr<ID3D12PipelineState> PipelineStatePool::FindOrCreateGraphicsPipelin
 }
 
 
-PipelineStatePool* const GetD3D12PipelineStatePool()
+PipelineStateManager* const GetD3D12PipelineStateManager()
 {
-	return g_pipelineStatePool;
+	return g_pipelineStateManager;
 }
 
 } // namespace Luna::DX12

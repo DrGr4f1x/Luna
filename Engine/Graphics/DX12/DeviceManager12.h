@@ -27,7 +27,7 @@ class DepthBufferManager;
 class DescriptorAllocator;
 class DescriptorSetPool;
 class GpuBufferManager;
-class PipelineStatePool;
+class PipelineStateManager;
 class Queue;
 class RootSignaturePool;
 
@@ -89,7 +89,7 @@ public:
 	IDepthBufferManager* GetDepthBufferManager() override;
 	IDescriptorSetPool* GetDescriptorSetPool() override;
 	IGpuBufferManager* GetGpuBufferManager() override;
-	IPipelineStatePool* GetPipelineStatePool() override;
+	IPipelineStateManager* GetPipelineStateManager() override;
 	IRootSignaturePool* GetRootSignaturePool() override;
 
 	// Texture formats
@@ -153,7 +153,7 @@ private:
 	std::unique_ptr<DepthBufferManager> m_depthBufferManager;
 	std::unique_ptr<DescriptorSetPool> m_descriptorSetPool;
 	std::unique_ptr<GpuBufferManager> m_gpuBufferManager;
-	std::unique_ptr<PipelineStatePool> m_pipelineStatePool;
+	std::unique_ptr<PipelineStateManager> m_pipelineStateManager;
 	std::unique_ptr<RootSignaturePool> m_rootSignaturePool;
 
 	// Swap-chain objects

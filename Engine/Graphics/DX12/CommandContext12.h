@@ -34,7 +34,7 @@ class ColorBufferManager;
 class DepthBufferManager;
 class DescriptorSetPool;
 class GpuBufferManager;
-class PipelineStatePool;
+class PipelineStateManager;
 class RootSignaturePool;
 
 
@@ -163,7 +163,7 @@ private:
 	DepthBufferManager* m_depthBufferManager{ nullptr };
 	DescriptorSetPool* m_descriptorSetPool{ nullptr };
 	GpuBufferManager* m_gpuBufferManager{ nullptr };
-	PipelineStatePool* m_pipelineStatePool{ nullptr };
+	PipelineStateManager* m_pipelineStateManager{ nullptr };
 	RootSignaturePool* m_rootSignaturePool{ nullptr };
 
 	// Render target state

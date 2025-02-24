@@ -144,9 +144,9 @@ IGpuBufferManager* GetGpuBufferManager()
 }
 
 
-IPipelineStatePool* GetPipelineStatePool()
+IPipelineStateManager* GetPipelineStateManager()
 {
-	return GetDeviceManager()->GetPipelineStatePool();
+	return GetDeviceManager()->GetPipelineStateManager();
 }
 
 

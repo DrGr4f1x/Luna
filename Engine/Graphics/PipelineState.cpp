@@ -20,8 +20,8 @@ namespace Luna
 
 PipelineStateHandleType::~PipelineStateHandleType()
 {
-	assert(m_pool);
-	m_pool->DestroyHandle(this);
+	assert(m_manager);
+	m_manager->DestroyHandle(this);
 }
 
 
@@ -33,13 +33,13 @@ PrimitiveTopology GraphicsPipelineState::GetPrimitiveTopology() const
 
 void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
-	m_handle = GetPipelineStatePool()->CreateGraphicsPipeline(desc);
+	m_handle = GetPipelineStateManager()->CreateGraphicsPipeline(desc);
 }
 
 
 const GraphicsPipelineDesc& GraphicsPipelineState::GetDesc() const
 {
-	return GetPipelineStatePool()->GetDesc(m_handle.get());
+	return GetPipelineStateManager()->GetDesc(m_handle.get());
 }
 
 } // namespace Luna

@@ -18,7 +18,7 @@
 #include "DescriptorAllocatorVK.h"
 #include "DescriptorSetPoolVK.h"
 #include "GpuBufferManagerVK.h"
-#include "PipelineStatePoolVK.h"
+#include "PipelineStateManagerVK.h"
 #include "QueueVK.h"
 #include "RootSignaturePoolVK.h"
 #include "VulkanUtil.h"
@@ -290,7 +290,7 @@ void DeviceManager::CreateDeviceResources()
 
 	CreateDevice();
 
-	CreateResourcePools();
+	CreateResourceManagers();
 
 	// Create queues
 	CreateQueue(QueueType::Graphics);
@@ -487,9 +487,9 @@ IGpuBufferManager* DeviceManager::GetGpuBufferManager()
 }
 
 
-IPipelineStatePool* DeviceManager::GetPipelineStatePool()
+IPipelineStateManager* DeviceManager::GetPipelineStateManager()
 {
-	return m_pipelineStatePool.get();
+	return m_pipelineStateManager.get();
 }
 
 
@@ -648,13 +648,13 @@ void DeviceManager::CreateDevice()
 }
 
 
-void DeviceManager::CreateResourcePools()
+void DeviceManager::CreateResourceManagers()
 {
 	m_colorBufferManager = make_unique<ColorBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_depthBufferManager = make_unique<DepthBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_vkDevice.get());
 	m_gpuBufferManager = make_unique<GpuBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
-	m_pipelineStatePool = make_unique<PipelineStatePool>(m_vkDevice.get());
+	m_pipelineStateManager = make_unique<PipelineStateManager>(m_vkDevice.get());
 	m_rootSignaturePool = make_unique<RootSignaturePool>(m_vkDevice.get());
 }
 

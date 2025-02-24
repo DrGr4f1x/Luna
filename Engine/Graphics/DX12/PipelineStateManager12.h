@@ -17,13 +17,13 @@
 namespace Luna::DX12
 {
 
-class PipelineStatePool : public IPipelineStatePool
+class PipelineStateManager : public IPipelineStateManager
 {
 	static const uint32_t MaxItems = (1 << 12);
 
 public:
-	explicit PipelineStatePool(ID3D12Device* device);
-	~PipelineStatePool();
+	explicit PipelineStateManager(ID3D12Device* device);
+	~PipelineStateManager();
 
 	// Create/Destroy pipeline state
 	PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
@@ -59,7 +59,7 @@ private:
 };
 
 
-PipelineStatePool* const GetD3D12PipelineStatePool();
+PipelineStateManager* const GetD3D12PipelineStateManager();
 
 
 } // namespace Luna::DX12

@@ -23,7 +23,7 @@ class IColorBufferManager;
 class IDepthBufferManager;
 class IDescriptorSetPool;
 class IGpuBufferManager;
-class IPipelineStatePool;
+class IPipelineStateManager;
 class IRootSignaturePool;
 
 
@@ -105,7 +105,7 @@ IColorBufferManager* GetColorBufferManager();
 IDepthBufferManager* GetDepthBufferManager();
 IDescriptorSetPool* GetDescriptorSetPool();
 IGpuBufferManager* GetGpuBufferManager();
-IPipelineStatePool* GetPipelineStatePool();
+IPipelineStateManager* GetPipelineStateManager();
 IRootSignaturePool* GetRootSignaturePool();
 
 // Graphics related log categories

@@ -20,7 +20,7 @@
 #include "DescriptorSetPool12.h"
 #include "DeviceCaps12.h"
 #include "GpuBufferManager12.h"
-#include "PipelineStatePool12.h"
+#include "PipelineStateManager12.h"
 #include "Queue12.h"
 #include "RootSignaturePool12.h"
 #include "Shader12.h"
@@ -538,9 +538,9 @@ IGpuBufferManager* DeviceManager::GetGpuBufferManager()
 }
 
 
-IPipelineStatePool* DeviceManager::GetPipelineStatePool()
+IPipelineStateManager* DeviceManager::GetPipelineStateManager()
 {
-	return m_pipelineStatePool.get();
+	return m_pipelineStateManager.get();
 }
 
 
@@ -763,7 +763,7 @@ void DeviceManager::CreateResourceManagers()
 	m_depthBufferManager = make_unique<DepthBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_descriptorSetPool = make_unique<DescriptorSetPool>(m_dxDevice.get());
 	m_gpuBufferManager = make_unique<GpuBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
-	m_pipelineStatePool = make_unique<PipelineStatePool>(m_dxDevice.get());
+	m_pipelineStateManager = make_unique<PipelineStateManager>(m_dxDevice.get());
 	m_rootSignaturePool = make_unique<RootSignaturePool>(m_dxDevice.get());
 }
 

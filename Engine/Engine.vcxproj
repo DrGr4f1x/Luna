@@ -48,7 +48,7 @@
     <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp" />
     <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
     <ClCompile Include="Graphics\DX12\GpuBufferManager12.cpp" />
-    <ClCompile Include="Graphics\DX12\PipelineStatePool12.cpp" />
+    <ClCompile Include="Graphics\DX12\PipelineStateManager12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
@@ -75,7 +75,7 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\GpuBufferManagerVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\PipelineStatePoolVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignaturePoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
@@ -142,7 +142,7 @@
     <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h" />
     <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
     <ClInclude Include="Graphics\DX12\GpuBufferManager12.h" />
-    <ClInclude Include="Graphics\DX12\PipelineStatePool12.h" />
+    <ClInclude Include="Graphics\DX12\PipelineStateManager12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
     <ClInclude Include="Graphics\DX12\CommandContext12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
@@ -174,7 +174,7 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferManagerVK.h" />
-    <ClInclude Include="Graphics\Vulkan\PipelineStatePoolVK.h" />
+    <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignaturePoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />

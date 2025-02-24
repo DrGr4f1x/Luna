@@ -20,7 +20,7 @@
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
 #include "GpuBufferManager12.h"
-#include "PipelineStatePool12.h"
+#include "PipelineStateManager12.h"
 #include "Queue12.h"
 #include "RootSignaturePool12.h"
 
@@ -121,7 +121,7 @@ void CommandContext12::Initialize()
 	m_depthBufferManager = GetD3D12DepthBufferManager();
 	m_descriptorSetPool = GetD3D12DescriptorSetPool();
 	m_gpuBufferManager = GetD3D12GpuBufferManager();
-	m_pipelineStatePool = GetD3D12PipelineStatePool();
+	m_pipelineStateManager = GetD3D12PipelineStateManager();
 	m_rootSignaturePool = GetD3D12RootSignaturePool();
 }
 
@@ -455,7 +455,7 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 	m_computePipelineState = nullptr;
 
 	// TODO: Pass handle in as function parameter
-	ID3D12PipelineState* graphicsPSO = m_pipelineStatePool->GetPipelineState(graphicsPipeline.GetHandle().get());
+	ID3D12PipelineState* graphicsPSO = m_pipelineStateManager->GetPipelineState(graphicsPipeline.GetHandle().get());
 
 	if (m_graphicsPipelineState != graphicsPSO)
 	{
@@ -463,7 +463,7 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 		m_graphicsPipelineState = graphicsPSO;
 	}
 
-	// TODO: Add getter for primitive topology to PipelineStatePool
+	// TODO: Add getter for primitive topology to PipelineStateManager
 	auto topology = PrimitiveTopologyToDX12(graphicsPipeline.GetPrimitiveTopology());
 	if (m_primitiveTopology != topology)
 	{
