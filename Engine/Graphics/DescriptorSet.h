@@ -17,16 +17,16 @@ namespace Luna
 class ColorBuffer;
 class DepthBuffer;
 class GpuBuffer;
-class IDescriptorSetPool;
+class IDescriptorSetManager;
 class RootSignature;
 
 
 class __declspec(uuid("BDE2324D-CF9C-4489-9612-4C5DE87F88B6")) DescriptorSetHandleType : public RefCounted<DescriptorSetHandleType>
 {
 public:
-	DescriptorSetHandleType(uint32_t index, IDescriptorSetPool* pool)
+	DescriptorSetHandleType(uint32_t index, IDescriptorSetManager* manager)
 		: m_index{ index }
-		, m_pool{ pool }
+		, m_manager{ manager }
 	{}
 	~DescriptorSetHandleType();
 
@@ -34,13 +34,13 @@ public:
 
 private:
 	uint32_t m_index{ 0 };
-	IDescriptorSetPool* m_pool{ nullptr };
+	IDescriptorSetManager* m_manager{ nullptr };
 };
 
 using DescriptorSetHandle = wil::com_ptr<DescriptorSetHandleType>;
 
 
-class IDescriptorSetPool
+class IDescriptorSetManager
 {
 public:
 	// Destroy DescriptorSet.  Creation is implemented per-platform.

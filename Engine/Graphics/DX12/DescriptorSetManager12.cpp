@@ -10,17 +10,17 @@
 
 #include "Stdafx.h"
 
-#include "DescriptorSetPool12.h"
+#include "DescriptorSetManager12.h"
 
-#include "Graphics\DX12\ColorBufferManager12.h"
-#include "Graphics\DX12\DepthBufferManager12.h"
-#include "Graphics\DX12\GpuBufferManager12.h"
+#include "ColorBufferManager12.h"
+#include "DepthBufferManager12.h"
+#include "GpuBufferManager12.h"
 
 
 namespace Luna::DX12
 {
 
-DescriptorSetPool* g_descriptorSetPool{ nullptr };
+DescriptorSetManager* g_descriptorSetManager{ nullptr };
 
 
 inline void ValidateDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE handle)
@@ -29,26 +29,10 @@ inline void ValidateDescriptor(D3D12_CPU_DESCRIPTOR_HANDLE handle)
 }
 
 
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const IGpuResource* gpuResource)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{ .ptr = gpuResource->GetNativeObject(NativeObjectType::DX12_SRV).integer };
-	ValidateDescriptor(srvHandle);
-	return srvHandle;
-}
-
-
-inline D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(const IGpuResource* gpuResource, uint32_t uavIndex)
-{
-	D3D12_CPU_DESCRIPTOR_HANDLE uavHandle{ .ptr = gpuResource->GetNativeObject(NativeObjectType::DX12_UAV, uavIndex).integer };
-	ValidateDescriptor(uavHandle);
-	return uavHandle;
-}
-
-
-DescriptorSetPool::DescriptorSetPool(ID3D12Device* device)
+DescriptorSetManager::DescriptorSetManager(ID3D12Device* device)
 	: m_device{ device }
 {
-	assert(g_descriptorSetPool == nullptr);
+	assert(g_descriptorSetManager == nullptr);
 
 	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
@@ -57,17 +41,17 @@ DescriptorSetPool::DescriptorSetPool(ID3D12Device* device)
 		m_descriptorData[i] = DescriptorSetData{};
 	}
 
-	g_descriptorSetPool = this;
+	g_descriptorSetManager = this;
 }
 
 
-DescriptorSetPool::~DescriptorSetPool()
+DescriptorSetManager::~DescriptorSetManager()
 {
-	g_descriptorSetPool = nullptr;
+	g_descriptorSetManager = nullptr;
 }
 
 
-DescriptorSetHandle DescriptorSetPool::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+DescriptorSetHandle DescriptorSetManager::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -96,7 +80,7 @@ DescriptorSetHandle DescriptorSetPool::CreateDescriptorSet(const DescriptorSetDe
 }
 
 
-void DescriptorSetPool::DestroyHandle(DescriptorSetHandleType* handle)
+void DescriptorSetManager::DestroyHandle(DescriptorSetHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -111,7 +95,7 @@ void DescriptorSetPool::DestroyHandle(DescriptorSetHandleType* handle)
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer)
+void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer)
 {
 	assert(handle != 0);
 
@@ -125,7 +109,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
+void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	assert(handle != 0);
 
@@ -139,7 +123,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
@@ -161,7 +145,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
+void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
 	assert(handle != 0);
 
@@ -175,7 +159,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer)
+void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer)
 {
 	assert(handle != 0);
 
@@ -189,7 +173,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
@@ -211,7 +195,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+void DescriptorSetManager::SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
@@ -233,7 +217,7 @@ void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetDynamicOffset(DescriptorSetHandleType* handle, uint32_t offset)
+void DescriptorSetManager::SetDynamicOffset(DescriptorSetHandleType* handle, uint32_t offset)
 {
 	assert(handle != 0);
 
@@ -246,7 +230,7 @@ void DescriptorSetPool::SetDynamicOffset(DescriptorSetHandleType* handle, uint32
 }
 
 
-void DescriptorSetPool::UpdateGpuDescriptors(DescriptorSetHandleType* handle)
+void DescriptorSetManager::UpdateGpuDescriptors(DescriptorSetHandleType* handle)
 {
 	assert(handle != 0);
 
@@ -278,7 +262,7 @@ void DescriptorSetPool::UpdateGpuDescriptors(DescriptorSetHandleType* handle)
 }
 
 
-void DescriptorSetPool::SetDescriptor(DescriptorSetData& data, int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
+void DescriptorSetManager::SetDescriptor(DescriptorSetData& data, int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
 {
 	assert(slot >= 0 && slot < (int)data.numDescriptors);
 	if (data.descriptors[slot].ptr != descriptor.ptr)
@@ -289,7 +273,7 @@ void DescriptorSetPool::SetDescriptor(DescriptorSetData& data, int slot, D3D12_C
 }
 
 
-bool DescriptorSetPool::HasBindableDescriptors(DescriptorSetHandleType* handle) const
+bool DescriptorSetManager::HasBindableDescriptors(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -300,7 +284,7 @@ bool DescriptorSetPool::HasBindableDescriptors(DescriptorSetHandleType* handle) 
 }
 
 
-D3D12_GPU_DESCRIPTOR_HANDLE DescriptorSetPool::GetGpuDescriptorHandle(DescriptorSetHandleType* handle) const
+D3D12_GPU_DESCRIPTOR_HANDLE DescriptorSetManager::GetGpuDescriptorHandle(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -311,7 +295,7 @@ D3D12_GPU_DESCRIPTOR_HANDLE DescriptorSetPool::GetGpuDescriptorHandle(Descriptor
 }
 
 
-uint64_t DescriptorSetPool::GetGpuAddress(DescriptorSetHandleType* handle) const
+uint64_t DescriptorSetManager::GetGpuAddress(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -322,7 +306,7 @@ uint64_t DescriptorSetPool::GetGpuAddress(DescriptorSetHandleType* handle) const
 }
 
 
-uint64_t DescriptorSetPool::GetDynamicOffset(DescriptorSetHandleType* handle) const
+uint64_t DescriptorSetManager::GetDynamicOffset(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -333,7 +317,7 @@ uint64_t DescriptorSetPool::GetDynamicOffset(DescriptorSetHandleType* handle) co
 }
 
 
-uint64_t DescriptorSetPool::GetGpuAddressWithOffset(DescriptorSetHandleType* handle) const
+uint64_t DescriptorSetManager::GetGpuAddressWithOffset(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -344,9 +328,9 @@ uint64_t DescriptorSetPool::GetGpuAddressWithOffset(DescriptorSetHandleType* han
 }
 
 
-DescriptorSetPool* const GetD3D12DescriptorSetPool()
+DescriptorSetManager* const GetD3D12DescriptorSetManager()
 {
-	return g_descriptorSetPool;
+	return g_descriptorSetManager;
 }
 
 } // namespace Luna::DX12

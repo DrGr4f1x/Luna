@@ -32,7 +32,7 @@ namespace Luna::VK
 class ColorBufferManager;
 class ComputeContext;
 class DepthBufferManager;
-class DescriptorSetPool;
+class DescriptorSetManager;
 class GpuBufferManager;
 class GraphicsContext;
 class PipelineStateManager;
@@ -170,7 +170,7 @@ private:
 	// Pools
 	ColorBufferManager* m_colorBufferManager{ nullptr };
 	DepthBufferManager* m_depthBufferManager{ nullptr };
-	DescriptorSetPool* m_descriptorSetPool{ nullptr };
+	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	GpuBufferManager* m_gpuBufferManager{ nullptr };
 	PipelineStateManager* m_pipelineStateManager{ nullptr };
 	RootSignaturePool* m_rootSignaturePool{ nullptr };

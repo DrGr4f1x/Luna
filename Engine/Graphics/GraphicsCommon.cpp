@@ -132,9 +132,9 @@ IDepthBufferManager* GetDepthBufferManager()
 }
 
 
-IDescriptorSetPool* GetDescriptorSetPool()
+IDescriptorSetManager* GetDescriptorSetManager()
 {
-	return GetDeviceManager()->GetDescriptorSetPool();
+	return GetDeviceManager()->GetDescriptorSetManager();
 }
 
 

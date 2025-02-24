@@ -128,7 +128,7 @@
     <ClCompile Include="Graphics\DescriptorSet.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp">
+    <ClCompile Include="Graphics\DX12\DescriptorSetManager12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\DX12\PipelineStateManager12.cpp">
@@ -146,7 +146,7 @@
     <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp">
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\ResourceSet.cpp">
@@ -414,7 +414,7 @@
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="CameraController.h" />
-    <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h">
+    <ClInclude Include="Graphics\DX12\DescriptorSetManager12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\PipelineStateManager12.h">
@@ -429,7 +429,7 @@
     <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h">
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\DX12\GpuBufferManager12.h">

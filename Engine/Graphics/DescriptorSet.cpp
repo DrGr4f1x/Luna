@@ -21,8 +21,8 @@ namespace Luna
 
 DescriptorSetHandleType::~DescriptorSetHandleType()
 {
-	assert(m_pool);
-	m_pool->DestroyHandle(this);
+	assert(m_manager);
+	m_manager->DestroyHandle(this);
 }
 
 
@@ -34,49 +34,49 @@ void DescriptorSet::Initialize(const RootSignature& rootSignature, uint32_t root
 
 void DescriptorSet::SetSRV(int slot, const ColorBuffer& colorBuffer)
 {
-	GetDescriptorSetPool()->SetSRV(m_handle.get(), slot, colorBuffer);
+	GetDescriptorSetManager()->SetSRV(m_handle.get(), slot, colorBuffer);
 }
 
 
 void DescriptorSet::SetSRV(int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
-	GetDescriptorSetPool()->SetSRV(m_handle.get(), slot, depthBuffer, depthSrv);
+	GetDescriptorSetManager()->SetSRV(m_handle.get(), slot, depthBuffer, depthSrv);
 }
 
 
 void DescriptorSet::SetSRV(int slot, const GpuBuffer& gpuBuffer)
 {
-	GetDescriptorSetPool()->SetSRV(m_handle.get(), slot, gpuBuffer);
+	GetDescriptorSetManager()->SetSRV(m_handle.get(), slot, gpuBuffer);
 }
 
 
 void DescriptorSet::SetUAV(int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
-	GetDescriptorSetPool()->SetUAV(m_handle.get(), slot, colorBuffer, uavIndex);
+	GetDescriptorSetManager()->SetUAV(m_handle.get(), slot, colorBuffer, uavIndex);
 }
 
 
 void DescriptorSet::SetUAV(int slot, const DepthBuffer& depthBuffer)
 {
-	GetDescriptorSetPool()->SetUAV(m_handle.get(), slot, depthBuffer);
+	GetDescriptorSetManager()->SetUAV(m_handle.get(), slot, depthBuffer);
 }
 
 
 void DescriptorSet::SetUAV(int slot, const GpuBuffer& gpuBuffer)
 {
-	GetDescriptorSetPool()->SetUAV(m_handle.get(), slot, gpuBuffer);
+	GetDescriptorSetManager()->SetUAV(m_handle.get(), slot, gpuBuffer);
 }
 
 
 void DescriptorSet::SetCBV(int slot, const GpuBuffer& gpuBuffer)
 {
-	GetDescriptorSetPool()->SetCBV(m_handle.get(), slot, gpuBuffer);
+	GetDescriptorSetManager()->SetCBV(m_handle.get(), slot, gpuBuffer);
 }
 
 
 void DescriptorSet::SetDynamicOffset(uint32_t offset)
 {
-	GetDescriptorSetPool()->SetDynamicOffset(m_handle.get(), offset);
+	GetDescriptorSetManager()->SetDynamicOffset(m_handle.get(), offset);
 }
 
 } // namespace Luna

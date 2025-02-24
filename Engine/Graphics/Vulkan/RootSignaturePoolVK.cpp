@@ -13,7 +13,7 @@
 #include "RootSignaturePoolVK.h"
 
 #include "DescriptorAllocatorVK.h"
-#include "DescriptorSetPoolVK.h"
+#include "DescriptorSetManagerVK.h"
 
 
 namespace Luna::VK
@@ -112,7 +112,7 @@ DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleTy
 		.isDynamicBuffer	= isDynamicBuffer
 	};
 
-	return GetVulkanDescriptorSetPool()->CreateDescriptorSet(descriptorSetDesc);
+	return GetVulkanDescriptorSetManager()->CreateDescriptorSet(descriptorSetDesc);
 }
 
 

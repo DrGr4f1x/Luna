@@ -10,47 +10,23 @@
 
 #include "Stdafx.h"
 
-#include "DescriptorSetPoolVK.h"
+#include "DescriptorSetManagerVK.h"
 
-#include "Graphics\Vulkan\ColorBufferManagerVK.h"
-#include "Graphics\Vulkan\DepthBufferManagerVK.h"
-#include "Graphics\Vulkan\GpuBufferManagerVK.h"
+#include "ColorBufferManagerVK.h"
+#include "DepthBufferManagerVK.h"
+#include "GpuBufferManagerVK.h"
 
 
 namespace Luna::VK
 {
 
-DescriptorSetPool* g_descriptorSetPool{ nullptr };
+DescriptorSetManager* g_descriptorSetManager{ nullptr };
 
 
-const VkDescriptorImageInfo* GetImageInfo(const IGpuResource* gpuResource)
-{
-	return gpuResource->GetNativeObject(NativeObjectType::VK_ImageInfo_SRV);
-}
-
-
-const VkDescriptorImageInfo* GetImageInfoUAV(const IGpuResource* gpuResource, uint32_t index)
-{
-	return gpuResource->GetNativeObject(NativeObjectType::VK_ImageInfo_UAV, index);
-}
-
-
-const VkDescriptorBufferInfo* GetBufferInfo(const IGpuResource* gpuResource)
-{
-	return gpuResource->GetNativeObject(NativeObjectType::VK_BufferInfo);
-}
-
-
-const VkBufferView* GetBufferView(const IGpuResource* gpuResource)
-{
-	return gpuResource->GetNativeObject(NativeObjectType::VK_BufferView);
-}
-
-
-DescriptorSetPool::DescriptorSetPool(CVkDevice* device)
+DescriptorSetManager::DescriptorSetManager(CVkDevice* device)
 	: m_device{ device }
 {
-	assert(g_descriptorSetPool == nullptr);
+	assert(g_descriptorSetManager == nullptr);
 
 	// Populate free list and data arrays
 	for (uint32_t i = 0; i < MaxItems; ++i)
@@ -59,17 +35,17 @@ DescriptorSetPool::DescriptorSetPool(CVkDevice* device)
 		m_descriptorData[i] = DescriptorSetData{};
 	}
 
-	g_descriptorSetPool = this;
+	g_descriptorSetManager = this;
 }
 
 
-DescriptorSetPool::~DescriptorSetPool()
+DescriptorSetManager::~DescriptorSetManager()
 {
-	g_descriptorSetPool = nullptr;
+	g_descriptorSetManager = nullptr;
 }
 
 
-DescriptorSetHandle DescriptorSetPool::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+DescriptorSetHandle DescriptorSetManager::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -107,7 +83,7 @@ DescriptorSetHandle DescriptorSetPool::CreateDescriptorSet(const DescriptorSetDe
 }
 
 
-void DescriptorSetPool::DestroyHandle(DescriptorSetHandleType* handle)
+void DescriptorSetManager::DestroyHandle(DescriptorSetHandleType* handle)
 {
 	assert(handle != nullptr);
 
@@ -122,7 +98,7 @@ void DescriptorSetPool::DestroyHandle(DescriptorSetHandleType* handle)
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer)
+void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer)
 {
 	assert(handle != 0);
 
@@ -147,7 +123,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
+void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
 {
 	assert(handle != 0);
 
@@ -172,7 +148,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
@@ -211,7 +187,7 @@ void DescriptorSetPool::SetSRV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
+void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
 {
 	assert(handle != 0);
 
@@ -236,7 +212,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer)
+void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, const DepthBuffer& depthBuffer)
 {
 	assert(handle != 0);
 
@@ -247,7 +223,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
@@ -286,7 +262,7 @@ void DescriptorSetPool::SetUAV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+void DescriptorSetManager::SetCBV(DescriptorSetHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
 {
 	assert(handle != 0);
 
@@ -315,7 +291,7 @@ void DescriptorSetPool::SetCBV(DescriptorSetHandleType* handle, int slot, const 
 }
 
 
-void DescriptorSetPool::SetDynamicOffset(DescriptorSetHandleType* handle, uint32_t offset)
+void DescriptorSetManager::SetDynamicOffset(DescriptorSetHandleType* handle, uint32_t offset)
 {
 	assert(handle != 0);
 
@@ -328,7 +304,7 @@ void DescriptorSetPool::SetDynamicOffset(DescriptorSetHandleType* handle, uint32
 }
 
 
-void DescriptorSetPool::UpdateGpuDescriptors(DescriptorSetHandleType* handle)
+void DescriptorSetManager::UpdateGpuDescriptors(DescriptorSetHandleType* handle)
 {
 	assert(handle != 0);
 
@@ -359,7 +335,7 @@ void DescriptorSetPool::UpdateGpuDescriptors(DescriptorSetHandleType* handle)
 }
 
 
-bool DescriptorSetPool::HasDescriptors(DescriptorSetHandleType* handle) const
+bool DescriptorSetManager::HasDescriptors(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -370,7 +346,7 @@ bool DescriptorSetPool::HasDescriptors(DescriptorSetHandleType* handle) const
 }
 
 
-VkDescriptorSet DescriptorSetPool::GetDescriptorSet(DescriptorSetHandleType* handle) const
+VkDescriptorSet DescriptorSetManager::GetDescriptorSet(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -381,7 +357,7 @@ VkDescriptorSet DescriptorSetPool::GetDescriptorSet(DescriptorSetHandleType* han
 }
 
 
-uint32_t DescriptorSetPool::GetDynamicOffset(DescriptorSetHandleType* handle) const
+uint32_t DescriptorSetManager::GetDynamicOffset(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -392,7 +368,7 @@ uint32_t DescriptorSetPool::GetDynamicOffset(DescriptorSetHandleType* handle) co
 }
 
 
-bool DescriptorSetPool::IsDynamicBuffer(DescriptorSetHandleType* handle) const
+bool DescriptorSetManager::IsDynamicBuffer(DescriptorSetHandleType* handle) const
 {
 	assert(handle != 0);
 
@@ -403,9 +379,9 @@ bool DescriptorSetPool::IsDynamicBuffer(DescriptorSetHandleType* handle) const
 }
 
 
-DescriptorSetPool* const GetVulkanDescriptorSetPool()
+DescriptorSetManager* const GetVulkanDescriptorSetManager()
 {
-	return g_descriptorSetPool;
+	return g_descriptorSetManager;
 }
 
 } // namespace Luna::VK

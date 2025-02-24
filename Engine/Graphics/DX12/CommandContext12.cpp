@@ -16,7 +16,7 @@
 
 #include "ColorBufferManager12.h"
 #include "DepthBufferManager12.h"
-#include "DescriptorSetPool12.h"
+#include "DescriptorSetManager12.h"
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
 #include "GpuBufferManager12.h"
@@ -119,7 +119,7 @@ void CommandContext12::Initialize()
 
 	m_colorBufferManager = GetD3D12ColorBufferManager();
 	m_depthBufferManager = GetD3D12DepthBufferManager();
-	m_descriptorSetPool = GetD3D12DescriptorSetPool();
+	m_descriptorSetManager = GetD3D12DescriptorSetManager();
 	m_gpuBufferManager = GetD3D12GpuBufferManager();
 	m_pipelineStateManager = GetD3D12PipelineStateManager();
 	m_rootSignaturePool = GetD3D12RootSignaturePool();
@@ -860,13 +860,13 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!m_descriptorSetPool->HasBindableDescriptors(descriptorSetHandle))
+	if (!m_descriptorSetManager->HasBindableDescriptors(descriptorSetHandle))
 		return;
 
 	// Copy descriptors
-	m_descriptorSetPool->UpdateGpuDescriptors(descriptorSetHandle);
+	m_descriptorSetManager->UpdateGpuDescriptors(descriptorSetHandle);
 
-	auto gpuDescriptor = m_descriptorSetPool->GetGpuDescriptorHandle(descriptorSetHandle);
+	auto gpuDescriptor = m_descriptorSetManager->GetGpuDescriptorHandle(descriptorSetHandle);
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
 		if (m_type == CommandListType::Direct)
@@ -878,9 +878,9 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 			m_commandList->SetComputeRootDescriptorTable(rootIndex, gpuDescriptor);
 		}
 	}
-	else if (m_descriptorSetPool->GetGpuAddress(descriptorSetHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	else if (m_descriptorSetManager->GetGpuAddress(descriptorSetHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = m_descriptorSetPool->GetGpuAddressWithOffset(descriptorSetHandle);
+		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = m_descriptorSetManager->GetGpuAddressWithOffset(descriptorSetHandle);
 		if (m_type == CommandListType::Direct)
 		{
 			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);

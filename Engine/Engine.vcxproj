@@ -45,7 +45,7 @@
     <ClCompile Include="Graphics\DescriptorSet.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBufferManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DepthBufferManager12.cpp" />
-    <ClCompile Include="Graphics\DX12\DescriptorSetPool12.cpp" />
+    <ClCompile Include="Graphics\DX12\DescriptorSetManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
     <ClCompile Include="Graphics\DX12\GpuBufferManager12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineStateManager12.cpp" />
@@ -72,7 +72,7 @@
     <ClCompile Include="Graphics\Vulkan\ColorBufferManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DepthBufferManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\GpuBufferManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp" />
@@ -139,7 +139,7 @@
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\ColorBufferManager12.h" />
     <ClInclude Include="Graphics\DX12\DepthBufferManager12.h" />
-    <ClInclude Include="Graphics\DX12\DescriptorSetPool12.h" />
+    <ClInclude Include="Graphics\DX12\DescriptorSetManager12.h" />
     <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
     <ClInclude Include="Graphics\DX12\GpuBufferManager12.h" />
     <ClInclude Include="Graphics\DX12\PipelineStateManager12.h" />
@@ -171,7 +171,7 @@
     <ClInclude Include="Graphics\Vulkan\ColorBufferManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\DepthBufferManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
-    <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h" />

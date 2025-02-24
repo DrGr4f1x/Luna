@@ -17,7 +17,7 @@
 
 #include "ColorBufferManagerVK.h"
 #include "DepthBufferManagerVK.h"
-#include "DescriptorSetPoolVK.h"
+#include "DescriptorSetManagerVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferManagerVK.h"
 #include "PipelineStateManagerVK.h"
@@ -173,7 +173,7 @@ void CommandContextVK::Initialize()
 
 	m_colorBufferManager = GetVulkanColorBufferManager();
 	m_depthBufferManager = GetVulkanDepthBufferManager();
-	m_descriptorSetPool = GetVulkanDescriptorSetPool();
+	m_descriptorSetManager = GetVulkanDescriptorSetManager();
 	m_gpuBufferManager = GetVulkanGpuBufferManager();
 	m_pipelineStateManager = GetVulkanPipelineStateManager();
 	m_rootSignaturePool = GetVulkanRootSignaturePool();
@@ -857,17 +857,17 @@ void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!m_descriptorSetPool->HasDescriptors(descriptorSetHandle))
+	if (!m_descriptorSetManager->HasDescriptors(descriptorSetHandle))
 		return;
 
-	m_descriptorSetPool->UpdateGpuDescriptors(descriptorSetHandle);
+	m_descriptorSetManager->UpdateGpuDescriptors(descriptorSetHandle);
 
-	VkDescriptorSet vkDescriptorSet = m_descriptorSetPool->GetDescriptorSet(descriptorSetHandle);
+	VkDescriptorSet vkDescriptorSet = m_descriptorSetManager->GetDescriptorSet(descriptorSetHandle);
 	if (vkDescriptorSet == VK_NULL_HANDLE)
 		return;
 
-	const uint32_t dynamicOffset = m_descriptorSetPool->GetDynamicOffset(descriptorSetHandle);
-	const bool isDynamicBuffer = m_descriptorSetPool->IsDynamicBuffer(descriptorSetHandle);
+	const uint32_t dynamicOffset = m_descriptorSetManager->GetDynamicOffset(descriptorSetHandle);
+	const bool isDynamicBuffer = m_descriptorSetManager->IsDynamicBuffer(descriptorSetHandle);
 
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,

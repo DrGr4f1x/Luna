@@ -11,44 +11,45 @@
 #pragma once
 
 #include "Graphics\DescriptorSet.h"
-#include "Graphics\DX12\DirectXCommon.h"
-#include "Graphics\DX12\DescriptorAllocator12.h"
+#include "Graphics\RootSignature.h"
+#include "Graphics\Vulkan\VulkanCommon.h"
 
 
-namespace Luna::DX12
+namespace Luna::VK
 {
 
 struct DescriptorSetDesc
 {
-	DescriptorHandle descriptorHandle;
+	VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
+	VulkanBindingOffsets bindingOffsets;
 	uint32_t numDescriptors{ 0 };
-	bool isSamplerTable{ false };
-	bool isRootBuffer{ false };
+	bool isDynamicBuffer{ false };
 };
 
 
-// TODO: Put descriptorHandle, gpuAddress, and dynamicOffset into a separate struct - they're the hot data for the GPU.
+using DescriptorData = std::variant<VkDescriptorImageInfo, VkDescriptorBufferInfo, VkBufferView>;
+
+
 struct DescriptorSetData
 {
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, MaxDescriptorsPerTable> descriptors;
-	DescriptorHandle descriptorHandle;
-	uint64_t gpuAddress{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+	VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
+	VulkanBindingOffsets bindingOffsets;
+	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> writeDescriptorSets;
+	std::array<DescriptorData, MaxDescriptorsPerTable> descriptorData;
 	uint32_t numDescriptors{ 0 };
 	uint32_t dirtyBits{ 0 };
 	uint32_t dynamicOffset{ 0 };
-
-	bool isSamplerTable{ false };
-	bool isRootBuffer{ false };
+	bool isDynamicBuffer{ false };
 };
 
 
-class DescriptorSetPool : public IDescriptorSetPool
+class DescriptorSetManager : public IDescriptorSetManager
 {
 	static const uint32_t MaxItems = (1 << 16);
 
 public:
-	explicit DescriptorSetPool(ID3D12Device* device);
-	~DescriptorSetPool();
+	explicit DescriptorSetManager(CVkDevice* device);
+	~DescriptorSetManager();
 
 	// Create/Destroy descriptor set
 	DescriptorSetHandle CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
@@ -70,17 +71,13 @@ public:
 	void UpdateGpuDescriptors(DescriptorSetHandleType* handle) override;
 
 	// Platform specific functions
-	bool HasBindableDescriptors(DescriptorSetHandleType* handle) const;
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(DescriptorSetHandleType* handle) const;
-	uint64_t GetGpuAddress(DescriptorSetHandleType* handle) const;
-	uint64_t GetDynamicOffset(DescriptorSetHandleType* handle) const;
-	uint64_t GetGpuAddressWithOffset(DescriptorSetHandleType* handle) const;
+	bool HasDescriptors(DescriptorSetHandleType* handle) const;
+	VkDescriptorSet GetDescriptorSet(DescriptorSetHandleType* handle) const;
+	uint32_t GetDynamicOffset(DescriptorSetHandleType* handle) const;
+	bool IsDynamicBuffer(DescriptorSetHandleType* handle) const;
 
 private:
-	void SetDescriptor(DescriptorSetData& data, int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
-
-private:
-	wil::com_ptr<ID3D12Device> m_device;
+	wil::com_ptr<CVkDevice> m_device;
 
 	// Allocation mutex
 	std::mutex m_allocationMutex;
@@ -93,6 +90,6 @@ private:
 };
 
 
-DescriptorSetPool* const GetD3D12DescriptorSetPool();
+DescriptorSetManager* const GetVulkanDescriptorSetManager();
 
-} // namespace Luna::DX12
+} // namespace Luna::VK

@@ -21,7 +21,7 @@ namespace Luna
 // Forward declarations
 class IColorBufferManager;
 class IDepthBufferManager;
-class IDescriptorSetPool;
+class IDescriptorSetManager;
 class IGpuBufferManager;
 class IPipelineStateManager;
 class IRootSignaturePool;
@@ -103,7 +103,7 @@ IDeviceManager* GetDeviceManager();
 
 IColorBufferManager* GetColorBufferManager();
 IDepthBufferManager* GetDepthBufferManager();
-IDescriptorSetPool* GetDescriptorSetPool();
+IDescriptorSetManager* GetDescriptorSetManager();
 IGpuBufferManager* GetGpuBufferManager();
 IPipelineStateManager* GetPipelineStateManager();
 IRootSignaturePool* GetRootSignaturePool();

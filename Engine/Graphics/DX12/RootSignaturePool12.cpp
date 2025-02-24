@@ -12,7 +12,7 @@
 
 #include "RootSignaturePool12.h"
 
-#include "DescriptorSetPool12.h"
+#include "DescriptorSetManager12.h"
 
 
 namespace Luna::DX12
@@ -117,7 +117,7 @@ DescriptorSetHandle RootSignaturePool::CreateDescriptorSet(RootSignatureHandleTy
 		.isRootBuffer		= isRootBuffer
 	};
 
-	return GetD3D12DescriptorSetPool()->CreateDescriptorSet(descriptorSetDesc);
+	return GetD3D12DescriptorSetManager()->CreateDescriptorSet(descriptorSetDesc);
 }
 
 
