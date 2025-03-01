@@ -82,6 +82,19 @@ void DescriptorSetPool::FreeDescriptorSet(VkDescriptorSet descriptorSet)
 }
 
 
+uint32_t DescriptorSetPool::GetNumLiveDescriptorSets() const
+{
+	uint32_t sum = 0;
+
+	for (uint32_t num : m_allocatedSetsPerPool)
+	{
+		sum += num;
+	}
+
+	return sum;
+}
+
+
 void DescriptorSetPool::Reset()
 {
 	// Reset all descriptor pools

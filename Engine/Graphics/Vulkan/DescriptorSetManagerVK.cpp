@@ -96,6 +96,7 @@ DescriptorSetHandle DescriptorSetManager::CreateDescriptorSet(const DescriptorSe
 		writeSet.pTexelBufferView = nullptr;
 	}
 
+	m_descs[index] = descriptorSetDesc;
 	m_descriptorData[index] = data;
 
 	return Create<DescriptorSetHandleType>(index, this);
@@ -111,6 +112,19 @@ void DescriptorSetManager::DestroyHandle(DescriptorSetHandleType* handle)
 	// TODO: queue this up to execute in one big batch, e.g. at the end of the frame
 
 	uint32_t index = handle->GetIndex();
+
+	// Free the allocated descriptor set
+	VkDescriptorSetLayout vkDescriptorSetLayout = m_descs[index].descriptorSetLayout->Get();
+	VkDescriptorSet vkDescriptorSet = m_descriptorData[index].descriptorSet;
+	auto it = m_setPoolMapping.find(vkDescriptorSetLayout);
+	assert(it != m_setPoolMapping.end());
+	it->second->FreeDescriptorSet(vkDescriptorSet);
+	if (it->second->GetNumLiveDescriptorSets() == 0)
+	{
+		m_setPoolMapping.erase(it);
+	}
+
+	m_descs[index] = DescriptorSetDesc{};
 	m_descriptorData[index] = DescriptorSetData{};
 
 	m_freeList.push(index);

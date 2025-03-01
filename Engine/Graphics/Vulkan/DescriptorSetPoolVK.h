@@ -34,6 +34,9 @@ public:
 	VkDescriptorSet AllocateDescriptorSet();
 	void FreeDescriptorSet(VkDescriptorSet descriptorSet);
 
+	// Get the number of live descriptor sets allocated, but not yet freed
+	uint32_t GetNumLiveDescriptorSets() const;
+
 	void Reset();
 
 private:

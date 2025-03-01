@@ -90,6 +90,9 @@ private:
 	// Free list
 	std::queue<uint32_t> m_freeList;
 
+	// Cold data
+	std::array<DescriptorSetDesc, MaxItems> m_descs;
+
 	// Hot data
 	std::array<DescriptorSetData, MaxItems> m_descriptorData;
 
