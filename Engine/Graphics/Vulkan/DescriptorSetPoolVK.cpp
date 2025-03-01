@@ -106,7 +106,7 @@ void DescriptorSetPool::ParseRootParameter(const RootParameter& rootParam)
 	// Count each type of descriptor needed by a descriptor set
 	if (rootParam.parameterType == RootParameterType::RootCBV)
 	{
-		descriptorTypeCounts[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER] = 1;
+		descriptorTypeCounts[VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC] = 1;
 	}
 	else if (rootParam.parameterType == RootParameterType::RootSRV || rootParam.parameterType == RootParameterType::RootUAV)
 	{

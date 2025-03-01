@@ -14,6 +14,7 @@
 
 #include "ColorBufferManagerVK.h"
 #include "DepthBufferManagerVK.h"
+#include "DescriptorSetPoolVK.h"
 #include "GpuBufferManagerVK.h"
 
 
@@ -54,11 +55,29 @@ DescriptorSetHandle DescriptorSetManager::CreateDescriptorSet(const DescriptorSe
 	uint32_t index = m_freeList.front();
 	m_freeList.pop();
 
+	// Find or create descriptor set pool
+	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->Get();
+	DescriptorSetPool* pool{ nullptr };
+	auto it = m_setPoolMapping.find(vkDescriptorSetLayout);
+	if (it == m_setPoolMapping.end())
+	{
+		auto poolHandle = make_unique<DescriptorSetPool>(m_device.get(), descriptorSetDesc.descriptorSetLayout, descriptorSetDesc.rootParameter);
+		pool = poolHandle.get();
+		m_setPoolMapping.emplace(vkDescriptorSetLayout, std::move(poolHandle));
+	}
+	else
+	{
+		pool = it->second.get();
+	}
+
+	// Allocate descriptor set from pool
+	VkDescriptorSet vkDescriptorSet = pool->AllocateDescriptorSet();
+
 	DescriptorSetData data{
-		.descriptorSet = descriptorSetDesc.descriptorSet,
-		.bindingOffsets = descriptorSetDesc.bindingOffsets,
-		.numDescriptors = descriptorSetDesc.numDescriptors,
-		.isDynamicBuffer = descriptorSetDesc.isDynamicBuffer
+		.descriptorSet		= vkDescriptorSet,
+		.bindingOffsets		= descriptorSetDesc.bindingOffsets,
+		.numDescriptors		= descriptorSetDesc.numDescriptors,
+		.isDynamicBuffer	= descriptorSetDesc.isDynamicBuffer
 	};
 
 	assert(data.numDescriptors <= MaxDescriptorsPerTable);

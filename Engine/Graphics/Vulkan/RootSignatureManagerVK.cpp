@@ -98,7 +98,6 @@ DescriptorSetHandle RootSignatureManager::CreateDescriptorSet(RootSignatureHandl
 	const auto& rootSignatureDesc = GetDesc(handle);
 	const auto& data = GetData(handle);
 
-	VkDescriptorSet descriptorSet = AllocateDescriptorSet(data.descriptorSetLayouts[index]->Get());
 	const auto& rootParam = rootSignatureDesc.rootParameters[index];
 
 	const bool isDynamicBuffer = rootParam.parameterType == RootParameterType::RootCBV ||
@@ -106,10 +105,11 @@ DescriptorSetHandle RootSignatureManager::CreateDescriptorSet(RootSignatureHandl
 		rootParam.parameterType == RootParameterType::RootUAV;
 
 	DescriptorSetDesc descriptorSetDesc{
-		.descriptorSet		= descriptorSet,
-		.bindingOffsets		= rootSignatureDesc.bindingOffsets,
-		.numDescriptors		= rootParam.GetNumDescriptors(),
-		.isDynamicBuffer	= isDynamicBuffer
+		.descriptorSetLayout	= data.descriptorSetLayouts[index].get(),
+		.rootParameter			= rootParam,
+		.bindingOffsets			= rootSignatureDesc.bindingOffsets,
+		.numDescriptors			= rootParam.GetNumDescriptors(),
+		.isDynamicBuffer		= isDynamicBuffer
 	};
 
 	return GetVulkanDescriptorSetManager()->CreateDescriptorSet(descriptorSetDesc);

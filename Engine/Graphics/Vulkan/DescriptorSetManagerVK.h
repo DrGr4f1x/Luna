@@ -18,10 +18,15 @@
 namespace Luna::VK
 {
 
+// Forward declarations
+class DescriptorSetPool;
+
+
 struct DescriptorSetDesc
 {
-	VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
-	VulkanBindingOffsets bindingOffsets;
+	CVkDescriptorSetLayout* descriptorSetLayout{ nullptr };
+	RootParameter rootParameter{};
+	VulkanBindingOffsets bindingOffsets{};
 	uint32_t numDescriptors{ 0 };
 	bool isDynamicBuffer{ false };
 };
@@ -87,6 +92,9 @@ private:
 
 	// Hot data
 	std::array<DescriptorSetData, MaxItems> m_descriptorData;
+
+	// Descriptor set pools
+	std::unordered_map<VkDescriptorSetLayout, std::unique_ptr<DescriptorSetPool>> m_setPoolMapping;
 };
 
 

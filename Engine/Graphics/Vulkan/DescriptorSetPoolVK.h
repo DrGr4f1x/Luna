@@ -29,6 +29,7 @@ public:
 	static const uint32_t MaxSetsPerPool = 16;
 
 	DescriptorSetPool(CVkDevice* device, CVkDescriptorSetLayout* layout, const RootParameter& rootParam, uint32_t poolSize = MaxSetsPerPool);
+	~DescriptorSetPool() = default;
 
 	VkDescriptorSet AllocateDescriptorSet();
 	void FreeDescriptorSet(VkDescriptorSet descriptorSet);
