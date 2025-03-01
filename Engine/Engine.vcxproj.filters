@@ -191,6 +191,9 @@
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -463,6 +466,9 @@
       <Filter>External\vk-bootstrap</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>

@@ -157,4 +157,11 @@ void CVkShaderModule::Destroy()
 	m_shaderModule = VK_NULL_HANDLE;
 }
 
+
+void CVkDescriptorPool::Destroy()
+{
+	vkDestroyDescriptorPool(GetDevice(), m_descriptorPool, nullptr);
+	m_descriptorPool = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

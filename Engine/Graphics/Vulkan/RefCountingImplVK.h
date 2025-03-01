@@ -649,4 +649,37 @@ private:
 	VkShaderModule m_shaderModule{ VK_NULL_HANDLE };
 };
 
+
+//
+// VKDescriptorPool
+//
+class __declspec(uuid("5F4C0CA9-0DAB-4B07-8CE7-DC35FBC79839")) CVkDescriptorPool
+	: public RefCounted<CVkDescriptorPool>
+	, public NonCopyable
+{
+public:
+	CVkDescriptorPool() noexcept = default;
+	CVkDescriptorPool(CVkDevice* device, VkDescriptorPool descriptorPool)
+		: m_device{ device }
+		, m_descriptorPool{ descriptorPool }
+	{
+	}
+
+	~CVkDescriptorPool()
+	{
+		Destroy();
+	}
+
+	VkDescriptorPool Get() const noexcept { return m_descriptorPool; }
+	operator VkDescriptorPool() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkDescriptorPool m_descriptorPool{ VK_NULL_HANDLE };
+};
+
 } // namespace Luna::VK

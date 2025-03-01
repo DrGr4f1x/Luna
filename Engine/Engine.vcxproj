@@ -73,6 +73,7 @@
     <ClCompile Include="Graphics\Vulkan\DepthBufferManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetManagerVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\GpuBufferManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="Graphics\Vulkan\DepthBufferManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetManagerVK.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h" />
