@@ -10,9 +10,11 @@
 
 #include "Stdafx.h"
 
-#include "DescriptorSetPoolVK.h"
+#include "DescriptorPoolVK.h"
 
 #include "Graphics\RootSignature.h"
+
+#include "Graphics\Vulkan\DeviceManagerVK.h"
 
 using namespace std;
 
@@ -20,16 +22,17 @@ using namespace std;
 namespace Luna::VK
 {
 
-DescriptorSetPool::DescriptorSetPool(CVkDevice* device, CVkDescriptorSetLayout* layout, const RootParameter& rootParam, uint32_t poolSize)
-	: m_device{ device }
-	, m_layout{ layout }
-	, m_poolMaxSets { poolSize }
+DescriptorPool::DescriptorPool(const DescriptorPoolDesc& descriptorPoolDesc)
+	: m_device{ descriptorPoolDesc.device }
+	, m_layout{ descriptorPoolDesc.layout }
+	, m_poolMaxSets { descriptorPoolDesc.poolSize }
+	, m_allowFreeDescriptorSets{ descriptorPoolDesc.allowFreeDescriptorSets }
 {
-	ParseRootParameter(rootParam);
+	ParseRootParameter(descriptorPoolDesc.rootParameter);
 }
 
 
-VkDescriptorSet DescriptorSetPool::AllocateDescriptorSet()
+VkDescriptorSet DescriptorPool::AllocateDescriptorSet()
 {
 	m_poolIndex = FindAvailablePool(m_poolIndex);
 
@@ -61,28 +64,31 @@ VkDescriptorSet DescriptorSetPool::AllocateDescriptorSet()
 }
 
 
-void DescriptorSetPool::FreeDescriptorSet(VkDescriptorSet descriptorSet)
+void DescriptorPool::FreeDescriptorSet(VkDescriptorSet descriptorSet)
 {
-	auto it = m_setPoolMapping.find(descriptorSet);
-	assert(it != m_setPoolMapping.end());
+	if (m_allowFreeDescriptorSets)
+	{
+		auto it = m_setPoolMapping.find(descriptorSet);
+		assert(it != m_setPoolMapping.end());
 
-	auto poolIndex = it->second;
+		auto poolIndex = it->second;
 
-	// Free descriptor set
-	vkFreeDescriptorSets(m_device->Get(), m_pools[poolIndex]->Get(), 1, &descriptorSet);
+		// Free descriptor set
+		vkFreeDescriptorSets(m_device->Get(), m_pools[poolIndex]->Get(), 1, &descriptorSet);
 
-	// Remove descriptor set mapping
-	m_setPoolMapping.erase(it);
+		// Remove descriptor set mapping
+		m_setPoolMapping.erase(it);
 
-	// Decrement allocated set count for the pool
-	--m_allocatedSetsPerPool[poolIndex];
+		// Decrement allocated set count for the pool
+		--m_allocatedSetsPerPool[poolIndex];
 
-	// Change the current pool index to use the available pool
-	m_poolIndex = poolIndex;
+		// Change the current pool index to use the available pool
+		m_poolIndex = poolIndex;
+	}
 }
 
 
-uint32_t DescriptorSetPool::GetNumLiveDescriptorSets() const
+uint32_t DescriptorPool::GetNumLiveDescriptorSets() const
 {
 	uint32_t sum = 0;
 
@@ -95,7 +101,7 @@ uint32_t DescriptorSetPool::GetNumLiveDescriptorSets() const
 }
 
 
-void DescriptorSetPool::Reset()
+void DescriptorPool::Reset()
 {
 	// Reset all descriptor pools
 	for (auto pool : m_pools)
@@ -112,7 +118,7 @@ void DescriptorSetPool::Reset()
 }
 
 
-void DescriptorSetPool::ParseRootParameter(const RootParameter& rootParam)
+void DescriptorPool::ParseRootParameter(const RootParameter& rootParam)
 {
 	map<VkDescriptorType, uint32_t> descriptorTypeCounts;
 
@@ -148,15 +154,19 @@ void DescriptorSetPool::ParseRootParameter(const RootParameter& rootParam)
 }
 
 
-uint32_t DescriptorSetPool::FindAvailablePool(uint32_t searchIndex)
+uint32_t DescriptorPool::FindAvailablePool(uint32_t searchIndex)
 {
 	// Create a new pool
 	if (searchIndex >= (uint32_t)m_pools.size())
 	{
+		VkDescriptorPoolCreateFlags flags{};
+		if (m_allowFreeDescriptorSets)
+			flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
 		VkDescriptorPoolCreateInfo createInfo
 		{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-			.flags			= VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+			.flags			= flags,
 			.maxSets		= m_poolMaxSets,
 			.poolSizeCount	= (uint32_t)m_poolSizes.size(),
 			.pPoolSizes		= m_poolSizes.data()
@@ -183,6 +193,76 @@ uint32_t DescriptorSetPool::FindAvailablePool(uint32_t searchIndex)
 
 	// Increment pool index
 	return FindAvailablePool(++searchIndex);
+}
+
+
+std::mutex DescriptorPoolCache::sm_mutex;
+std::queue<std::shared_ptr<DescriptorPool>> DescriptorPoolCache::sm_availablePools;
+std::queue<std::pair<uint64_t, std::shared_ptr<DescriptorPool>>> DescriptorPoolCache::sm_retiredPools;
+
+
+DescriptorPoolCache::DescriptorPoolCache(const DescriptorPoolDesc& descriptorPoolDesc)
+	: m_device { descriptorPoolDesc.device }
+	, m_layout{ descriptorPoolDesc.layout }
+	, m_rootParameter{ descriptorPoolDesc.rootParameter }
+	, m_poolMaxSets{ descriptorPoolDesc.poolSize }
+{}
+
+
+DescriptorPoolCache::~DescriptorPoolCache()
+{}
+
+
+VkDescriptorSet DescriptorPoolCache::AllocateDescriptorSet()
+{
+	if (!m_activePool)
+	{
+		m_activePool = RequestDescriptorPool();
+	}
+
+	return m_activePool->AllocateDescriptorSet();
+}
+
+
+void DescriptorPoolCache::RetirePool(uint64_t fenceValue)
+{
+	lock_guard<mutex> lockGuard(sm_mutex);
+	sm_retiredPools.push(make_pair(fenceValue, m_activePool));
+	m_activePool.reset();
+}
+
+
+shared_ptr<DescriptorPool> DescriptorPoolCache::RequestDescriptorPool()
+{
+	lock_guard<mutex> lockGuard(sm_mutex);
+
+	auto deviceManager = GetVulkanDeviceManager();
+
+	while (!sm_retiredPools.empty() && deviceManager->IsFenceComplete(sm_retiredPools.front().first))
+	{
+		sm_availablePools.push(sm_retiredPools.front().second);
+		sm_retiredPools.pop();
+	}
+
+	if (!sm_availablePools.empty())
+	{
+		auto pool = sm_availablePools.front();
+		sm_availablePools.pop();
+		pool->Reset();
+		return pool;
+	}
+	else
+	{
+		DescriptorPoolDesc descriptorPoolDesc{
+			.device						= m_device.get(),
+			.layout						= m_layout.get(),
+			.rootParameter				= m_rootParameter,
+			.poolSize					= MaxSetsPerPool,
+			.allowFreeDescriptorSets	= false
+		};
+		auto pool = make_shared<DescriptorPool>(descriptorPoolDesc);
+		return pool;
+	}
 }
 
 } // namespace Luna::VK

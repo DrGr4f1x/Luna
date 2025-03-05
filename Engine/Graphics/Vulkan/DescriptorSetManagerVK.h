@@ -19,7 +19,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class DescriptorSetPool;
+class DescriptorPool;
 
 
 struct DescriptorSetDesc
@@ -97,7 +97,7 @@ private:
 	std::array<DescriptorSetData, MaxItems> m_descriptorData;
 
 	// Descriptor set pools
-	std::unordered_map<VkDescriptorSetLayout, std::unique_ptr<DescriptorSetPool>> m_setPoolMapping;
+	std::unordered_map<VkDescriptorSetLayout, std::unique_ptr<DescriptorPool>> m_setPoolMapping;
 };
 
 

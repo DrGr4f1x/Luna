@@ -189,6 +189,19 @@ void DeviceManager::WaitForGpu()
 }
 
 
+void DeviceManager::WaitForFence(uint64_t fenceValue)
+{
+	Queue& producer = GetQueue((CommandListType)(fenceValue >> 56));
+	producer.WaitForFence(fenceValue);
+}
+
+
+bool DeviceManager::IsFenceComplete(uint64_t fenceValue)
+{
+	return GetQueue(static_cast<CommandListType>(fenceValue >> 56)).IsFenceComplete(fenceValue);
+}
+
+
 void DeviceManager::SetWindowSize(uint32_t width, uint32_t height)
 {
 	if (m_desc.backBufferWidth != width || m_desc.backBufferHeight != height)

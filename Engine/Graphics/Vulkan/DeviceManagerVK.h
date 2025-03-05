@@ -46,6 +46,8 @@ public:
 	void Present() final;
 
 	void WaitForGpu() final;
+	void WaitForFence(uint64_t fenceValue);
+	bool IsFenceComplete(uint64_t fenceValue);
 
 	void SetWindowSize(uint32_t width, uint32_t height) final;
 	void CreateDeviceResources() final;

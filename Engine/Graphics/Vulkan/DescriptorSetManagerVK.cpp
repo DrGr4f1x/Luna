@@ -14,7 +14,7 @@
 
 #include "ColorBufferManagerVK.h"
 #include "DepthBufferManagerVK.h"
-#include "DescriptorSetPoolVK.h"
+#include "DescriptorPoolVK.h"
 #include "GpuBufferManagerVK.h"
 
 
@@ -57,11 +57,20 @@ DescriptorSetHandle DescriptorSetManager::CreateDescriptorSet(const DescriptorSe
 
 	// Find or create descriptor set pool
 	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->Get();
-	DescriptorSetPool* pool{ nullptr };
+	DescriptorPool* pool{ nullptr };
 	auto it = m_setPoolMapping.find(vkDescriptorSetLayout);
 	if (it == m_setPoolMapping.end())
 	{
-		auto poolHandle = make_unique<DescriptorSetPool>(m_device.get(), descriptorSetDesc.descriptorSetLayout, descriptorSetDesc.rootParameter);
+		DescriptorPoolDesc descriptorPoolDesc
+		{
+			.device						= m_device.get(),
+			.layout						= descriptorSetDesc.descriptorSetLayout,
+			.rootParameter				= descriptorSetDesc.rootParameter,
+			.poolSize					= MaxSetsPerPool,
+			.allowFreeDescriptorSets	= true
+		};
+
+		auto poolHandle = make_unique<DescriptorPool>(descriptorPoolDesc);
 		pool = poolHandle.get();
 		m_setPoolMapping.emplace(vkDescriptorSetLayout, std::move(poolHandle));
 	}
