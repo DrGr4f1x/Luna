@@ -176,6 +176,7 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferManagerVK.h" />
+    <ClInclude Include="Graphics\Vulkan\HashVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />

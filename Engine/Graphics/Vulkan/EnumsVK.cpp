@@ -806,4 +806,29 @@ VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState)
 	return bits;
 }
 
+
+bool IsDescriptorImageInfoType(VkDescriptorType descriptorType)
+{
+	return descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER ||
+		descriptorType == VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE ||
+		descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_IMAGE ||
+		descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+}
+
+
+bool IsDescriptorBufferInfoType(VkDescriptorType descriptorType)
+{
+	return descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+		descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER ||
+		descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC ||
+		descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+}
+
+
+bool IsDescriptorBufferViewType(VkDescriptorType descriptorType)
+{
+	return descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER ||
+		descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+}
+
 } // Minimumnamespace Luna::VK

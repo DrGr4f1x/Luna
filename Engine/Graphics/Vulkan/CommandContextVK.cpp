@@ -171,6 +171,8 @@ void CommandContextVK::Initialize()
 	assert(m_commandBuffer == VK_NULL_HANDLE);
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 
+	m_dynamicDescriptorHeap = make_unique<DefaultDynamicDescriptorHeap>(m_device.get());
+
 	m_colorBufferManager = GetVulkanColorBufferManager();
 	m_depthBufferManager = GetVulkanDepthBufferManager();
 	m_descriptorSetManager = GetVulkanDescriptorSetManager();
@@ -221,7 +223,7 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 
 	// Recycle dynamic allocations
 	//m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
-	//m_dynamicDescriptorPool.CleanupUsedPools(fenceValue);
+	m_dynamicDescriptorHeap->CleanupUsedPools(fenceValue);
 
 	if (bWaitForCompletion)
 	{
@@ -578,11 +580,15 @@ void CommandContextVK::SetRootSignature(RootSignature& rootSignature)
 	{
 		m_computePipelineLayout = VK_NULL_HANDLE;
 		m_graphicsPipelineLayout = pipelineLayout;
+
+		m_dynamicDescriptorHeap->ParseRootSignature(rootSignature, true);
 	}
 	else
 	{
 		m_graphicsPipelineLayout = VK_NULL_HANDLE;
 		m_computePipelineLayout = pipelineLayout;
+
+		m_dynamicDescriptorHeap->ParseRootSignature(rootSignature, false);
 	}
 
 	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
@@ -732,7 +738,8 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 
 void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer)
 {
-	assert(false);
+	auto handle = gpuBuffer.GetHandle();
+	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, m_gpuBufferManager->GetBufferInfo(handle.get()), true);
 }
 
 
@@ -752,45 +759,65 @@ void CommandContextVK::SetResources(ResourceSet& resourceSet)
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	auto handle = colorBuffer.GetHandle();
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, m_colorBufferManager->GetImageInfoSrv(handle.get()), true);
+}
+
+
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+{
+	auto handle = depthBuffer.GetHandle();
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, m_depthBufferManager->GetImageInfo(handle.get(), depthSrv), true);
+}
+
+
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
+{
+	auto handle = gpuBuffer.GetHandle();
+	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
+	{
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, m_gpuBufferManager->GetBufferView(handle.get()), true);
+	}
+	else
+	{
+		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, m_gpuBufferManager->GetBufferInfo(handle.get()), true);
+	}
+}
+
+
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer)
+{
+	auto handle = colorBuffer.GetHandle();
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, m_colorBufferManager->GetImageInfoUav(handle.get()), true);
+}
+
+
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer)
 {
 	assert(false);
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
 {
-	assert(false);
+	auto handle = gpuBuffer.GetHandle();
+	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
+	{
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, m_gpuBufferManager->GetBufferView(handle.get()), true);
+	}
+	else
+	{
+		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, m_gpuBufferManager->GetBufferInfo(handle.get()), true);
+	}
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
 {
-	assert(false);
-}
-
-
-void CommandContextVK::SetUAV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
-{
-	assert(false);
-}
-
-
-void CommandContextVK::SetUAV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer)
-{
-	assert(false);
-}
-
-
-void CommandContextVK::SetUAV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
-{
-	assert(false);
-}
-
-
-void CommandContextVK::SetCBV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
-{
-	assert(false);
+	auto handle = gpuBuffer.GetHandle();
+	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, m_gpuBufferManager->GetBufferInfo(handle.get()), true);
 }
 
 
@@ -818,8 +845,7 @@ void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t i
 	uint32_t startVertexLocation, uint32_t startInstanceLocation)
 {
 	FlushResourceBarriers();
-	// TODO
-	//m_dynamicDescriptorPool.CommitGraphicsDescriptorSets(m_commandList, m_curGraphicsPipelineLayout);
+	m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, m_type == CommandListType::Direct);
 	vkCmdDraw(m_commandBuffer, vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
 }
 
@@ -828,8 +854,7 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 	int32_t baseVertexLocation, uint32_t startInstanceLocation)
 {
 	FlushResourceBarriers();
-	// TODO
-	//m_dynamicDescriptorPool.CommitGraphicsDescriptorSets(m_commandList, m_curGraphicsPipelineLayout);
+	m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, m_type == CommandListType::Direct);
 	vkCmdDrawIndexed(m_commandBuffer, indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 

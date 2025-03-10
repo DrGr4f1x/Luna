@@ -12,6 +12,7 @@
 
 #include "Graphics\CommandContext.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\DynamicDescriptorHeapVK.h"
 
 using namespace Microsoft::WRL;
 
@@ -35,6 +36,7 @@ class DepthBufferManager;
 class DescriptorSetManager;
 class GpuBufferManager;
 class GraphicsContext;
+class IDynamicDescriptorHeap;
 class PipelineStateManager;
 class RootSignatureManager;
 
@@ -67,9 +69,11 @@ class __declspec(uuid("63C5358D-F31C-43DA-90DA-8676E272BE4A")) CommandContextVK 
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
 {
 public:
-	explicit CommandContextVK(CommandListType type)
-		: m_type{ type }
+	explicit CommandContextVK(CVkDevice* device, CommandListType type)
+		: m_device{ device }
+		, m_type{ type }
 	{}
+	~CommandContextVK() = default;
 
 	void SetId(const std::string& id) override { m_id = id; }
 	CommandListType GetType() const override { return m_type; }
@@ -159,7 +163,11 @@ private:
 
 private:
 	std::string m_id;
+	wil::com_ptr<CVkDevice> m_device;
 	CommandListType m_type;
+
+	// Dynamic descriptor heap
+	std::unique_ptr<IDynamicDescriptorHeap> m_dynamicDescriptorHeap;
 
 	VkCommandBuffer m_commandBuffer{ VK_NULL_HANDLE };
 

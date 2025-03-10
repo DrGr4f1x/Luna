@@ -37,6 +37,7 @@ struct DescriptorPoolDesc
 	bool allowFreeDescriptorSets{ false };
 };
 
+
 class DescriptorPool
 {
 public:
@@ -95,6 +96,8 @@ public:
 	VkDescriptorSet AllocateDescriptorSet();
 
 	void RetirePool(uint64_t fenceValue);
+
+	VkDescriptorSetLayout GetLayout() const;
 
 private:
 	std::shared_ptr<DescriptorPool> RequestDescriptorPool();

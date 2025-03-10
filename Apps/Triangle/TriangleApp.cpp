@@ -141,7 +141,7 @@ void TriangleApp::Render()
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
-	//context.SetCBV(0, 0, m_constantBuffer);
+	context.SetCBV(0, 0, m_constantBuffer);
 
 	/*vector<Vertex> vertexData =
 	{

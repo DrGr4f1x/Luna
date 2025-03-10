@@ -232,6 +232,17 @@ void DescriptorPoolCache::RetirePool(uint64_t fenceValue)
 }
 
 
+VkDescriptorSetLayout DescriptorPoolCache::GetLayout() const
+{
+	if (m_layout != nullptr)
+	{
+		return m_layout->Get();
+	}
+
+	return VK_NULL_HANDLE;
+}
+
+
 shared_ptr<DescriptorPool> DescriptorPoolCache::RequestDescriptorPool()
 {
 	lock_guard<mutex> lockGuard(sm_mutex);

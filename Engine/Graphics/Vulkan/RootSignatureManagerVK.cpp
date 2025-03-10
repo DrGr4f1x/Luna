@@ -19,6 +19,41 @@
 namespace Luna::VK
 {
 
+inline VkDescriptorType RootParameterTypeToVulkanDescriptorType(RootParameterType rootParameterType)
+{
+	switch (rootParameterType)
+	{
+	case RootParameterType::RootCBV: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+	case RootParameterType::RootSRV:
+	case RootParameterType::RootUAV: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+	default:						 return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+	}
+}
+
+
+inline uint32_t GetDescriptorOffset(VulkanBindingOffsets bindingOffsets, VkDescriptorType descriptorType)
+{
+	switch (descriptorType)
+	{
+	case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+	case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+	case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+	case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:	return bindingOffsets.shaderResource;
+
+	case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+	case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+	case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+	case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:		return bindingOffsets.unorderedAccess;
+
+	case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+	case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:		return bindingOffsets.constantBuffer;
+
+	case VK_DESCRIPTOR_TYPE_SAMPLER:					return bindingOffsets.sampler;
+	}
+	return 0;
+}
+
+
 RootSignatureManager* g_rootSignatureManager{ nullptr };
 
 
@@ -125,6 +160,53 @@ VkPipelineLayout RootSignatureManager::GetPipelineLayout(RootSignatureHandleType
 }
 
 
+CVkDescriptorSetLayout* RootSignatureManager::GetDescriptorSetLayout(RootSignatureHandleType* handle, uint32_t paramIndex) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+
+	int descriptorSetIndex = GetDescriptorSetIndexFromRootParameterIndex(handle, paramIndex);
+
+	if (descriptorSetIndex != -1)
+	{
+		return m_rootSignatureData[index].descriptorSetLayouts[descriptorSetIndex].get();
+	}
+
+	return VK_NULL_HANDLE;
+}
+
+
+int RootSignatureManager::GetDescriptorSetIndexFromRootParameterIndex(RootSignatureHandleType* handle, uint32_t paramIndex) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+
+	const auto& paramToSetMap = m_rootSignatureData[index].rootParameterIndexToDescriptorSetMap;
+	auto it = paramToSetMap.find(paramIndex);
+	if (it != paramToSetMap.end())
+	{
+		return it->second;
+	}
+
+	return -1;
+}
+
+
+const std::vector<DescriptorBindingDesc>& RootSignatureManager::GetLayoutBindings(RootSignatureHandleType* handle, uint32_t paramIndex) const
+{
+	assert(handle != nullptr);
+
+	uint32_t index = handle->GetIndex();
+
+	auto it = m_rootSignatureData[index].layoutBindingMap.find(paramIndex);
+	assert(it != m_rootSignatureData[index].layoutBindingMap.end());
+
+	return it->second;
+}
+
+
 const RootSignatureData& RootSignatureManager::GetData(RootSignatureHandleType* handle) const
 {
 	assert(handle != nullptr);
@@ -146,13 +228,22 @@ RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const Root
 	std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> descriptorSetLayouts;
 	std::vector<VkPushConstantRange> vkPushConstantRanges;
+	std::unordered_map<uint32_t, std::vector<DescriptorBindingDesc>> layoutBindingMap;
+	std::unordered_map<uint32_t, uint32_t> rootParameterIndexToDescriptorSetMap;
 	uint32_t pushConstantOffset{ 0 };
 
 	size_t hashCode = Utility::g_hashStart;
 
+	uint32_t rootParamIndex = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
+		std::vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
+		std::vector<DescriptorBindingDesc> layoutBindingDescs;
+
 		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
+
+		bool createLayout = true;
+		uint32_t offset = 0;
 
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
@@ -163,132 +254,62 @@ RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const Root
 			pushConstantOffset += rootParameter.num32BitConstants * 4;
 
 			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
-		}
-		else if (rootParameter.parameterType == RootParameterType::RootCBV)
-		{
-			VkDescriptorSetLayoutBinding vkBinding{
-				.binding = rootParameter.startRegister + rootSignatureDesc.bindingOffsets.constantBuffer,
-				.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-				.descriptorCount = 1,
-				.stageFlags = shaderStageFlags,
-				.pImmutableSamplers = nullptr
-			};
 
+			createLayout = false;
+		}
+		else if (rootParameter.parameterType == RootParameterType::RootCBV ||
+			rootParameter.parameterType == RootParameterType::RootSRV ||
+			rootParameter.parameterType == RootParameterType::RootUAV)
+		{
+			VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
+			vkBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);
+
+			offset = GetDescriptorOffset(rootSignatureDesc.bindingOffsets, vkBinding.descriptorType);
+
+			vkBinding.binding = rootParameter.startRegister + offset;
+			vkBinding.descriptorCount = 1;
+			vkBinding.stageFlags = shaderStageFlags;
+			vkBinding.pImmutableSamplers = nullptr;
+			
 			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
 
-			VkDescriptorSetLayoutCreateInfo createInfo{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount = 1,
-				.pBindings = &vkBinding
-			};
-
-			VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
-			vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
-			vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
-
-			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
-			descriptorSetLayouts.push_back(descriptorSetLayout);
-		}
-		else if (rootParameter.parameterType == RootParameterType::RootSRV)
-		{
-			VkDescriptorSetLayoutBinding vkBinding{
-				.binding = rootParameter.startRegister + rootSignatureDesc.bindingOffsets.shaderResource,
-				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
-				.descriptorCount = 1,
-				.stageFlags = shaderStageFlags,
-				.pImmutableSamplers = nullptr
-			};
-
-			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
-
-			VkDescriptorSetLayoutCreateInfo createInfo{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount = 1,
-				.pBindings = &vkBinding
-			};
-
-			VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
-			vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
-			vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
-
-			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
-			descriptorSetLayouts.push_back(descriptorSetLayout);
-		}
-		else if (rootParameter.parameterType == RootParameterType::RootUAV)
-		{
-			VkDescriptorSetLayoutBinding vkBinding{
-				.binding = rootParameter.startRegister + rootSignatureDesc.bindingOffsets.unorderedAccess,
-				.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
-				.descriptorCount = 1,
-				.stageFlags = shaderStageFlags,
-				.pImmutableSamplers = nullptr
-			};
-
-			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
-
-			VkDescriptorSetLayoutCreateInfo createInfo{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount = 1,
-				.pBindings = &vkBinding
-			};
-
-			VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
-			vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
-			vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
-
-			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
-			descriptorSetLayouts.push_back(descriptorSetLayout);
+			DescriptorBindingDesc& bindingDesc = layoutBindingDescs.emplace_back();
+			bindingDesc.descriptorType = vkBinding.descriptorType;
+			bindingDesc.startSlot = rootParameter.startRegister;
+			bindingDesc.numDescriptors = vkBinding.descriptorCount;
+			bindingDesc.offset = offset;
 		}
 		else if (rootParameter.parameterType == RootParameterType::Table)
 		{
-			std::vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
-
 			for (const auto& range : rootParameter.table)
 			{
 				VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
 				vkBinding.descriptorCount = range.numDescriptors;
 				vkBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
+
+				offset = GetDescriptorOffset(rootSignatureDesc.bindingOffsets, vkBinding.descriptorType);
+
+				vkBinding.binding = range.startRegister + offset;
 				vkBinding.stageFlags = shaderStageFlags;
 				vkBinding.pImmutableSamplers = nullptr;
 
-				uint32_t offset{ 0 };
-
-				switch (range.descriptorType)
-				{
-				case DescriptorType::TextureSRV:
-				case DescriptorType::StructuredBufferSRV:
-				case DescriptorType::TypedBufferSRV:
-				case DescriptorType::RawBufferSRV:
-				case DescriptorType::RayTracingAccelStruct:
-					offset = rootSignatureDesc.bindingOffsets.shaderResource;
-					break;
-
-				case DescriptorType::TextureUAV:
-				case DescriptorType::StructuredBufferUAV:
-				case DescriptorType::TypedBufferUAV:
-				case DescriptorType::RawBufferUAV:
-				case DescriptorType::SamplerFeedbackTextureUAV:
-					offset = rootSignatureDesc.bindingOffsets.unorderedAccess;
-					break;
-
-				case DescriptorType::ConstantBuffer:
-					offset = rootSignatureDesc.bindingOffsets.constantBuffer;
-					break;
-
-				case DescriptorType::Sampler:
-					offset = rootSignatureDesc.bindingOffsets.sampler;
-					break;
-				}
-
-				vkBinding.binding = range.startRegister + offset;
-
 				hashCode = Utility::HashState(&vkBinding, 1, hashCode);
+
+				DescriptorBindingDesc& bindingDesc = layoutBindingDescs.emplace_back();
+				bindingDesc.descriptorType = vkBinding.descriptorType;
+				bindingDesc.startSlot = rootParameter.startRegister;
+				bindingDesc.numDescriptors = vkBinding.descriptorCount;
+				bindingDesc.offset = offset;
 			}
+		}
+
+		if (createLayout)
+		{
 
 			VkDescriptorSetLayoutCreateInfo createInfo{
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount = (uint32_t)vkLayoutBindings.size(),
-				.pBindings = vkLayoutBindings.data()
+				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+				.bindingCount	= (uint32_t)vkLayoutBindings.size(),
+				.pBindings		= vkLayoutBindings.data()
 			};
 
 			VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
@@ -297,7 +318,12 @@ RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const Root
 
 			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
 			descriptorSetLayouts.push_back(descriptorSetLayout);
+
+			layoutBindingMap[rootParamIndex] = layoutBindingDescs;
+			rootParameterIndexToDescriptorSetMap[rootParamIndex] = (uint32_t)descriptorSetLayouts.size() - 1;
 		}
+
+		++rootParamIndex;
 	}
 
 	CVkPipelineLayout** ppPipelineLayout;
@@ -322,11 +348,11 @@ RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const Root
 	if (firstCompile)
 	{
 		VkPipelineLayoutCreateInfo createInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount = (uint32_t)vkDescriptorSetLayouts.size(),
-			.pSetLayouts = vkDescriptorSetLayouts.data(),
-			.pushConstantRangeCount = (uint32_t)vkPushConstantRanges.size(),
-			.pPushConstantRanges = vkPushConstantRanges.data()
+			.sType						= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+			.setLayoutCount				= (uint32_t)vkDescriptorSetLayouts.size(),
+			.pSetLayouts				= vkDescriptorSetLayouts.data(),
+			.pushConstantRangeCount		= (uint32_t)vkPushConstantRanges.size(),
+			.pPushConstantRanges		= vkPushConstantRanges.data()
 		};
 
 		VkPipelineLayout vkPipelineLayout{ VK_NULL_HANDLE };
@@ -340,8 +366,10 @@ RootSignatureData RootSignatureManager::FindOrCreateRootSignatureData(const Root
 	}
 
 	RootSignatureData rootSignatureData{
-		.pipelineLayout = *ppPipelineLayout,
-		.descriptorSetLayouts = descriptorSetLayouts
+		.pipelineLayout							= *ppPipelineLayout,
+		.layoutBindingMap						= layoutBindingMap,
+		.rootParameterIndexToDescriptorSetMap	= rootParameterIndexToDescriptorSetMap,
+		.descriptorSetLayouts					= descriptorSetLayouts
 	};
 
 	return rootSignatureData;

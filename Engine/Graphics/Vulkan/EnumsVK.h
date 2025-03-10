@@ -108,4 +108,8 @@ VkAccessFlagBits2 GetAccessMask(ResourceState resourceState);
 
 VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState);
 
+bool IsDescriptorImageInfoType(VkDescriptorType descriptorType);
+bool IsDescriptorBufferInfoType(VkDescriptorType descriptorType);
+bool IsDescriptorBufferViewType(VkDescriptorType descriptorType);
+
 } // namespace Luna::VK

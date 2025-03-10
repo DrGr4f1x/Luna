@@ -17,9 +17,20 @@
 namespace Luna::VK
 {
 
+struct DescriptorBindingDesc
+{
+	VkDescriptorType descriptorType;
+	uint32_t startSlot{ 0 };
+	uint32_t numDescriptors{ 1 };
+	uint32_t offset{ 0 };
+};
+
 struct RootSignatureData
 {
 	wil::com_ptr<CVkPipelineLayout> pipelineLayout;
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	std::unordered_map<uint32_t, std::vector<DescriptorBindingDesc>> layoutBindingMap;
+	std::unordered_map<uint32_t, uint32_t> rootParameterIndexToDescriptorSetMap;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> descriptorSetLayouts;
 };
 
@@ -43,6 +54,9 @@ public:
 
 	// Getters
 	VkPipelineLayout GetPipelineLayout(RootSignatureHandleType* handle) const;
+	CVkDescriptorSetLayout* GetDescriptorSetLayout(RootSignatureHandleType* handle, uint32_t paramIndex) const;
+	int GetDescriptorSetIndexFromRootParameterIndex(RootSignatureHandleType* handle, uint32_t paramIndex) const;
+	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(RootSignatureHandleType* handle, uint32_t paramIndex) const;
 
 private:
 	const RootSignatureData& GetData(RootSignatureHandleType* handle) const;

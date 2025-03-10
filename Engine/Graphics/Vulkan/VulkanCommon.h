@@ -34,6 +34,7 @@
 
 #include "Graphics\Vulkan\EnumsVK.h"
 #include "Graphics\Vulkan\FormatsVK.h"
+#include "Graphics\Vulkan\HashVK.h"
 #include "Graphics\Vulkan\RefCountingImplVK.h"
 #include "Graphics\Vulkan\StringsVK.h"
 #include "Graphics\Vulkan\VersionVK.h"
