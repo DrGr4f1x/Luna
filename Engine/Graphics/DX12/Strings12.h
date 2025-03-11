@@ -313,18 +313,6 @@ inline std::string D3DTypeToString(D3D12_WORK_GRAPHS_TIER workGraphsTier, bool b
 }
 #endif
 
-
-#if defined(D3D12_PREVIEW_SDK_VERSION) && (D3D12_PREVIEW_SDK_VERSION >= 716)
-inline std::string D3DTypeToString(D3D12_TIGHT_ALIGNMENT_TIER tightAlignmentTier, bool bNumberOnly = false)
-{
-	if (tightAlignmentTier == D3D12_TIGHT_ALIGNMENT_TIER_1)
-	{
-		return bNumberOnly ? "1.0" : "Tier 1.0";
-	}
-	return s_notSupported;
-}
-#endif
-
 } // namespace Luna::DX12
 
 
@@ -369,9 +357,6 @@ DECLARE_STRING_FORMATTERS(D3D12_VIEW_INSTANCING_TIER)
 DECLARE_STRING_FORMATTERS(D3D12_WAVE_MMA_TIER)
 #if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
 DECLARE_STRING_FORMATTERS(D3D12_WORK_GRAPHS_TIER)
-#endif
-#if defined(D3D12_PREVIEW_SDK_VERSION) && (D3D12_PREVIEW_SDK_VERSION >= 716)
-DECLARE_STRING_FORMATTERS(D3D12_TIGHT_ALIGNMENT_TIER)
 #endif
 
 #undef DECLARE_STRING_FORMATTERS

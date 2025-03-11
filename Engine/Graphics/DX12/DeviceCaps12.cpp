@@ -105,15 +105,6 @@ void DeviceCaps::ReadFullCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeature
 		m_validCaps[21] = SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &caps21, sizeof(caps21)));
 #endif
 
-#if defined(D3D12_PREVIEW_SDK_VERSION) && (D3D12_PREVIEW_SDK_VERSION >= 716)
-		hasTightAlighmentTier = true;
-		if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_TIGHT_ALIGNMENT, &tightAlignmentTier, sizeof(tightAlignmentTier))))
-		{
-			tightAlignmentTier = {};
-			hasTightAlighmentTier = false;
-		}
-#endif
-
 		m_capsRead = true;
 	}
 }
@@ -370,15 +361,6 @@ void DeviceCaps::LogCaps()
 		LogInfo(LogDirectX) << format(formatStr, "ExecuteIndirectTier:", caps21.ExecuteIndirectTier) << endl;
 		LogInfo(LogDirectX) << format(formatStr, "SampleCmpGradientAndBiasSupported:", (bool)caps21.SampleCmpGradientAndBiasSupported) << endl;
 		LogInfo(LogDirectX) << format(formatStr, "ExtendedCommandInfoSupported:", (bool)caps21.ExtendedCommandInfoSupported) << endl;
-		LogInfo(LogDirectX) << endl;
-	}
-#endif
-
-#if defined(D3D12_PREVIEW_SDK_VERSION) && (D3D12_PREVIEW_SDK_VERSION >= 716)
-	if (hasTightAlighmentTier)
-	{
-		LogInfo(LogDirectX) << "    D3D12_FEATURE_TIGHT_ALIGNMENT_TIER" << endl;
-		LogInfo(LogDirectX) << format(formatStr, "SupportTier:", tightAlignmentTier.SupportTier) << endl;
 		LogInfo(LogDirectX) << endl;
 	}
 #endif

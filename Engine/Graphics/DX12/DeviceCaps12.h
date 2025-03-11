@@ -87,11 +87,6 @@ struct DeviceCaps
 	D3D12_FEATURE_DATA_D3D12_OPTIONS21 caps21{};
 #endif
 
-#if defined(D3D12_PREVIEW_SDK_VERSION) && (D3D12_PREVIEW_SDK_VERSION >= 716)
-	D3D12_FEATURE_DATA_TIGHT_ALIGNMENT tightAlignmentTier{};
-	bool hasTightAlighmentTier{ false };
-#endif
-
 	void ReadBasicCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel);
 	void ReadFullCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel, D3D_SHADER_MODEL bestShaderModel);
 
