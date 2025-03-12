@@ -3,8 +3,6 @@ TODO:
 -- Proper Vulkan extension support
 -- Clean up ShaderCompiler code organization
 -- Proper DX12 feature support
--- DX12: Dynamic descriptors (e.g. SetSRV, SetUAV etc on command context)
--- Vulkan: Dynamic descriptors / push descriptors (e.g. SetSRV, SetUAV etc on command context)
 -- Command context linear allocator for dynamic buffers
 -- Handles and pools for:
     -- ComputePipelineState
@@ -33,9 +31,12 @@ TODO:
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
 -- Take another look at Shaders.  Not super happy with how things are.
 -- Trim GraphicsDeviceDesc - most of that stuff is on the DeviceManager, unneeded by the GraphicsDevice itself
--- Integrate vk-bootstrap.  Will need to be a git submodule, with source files compiled in to the engine
 -- Do a const pass on the Handle* parameters passed into the various Pool member functions
--- Get rid of the GraphicsDevice class altogether.  It serves no purpose at this point.
+-- Refactor Vulkan DescriptorSet, now that DescriptorSetPool exists
+-- Do a Vulkan DynamicDescriptorHeap implementation using mutable descriptors
+-- Do a Vulkan DynamicDescriptorHeap implementation using descriptor buffers
+-- Support dynamic buffers in Vulkan DynamicDescriptorHeap
+-- Refactor various pools into single pool for all pool-managed resource types
 
 
 DONE:
@@ -48,6 +49,10 @@ DONE:
     -- DepthBuffer
 -- Backbuffer count (3) is hardcoded - handle this a different way
 -- All platform resources (e.g. ColorBuffer, GpuBuffer) should store their creation Descs.  Actually the corresponding Pool should hold the Descs.
+-- DX12: Dynamic descriptors (e.g. SetSRV, SetUAV etc on command context)
+-- Get rid of the GraphicsDevice class altogether.  It serves no purpose at this point.
+-- Integrate vk-bootstrap.  Will need to be a git submodule, with source files compiled in to the engine
+-- Implement DefaultDynamicDescriptorHeap for vanilla Vulkan (no extensions)
 
 
 WON'T DO:
