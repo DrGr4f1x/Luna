@@ -38,6 +38,7 @@ TODO:
 -- Support dynamic buffers in Vulkan DynamicDescriptorHeap
 -- Refactor various pools into single pool for all pool-managed resource types
 -- Rework Vulkan Queues to handle case where the device doesn't support separate compute/copy queues
+-- Run static analysis pass on solution
 
 
 DONE:
@@ -54,6 +55,8 @@ DONE:
 -- Get rid of the GraphicsDevice class altogether.  It serves no purpose at this point.
 -- Integrate vk-bootstrap.  Will need to be a git submodule, with source files compiled in to the engine
 -- Implement DefaultDynamicDescriptorHeap for vanilla Vulkan (no extensions)
+-- Update to Vulkan API v1.4
+-- Ensure Vulkan works without installing Volk or VMA with the Vulkan SDK
 
 
 WON'T DO:

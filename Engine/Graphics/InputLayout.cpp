@@ -41,11 +41,11 @@ const char* GetVertexComponentName(VertexComponent component)
 	if (component == VertexComponent::Bitangent)
 		return sBitangent;
 
-	if (component == VertexComponent::Color || component == VertexComponent::Color0 || component == VertexComponent::Color1)
+	// Note Color == Color0, so this handles both enums
+	if (component == VertexComponent::Color0 || component == VertexComponent::Color1)
 		return sColor;
 
-	if (component == VertexComponent::Texcoord ||
-		component == VertexComponent::Texcoord0 ||
+	if (component == VertexComponent::Texcoord0 ||
 		component == VertexComponent::Texcoord1 ||
 		component == VertexComponent::Texcoord2 ||
 		component == VertexComponent::Texcoord3)
@@ -85,14 +85,13 @@ Format GetVertexComponentFormat(VertexComponent component)
 	if (component == VertexComponent::BlendWeight)
 		return Format::R32_Float;
 
-	if (component == VertexComponent::Texcoord ||
-		component == VertexComponent::Texcoord0 ||
+	if (component == VertexComponent::Texcoord0 ||
 		component == VertexComponent::Texcoord1 ||
 		component == VertexComponent::Texcoord2 ||
 		component == VertexComponent::Texcoord3)
 		return Format::RG32_Float;
 
-	if (component == VertexComponent::Color || component == VertexComponent::Color0 || component == VertexComponent::Color1)
+	if (component == VertexComponent::Color0 || component == VertexComponent::Color1)
 		return Format::RGBA32_Float;
 
 	return Format::RGB32_Float;

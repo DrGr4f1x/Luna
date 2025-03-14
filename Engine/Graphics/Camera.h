@@ -52,30 +52,30 @@ protected:
 
 	void SetProjMatrix(const Math::Matrix4& ProjMat) { m_projMatrix = ProjMat; }
 
-	Math::OrthogonalTransform m_cameraToWorld;
+	Math::OrthogonalTransform m_cameraToWorld{};
 
 	// Redundant data cached for faster lookups.
-	Math::Matrix3 m_basis;
+	Math::Matrix3 m_basis{ Math::kIdentity };
 
 	// Transforms homogeneous coordinates from world space to view space.  In this case, view space is defined as +X is
 	// to the right, +Y is up, and -Z is forward.  This has to match what the projection matrix expects, but you might
 	// also need to know what the convention is if you work in view space in a shader.
-	Math::Matrix4 m_viewMatrix;		// i.e. "World-to-View" matrix
+	Math::Matrix4 m_viewMatrix{ Math::kIdentity };		// i.e. "World-to-View" matrix
 
 	// The projection matrix transforms view space to clip space.  Once division by W has occurred, the final coordinates
 	// can be transformed by the viewport matrix to screen space.  The projection matrix is determined by the screen aspect 
 	// and camera field of view.  A projection matrix can also be orthographic.  In that case, field of view would be defined
 	// in linear units, not angles.
-	Math::Matrix4 m_projMatrix;		// i.e. "View-to-Projection" matrix
+	Math::Matrix4 m_projMatrix{ Math::kIdentity };		// i.e. "View-to-Projection" matrix
 
 	// A concatenation of the view and projection matrices.
-	Math::Matrix4 m_viewProjMatrix;	// i.e.  "World-To-Projection" matrix.
+	Math::Matrix4 m_viewProjMatrix{ Math::kIdentity };	// i.e.  "World-To-Projection" matrix.
 
 	// The view-projection matrix from the previous frame
-	Math::Matrix4 m_previousViewProjMatrix;
+	Math::Matrix4 m_previousViewProjMatrix{ Math::kIdentity };
 
 	// Projects a clip-space coordinate to the previous frame (useful for temporal effects).
-	Math::Matrix4 m_reprojectMatrix;
+	Math::Matrix4 m_reprojectMatrix{ Math::kIdentity };
 
 	Math::Frustum m_frustumVS;		// View-space view frustum
 	Math::Frustum m_frustumWS;		// World-space view frustum
