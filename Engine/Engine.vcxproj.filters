@@ -194,6 +194,9 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="..\External\volk\volk.c">
+      <Filter>External\volk</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -474,6 +477,9 @@
     <ClInclude Include="Graphics\Vulkan\HashVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\volk\volk.h">
+      <Filter>External\volk</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -499,6 +505,9 @@
     </Filter>
     <Filter Include="External\vk-bootstrap">
       <UniqueIdentifier>{06149bfa-c211-4463-bb4a-52bf5cc8fab2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\volk">
+      <UniqueIdentifier>{a92d6ce0-eb31-48a6-8c92-4697353a93f4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

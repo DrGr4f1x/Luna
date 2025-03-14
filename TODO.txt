@@ -37,6 +37,7 @@ TODO:
 -- Do a Vulkan DynamicDescriptorHeap implementation using descriptor buffers
 -- Support dynamic buffers in Vulkan DynamicDescriptorHeap
 -- Refactor various pools into single pool for all pool-managed resource types
+-- Rework Vulkan Queues to handle case where the device doesn't support separate compute/copy queues
 
 
 DONE:

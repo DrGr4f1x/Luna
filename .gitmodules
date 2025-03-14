@@ -13,3 +13,6 @@
 [submodule "External/vk-bootstrap"]
 	path = External/vk-bootstrap
 	url = https://github.com/charles-lunarg/vk-bootstrap
+[submodule "External/volk"]
+	path = External/volk
+	url = https://github.com/zeux/volk
