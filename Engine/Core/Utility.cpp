@@ -146,9 +146,9 @@ void SIMDMemFill(void* __restrict _dest, __m128 fillVector, size_t numQuadwords)
 	// Copy the remaining quadwords
 	switch (numQuadwords & 3)
 	{
-	case 3: _mm_stream_si128(dest++, source);	 // Fall through
-	case 2: _mm_stream_si128(dest++, source);	 // Fall through
-	case 1: _mm_stream_si128(dest++, source);	 // Fall through
+	case 3: _mm_stream_si128(dest++, source); [[fallthrough]];
+	case 2: _mm_stream_si128(dest++, source); [[fallthrough]];
+	case 1: _mm_stream_si128(dest++, source); [[fallthrough]];
 	default:
 		break;
 	}
