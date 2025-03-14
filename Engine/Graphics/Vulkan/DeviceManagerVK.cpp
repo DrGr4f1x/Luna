@@ -287,8 +287,6 @@ void DeviceManager::CreateDeviceResources()
 	m_vkbPhysicalDevice = physicalDeviceRet.value();
 	m_vkPhysicalDevice = Create<CVkPhysicalDevice>(m_vkInstance.get(), m_vkbPhysicalDevice.physical_device);	
 
-	GetQueueFamilyIndices();
-
 	// TODO
 	m_caps.ReadCaps(*m_vkPhysicalDevice);
 	//if (g_graphicsDeviceOptions.logDeviceFeatures)
@@ -713,78 +711,6 @@ void DeviceManager::ResizeSwapChain()
 	m_swapChainBuffers.clear();
 
 	CreateWindowSizeDependentResources();
-}
-
-
-void DeviceManager::GetQueueFamilyIndices()
-{
-	m_queueFamilyIndices.graphics = GetQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
-	m_queueFamilyIndices.compute = GetQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
-	m_queueFamilyIndices.transfer = GetQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
-}
-
-
-int32_t DeviceManager::GetQueueFamilyIndex(VkQueueFlags queueFlags)
-{
-	int32_t index{ 0 };
-
-	// Dedicated queue for compute
-	// Try to find a queue family index that supports compute but not graphics
-	if (queueFlags & VK_QUEUE_COMPUTE_BIT)
-	{
-		for (const auto& properties : m_queueFamilyProperties)
-		{
-			if ((properties.queueFlags & queueFlags) && ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
-			{
-				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(*m_vkPhysicalDevice, index))
-				{
-					m_queueFamilyIndices.present = index;
-				}
-
-				return index;
-			}
-			++index;
-		}
-	}
-
-	// Dedicated queue for transfer
-	// Try to find a queue family index that supports transfer but not graphics and compute
-	if (queueFlags & VK_QUEUE_TRANSFER_BIT)
-	{
-		index = 0;
-		for (const auto& properties : m_queueFamilyProperties)
-		{
-			if ((properties.queueFlags & queueFlags) && ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((properties.queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
-			{
-				if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(*m_vkPhysicalDevice, index))
-				{
-					m_queueFamilyIndices.present = index;
-				}
-
-				return index;
-			}
-			++index;
-		}
-	}
-
-	// For other queue types or if no separate compute queue is present, return the first one to support the requested flags
-	index = 0;
-	for (const auto& properties : m_queueFamilyProperties)
-	{
-		if (properties.queueFlags & queueFlags)
-		{
-			if (m_queueFamilyIndices.present == -1 && vkGetPhysicalDeviceWin32PresentationSupportKHR(*m_vkPhysicalDevice, index))
-			{
-				m_queueFamilyIndices.present = index;
-			}
-
-			return index;
-		}
-		++index;
-	}
-
-	LogWarning(LogVulkan) << "Failed to find a matching queue family index for queue bit(s) " << VkQueueFlagsToString(queueFlags) << endl;
-	return -1;
 }
 
 

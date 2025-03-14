@@ -89,9 +89,6 @@ private:
 
 	void ResizeSwapChain();
 
-	void GetQueueFamilyIndices();
-	int32_t GetQueueFamilyIndex(VkQueueFlags queueFlags);
-
 	Queue& GetQueue(QueueType queueType);
 	Queue& GetQueue(CommandListType commandListType);
 	void QueueWaitForSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value);
@@ -143,14 +140,6 @@ private:
 	std::vector<ColorBuffer> m_swapChainBuffers;
 
 	// Queues and queue families
-	std::vector<VkQueueFamilyProperties> m_queueFamilyProperties;
-	struct
-	{
-		int32_t graphics{ -1 };
-		int32_t compute{ -1 };
-		int32_t transfer{ -1 };
-		int32_t present{ -1 };
-	} m_queueFamilyIndices;
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
 
 	// Present synchronization
