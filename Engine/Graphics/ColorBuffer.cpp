@@ -18,82 +18,96 @@
 namespace Luna
 {
 
-ColorBufferHandleType::~ColorBufferHandleType()
-{
-	assert(m_manager);
-	m_manager->DestroyHandle(this);
-}
-
 
 void ColorBuffer::Initialize(const ColorBufferDesc& ColorBufferDesc)
 {
-	m_handle = GetColorBufferManager()->CreateColorBuffer(ColorBufferDesc);
+	m_handle = GetResourceManager()->CreateColorBuffer(ColorBufferDesc);
 }
 
 
 ResourceType ColorBuffer::GetResourceType() const
 {
-	return GetColorBufferManager()->GetResourceType(m_handle.get());
+	auto res = GetResourceManager()->GetResourceType(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 ResourceState ColorBuffer::GetUsageState() const
 {
-	return GetColorBufferManager()->GetUsageState(m_handle.get());
+	auto res = GetResourceManager()->GetUsageState(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 void ColorBuffer::SetUsageState(ResourceState newState)
 {
-	GetColorBufferManager()->SetUsageState(m_handle.get(), newState);
+	GetResourceManager()->SetUsageState(m_handle.get(), newState);
 }
 
 
 uint64_t ColorBuffer::GetWidth() const
 {
-	return GetColorBufferManager()->GetWidth(m_handle.get());
+	auto res = GetResourceManager()->GetWidth(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t ColorBuffer::GetHeight() const
 {
-	return GetColorBufferManager()->GetHeight(m_handle.get());
+	auto res = GetResourceManager()->GetHeight(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t ColorBuffer::GetDepth() const
 {
-	return GetColorBufferManager()->GetDepthOrArraySize(m_handle.get());
+	auto res = GetResourceManager()->GetDepthOrArraySize(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t ColorBuffer::GetArraySize() const
 {
-	return GetColorBufferManager()->GetDepthOrArraySize(m_handle.get());
+	auto res = GetResourceManager()->GetDepthOrArraySize(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t ColorBuffer::GetNumMips() const
 {
-	return GetColorBufferManager()->GetNumMips(m_handle.get());
+	auto res = GetResourceManager()->GetNumMips(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t ColorBuffer::GetNumSamples() const
 {
-	return GetColorBufferManager()->GetNumSamples(m_handle.get());
+	auto res = GetResourceManager()->GetNumSamples(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t ColorBuffer::GetPlaneCount() const
 {
-	return GetColorBufferManager()->GetPlaneCount(m_handle.get());
+	auto res = GetResourceManager()->GetPlaneCount(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 Format ColorBuffer::GetFormat() const
 {
-	return GetColorBufferManager()->GetFormat(m_handle.get());
+	auto res = GetResourceManager()->GetFormat(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
@@ -105,7 +119,15 @@ TextureDimension ColorBuffer::GetDimension() const
 
 Color ColorBuffer::GetClearColor() const
 {
-	return GetColorBufferManager()->GetClearColor(m_handle.get());
+	auto res = GetResourceManager()->GetClearColor(m_handle.get());
+	assert(res.has_value());
+	return *res;
+}
+
+
+void ColorBuffer::SetHandle(ResourceHandleType* handle) 
+{ 
+	m_handle = handle; 
 }
 
 } // namespace Luna

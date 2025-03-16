@@ -20,11 +20,9 @@ namespace Luna
 
 // Forward declarations
 class CommandContext;
-class IColorBufferManager;
-class IDepthBufferManager;
 class IDescriptorSetManager;
-class IGpuBufferManager;
 class IPipelineStateManager;
+class IResourceManager;
 class IRootSignatureManager;
 
 
@@ -113,11 +111,9 @@ public:
 	virtual Format GetColorFormat() = 0;
 	virtual Format GetDepthFormat() = 0;
 
-	virtual IColorBufferManager* GetColorBufferManager() = 0;
-	virtual IDepthBufferManager* GetDepthBufferManager() = 0;
 	virtual IDescriptorSetManager* GetDescriptorSetManager() = 0;
-	virtual IGpuBufferManager* GetGpuBufferManager() = 0;
 	virtual IPipelineStateManager* GetPipelineStateManager() = 0;
+	virtual IResourceManager* GetResourceManager() = 0;
 	virtual IRootSignatureManager* GetRootSignatureManager() = 0;
 };
 

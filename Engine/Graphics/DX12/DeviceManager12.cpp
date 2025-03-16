@@ -14,14 +14,12 @@
 
 #include "Graphics\GraphicsCommon.h"
 
-#include "ColorBufferManager12.h"
 #include "CommandContext12.h"
-#include "DepthBufferManager12.h"
 #include "DescriptorSetManager12.h"
 #include "DeviceCaps12.h"
-#include "GpuBufferManager12.h"
 #include "PipelineStateManager12.h"
 #include "Queue12.h"
+#include "ResourceManager12.h"
 #include "RootSignatureManager12.h"
 #include "Shader12.h"
 
@@ -435,7 +433,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(GetD3D12ColorBufferManager()->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i).get());
+		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i).get());
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 
@@ -514,33 +512,21 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IColorBufferManager* DeviceManager::GetColorBufferManager()
-{
-	return m_colorBufferManager.get();
-}
-
-
-IDepthBufferManager* DeviceManager::GetDepthBufferManager()
-{
-	return m_depthBufferManager.get();
-}
-
-
 IDescriptorSetManager* DeviceManager::GetDescriptorSetManager()
 {
 	return m_descriptorSetManager.get();
 }
 
 
-IGpuBufferManager* DeviceManager::GetGpuBufferManager()
-{
-	return m_gpuBufferManager.get();
-}
-
-
 IPipelineStateManager* DeviceManager::GetPipelineStateManager()
 {
 	return m_pipelineStateManager.get();
+}
+
+
+IResourceManager* DeviceManager::GetResourceManager()
+{
+	return m_resourceManager.get();
 }
 
 
@@ -759,11 +745,9 @@ void DeviceManager::CreateDevice()
 
 void DeviceManager::CreateResourceManagers()
 {
-	m_colorBufferManager = make_unique<ColorBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
-	m_depthBufferManager = make_unique<DepthBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_dxDevice.get());
-	m_gpuBufferManager = make_unique<GpuBufferManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_pipelineStateManager = make_unique<PipelineStateManager>(m_dxDevice.get());
+	m_resourceManager = make_unique<ResourceManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_rootSignatureManager = make_unique<RootSignatureManager>(m_dxDevice.get());
 }
 

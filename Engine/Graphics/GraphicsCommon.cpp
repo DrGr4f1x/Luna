@@ -120,33 +120,21 @@ IDeviceManager* GetDeviceManager()
 }
 
 
-IColorBufferManager* GetColorBufferManager()
-{
-	return GetDeviceManager()->GetColorBufferManager();
-}
-
-
-IDepthBufferManager* GetDepthBufferManager()
-{
-	return GetDeviceManager()->GetDepthBufferManager();
-}
-
-
 IDescriptorSetManager* GetDescriptorSetManager()
 {
 	return GetDeviceManager()->GetDescriptorSetManager();
 }
 
 
-IGpuBufferManager* GetGpuBufferManager()
-{
-	return GetDeviceManager()->GetGpuBufferManager();
-}
-
-
 IPipelineStateManager* GetPipelineStateManager()
 {
 	return GetDeviceManager()->GetPipelineStateManager();
+}
+
+
+IResourceManager* GetResourceManager()
+{
+	return GetDeviceManager()->GetResourceManager();
 }
 
 

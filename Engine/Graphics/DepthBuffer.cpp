@@ -18,82 +18,96 @@
 namespace Luna
 {
 
-DepthBufferHandleType::~DepthBufferHandleType()
-{
-	assert(m_manager);
-	m_manager->DestroyHandle(this);
-}
-
 
 void DepthBuffer::Initialize(const DepthBufferDesc& depthBufferDesc)
 {
-	m_handle = GetDepthBufferManager()->CreateDepthBuffer(depthBufferDesc);
+	m_handle = GetResourceManager()->CreateDepthBuffer(depthBufferDesc);
 }
 
 
 ResourceType DepthBuffer::GetResourceType() const
 {
-	return GetDepthBufferManager()->GetResourceType(m_handle.get());
+	auto res = GetResourceManager()->GetResourceType(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 ResourceState DepthBuffer::GetUsageState() const
 {
-	return GetDepthBufferManager()->GetUsageState(m_handle.get());
+	auto res = GetResourceManager()->GetUsageState(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 void DepthBuffer::SetUsageState(ResourceState newState)
 {
-	GetDepthBufferManager()->SetUsageState(m_handle.get(), newState);
+	GetResourceManager()->SetUsageState(m_handle.get(), newState);
 }
 
 
 uint64_t DepthBuffer::GetWidth() const
 {
-	return GetDepthBufferManager()->GetWidth(m_handle.get());
+	auto res = GetResourceManager()->GetWidth(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t DepthBuffer::GetHeight() const
 {
-	return GetDepthBufferManager()->GetHeight(m_handle.get());
+	auto res = GetResourceManager()->GetHeight(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t DepthBuffer::GetDepth() const
 {
-	return GetDepthBufferManager()->GetDepthOrArraySize(m_handle.get());
+	auto res = GetResourceManager()->GetDepthOrArraySize(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t DepthBuffer::GetArraySize() const
 {
-	return GetDepthBufferManager()->GetDepthOrArraySize(m_handle.get());
+	auto res = GetResourceManager()->GetDepthOrArraySize(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t DepthBuffer::GetNumMips() const
 {
-	return GetDepthBufferManager()->GetNumMips(m_handle.get());
+	auto res = GetResourceManager()->GetNumMips(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t DepthBuffer::GetNumSamples() const
 {
-	return GetDepthBufferManager()->GetNumSamples(m_handle.get());
+	auto res = GetResourceManager()->GetNumSamples(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint32_t DepthBuffer::GetPlaneCount() const
 {
-	return GetDepthBufferManager()->GetPlaneCount(m_handle.get());
+	auto res = GetResourceManager()->GetPlaneCount(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 Format DepthBuffer::GetFormat() const
 {
-	return GetDepthBufferManager()->GetFormat(m_handle.get());
+	auto res = GetResourceManager()->GetFormat(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
@@ -105,13 +119,17 @@ TextureDimension DepthBuffer::GetDimension() const
 
 float DepthBuffer::GetClearDepth() const
 {
-	return GetDepthBufferManager()->GetClearDepth(m_handle.get());
+	auto res = GetResourceManager()->GetClearDepth(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 
 uint8_t DepthBuffer::GetClearStencil() const
 {
-	return GetDepthBufferManager()->GetClearStencil(m_handle.get());
+	auto res = GetResourceManager()->GetClearStencil(m_handle.get());
+	assert(res.has_value());
+	return *res;
 }
 
 } // namespace Luna

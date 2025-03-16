@@ -23,12 +23,10 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class ColorBufferManager;
-class DepthBufferManager;
 class DescriptorSetManager;
-class GpuBufferManager;
 class PipelineStateManager;
 class Queue;
+class ResourceManager;
 class RootSignatureManager;
 
 
@@ -61,11 +59,9 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
-	IColorBufferManager* GetColorBufferManager() override;
-	IDepthBufferManager* GetDepthBufferManager() override;
 	IDescriptorSetManager* GetDescriptorSetManager() override;
-	IGpuBufferManager* GetGpuBufferManager() override;
 	IPipelineStateManager* GetPipelineStateManager() override;
+	IResourceManager* GetResourceManager() override;
 	IRootSignatureManager* GetRootSignatureManager() override;
 
 	void ReleaseImage(CVkImage* image);
@@ -120,11 +116,9 @@ private:
 	vkb::Swapchain m_vkbSwapchain;
 
 	// Vulkan resource managers
-	std::unique_ptr<ColorBufferManager> m_colorBufferManager;
-	std::unique_ptr<DepthBufferManager> m_depthBufferManager;
 	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
-	std::unique_ptr<GpuBufferManager> m_gpuBufferManager;
 	std::unique_ptr<PipelineStateManager> m_pipelineStateManager;
+	std::unique_ptr<ResourceManager> m_resourceManager;
 	std::unique_ptr<RootSignatureManager> m_rootSignatureManager;
 
 	// Swapchain

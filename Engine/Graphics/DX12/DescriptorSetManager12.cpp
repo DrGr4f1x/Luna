@@ -12,9 +12,7 @@
 
 #include "DescriptorSetManager12.h"
 
-#include "ColorBufferManager12.h"
-#include "DepthBufferManager12.h"
-#include "GpuBufferManager12.h"
+#include "ResourceManager12.h"
 
 
 namespace Luna::DX12
@@ -102,10 +100,10 @@ void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto colorBufferManager = GetD3D12ColorBufferManager();
+	auto resourceManager = GetD3D12ResourceManager();
 	auto colorBufferHandle = colorBuffer.GetHandle();
 
-	SetDescriptor(data, slot, colorBufferManager->GetSRV(colorBufferHandle.get()));
+	SetDescriptor(data, slot, resourceManager->GetSRV(colorBufferHandle.get(), true));
 }
 
 
@@ -116,10 +114,10 @@ void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto depthBufferManager = GetD3D12DepthBufferManager();
+	auto resourceManager = GetD3D12ResourceManager();
 	auto depthBufferHandle = depthBuffer.GetHandle();
 
-	SetDescriptor(data, slot, depthBufferManager->GetSRV(depthBufferHandle.get(), depthSrv));
+	SetDescriptor(data, slot, resourceManager->GetSRV(depthBufferHandle.get(), depthSrv));
 }
 
 
@@ -130,17 +128,17 @@ void DescriptorSetManager::SetSRV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto gpuBufferManager = GetD3D12GpuBufferManager();
-	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
+	auto resourceManager = GetD3D12ResourceManager();
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
 
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBufferManager->GetGpuAddress(gpuBufferHandle.get());
+		data.gpuAddress = resourceManager->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, gpuBufferManager->GetSRV(gpuBufferHandle.get()));
+		SetDescriptor(data, slot, resourceManager->GetSRV(gpuBufferHandle.get(), true));
 	}
 }
 
@@ -152,10 +150,10 @@ void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto colorBufferManager = GetD3D12ColorBufferManager();
+	auto resourceManager = GetD3D12ResourceManager();
 	auto colorBufferHandle = colorBuffer.GetHandle();
 
-	SetDescriptor(data, slot, colorBufferManager->GetUAV(colorBufferHandle.get(), uavIndex));
+	SetDescriptor(data, slot, resourceManager->GetUAV(colorBufferHandle.get(), uavIndex));
 }
 
 
@@ -166,7 +164,7 @@ void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto depthBufferManager = GetD3D12DepthBufferManager();
+	auto resourceManager = GetD3D12ResourceManager();
 	auto depthBufferHandle = depthBuffer.GetHandle();
 
 	assert_msg(false, "Depth UAVs not yet supported");
@@ -180,17 +178,17 @@ void DescriptorSetManager::SetUAV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto gpuBufferManager = GetD3D12GpuBufferManager();
-	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
+	auto resourceManager = GetD3D12ResourceManager();
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
 
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBufferManager->GetGpuAddress(gpuBufferHandle.get());
+		data.gpuAddress = resourceManager->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, gpuBufferManager->GetUAV(gpuBufferHandle.get()));
+		SetDescriptor(data, slot, resourceManager->GetUAV(gpuBufferHandle.get()));
 	}
 }
 
@@ -202,17 +200,17 @@ void DescriptorSetManager::SetCBV(DescriptorSetHandleType* handle, int slot, con
 	uint32_t index = handle->GetIndex();
 	auto& data = m_descriptorData[index];
 
-	auto gpuBufferManager = GetD3D12GpuBufferManager();
-	GpuBufferHandle gpuBufferHandle = gpuBuffer.GetHandle();
+	auto resourceManager = GetD3D12ResourceManager();
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
 
 	if (data.isRootBuffer)
 	{
 		assert(slot == 0);
-		data.gpuAddress = gpuBufferManager->GetGpuAddress(gpuBufferHandle.get());
+		data.gpuAddress = resourceManager->GetGpuAddress(gpuBufferHandle.get());
 	}
 	else
 	{
-		SetDescriptor(data, slot, gpuBufferManager->GetCBV(gpuBufferHandle.get()));
+		SetDescriptor(data, slot, resourceManager->GetCBV(gpuBufferHandle.get()));
 	}
 }
 

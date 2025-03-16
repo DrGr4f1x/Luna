@@ -30,14 +30,12 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class ColorBufferManager;
 class ComputeContext;
-class DepthBufferManager;
 class DescriptorSetManager;
-class GpuBufferManager;
 class GraphicsContext;
 class IDynamicDescriptorHeap;
 class PipelineStateManager;
+class ResourceManager;
 class RootSignatureManager;
 
 
@@ -176,11 +174,9 @@ private:
 	bool m_isRendering{ false };
 
 	// Managers
-	ColorBufferManager* m_colorBufferManager{ nullptr };
-	DepthBufferManager* m_depthBufferManager{ nullptr };
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
-	GpuBufferManager* m_gpuBufferManager{ nullptr };
 	PipelineStateManager* m_pipelineStateManager{ nullptr };
+	ResourceManager* m_resourceManager{ nullptr };
 	RootSignatureManager* m_rootSignatureManager{ nullptr };
 
 	// Resource barriers

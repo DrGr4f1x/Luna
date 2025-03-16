@@ -13,6 +13,8 @@
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 #include "Graphics\PixelBuffer.h"
+#include "Graphics\ResourceManager.h"
+
 
 namespace Luna
 {
@@ -44,51 +46,6 @@ struct DepthBufferDesc
 };
 
 
-class IDepthBufferManager;
-
-
-class __declspec(uuid("BFA0209B-629D-4A01-9E6E-5A4D2F8D884D")) DepthBufferHandleType : public RefCounted<DepthBufferHandleType>
-{
-public:
-	DepthBufferHandleType(uint32_t index, IDepthBufferManager* manager)
-		: m_index{ index }
-		, m_manager{ manager }
-	{}
-	~DepthBufferHandleType();
-
-	uint32_t GetIndex() const { return m_index; }
-
-private:
-	uint32_t m_index{ 0 };
-	IDepthBufferManager* m_manager{ nullptr };
-};
-
-using DepthBufferHandle = wil::com_ptr<DepthBufferHandleType>;
-
-
-class IDepthBufferManager
-{
-public:
-	// Create/Destroy DepthBuffer
-	virtual DepthBufferHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
-	virtual void DestroyHandle(DepthBufferHandleType* handle) = 0;
-
-	// Platform agnostic functions
-	virtual ResourceType GetResourceType(DepthBufferHandleType* handle) const = 0;
-	virtual ResourceState GetUsageState(DepthBufferHandleType* handle) const = 0;
-	virtual void SetUsageState(DepthBufferHandleType* handle, ResourceState newState) = 0;
-	virtual uint64_t GetWidth(DepthBufferHandleType* handle) const = 0;
-	virtual uint32_t GetHeight(DepthBufferHandleType* handle) const = 0;
-	virtual uint32_t GetDepthOrArraySize(DepthBufferHandleType* handle) const = 0;
-	virtual uint32_t GetNumMips(DepthBufferHandleType* handle) const = 0;
-	virtual uint32_t GetNumSamples(DepthBufferHandleType* handle) const = 0;
-	virtual uint32_t GetPlaneCount(DepthBufferHandleType* handle) const = 0;
-	virtual Format GetFormat(DepthBufferHandleType* handle) const = 0;
-	virtual float GetClearDepth(DepthBufferHandleType* handle) const = 0;
-	virtual uint8_t GetClearStencil(DepthBufferHandleType* handle) const = 0;
-};
-
-
 class DepthBuffer
 {
 public:
@@ -109,10 +66,10 @@ public:
 	float GetClearDepth() const;
 	uint8_t GetClearStencil() const;
 
-	DepthBufferHandle GetHandle() const { return m_handle; }
+	ResourceHandle GetHandle() const { return m_handle; }
 
 private:
-	DepthBufferHandle m_handle;
+	ResourceHandle m_handle;
 };
 
 } // namespace Luna

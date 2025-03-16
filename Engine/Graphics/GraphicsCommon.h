@@ -19,11 +19,9 @@ namespace Luna
 {
 
 // Forward declarations
-class IColorBufferManager;
-class IDepthBufferManager;
 class IDescriptorSetManager;
-class IGpuBufferManager;
 class IPipelineStateManager;
+class IResourceManager;
 class IRootSignatureManager;
 
 
@@ -101,11 +99,9 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
 
-IColorBufferManager* GetColorBufferManager();
-IDepthBufferManager* GetDepthBufferManager();
 IDescriptorSetManager* GetDescriptorSetManager();
-IGpuBufferManager* GetGpuBufferManager();
 IPipelineStateManager* GetPipelineStateManager();
+IResourceManager* GetResourceManager();
 IRootSignatureManager* GetRootSignatureManager();
 
 // Graphics related log categories

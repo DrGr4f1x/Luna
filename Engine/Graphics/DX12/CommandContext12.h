@@ -30,11 +30,9 @@ namespace Luna::DX12
 {
 
 // Forward declarations
-class ColorBufferManager;
-class DepthBufferManager;
 class DescriptorSetManager;
-class GpuBufferManager;
 class PipelineStateManager;
+class ResourceManager;
 class RootSignatureManager;
 
 
@@ -159,11 +157,9 @@ private:
 	bool m_bHasPendingDebugEvent{ false };
 
 	// Managers
-	ColorBufferManager* m_colorBufferManager{ nullptr };
-	DepthBufferManager* m_depthBufferManager{ nullptr };
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
-	GpuBufferManager* m_gpuBufferManager{ nullptr };
 	PipelineStateManager* m_pipelineStateManager{ nullptr };
+	ResourceManager* m_resourceManager{ nullptr };
 	RootSignatureManager* m_rootSignatureManager{ nullptr };
 
 	// Render target state

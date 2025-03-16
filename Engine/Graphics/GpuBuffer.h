@@ -13,6 +13,7 @@
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 #include "Graphics\GpuResource.h"
+#include "Graphics\ResourceManager.h"
 
 
 namespace Luna
@@ -40,54 +41,13 @@ struct GpuBufferDesc
 };
 
 
-class IGpuBufferManager;
-
-
-class __declspec(uuid("3BC9117D-D567-4D21-9AFC-ACFF5D17C167")) GpuBufferHandleType : public RefCounted<GpuBufferHandleType>
-{
-public:
-	GpuBufferHandleType(uint32_t index, IGpuBufferManager* manager)
-		: m_index{ index }
-		, m_manager{ manager }
-	{}
-	~GpuBufferHandleType();
-
-	uint32_t GetIndex() const { return m_index; }
-
-private:
-	uint32_t m_index{ 0 };
-	IGpuBufferManager* m_manager{ nullptr };
-};
-
-using GpuBufferHandle = wil::com_ptr<GpuBufferHandleType>;
-
-
-class IGpuBufferManager
-{
-public:
-	// Create/Destroy GpuBuffer
-	virtual GpuBufferHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
-	virtual void DestroyHandle(GpuBufferHandleType* handle) = 0;
-
-	// Platform agnostic functions
-	virtual ResourceType GetResourceType(GpuBufferHandleType* handle) const = 0;
-	virtual ResourceState GetUsageState(GpuBufferHandleType* handle) const = 0;
-	virtual void SetUsageState(GpuBufferHandleType* handle, ResourceState newState) = 0;
-	virtual size_t GetSize(GpuBufferHandleType* handle) const = 0;
-	virtual size_t GetElementCount(GpuBufferHandleType* handle) const = 0;
-	virtual size_t GetElementSize(GpuBufferHandleType* handle) const = 0;
-	virtual void Update(GpuBufferHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const = 0;
-
-};
-
-
 class GpuBuffer
 {
 public:
 
 	void Initialize(const GpuBufferDesc& gpuBufferDesc);
 
-	GpuBufferHandle GetHandle() const { return m_handle; }
+	ResourceHandle GetHandle() const { return m_handle; }
 
 	ResourceType GetResourceType() const;
 	ResourceState GetUsageState() const;
@@ -101,7 +61,7 @@ public:
 	void Update(size_t sizeInBytes, size_t offset, const void* data);
 
 private:
-	GpuBufferHandle m_handle;
+	ResourceHandle m_handle;
 };
 
 } // namespace Luna

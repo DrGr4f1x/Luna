@@ -155,29 +155,11 @@
     <ClCompile Include="Graphics\GpuBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\GpuBufferManager12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\GpuBufferManagerVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\DepthBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\DepthBufferManager12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DepthBufferManagerVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\ColorBuffer.cpp">
       <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\DX12\ColorBufferManager12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\ColorBufferManagerVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp">
       <Filter>Graphics\Vulkan</Filter>
@@ -196,6 +178,15 @@
     </ClCompile>
     <ClCompile Include="..\External\volk\volk.c">
       <Filter>External\volk</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\ResourceManager.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\ResourceManager12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\ResourceManagerVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -438,24 +429,6 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorSetManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\GpuBufferManager12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\GpuBufferManagerVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\DX12\DepthBufferManager12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DepthBufferManagerVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\DX12\ColorBufferManager12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\ColorBufferManagerVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Vulkan\VulkanUtil.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
@@ -479,6 +452,15 @@
     </ClInclude>
     <ClInclude Include="..\External\volk\volk.h">
       <Filter>External\volk</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\ResourceManager.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\ResourceManager12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\ResourceManagerVK.h">
+      <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

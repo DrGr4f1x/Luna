@@ -12,14 +12,12 @@
 
 #include "DeviceManagerVK.h"
 
-#include "ColorBufferManagerVK.h"
 #include "CommandContextVK.h"
-#include "DepthBufferManagerVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "DescriptorSetManagerVK.h"
-#include "GpuBufferManagerVK.h"
 #include "PipelineStateManagerVK.h"
 #include "QueueVK.h"
+#include "ResourceManagerVK.h"
 #include "RootSignatureManagerVK.h"
 #include "VulkanUtil.h"
 
@@ -413,7 +411,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < (uint32_t)images.size(); ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(m_colorBufferManager->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
+		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
 		m_swapChainBuffers.push_back(swapChainBuffer);
 	}
 }
@@ -474,33 +472,21 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IColorBufferManager* DeviceManager::GetColorBufferManager()
-{
-	return m_colorBufferManager.get();
-}
-
-
-IDepthBufferManager* DeviceManager::GetDepthBufferManager()
-{
-	return m_depthBufferManager.get();
-}
-
-
 IDescriptorSetManager* DeviceManager::GetDescriptorSetManager()
 {
 	return m_descriptorSetManager.get();
 }
 
 
-IGpuBufferManager* DeviceManager::GetGpuBufferManager()
-{
-	return m_gpuBufferManager.get();
-}
-
-
 IPipelineStateManager* DeviceManager::GetPipelineStateManager()
 {
 	return m_pipelineStateManager.get();
+}
+
+
+IResourceManager* DeviceManager::GetResourceManager()
+{
+	return m_resourceManager.get();
 }
 
 
@@ -661,11 +647,9 @@ void DeviceManager::CreateDevice()
 
 void DeviceManager::CreateResourceManagers()
 {
-	m_colorBufferManager = make_unique<ColorBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
-	m_depthBufferManager = make_unique<DepthBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_vkDevice.get());
-	m_gpuBufferManager = make_unique<GpuBufferManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_pipelineStateManager = make_unique<PipelineStateManager>(m_vkDevice.get());
+	m_resourceManager = make_unique<ResourceManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_rootSignatureManager = make_unique<RootSignatureManager>(m_vkDevice.get());
 }
 

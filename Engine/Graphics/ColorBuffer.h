@@ -13,6 +13,7 @@
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 #include "Graphics\PixelBuffer.h"
+#include "Graphics\ResourceManager.h"
 
 
 namespace Luna
@@ -47,50 +48,6 @@ struct ColorBufferDesc
 };
 
 
-class IColorBufferManager;
-
-
-class __declspec(uuid("06E5178C-0CD1-491E-BBA4-8C445CBA2E34")) ColorBufferHandleType : public RefCounted<ColorBufferHandleType>
-{
-public:
-	ColorBufferHandleType(uint32_t index, IColorBufferManager* manager)
-		: m_index{ index }
-		, m_manager{ manager }
-	{}
-	~ColorBufferHandleType();
-
-	uint32_t GetIndex() const { return m_index; }
-
-private:
-	uint32_t m_index{ 0 };
-	IColorBufferManager* m_manager{ nullptr };
-};
-
-using ColorBufferHandle = wil::com_ptr<ColorBufferHandleType>;
-
-
-class IColorBufferManager
-{
-public:
-	// Create/Destroy ColorBuffer
-	virtual ColorBufferHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
-	virtual void DestroyHandle(ColorBufferHandleType* handle) = 0;
-
-	// Platform agnostic functions
-	virtual ResourceType GetResourceType(ColorBufferHandleType* handle) const = 0;
-	virtual ResourceState GetUsageState(ColorBufferHandleType* handle) const = 0;
-	virtual void SetUsageState(ColorBufferHandleType* handle, ResourceState newState) = 0;
-	virtual uint64_t GetWidth(ColorBufferHandleType* handle) const = 0;
-	virtual uint32_t GetHeight(ColorBufferHandleType* handle) const = 0;
-	virtual uint32_t GetDepthOrArraySize(ColorBufferHandleType* handle) const = 0;
-	virtual uint32_t GetNumMips(ColorBufferHandleType* handle) const = 0;
-	virtual uint32_t GetNumSamples(ColorBufferHandleType* handle) const = 0;
-	virtual uint32_t GetPlaneCount(ColorBufferHandleType* handle) const = 0;
-	virtual Format GetFormat(ColorBufferHandleType* handle) const = 0;
-	virtual Color GetClearColor(ColorBufferHandleType* handle) const = 0;
-};
-
-
 class ColorBuffer
 {
 public:
@@ -110,11 +67,11 @@ public:
 	TextureDimension GetDimension() const;
 	Color GetClearColor() const;
 
-	void SetHandle(ColorBufferHandleType* handle) { m_handle = handle; }
-	ColorBufferHandle GetHandle() const { return m_handle; }
+	void SetHandle(ResourceHandleType* handle);
+	ResourceHandle GetHandle() const { return m_handle; }
 
 private:
-	ColorBufferHandle m_handle;
+	ResourceHandle m_handle;
 };
 
 } // namespace Luna
