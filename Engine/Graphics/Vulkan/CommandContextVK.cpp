@@ -17,7 +17,6 @@
 
 #include "DescriptorSetManagerVK.h"
 #include "DeviceManagerVK.h"
-#include "PipelineStateManagerVK.h"
 #include "QueueVK.h"
 #include "ResourceManagerVK.h"
 #include "RootSignatureManagerVK.h"
@@ -172,7 +171,6 @@ void CommandContextVK::Initialize()
 	m_dynamicDescriptorHeap = make_unique<DefaultDynamicDescriptorHeap>(m_device.get());
 
 	m_descriptorSetManager = GetVulkanDescriptorSetManager();
-	m_pipelineStateManager = GetVulkanPipelineStateManager();
 	m_resourceManager = GetVulkanResourceManager();
 	m_rootSignatureManager = GetVulkanRootSignatureManager();
 }
@@ -601,7 +599,7 @@ void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	VkPipeline vkPipeline = m_pipelineStateManager->GetPipeline(graphicsPipeline.GetHandle().get());
+	VkPipeline vkPipeline = m_resourceManager->GetGraphicsPipeline(graphicsPipeline.GetHandle().get());
 
 	if (vkPipeline != m_graphicsPipeline)
 	{

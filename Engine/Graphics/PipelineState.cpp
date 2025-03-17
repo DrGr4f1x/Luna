@@ -13,17 +13,11 @@
 #include "PipelineState.h"
 
 #include "GraphicsCommon.h"
+#include "ResourceManager.h"
 
 
 namespace Luna
 {
-
-PipelineStateHandleType::~PipelineStateHandleType()
-{
-	assert(m_manager);
-	m_manager->DestroyHandle(this);
-}
-
 
 PrimitiveTopology GraphicsPipelineState::GetPrimitiveTopology() const
 {
@@ -33,13 +27,13 @@ PrimitiveTopology GraphicsPipelineState::GetPrimitiveTopology() const
 
 void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
 {
-	m_handle = GetPipelineStateManager()->CreateGraphicsPipeline(desc);
+	m_handle = GetResourceManager()->CreateGraphicsPipeline(desc);
 }
 
 
 const GraphicsPipelineDesc& GraphicsPipelineState::GetDesc() const
 {
-	return GetPipelineStateManager()->GetDesc(m_handle.get());
+	return GetResourceManager()->GetGraphicsPipelineDesc(m_handle.get());
 }
 
 } // namespace Luna

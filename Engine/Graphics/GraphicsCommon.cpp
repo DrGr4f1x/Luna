@@ -126,12 +126,6 @@ IDescriptorSetManager* GetDescriptorSetManager()
 }
 
 
-IPipelineStateManager* GetPipelineStateManager()
-{
-	return GetDeviceManager()->GetPipelineStateManager();
-}
-
-
 IResourceManager* GetResourceManager()
 {
 	return GetDeviceManager()->GetResourceManager();

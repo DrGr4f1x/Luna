@@ -20,7 +20,6 @@ namespace Luna
 
 // Forward declarations
 class IDescriptorSetManager;
-class IPipelineStateManager;
 class IResourceManager;
 class IRootSignatureManager;
 
@@ -100,7 +99,6 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 IDeviceManager* GetDeviceManager();
 
 IDescriptorSetManager* GetDescriptorSetManager();
-IPipelineStateManager* GetPipelineStateManager();
 IResourceManager* GetResourceManager();
 IRootSignatureManager* GetRootSignatureManager();
 

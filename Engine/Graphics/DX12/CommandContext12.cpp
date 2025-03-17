@@ -17,7 +17,6 @@
 #include "DescriptorSetManager12.h"
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
-#include "PipelineStateManager12.h"
 #include "Queue12.h"
 #include "ResourceManager12.h"
 #include "RootSignatureManager12.h"
@@ -116,7 +115,6 @@ void CommandContext12::Initialize()
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 
 	m_descriptorSetManager = GetD3D12DescriptorSetManager();
-	m_pipelineStateManager = GetD3D12PipelineStateManager();
 	m_resourceManager = GetD3D12ResourceManager();
 	m_rootSignatureManager = GetD3D12RootSignatureManager();
 }
@@ -451,7 +449,7 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeli
 	m_computePipelineState = nullptr;
 
 	// TODO: Pass handle in as function parameter
-	ID3D12PipelineState* graphicsPSO = m_pipelineStateManager->GetPipelineState(graphicsPipeline.GetHandle().get());
+	ID3D12PipelineState* graphicsPSO = m_resourceManager->GetGraphicsPipelineState(graphicsPipeline.GetHandle().get());
 
 	if (m_graphicsPipelineState != graphicsPSO)
 	{

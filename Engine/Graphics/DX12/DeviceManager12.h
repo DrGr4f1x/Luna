@@ -24,7 +24,6 @@ namespace Luna::DX12
 struct DeviceCaps;
 class DescriptorAllocator;
 class DescriptorSetManager;
-class PipelineStateManager;
 class Queue;
 class ResourceManager;
 class RootSignatureManager;
@@ -84,7 +83,6 @@ public:
 	Format GetDepthFormat() final;
 
 	IDescriptorSetManager* GetDescriptorSetManager() override;
-	IPipelineStateManager* GetPipelineStateManager() override;
 	IResourceManager* GetResourceManager() override;
 	IRootSignatureManager* GetRootSignatureManager() override;
 
@@ -146,7 +144,6 @@ private:
 
 	// DirectX resource managers
 	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
-	std::unique_ptr<PipelineStateManager> m_pipelineStateManager;
 	std::unique_ptr<ResourceManager> m_resourceManager;
 	std::unique_ptr<RootSignatureManager> m_rootSignatureManager;
 

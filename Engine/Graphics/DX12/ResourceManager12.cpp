@@ -12,6 +12,10 @@
 
 #include "ResourceManager12.h"
 
+#include "FileSystem.h"
+#include "RootSignatureManager12.h"
+#include "Shader12.h"
+
 using namespace std;
 
 
@@ -19,6 +23,55 @@ namespace Luna::DX12
 {
 
 ResourceManager* g_resourceManager{ nullptr };
+
+
+pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
+{
+	auto fileSystem = GetFileSystem();
+
+	string shaderFileWithExtension = shaderFilename;
+	bool exists = false;
+
+	// See if the filename already has an extension
+	string extension = fileSystem->GetFileExtension(shaderFilename);
+	if (!extension.empty())
+	{
+		exists = fileSystem->Exists(shaderFileWithExtension);
+	}
+	else
+	{
+		// Try .dxil extension first
+		shaderFileWithExtension = shaderFilename + ".dxil";
+		exists = fileSystem->Exists(shaderFileWithExtension);
+		if (!exists)
+		{
+			// Try .dxbc next
+			shaderFileWithExtension = shaderFilename + ".dxbc";
+			exists = fileSystem->Exists(shaderFileWithExtension);
+		}
+	}
+
+	return make_pair(shaderFileWithExtension, exists);
+}
+
+
+Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry)
+{
+	auto [shaderFilenameWithExtension, exists] = GetShaderFilenameWithExtension(shaderNameAndEntry.shaderFile);
+
+	if (!exists)
+	{
+		return nullptr;
+	}
+
+	ShaderDesc shaderDesc{
+		.filenameWithExtension = shaderFilenameWithExtension,
+		.entry = shaderNameAndEntry.entry,
+		.type = type
+	};
+
+	return Shader::Load(shaderDesc);
+}
 
 
 ResourceManager::ResourceManager(ID3D12Device* device, D3D12MA::Allocator* allocator)
@@ -38,6 +91,7 @@ ResourceManager::ResourceManager(ID3D12Device* device, D3D12MA::Allocator* alloc
 		m_colorBufferCache.Reset(i);
 		m_depthBufferCache.Reset(i);
 		m_gpuBufferCache.Reset(i);
+		m_graphicsPipelineCache.Reset(i);
 	}
 
 	g_resourceManager = this;
@@ -145,24 +199,52 @@ ResourceHandle ResourceManager::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 }
 
 
+ResourceHandle ResourceManager::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+{
+	std::lock_guard guard(m_allocationMutex);
+
+	assert(!m_resourceFreeList.empty());
+
+	// Get a graphics pipeline index allocation
+	uint32_t graphicsPipelineIndex = m_graphicsPipelineCache.freeList.front();
+	m_graphicsPipelineCache.freeList.pop();
+
+	// Allocate the graphics pipeline 
+	auto graphicsPipeline = CreateGraphicsPipeline_Internal(pipelineDesc);
+
+	m_graphicsPipelineCache.AddData(graphicsPipelineIndex, pipelineDesc, graphicsPipeline);
+
+	return Create<ResourceHandleType>(graphicsPipelineIndex, ManagedGraphicsPipeline, this);
+}
+
+
 void ResourceManager::DestroyHandle(ResourceHandleType* handle)
 {
 	std::lock_guard guard(m_allocationMutex);
 
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
+	bool isResourceHandle = false;
+
 	switch (type)
 	{
 	case ManagedColorBuffer:
 		m_colorBufferCache.Reset(resourceIndex);
+		isResourceHandle = true;
 		break;
 
 	case ManagedDepthBuffer:
 		m_depthBufferCache.Reset(resourceIndex);
+		isResourceHandle = true;
 		break;
 
 	case ManagedGpuBuffer:
 		m_gpuBufferCache.Reset(resourceIndex);
+		isResourceHandle = true;
+		break;
+
+	case ManagedGraphicsPipeline:
+		m_graphicsPipelineCache.Reset(resourceIndex);
 		break;
 
 	default:
@@ -171,8 +253,12 @@ void ResourceManager::DestroyHandle(ResourceHandleType* handle)
 	}
 
 	// Finally, mark the resource index as unallocated
-	m_resourceIndices[index] = InvalidAllocation;
-	m_resourceFreeList.push(index);
+	if (isResourceHandle)
+	{
+		m_resourceData[index] = ResourceData{};
+		m_resourceIndices[index] = InvalidAllocation;
+		m_resourceFreeList.push(index);
+	}
 }
 
 
@@ -435,6 +521,16 @@ void ResourceManager::Update(ResourceHandleType* handle, size_t sizeInBytes, siz
 }
 
 
+const GraphicsPipelineDesc& ResourceManager::GetGraphicsPipelineDesc(ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedGraphicsPipeline);
+
+	return m_graphicsPipelineCache.descArray[resourceIndex];
+}
+
+
 ResourceHandle ResourceManager::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex)
 {
 	wil::com_ptr<ID3D12Resource> displayPlane;
@@ -575,6 +671,16 @@ uint64_t ResourceManager::GetGpuAddress(ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 	return m_resourceData[index].resource->GetGPUVirtualAddress();
+}
+
+
+ID3D12PipelineState* ResourceManager::GetGraphicsPipelineState(ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedGraphicsPipeline);
+
+	return m_graphicsPipelineCache.dataArray[resourceIndex].get();
 }
 
 
@@ -991,6 +1097,199 @@ pair<ResourceData, GpuBufferData> ResourceManager::CreateGpuBuffer_Internal(cons
 	}
 
 	return make_pair(resourceData, gpuBufferData);
+}
+
+
+wil::com_ptr<ID3D12PipelineState> ResourceManager::CreateGraphicsPipeline_Internal(const GraphicsPipelineDesc& pipelineDesc)
+{
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
+	d3d12PipelineDesc.NodeMask = 1;
+	d3d12PipelineDesc.SampleMask = pipelineDesc.sampleMask;
+	d3d12PipelineDesc.InputLayout.NumElements = 0;
+
+	// Blend state
+	d3d12PipelineDesc.BlendState.AlphaToCoverageEnable = pipelineDesc.blendState.alphaToCoverageEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.BlendState.IndependentBlendEnable = pipelineDesc.blendState.independentBlendEnable ? TRUE : FALSE;
+
+	for (uint32_t i = 0; i < 8; ++i)
+	{
+		auto& rtDesc = d3d12PipelineDesc.BlendState.RenderTarget[i];
+		const auto& renderTargetBlend = pipelineDesc.blendState.renderTargetBlend[i];
+
+		rtDesc.BlendEnable = renderTargetBlend.blendEnable ? TRUE : FALSE;
+		rtDesc.LogicOpEnable = renderTargetBlend.logicOpEnable ? TRUE : FALSE;
+		rtDesc.SrcBlend = BlendToDX12(renderTargetBlend.srcBlend);
+		rtDesc.DestBlend = BlendToDX12(renderTargetBlend.dstBlend);
+		rtDesc.BlendOp = BlendOpToDX12(renderTargetBlend.blendOp);
+		rtDesc.SrcBlendAlpha = BlendToDX12(renderTargetBlend.srcBlendAlpha);
+		rtDesc.DestBlendAlpha = BlendToDX12(renderTargetBlend.dstBlendAlpha);
+		rtDesc.BlendOpAlpha = BlendOpToDX12(renderTargetBlend.blendOpAlpha);
+		rtDesc.LogicOp = LogicOpToDX12(renderTargetBlend.logicOp);
+		rtDesc.RenderTargetWriteMask = ColorWriteToDX12(renderTargetBlend.writeMask);
+	}
+
+	// Rasterizer state
+	const auto& rasterizerState = pipelineDesc.rasterizerState;
+	d3d12PipelineDesc.RasterizerState.FillMode = FillModeToDX12(rasterizerState.fillMode);
+	d3d12PipelineDesc.RasterizerState.CullMode = CullModeToDX12(rasterizerState.cullMode);
+	d3d12PipelineDesc.RasterizerState.FrontCounterClockwise = rasterizerState.frontCounterClockwise ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.DepthBias = rasterizerState.depthBias;
+	d3d12PipelineDesc.RasterizerState.DepthBiasClamp = rasterizerState.depthBiasClamp;
+	d3d12PipelineDesc.RasterizerState.SlopeScaledDepthBias = rasterizerState.slopeScaledDepthBias;
+	d3d12PipelineDesc.RasterizerState.DepthClipEnable = rasterizerState.depthClipEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.MultisampleEnable = rasterizerState.multisampleEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.AntialiasedLineEnable = rasterizerState.antialiasedLineEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.RasterizerState.ForcedSampleCount = rasterizerState.forcedSampleCount;
+	d3d12PipelineDesc.RasterizerState.ConservativeRaster =
+		rasterizerState.conservativeRasterizationEnable ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+
+	// Depth-stencil state
+	const auto& depthStencilState = pipelineDesc.depthStencilState;
+	d3d12PipelineDesc.DepthStencilState.DepthEnable = depthStencilState.depthEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.DepthStencilState.DepthWriteMask = DepthWriteToDX12(depthStencilState.depthWriteMask);
+	d3d12PipelineDesc.DepthStencilState.DepthFunc = ComparisonFuncToDX12(depthStencilState.depthFunc);
+	d3d12PipelineDesc.DepthStencilState.StencilEnable = depthStencilState.stencilEnable ? TRUE : FALSE;
+	d3d12PipelineDesc.DepthStencilState.StencilReadMask = depthStencilState.stencilReadMask;
+	d3d12PipelineDesc.DepthStencilState.StencilWriteMask = depthStencilState.stencilWriteMask;
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilFailOp = StencilOpToDX12(depthStencilState.frontFace.stencilFailOp);
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilDepthFailOp = StencilOpToDX12(depthStencilState.frontFace.stencilDepthFailOp);
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilPassOp = StencilOpToDX12(depthStencilState.frontFace.stencilPassOp);
+	d3d12PipelineDesc.DepthStencilState.FrontFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.frontFace.stencilFunc);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFailOp = StencilOpToDX12(depthStencilState.backFace.stencilFailOp);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilDepthFailOp = StencilOpToDX12(depthStencilState.backFace.stencilDepthFailOp);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilPassOp = StencilOpToDX12(depthStencilState.backFace.stencilPassOp);
+	d3d12PipelineDesc.DepthStencilState.BackFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.backFace.stencilFunc);
+
+	// Primitive topology & primitive restart
+	d3d12PipelineDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(pipelineDesc.topology);
+	d3d12PipelineDesc.IBStripCutValue = IndexBufferStripCutValueToDX12(pipelineDesc.indexBufferStripCut);
+
+	// Render target formats
+	const uint32_t numRtvs = (uint32_t)pipelineDesc.rtvFormats.size();
+	const uint32_t maxRenderTargets = 8;
+	for (uint32_t i = 0; i < numRtvs; ++i)
+	{
+		d3d12PipelineDesc.RTVFormats[i] = FormatToDxgi(pipelineDesc.rtvFormats[i]).rtvFormat;
+	}
+	for (uint32_t i = numRtvs; i < maxRenderTargets; ++i)
+	{
+		d3d12PipelineDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+	}
+	d3d12PipelineDesc.NumRenderTargets = numRtvs;
+	d3d12PipelineDesc.DSVFormat = GetDSVFormat(FormatToDxgi(pipelineDesc.dsvFormat).resourceFormat);
+	d3d12PipelineDesc.SampleDesc.Count = pipelineDesc.msaaCount;
+	d3d12PipelineDesc.SampleDesc.Quality = 0; // TODO Rework this to enable quality levels in DX12
+
+	// Input layout
+	d3d12PipelineDesc.InputLayout.NumElements = (UINT)pipelineDesc.vertexElements.size();
+	unique_ptr<const D3D12_INPUT_ELEMENT_DESC> d3dElements;
+
+	if (d3d12PipelineDesc.InputLayout.NumElements > 0)
+	{
+		D3D12_INPUT_ELEMENT_DESC* newD3DElements = (D3D12_INPUT_ELEMENT_DESC*)malloc(sizeof(D3D12_INPUT_ELEMENT_DESC) * d3d12PipelineDesc.InputLayout.NumElements);
+
+		const auto& vertexElements = pipelineDesc.vertexElements;
+
+		for (uint32_t i = 0; i < d3d12PipelineDesc.InputLayout.NumElements; ++i)
+		{
+			newD3DElements[i].AlignedByteOffset = vertexElements[i].alignedByteOffset;
+			newD3DElements[i].Format = FormatToDxgi(vertexElements[i].format).srvFormat;
+			newD3DElements[i].InputSlot = vertexElements[i].inputSlot;
+			newD3DElements[i].InputSlotClass = InputClassificationToDX12(vertexElements[i].inputClassification);
+			newD3DElements[i].InstanceDataStepRate = vertexElements[i].instanceDataStepRate;
+			newD3DElements[i].SemanticIndex = vertexElements[i].semanticIndex;
+			newD3DElements[i].SemanticName = vertexElements[i].semanticName;
+		}
+
+		d3dElements.reset((const D3D12_INPUT_ELEMENT_DESC*)newD3DElements);
+	}
+
+	// Shaders
+	if (pipelineDesc.vertexShader)
+	{
+		Shader* vertexShader = LoadShader(ShaderType::Vertex, pipelineDesc.vertexShader);
+		assert(vertexShader);
+		d3d12PipelineDesc.VS = CD3DX12_SHADER_BYTECODE(vertexShader->GetByteCode(), vertexShader->GetByteCodeSize());
+	}
+
+	if (pipelineDesc.pixelShader)
+	{
+		Shader* pixelShader = LoadShader(ShaderType::Pixel, pipelineDesc.pixelShader);
+		assert(pixelShader);
+		d3d12PipelineDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
+	}
+
+	if (pipelineDesc.geometryShader)
+	{
+		Shader* geometryShader = LoadShader(ShaderType::Geometry, pipelineDesc.geometryShader);
+		assert(geometryShader);
+		d3d12PipelineDesc.GS = CD3DX12_SHADER_BYTECODE(geometryShader->GetByteCode(), geometryShader->GetByteCodeSize());
+	}
+
+	if (pipelineDesc.hullShader)
+	{
+		Shader* hullShader = LoadShader(ShaderType::Hull, pipelineDesc.hullShader);
+		assert(hullShader);
+		d3d12PipelineDesc.HS = CD3DX12_SHADER_BYTECODE(hullShader->GetByteCode(), hullShader->GetByteCodeSize());
+	}
+
+	if (pipelineDesc.domainShader)
+	{
+		Shader* domainShader = LoadShader(ShaderType::Domain, pipelineDesc.domainShader);
+		assert(domainShader);
+		d3d12PipelineDesc.DS = CD3DX12_SHADER_BYTECODE(domainShader->GetByteCode(), domainShader->GetByteCodeSize());
+	}
+
+	// Make sure the root signature is finalized first
+	d3d12PipelineDesc.pRootSignature = GetD3D12RootSignatureManager()->GetRootSignature(pipelineDesc.rootSignature.get());
+	assert(d3d12PipelineDesc.pRootSignature != nullptr);
+
+	d3d12PipelineDesc.InputLayout.pInputElementDescs = nullptr;
+
+	size_t hashCode = Utility::HashState(&d3d12PipelineDesc);
+	hashCode = Utility::HashState(d3dElements.get(), d3d12PipelineDesc.InputLayout.NumElements, hashCode);
+
+	d3d12PipelineDesc.InputLayout.pInputElementDescs = d3dElements.get();
+
+	ID3D12PipelineState** ppPipelineState = nullptr;
+	ID3D12PipelineState* pPipelineState;
+	bool firstCompile = false;
+	{
+		lock_guard<mutex> CS(m_pipelineStateMutex);
+
+		auto iter = m_pipelineStateMap.find(hashCode);
+
+		// Reserve space so the next inquiry will find that someone got here first.
+		if (iter == m_pipelineStateMap.end())
+		{
+			firstCompile = true;
+			ppPipelineState = m_pipelineStateMap[hashCode].addressof();
+		}
+		else
+		{
+			ppPipelineState = iter->second.addressof();
+		}
+	}
+
+	if (firstCompile)
+	{
+		HRESULT res = m_device->CreateGraphicsPipelineState(&d3d12PipelineDesc, IID_PPV_ARGS(&pPipelineState));
+		ThrowIfFailed(res);
+
+		SetDebugName(pPipelineState, pipelineDesc.name);
+
+		m_pipelineStateMap[hashCode].attach(pPipelineState);
+	}
+	else
+	{
+		while (*ppPipelineState == nullptr)
+		{
+			this_thread::yield();
+		}
+		pPipelineState = *ppPipelineState;
+	}
+
+	return pPipelineState;
 }
 
 

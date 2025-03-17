@@ -15,7 +15,6 @@
 #include "CommandContextVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "DescriptorSetManagerVK.h"
-#include "PipelineStateManagerVK.h"
 #include "QueueVK.h"
 #include "ResourceManagerVK.h"
 #include "RootSignatureManagerVK.h"
@@ -478,12 +477,6 @@ IDescriptorSetManager* DeviceManager::GetDescriptorSetManager()
 }
 
 
-IPipelineStateManager* DeviceManager::GetPipelineStateManager()
-{
-	return m_pipelineStateManager.get();
-}
-
-
 IResourceManager* DeviceManager::GetResourceManager()
 {
 	return m_resourceManager.get();
@@ -648,7 +641,6 @@ void DeviceManager::CreateDevice()
 void DeviceManager::CreateResourceManagers()
 {
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_vkDevice.get());
-	m_pipelineStateManager = make_unique<PipelineStateManager>(m_vkDevice.get());
 	m_resourceManager = make_unique<ResourceManager>(m_vkDevice.get(), m_vmaAllocator.get());
 	m_rootSignatureManager = make_unique<RootSignatureManager>(m_vkDevice.get());
 }

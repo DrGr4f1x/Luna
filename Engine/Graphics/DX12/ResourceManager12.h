@@ -13,6 +13,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\PipelineState.h"
 #include "Graphics\ResourceManager.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
@@ -60,9 +61,10 @@ class ResourceManager : public IResourceManager
 	static const uint32_t InvalidAllocation = ~0u;
 	enum ManagedResourceType
 	{
-		ManagedColorBuffer	= 0x1,
-		ManagedDepthBuffer	= 0x2,
-		ManagedGpuBuffer	= 0x4,
+		ManagedColorBuffer		= 0x1,
+		ManagedDepthBuffer		= 0x2,
+		ManagedGpuBuffer		= 0x4,
+		ManagedGraphicsPipeline	= 0x8,
 	};
 
 public:
@@ -73,6 +75,7 @@ public:
 	ResourceHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	ResourceHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
+	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	void DestroyHandle(ResourceHandleType* handle) override;
 
 	// General resource methods
@@ -102,6 +105,9 @@ public:
 	std::optional<size_t> GetElementSize(ResourceHandleType* handle) const override;
 	void Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const override;
 
+	// Graphics pipeline state
+	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const override;
+
 	// Platform-specific methods
 	ResourceHandle CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex);
 	ID3D12Resource* GetResource(ResourceHandleType* handle) const;
@@ -111,12 +117,14 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(ResourceHandleType* handle, uint32_t uavIndex = 0) const;
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCBV(ResourceHandleType* handle) const;
 	uint64_t GetGpuAddress(ResourceHandleType* handle) const;
+	ID3D12PipelineState* GetGraphicsPipelineState(ResourceHandleType* handle) const;
 
 private:
 	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(ResourceHandleType* handle) const;
 	std::pair<ResourceData, ColorBufferData> CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc);
 	std::pair<ResourceData, DepthBufferData> CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc);
 	std::pair<ResourceData, GpuBufferData> CreateGpuBuffer_Internal(const GpuBufferDesc& gpuBufferDesc);
+	wil::com_ptr<ID3D12PipelineState> CreateGraphicsPipeline_Internal(const GraphicsPipelineDesc& pipelineDesc);
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
 
 private:
@@ -135,9 +143,9 @@ private:
 	// Resource data
 	std::array<ResourceData, MaxResources> m_resourceData;
 
-	// Data caches
+	// Resource caches
 	template<typename DescType, typename DataType, uint32_t MAX_ITEMS>
-	struct TDataCache
+	struct TResourceCache
 	{
 		std::queue<uint32_t> freeList;
 		std::array<DescType, MAX_ITEMS> descArray;
@@ -157,9 +165,13 @@ private:
 		}
 	};
 
-	TDataCache<ColorBufferDesc, ColorBufferData, MaxResources> m_colorBufferCache;
-	TDataCache<DepthBufferDesc, DepthBufferData, MaxResources> m_depthBufferCache;
-	TDataCache<GpuBufferDesc, GpuBufferData, MaxResources> m_gpuBufferCache;
+	TResourceCache<ColorBufferDesc, ColorBufferData, MaxResources> m_colorBufferCache;
+	TResourceCache<DepthBufferDesc, DepthBufferData, MaxResources> m_depthBufferCache;
+	TResourceCache<GpuBufferDesc, GpuBufferData, MaxResources> m_gpuBufferCache;
+	
+	TResourceCache<GraphicsPipelineDesc, wil::com_ptr<ID3D12PipelineState>, MaxResources> m_graphicsPipelineCache;
+	std::mutex m_pipelineStateMutex;
+	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
 };
 
 

@@ -13,7 +13,9 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\PipelineState.h"
 #include "Graphics\ResourceManager.h"
+#include "Graphics\Shader.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
@@ -63,9 +65,10 @@ class ResourceManager : public IResourceManager
 	static const uint32_t InvalidAllocation = ~0u;
 	enum ManagedResourceType
 	{
-		ManagedColorBuffer = 0x1,
-		ManagedDepthBuffer = 0x2,
-		ManagedGpuBuffer = 0x4,
+		ManagedColorBuffer			= 0x1,
+		ManagedDepthBuffer			= 0x2,
+		ManagedGpuBuffer			= 0x4,
+		ManagedGraphicsPipeline		= 0x8
 	};
 
 public:
@@ -76,6 +79,7 @@ public:
 	ResourceHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	ResourceHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
+	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	void DestroyHandle(ResourceHandleType* handle) override;
 
 	// General resource methods
@@ -105,6 +109,9 @@ public:
 	std::optional<size_t> GetElementSize(ResourceHandleType* handle) const override;
 	void Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const override;
 
+	// Graphics pipeline state
+	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const override;
+
 	// Platform specific methods
 	ResourceHandle CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 	VkImage GetImage(ResourceHandleType* handle) const;
@@ -117,12 +124,16 @@ public:
 	VkDescriptorImageInfo GetImageInfoDepth(ResourceHandleType* handle, bool depthSrv) const;
 	VkDescriptorBufferInfo GetBufferInfo(ResourceHandleType* handle) const;
 	VkBufferView GetBufferView(ResourceHandleType* handle) const;
+	VkPipeline GetGraphicsPipeline(ResourceHandleType* handle) const;
 
 private:
 	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(ResourceHandleType* handle) const;
 	std::pair<ResourceData, ColorBufferData> CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc);
 	std::pair<ResourceData, DepthBufferData> CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc);
 	std::pair<ResourceData, GpuBufferData> CreateGpuBuffer_Internal(const GpuBufferDesc& gpuBufferDesc);
+	wil::com_ptr<CVkPipeline> CreateGraphicsPipeline_Internal(const GraphicsPipelineDesc& pipelineDesc);
+	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
+	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
 
 private:
 	wil::com_ptr<CVkDevice> m_device;
@@ -165,6 +176,11 @@ private:
 	TDataCache<ColorBufferDesc, ColorBufferData, MaxResources> m_colorBufferCache;
 	TDataCache<DepthBufferDesc, DepthBufferData, MaxResources> m_depthBufferCache;
 	TDataCache<GpuBufferDesc, GpuBufferData, MaxResources> m_gpuBufferCache;
+
+	TDataCache<GraphicsPipelineDesc, wil::com_ptr<CVkPipeline>, MaxResources> m_graphicsPipelineCache;
+	std::mutex m_shaderModuleMutex;
+	std::map<size_t, wil::com_ptr<CVkShaderModule>> m_shaderModuleHashMap;
+	wil::com_ptr<CVkPipelineCache> m_pipelineCache;
 };
 
 

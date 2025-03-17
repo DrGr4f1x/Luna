@@ -112,7 +112,6 @@ public:
 	virtual Format GetDepthFormat() = 0;
 
 	virtual IDescriptorSetManager* GetDescriptorSetManager() = 0;
-	virtual IPipelineStateManager* GetPipelineStateManager() = 0;
 	virtual IResourceManager* GetResourceManager() = 0;
 	virtual IRootSignatureManager* GetRootSignatureManager() = 0;
 };

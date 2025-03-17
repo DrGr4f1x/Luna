@@ -34,7 +34,6 @@ class ComputeContext;
 class DescriptorSetManager;
 class GraphicsContext;
 class IDynamicDescriptorHeap;
-class PipelineStateManager;
 class ResourceManager;
 class RootSignatureManager;
 
@@ -175,7 +174,6 @@ private:
 
 	// Managers
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
-	PipelineStateManager* m_pipelineStateManager{ nullptr };
 	ResourceManager* m_resourceManager{ nullptr };
 	RootSignatureManager* m_rootSignatureManager{ nullptr };
 

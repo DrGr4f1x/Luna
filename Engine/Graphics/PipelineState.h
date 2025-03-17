@@ -13,6 +13,7 @@
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 #include "Graphics\InputLayout.h"
+#include "Graphics\ResourceManager.h"
 #include "Graphics\RootSignature.h"
 
 
@@ -188,41 +189,6 @@ struct GraphicsPipelineDesc
 };
 
 
-class IPipelineStateManager;
-
-
-class __declspec(uuid("F2A84C37-1876-440B-AC18-4D712C906D83")) PipelineStateHandleType : public RefCounted<PipelineStateHandleType>
-{
-public:
-	PipelineStateHandleType(uint32_t index, IPipelineStateManager* manager)
-		: m_index{ index }
-		, m_manager{ manager }
-	{}
-
-	~PipelineStateHandleType();
-
-	uint32_t GetIndex() const { return m_index; }
-
-private:
-	uint32_t m_index{ 0 };
-	IPipelineStateManager* m_manager{ nullptr };
-};
-
-using PipelineStateHandle = wil::com_ptr<PipelineStateHandleType>;
-
-
-class IPipelineStateManager
-{
-public:
-	// Create/Destroy pipeline state
-	virtual PipelineStateHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
-	virtual void DestroyHandle(PipelineStateHandleType* handle) = 0;
-
-	// Platform agnostic getters
-	virtual const GraphicsPipelineDesc& GetDesc(PipelineStateHandleType* handle) const = 0;
-};
-
-
 class GraphicsPipelineState
 {
 public:
@@ -231,13 +197,13 @@ public:
 
 	void Initialize(GraphicsPipelineDesc& pipelineDesc);
 
-	PipelineStateHandle GetHandle() const { return m_handle; }
+	ResourceHandle GetHandle() const { return m_handle; }
 
 private:
 	const GraphicsPipelineDesc& GetDesc() const;
 
 private:
-	PipelineStateHandle m_handle;
+	ResourceHandle m_handle;
 };
 
 } // namespace

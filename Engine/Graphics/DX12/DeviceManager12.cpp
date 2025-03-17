@@ -17,7 +17,6 @@
 #include "CommandContext12.h"
 #include "DescriptorSetManager12.h"
 #include "DeviceCaps12.h"
-#include "PipelineStateManager12.h"
 #include "Queue12.h"
 #include "ResourceManager12.h"
 #include "RootSignatureManager12.h"
@@ -518,12 +517,6 @@ IDescriptorSetManager* DeviceManager::GetDescriptorSetManager()
 }
 
 
-IPipelineStateManager* DeviceManager::GetPipelineStateManager()
-{
-	return m_pipelineStateManager.get();
-}
-
-
 IResourceManager* DeviceManager::GetResourceManager()
 {
 	return m_resourceManager.get();
@@ -746,7 +739,6 @@ void DeviceManager::CreateDevice()
 void DeviceManager::CreateResourceManagers()
 {
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_dxDevice.get());
-	m_pipelineStateManager = make_unique<PipelineStateManager>(m_dxDevice.get());
 	m_resourceManager = make_unique<ResourceManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 	m_rootSignatureManager = make_unique<RootSignatureManager>(m_dxDevice.get());
 }

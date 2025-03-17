@@ -53,7 +53,6 @@
     <ClCompile Include="Graphics\DescriptorSet.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSetManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
-    <ClCompile Include="Graphics\DX12\PipelineStateManager12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
@@ -80,7 +79,6 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorSetManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\PipelineStateManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ResourceManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
@@ -146,7 +144,6 @@
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSetManager12.h" />
     <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
-    <ClInclude Include="Graphics\DX12\PipelineStateManager12.h" />
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
     <ClInclude Include="Graphics\DX12\CommandContext12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
@@ -179,7 +176,6 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\HashVK.h" />
-    <ClInclude Include="Graphics\Vulkan\PipelineStateManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\ResourceManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />

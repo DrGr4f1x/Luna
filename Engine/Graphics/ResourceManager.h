@@ -22,6 +22,7 @@ class IResourceManager;
 struct ColorBufferDesc;
 struct DepthBufferDesc;
 struct GpuBufferDesc;
+struct GraphicsPipelineDesc;
 
 
 class __declspec(uuid("76EB2254-E7A6-4F2D-9037-A0FE41926CE2")) ResourceHandleType : public RefCounted<ResourceHandleType>
@@ -53,6 +54,7 @@ public:
 	virtual ResourceHandle CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
 	virtual ResourceHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
 	virtual ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
+	virtual ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
 	virtual void DestroyHandle(ResourceHandleType* handle) = 0;
 
 	// General resource methods
@@ -81,6 +83,9 @@ public:
 	virtual std::optional<size_t> GetElementCount(ResourceHandleType* handle) const = 0;
 	virtual std::optional<size_t> GetElementSize(ResourceHandleType* handle) const = 0;
 	virtual void Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const = 0;
+
+	// Graphics pipeline methods
+	virtual const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const = 0;
 };
 
 } // namespace Luna
