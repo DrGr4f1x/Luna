@@ -34,20 +34,10 @@ ResourceManager::ResourceManager(ID3D12Device* device, D3D12MA::Allocator* alloc
 		m_resourceIndices[i] = InvalidAllocation;
 		m_resourceData[i] = ResourceData{};
 
-		// ColorBuffer data
-		m_colorBufferFreeList.push(i);
-		m_colorBufferDescs[i] = ColorBufferDesc{};
-		m_colorBufferData[i] = ColorBufferData{};
-
-		// DepthBuffer data
-		m_depthBufferFreeList.push(i);
-		m_depthBufferDescs[i] = DepthBufferDesc{};
-		m_depthBufferData[i] = DepthBufferData{};
-
-		// GpuBuffer data
-		m_gpuBufferFreeList.push(i);
-		m_gpuBufferDescs[i] = GpuBufferDesc{};
-		m_gpuBufferData[i] = GpuBufferData{};
+		// Initialize caches
+		m_colorBufferCache.Reset(i);
+		m_depthBufferCache.Reset(i);
+		m_gpuBufferCache.Reset(i);
 	}
 
 	g_resourceManager = this;
@@ -71,8 +61,8 @@ ResourceHandle ResourceManager::CreateColorBuffer(const ColorBufferDesc& colorBu
 	m_resourceFreeList.pop();
 
 	// Get a color buffer index allocation
-	uint32_t colorBufferIndex = m_colorBufferFreeList.front();
-	m_colorBufferFreeList.pop();
+	uint32_t colorBufferIndex = m_colorBufferCache.freeList.front();
+	m_colorBufferCache.freeList.pop();
 
 	// Make sure we don't already have a color buffer allocation
 	assert(m_resourceIndices[resourceIndex] == InvalidAllocation);
@@ -83,8 +73,7 @@ ResourceHandle ResourceManager::CreateColorBuffer(const ColorBufferDesc& colorBu
 	// Allocate the color buffer and resource
 	auto [resourceData, colorBufferData] = CreateColorBuffer_Internal(colorBufferDesc);
 
-	m_colorBufferDescs[colorBufferIndex] = colorBufferDesc;
-	m_colorBufferData[colorBufferIndex] = colorBufferData;
+	m_colorBufferCache.AddData(colorBufferIndex, colorBufferDesc, colorBufferData);
 	m_resourceData[resourceIndex] = resourceData;
 
 	return Create<ResourceHandleType>(resourceIndex, ManagedColorBuffer, this);
@@ -102,8 +91,8 @@ ResourceHandle ResourceManager::CreateDepthBuffer(const DepthBufferDesc& depthBu
 	m_resourceFreeList.pop();
 
 	// Get a depth buffer index allocation
-	uint32_t depthBufferIndex = m_depthBufferFreeList.front();
-	m_depthBufferFreeList.pop();
+	uint32_t depthBufferIndex = m_depthBufferCache.freeList.front();
+	m_depthBufferCache.freeList.pop();
 
 	// Make sure we don't already have a depth buffer allocation
 	assert(m_resourceIndices[resourceIndex] == InvalidAllocation);
@@ -114,8 +103,7 @@ ResourceHandle ResourceManager::CreateDepthBuffer(const DepthBufferDesc& depthBu
 	// Allocate the depth buffer and resource
 	auto [resourceData, depthBufferData] = CreateDepthBuffer_Internal(depthBufferDesc);
 
-	m_depthBufferDescs[depthBufferIndex] = depthBufferDesc;
-	m_depthBufferData[depthBufferIndex] = depthBufferData;
+	m_depthBufferCache.AddData(depthBufferIndex, depthBufferDesc, depthBufferData);
 	m_resourceData[resourceIndex] = resourceData;
 
 	return Create<ResourceHandleType>(resourceIndex, ManagedDepthBuffer, this);
@@ -133,8 +121,8 @@ ResourceHandle ResourceManager::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 	m_resourceFreeList.pop();
 
 	// Get a gpu buffer index allocation
-	uint32_t gpuBufferIndex = m_gpuBufferFreeList.front();
-	m_gpuBufferFreeList.pop();
+	uint32_t gpuBufferIndex = m_gpuBufferCache.freeList.front();
+	m_gpuBufferCache.freeList.pop();
 
 	// Make sure we don't already have a gpu buffer allocation
 	assert(m_resourceIndices[resourceIndex] == InvalidAllocation);
@@ -150,8 +138,7 @@ ResourceHandle ResourceManager::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDe
 	}
 	auto [resourceData, gpuBufferData] = CreateGpuBuffer_Internal(gpuBufferDesc2);
 
-	m_gpuBufferDescs[gpuBufferIndex] = gpuBufferDesc2;
-	m_gpuBufferData[gpuBufferIndex] = gpuBufferData;
+	m_gpuBufferCache.AddData(gpuBufferIndex, gpuBufferDesc2, gpuBufferData);
 	m_resourceData[resourceIndex] = resourceData;
 
 	return Create<ResourceHandleType>(resourceIndex, ManagedGpuBuffer, this);
@@ -167,21 +154,15 @@ void ResourceManager::DestroyHandle(ResourceHandleType* handle)
 	switch (type)
 	{
 	case ManagedColorBuffer:
-		m_colorBufferDescs[resourceIndex] = ColorBufferDesc{};
-		m_colorBufferData[resourceIndex] = ColorBufferData{};
-		m_colorBufferFreeList.push(resourceIndex);
+		m_colorBufferCache.Reset(resourceIndex);
 		break;
 
 	case ManagedDepthBuffer:
-		m_depthBufferDescs[resourceIndex] = DepthBufferDesc{};
-		m_depthBufferData[resourceIndex] = DepthBufferData{};
-		m_depthBufferFreeList.push(resourceIndex);
+		m_depthBufferCache.Reset(resourceIndex);
 		break;
 
 	case ManagedGpuBuffer:
-		m_gpuBufferDescs[resourceIndex] = GpuBufferDesc{};
-		m_gpuBufferData[resourceIndex] = GpuBufferData{};
-		m_gpuBufferFreeList.push(resourceIndex);
+		m_gpuBufferCache.Reset(resourceIndex);
 		break;
 
 	default:
@@ -201,9 +182,9 @@ std::optional<ResourceType> ResourceManager::GetResourceType(ResourceHandleType*
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].resourceType);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].resourceType);
-	case ManagedGpuBuffer: return make_optional(m_gpuBufferDescs[resourceIndex].resourceType);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].resourceType);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].resourceType);
+	case ManagedGpuBuffer: return make_optional(m_gpuBufferCache.descArray[resourceIndex].resourceType);
 
 	default: 
 		assert(false);
@@ -235,9 +216,9 @@ std::optional<Format> ResourceManager::GetFormat(ResourceHandleType* handle) con
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].format);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].format);
-	case ManagedGpuBuffer: return make_optional(m_gpuBufferDescs[resourceIndex].format);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].format);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].format);
+	case ManagedGpuBuffer: return make_optional(m_gpuBufferCache.descArray[resourceIndex].format);
 
 	default:
 		assert(false);
@@ -253,8 +234,8 @@ std::optional<uint64_t> ResourceManager::GetWidth(ResourceHandleType* handle) co
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].width);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].width);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].width);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].width);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -269,8 +250,8 @@ std::optional<uint32_t> ResourceManager::GetHeight(ResourceHandleType* handle) c
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].height);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].height);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].height);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].height);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -285,8 +266,8 @@ std::optional<uint32_t> ResourceManager::GetDepthOrArraySize(ResourceHandleType*
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].arraySizeOrDepth);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].arraySizeOrDepth);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].arraySizeOrDepth);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].arraySizeOrDepth);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -301,8 +282,8 @@ std::optional<uint32_t> ResourceManager::GetNumMips(ResourceHandleType* handle) 
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].numMips);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].numMips);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].numMips);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].numMips);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -317,8 +298,8 @@ std::optional<uint32_t> ResourceManager::GetNumSamples(ResourceHandleType* handl
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].numSamples);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].numSamples);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].numSamples);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].numSamples);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -333,8 +314,8 @@ std::optional<uint32_t> ResourceManager::GetPlaneCount(ResourceHandleType* handl
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferData[resourceIndex].planeCount);
-	case ManagedDepthBuffer: return make_optional(m_depthBufferData[resourceIndex].planeCount);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.dataArray[resourceIndex].planeCount);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.dataArray[resourceIndex].planeCount);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -349,7 +330,7 @@ std::optional<Color> ResourceManager::GetClearColor(ResourceHandleType* handle) 
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return make_optional(m_colorBufferDescs[resourceIndex].clearColor);
+	case ManagedColorBuffer: return make_optional(m_colorBufferCache.descArray[resourceIndex].clearColor);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -364,7 +345,7 @@ std::optional<float> ResourceManager::GetClearDepth(ResourceHandleType* handle) 
 
 	switch (type)
 	{
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].clearDepth);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].clearDepth);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -379,7 +360,7 @@ std::optional<uint8_t> ResourceManager::GetClearStencil(ResourceHandleType* hand
 
 	switch (type)
 	{
-	case ManagedDepthBuffer: return make_optional(m_depthBufferDescs[resourceIndex].clearStencil);
+	case ManagedDepthBuffer: return make_optional(m_depthBufferCache.descArray[resourceIndex].clearStencil);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -394,7 +375,7 @@ std::optional<size_t> ResourceManager::GetSize(ResourceHandleType* handle) const
 
 	switch (type)
 	{
-	case ManagedGpuBuffer: return make_optional(m_gpuBufferDescs[resourceIndex].elementCount * m_gpuBufferDescs[resourceIndex].elementSize);
+	case ManagedGpuBuffer: return make_optional(m_gpuBufferCache.descArray[resourceIndex].elementCount * m_gpuBufferCache.descArray[resourceIndex].elementSize);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -409,7 +390,7 @@ std::optional<size_t> ResourceManager::GetElementCount(ResourceHandleType* handl
 
 	switch (type)
 	{
-	case ManagedGpuBuffer: return make_optional(m_gpuBufferDescs[resourceIndex].elementCount);
+	case ManagedGpuBuffer: return make_optional(m_gpuBufferCache.descArray[resourceIndex].elementCount);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -424,7 +405,7 @@ std::optional<size_t> ResourceManager::GetElementSize(ResourceHandleType* handle
 
 	switch (type)
 	{
-	case ManagedGpuBuffer: return make_optional(m_gpuBufferDescs[resourceIndex].elementSize);
+	case ManagedGpuBuffer: return make_optional(m_gpuBufferCache.descArray[resourceIndex].elementSize);
 	default:
 		assert(false);
 		LogError(LogGraphics) << "ResourceManager: unknown resource type " << type << endl;
@@ -437,8 +418,8 @@ void ResourceManager::Update(ResourceHandleType* handle, size_t sizeInBytes, siz
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
-	assert((sizeInBytes + offset) <= (m_gpuBufferDescs[resourceIndex].elementSize * m_gpuBufferDescs[resourceIndex].elementCount));
-	assert(HasFlag(m_gpuBufferDescs[resourceIndex].memoryAccess, MemoryAccess::CpuWrite));
+	assert((sizeInBytes + offset) <= (m_gpuBufferCache.descArray[resourceIndex].elementSize * m_gpuBufferCache.descArray[resourceIndex].elementCount));
+	assert(HasFlag(m_gpuBufferCache.descArray[resourceIndex].memoryAccess, MemoryAccess::CpuWrite));
 
 	CD3DX12_RANGE readRange(0, 0);
 
@@ -502,8 +483,8 @@ ResourceHandle ResourceManager::CreateColorBufferFromSwapChain(IDXGISwapChain* s
 	m_resourceFreeList.pop();
 
 	// Get a color buffer index allocation
-	uint32_t colorBufferIndex = m_colorBufferFreeList.front();
-	m_colorBufferFreeList.pop();
+	uint32_t colorBufferIndex = m_colorBufferCache.freeList.front();
+	m_colorBufferCache.freeList.pop();
 
 	// Make sure we don't already have a color buffer allocation
 	assert(m_resourceIndices[index] == InvalidAllocation);
@@ -511,8 +492,8 @@ ResourceHandle ResourceManager::CreateColorBufferFromSwapChain(IDXGISwapChain* s
 	// Store the color buffer allocation index
 	m_resourceIndices[index] = colorBufferIndex;
 
-	m_colorBufferDescs[colorBufferIndex] = colorBufferDesc;
-	m_colorBufferData[colorBufferIndex] = colorBufferData;
+	m_colorBufferCache.descArray[colorBufferIndex] = colorBufferDesc;
+	m_colorBufferCache.dataArray[colorBufferIndex] = colorBufferData;
 	m_resourceData[index] = resourceData;
 
 	return Create<ResourceHandleType>(index, ManagedColorBuffer, this);
@@ -533,9 +514,9 @@ D3D12_CPU_DESCRIPTOR_HANDLE ResourceManager::GetSRV(ResourceHandleType* handle, 
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return m_colorBufferData[resourceIndex].srvHandle;
-	case ManagedDepthBuffer: return depthSrv ? m_depthBufferData[resourceIndex].depthSrvHandle : m_depthBufferData[resourceIndex].stencilSrvHandle;
-	case ManagedGpuBuffer: return m_gpuBufferData[resourceIndex].srvHandle;
+	case ManagedColorBuffer: return m_colorBufferCache.dataArray[resourceIndex].srvHandle;
+	case ManagedDepthBuffer: return depthSrv ? m_depthBufferCache.dataArray[resourceIndex].depthSrvHandle : m_depthBufferCache.dataArray[resourceIndex].stencilSrvHandle;
+	case ManagedGpuBuffer: return m_gpuBufferCache.dataArray[resourceIndex].srvHandle;
 	default: return D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = 0 };
 	}
 }
@@ -546,7 +527,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE ResourceManager::GetRTV(ResourceHandleType* handle) 
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 	assert(type == ManagedColorBuffer);
 
-	return m_colorBufferData[resourceIndex].rtvHandle;
+	return m_colorBufferCache.dataArray[resourceIndex].rtvHandle;
 }
 
 
@@ -557,10 +538,10 @@ D3D12_CPU_DESCRIPTOR_HANDLE ResourceManager::GetDSV(ResourceHandleType* handle, 
 
 	switch (depthStencilAspect)
 	{
-	case DepthStencilAspect::ReadWrite:		return m_depthBufferData[resourceIndex].dsvHandles[0];
-	case DepthStencilAspect::ReadOnly:		return m_depthBufferData[resourceIndex].dsvHandles[1];
-	case DepthStencilAspect::DepthReadOnly:	return m_depthBufferData[resourceIndex].dsvHandles[2];
-	default:								return m_depthBufferData[resourceIndex].dsvHandles[3];
+	case DepthStencilAspect::ReadWrite:		return m_depthBufferCache.dataArray[resourceIndex].dsvHandles[0];
+	case DepthStencilAspect::ReadOnly:		return m_depthBufferCache.dataArray[resourceIndex].dsvHandles[1];
+	case DepthStencilAspect::DepthReadOnly:	return m_depthBufferCache.dataArray[resourceIndex].dsvHandles[2];
+	default:								return m_depthBufferCache.dataArray[resourceIndex].dsvHandles[3];
 	}
 }
 
@@ -572,8 +553,8 @@ D3D12_CPU_DESCRIPTOR_HANDLE ResourceManager::GetUAV(ResourceHandleType* handle, 
 
 	switch (type)
 	{
-	case ManagedColorBuffer: return m_colorBufferData[resourceIndex].uavHandles[uavIndex];
-	case ManagedGpuBuffer: return m_gpuBufferData[resourceIndex].uavHandle;
+	case ManagedColorBuffer: return m_colorBufferCache.dataArray[resourceIndex].uavHandles[uavIndex];
+	case ManagedGpuBuffer: return m_gpuBufferCache.dataArray[resourceIndex].uavHandle;
 	default:
 		return D3D12_CPU_DESCRIPTOR_HANDLE{ .ptr = 0 };
 	}
@@ -586,7 +567,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE ResourceManager::GetCBV(ResourceHandleType* handle) 
 
 	assert(type == ManagedGpuBuffer);
 
-	return m_gpuBufferData[resourceIndex].cbvHandle;
+	return m_gpuBufferCache.dataArray[resourceIndex].cbvHandle;
 }
 
 

@@ -135,20 +135,31 @@ private:
 	// Resource data
 	std::array<ResourceData, MaxResources> m_resourceData;
 
-	// Color buffer data
-	std::queue<uint32_t> m_colorBufferFreeList;
-	std::array<ColorBufferDesc, MaxResources> m_colorBufferDescs;
-	std::array<ColorBufferData, MaxResources> m_colorBufferData;
+	// Data caches
+	template<typename DescType, typename DataType, uint32_t MAX_ITEMS>
+	struct TDataCache
+	{
+		std::queue<uint32_t> freeList;
+		std::array<DescType, MAX_ITEMS> descArray;
+		std::array<DataType, MAX_ITEMS> dataArray;
 
-	// Depth buffer data
-	std::queue<uint32_t> m_depthBufferFreeList;
-	std::array<DepthBufferDesc, MaxResources> m_depthBufferDescs;
-	std::array<DepthBufferData, MaxResources> m_depthBufferData;
+		void AddData(uint32_t dataIndex, const DescType& desc, const DataType& data)
+		{
+			descArray[dataIndex] = desc;
+			dataArray[dataIndex] = data;
+		}
 
-	// Gpu buffer data
-	std::queue<uint32_t> m_gpuBufferFreeList;
-	std::array<GpuBufferDesc, MaxResources> m_gpuBufferDescs;
-	std::array<GpuBufferData, MaxResources> m_gpuBufferData;
+		void Reset(uint32_t dataIndex)
+		{
+			freeList.push(dataIndex);
+			descArray[dataIndex] = DescType{};
+			dataArray[dataIndex] = DataType{};
+		}
+	};
+
+	TDataCache<ColorBufferDesc, ColorBufferData, MaxResources> m_colorBufferCache;
+	TDataCache<DepthBufferDesc, DepthBufferData, MaxResources> m_depthBufferCache;
+	TDataCache<GpuBufferDesc, GpuBufferData, MaxResources> m_gpuBufferCache;
 };
 
 
