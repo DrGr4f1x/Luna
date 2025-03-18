@@ -88,54 +88,54 @@ public:
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
-	void DestroyHandle(ResourceHandleType* handle) override;
+	void DestroyHandle(const ResourceHandleType* handle) override;
 
 	// General resource methods
-	std::optional<ResourceType> GetResourceType(ResourceHandleType* handle) const override;
-	std::optional<ResourceState> GetUsageState(ResourceHandleType* handle) const override;
-	void SetUsageState(ResourceHandleType* handle, ResourceState newState) override;
-	std::optional<Format> GetFormat(ResourceHandleType* handle) const override;
+	std::optional<ResourceType> GetResourceType(const ResourceHandleType* handle) const override;
+	std::optional<ResourceState> GetUsageState(const ResourceHandleType* handle) const override;
+	void SetUsageState(const ResourceHandleType* handle, ResourceState newState) override;
+	std::optional<Format> GetFormat(const ResourceHandleType* handle) const override;
 
 	// Pixel buffer methods
-	std::optional<uint64_t> GetWidth(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetHeight(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetDepthOrArraySize(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetNumMips(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetNumSamples(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetPlaneCount(ResourceHandleType* handle) const override;
+	std::optional<uint64_t> GetWidth(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetHeight(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetDepthOrArraySize(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetNumMips(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetNumSamples(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetPlaneCount(const ResourceHandleType* handle) const override;
 
 	// Color buffer methods
-	std::optional<Color> GetClearColor(ResourceHandleType* handle) const override;
+	std::optional<Color> GetClearColor(const ResourceHandleType* handle) const override;
 
 	// Depth buffer methods
-	std::optional<float> GetClearDepth(ResourceHandleType* handle) const override;
-	std::optional<uint8_t> GetClearStencil(ResourceHandleType* handle) const override;
+	std::optional<float> GetClearDepth(const ResourceHandleType* handle) const override;
+	std::optional<uint8_t> GetClearStencil(const ResourceHandleType* handle) const override;
 
 	// Gpu buffer methods
-	std::optional<size_t> GetSize(ResourceHandleType* handle) const override;
-	std::optional<size_t> GetElementCount(ResourceHandleType* handle) const override;
-	std::optional<size_t> GetElementSize(ResourceHandleType* handle) const override;
-	void Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const override;
+	std::optional<size_t> GetSize(const ResourceHandleType* handle) const override;
+	std::optional<size_t> GetElementCount(const ResourceHandleType* handle) const override;
+	std::optional<size_t> GetElementSize(const ResourceHandleType* handle) const override;
+	void Update(const ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const override;
 
 	// Graphics pipeline state
-	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const override;
+	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(const ResourceHandleType* handle) const override;
 
 	// Root signature methods
 	const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const override;
 	uint32_t GetNumRootParameters(const ResourceHandleType* handle) const override;
-	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const override;
+	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const override;
 
 	// Platform-specific methods
 	ResourceHandle CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex);
-	ID3D12Resource* GetResource(ResourceHandleType* handle) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(ResourceHandleType* handle, bool depthSrv) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(ResourceHandleType* handle) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(ResourceHandleType* handle, DepthStencilAspect depthStencilAspect) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(ResourceHandleType* handle, uint32_t uavIndex = 0) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCBV(ResourceHandleType* handle) const;
-	uint64_t GetGpuAddress(ResourceHandleType* handle) const;
-	ID3D12PipelineState* GetGraphicsPipelineState(ResourceHandleType* handle) const;
-	ID3D12RootSignature* GetRootSignature(ResourceHandleType* handle) const;
+	ID3D12Resource* GetResource(const ResourceHandleType* handle) const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRV(const ResourceHandleType* handle, bool depthSrv) const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRTV(const ResourceHandleType* handle) const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDSV(const ResourceHandleType* handle, DepthStencilAspect depthStencilAspect) const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUAV(const ResourceHandleType* handle, uint32_t uavIndex = 0) const;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCBV(const ResourceHandleType* handle) const;
+	uint64_t GetGpuAddress(const ResourceHandleType* handle) const;
+	ID3D12PipelineState* GetGraphicsPipelineState(const ResourceHandleType* handle) const;
+	ID3D12RootSignature* GetRootSignature(const ResourceHandleType* handle) const;
 	uint32_t GetDescriptorTableBitmap(const ResourceHandleType* handle) const;
 	uint32_t GetSamplerTableBitmap(const ResourceHandleType* handle) const;
 	const std::vector<uint32_t>& GetDescriptorTableSize(const ResourceHandleType* handle) const;

@@ -101,60 +101,60 @@ public:
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
-	void DestroyHandle(ResourceHandleType* handle) override;
+	void DestroyHandle(const ResourceHandleType* handle) override;
 
 	// General resource methods
-	std::optional<ResourceType> GetResourceType(ResourceHandleType* handle) const override;
-	std::optional<ResourceState> GetUsageState(ResourceHandleType* handle) const override;
-	void SetUsageState(ResourceHandleType* handle, ResourceState newState) override;
-	std::optional<Format> GetFormat(ResourceHandleType* handle) const override;
+	std::optional<ResourceType> GetResourceType(const ResourceHandleType* handle) const override;
+	std::optional<ResourceState> GetUsageState(const ResourceHandleType* handle) const override;
+	void SetUsageState(const ResourceHandleType* handle, ResourceState newState) override;
+	std::optional<Format> GetFormat(const ResourceHandleType* handle) const override;
 
 	// Pixel buffer methods
-	std::optional<uint64_t> GetWidth(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetHeight(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetDepthOrArraySize(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetNumMips(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetNumSamples(ResourceHandleType* handle) const override;
-	std::optional<uint32_t> GetPlaneCount(ResourceHandleType* handle) const override;
+	std::optional<uint64_t> GetWidth(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetHeight(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetDepthOrArraySize(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetNumMips(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetNumSamples(const ResourceHandleType* handle) const override;
+	std::optional<uint32_t> GetPlaneCount(const ResourceHandleType* handle) const override;
 
 	// Color buffer methods
-	std::optional<Color> GetClearColor(ResourceHandleType* handle) const override;
+	std::optional<Color> GetClearColor(const ResourceHandleType* handle) const override;
 
 	// Depth buffer methods
-	std::optional<float> GetClearDepth(ResourceHandleType* handle) const override;
-	std::optional<uint8_t> GetClearStencil(ResourceHandleType* handle) const override;
+	std::optional<float> GetClearDepth(const ResourceHandleType* handle) const override;
+	std::optional<uint8_t> GetClearStencil(const ResourceHandleType* handle) const override;
 
 	// Gpu buffer methods
-	std::optional<size_t> GetSize(ResourceHandleType* handle) const override;
-	std::optional<size_t> GetElementCount(ResourceHandleType* handle) const override;
-	std::optional<size_t> GetElementSize(ResourceHandleType* handle) const override;
-	void Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const override;
+	std::optional<size_t> GetSize(const ResourceHandleType* handle) const override;
+	std::optional<size_t> GetElementCount(const ResourceHandleType* handle) const override;
+	std::optional<size_t> GetElementSize(const ResourceHandleType* handle) const override;
+	void Update(const ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const override;
 
 	// Graphics pipeline state
-	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const override;
+	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(const ResourceHandleType* handle) const override;
 
 	// Root signature methods
 	const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const override;
 	uint32_t GetNumRootParameters(const ResourceHandleType* handle) const override;
-	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const override;
+	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const override;
 
 	// Platform specific methods
 	ResourceHandle CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
-	VkImage GetImage(ResourceHandleType* handle) const;
-	VkBuffer GetBuffer(ResourceHandleType* handle) const;
-	VkImageView GetImageViewSrv(ResourceHandleType* handle) const;
-	VkImageView GetImageViewRtv(ResourceHandleType* handle) const;
-	VkImageView GetImageViewDepth(ResourceHandleType* handle, DepthStencilAspect depthStencilAspect) const;
-	VkDescriptorImageInfo GetImageInfoSrv(ResourceHandleType* handle) const;
-	VkDescriptorImageInfo GetImageInfoUav(ResourceHandleType* handle) const;
-	VkDescriptorImageInfo GetImageInfoDepth(ResourceHandleType* handle, bool depthSrv) const;
-	VkDescriptorBufferInfo GetBufferInfo(ResourceHandleType* handle) const;
-	VkBufferView GetBufferView(ResourceHandleType* handle) const;
-	VkPipeline GetGraphicsPipeline(ResourceHandleType* handle) const;
-	VkPipelineLayout GetPipelineLayout(ResourceHandleType* handle) const;
-	CVkDescriptorSetLayout* GetDescriptorSetLayout(ResourceHandleType* handle, uint32_t paramIndex) const;
-	int GetDescriptorSetIndexFromRootParameterIndex(ResourceHandleType* handle, uint32_t paramIndex) const;
-	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(ResourceHandleType* handle, uint32_t paramIndex) const;
+	VkImage GetImage(const ResourceHandleType* handle) const;
+	VkBuffer GetBuffer(const ResourceHandleType* handle) const;
+	VkImageView GetImageViewSrv(const ResourceHandleType* handle) const;
+	VkImageView GetImageViewRtv(const ResourceHandleType* handle) const;
+	VkImageView GetImageViewDepth(const ResourceHandleType* handle, DepthStencilAspect depthStencilAspect) const;
+	VkDescriptorImageInfo GetImageInfoSrv(const ResourceHandleType* handle) const;
+	VkDescriptorImageInfo GetImageInfoUav(const ResourceHandleType* handle) const;
+	VkDescriptorImageInfo GetImageInfoDepth(const ResourceHandleType* handle, bool depthSrv) const;
+	VkDescriptorBufferInfo GetBufferInfo(const ResourceHandleType* handle) const;
+	VkBufferView GetBufferView(const ResourceHandleType* handle) const;
+	VkPipeline GetGraphicsPipeline(const ResourceHandleType* handle) const;
+	VkPipelineLayout GetPipelineLayout(const ResourceHandleType* handle) const;
+	CVkDescriptorSetLayout* GetDescriptorSetLayout(const ResourceHandleType* handle, uint32_t paramIndex) const;
+	int GetDescriptorSetIndexFromRootParameterIndex(const ResourceHandleType* handle, uint32_t paramIndex) const;
+	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(const ResourceHandleType* handle, uint32_t paramIndex) const;
 
 private:
 	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(const ResourceHandleType* handle) const;

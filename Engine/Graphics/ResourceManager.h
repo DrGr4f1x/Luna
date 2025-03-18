@@ -58,42 +58,42 @@ public:
 	virtual ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 	virtual ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
 	virtual ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
-	virtual void DestroyHandle(ResourceHandleType* handle) = 0;
+	virtual void DestroyHandle(const ResourceHandleType* handle) = 0;
 
 	// General resource methods
-	virtual std::optional<ResourceType> GetResourceType(ResourceHandleType* handle) const = 0;
-	virtual std::optional<ResourceState> GetUsageState(ResourceHandleType* handle) const = 0;
-	virtual void SetUsageState(ResourceHandleType* handle, ResourceState newState) = 0;
-	virtual std::optional<Format> GetFormat(ResourceHandleType* handle) const = 0;
+	virtual std::optional<ResourceType> GetResourceType(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<ResourceState> GetUsageState(const ResourceHandleType* handle) const = 0;
+	virtual void SetUsageState(const ResourceHandleType* handle, ResourceState newState) = 0;
+	virtual std::optional<Format> GetFormat(const ResourceHandleType* handle) const = 0;
 
 	// Pixel buffer methods
-	virtual std::optional<uint64_t> GetWidth(ResourceHandleType* handle) const = 0;
-	virtual std::optional<uint32_t> GetHeight(ResourceHandleType* handle) const = 0;
-	virtual std::optional<uint32_t> GetDepthOrArraySize(ResourceHandleType* handle) const = 0;
-	virtual std::optional<uint32_t> GetNumMips(ResourceHandleType* handle) const = 0;
-	virtual std::optional<uint32_t> GetNumSamples(ResourceHandleType* handle) const = 0;
-	virtual std::optional<uint32_t> GetPlaneCount(ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint64_t> GetWidth(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint32_t> GetHeight(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint32_t> GetDepthOrArraySize(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint32_t> GetNumMips(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint32_t> GetNumSamples(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint32_t> GetPlaneCount(const ResourceHandleType* handle) const = 0;
 
 	// Color buffer methods
-	virtual std::optional<Color> GetClearColor(ResourceHandleType* handle) const = 0;
+	virtual std::optional<Color> GetClearColor(const ResourceHandleType* handle) const = 0;
 
 	// Depth buffer methods
-	virtual std::optional<float> GetClearDepth(ResourceHandleType* handle) const = 0;
-	virtual std::optional<uint8_t> GetClearStencil(ResourceHandleType* handle) const = 0;
+	virtual std::optional<float> GetClearDepth(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<uint8_t> GetClearStencil(const ResourceHandleType* handle) const = 0;
 
 	// Gpu buffer methods
-	virtual std::optional<size_t> GetSize(ResourceHandleType* handle) const = 0;
-	virtual std::optional<size_t> GetElementCount(ResourceHandleType* handle) const = 0;
-	virtual std::optional<size_t> GetElementSize(ResourceHandleType* handle) const = 0;
-	virtual void Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const = 0;
+	virtual std::optional<size_t> GetSize(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<size_t> GetElementCount(const ResourceHandleType* handle) const = 0;
+	virtual std::optional<size_t> GetElementSize(const ResourceHandleType* handle) const = 0;
+	virtual void Update(const ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const = 0;
 
 	// Graphics pipeline methods
-	virtual const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const = 0;
+	virtual const GraphicsPipelineDesc& GetGraphicsPipelineDesc(const ResourceHandleType* handle) const = 0;
 
 	// Root signature methods
 	virtual const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const = 0;
 	virtual uint32_t GetNumRootParameters(const ResourceHandleType* handle) const = 0;
-	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const = 0;
+	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const = 0;
 };
 
 } // namespace Luna

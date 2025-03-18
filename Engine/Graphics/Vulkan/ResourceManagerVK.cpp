@@ -275,7 +275,7 @@ ResourceHandle ResourceManager::CreateRootSignature(const RootSignatureDesc& roo
 }
 
 
-void ResourceManager::DestroyHandle(ResourceHandleType* handle)
+void ResourceManager::DestroyHandle(const ResourceHandleType* handle)
 {
 	std::lock_guard guard(m_allocationMutex);
 
@@ -323,7 +323,7 @@ void ResourceManager::DestroyHandle(ResourceHandleType* handle)
 }
 
 
-std::optional<ResourceType> ResourceManager::GetResourceType(ResourceHandleType* handle) const
+std::optional<ResourceType> ResourceManager::GetResourceType(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -341,7 +341,7 @@ std::optional<ResourceType> ResourceManager::GetResourceType(ResourceHandleType*
 }
 
 
-std::optional<ResourceState> ResourceManager::GetUsageState(ResourceHandleType* handle) const
+std::optional<ResourceState> ResourceManager::GetUsageState(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -349,7 +349,7 @@ std::optional<ResourceState> ResourceManager::GetUsageState(ResourceHandleType* 
 }
 
 
-void ResourceManager::SetUsageState(ResourceHandleType* handle, ResourceState newState)
+void ResourceManager::SetUsageState(const ResourceHandleType* handle, ResourceState newState)
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -357,7 +357,7 @@ void ResourceManager::SetUsageState(ResourceHandleType* handle, ResourceState ne
 }
 
 
-std::optional<Format> ResourceManager::GetFormat(ResourceHandleType* handle) const
+std::optional<Format> ResourceManager::GetFormat(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -375,7 +375,7 @@ std::optional<Format> ResourceManager::GetFormat(ResourceHandleType* handle) con
 }
 
 
-std::optional<uint64_t> ResourceManager::GetWidth(ResourceHandleType* handle) const
+std::optional<uint64_t> ResourceManager::GetWidth(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -391,7 +391,7 @@ std::optional<uint64_t> ResourceManager::GetWidth(ResourceHandleType* handle) co
 }
 
 
-std::optional<uint32_t> ResourceManager::GetHeight(ResourceHandleType* handle) const
+std::optional<uint32_t> ResourceManager::GetHeight(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -407,7 +407,7 @@ std::optional<uint32_t> ResourceManager::GetHeight(ResourceHandleType* handle) c
 }
 
 
-std::optional<uint32_t> ResourceManager::GetDepthOrArraySize(ResourceHandleType* handle) const
+std::optional<uint32_t> ResourceManager::GetDepthOrArraySize(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -423,7 +423,7 @@ std::optional<uint32_t> ResourceManager::GetDepthOrArraySize(ResourceHandleType*
 }
 
 
-std::optional<uint32_t> ResourceManager::GetNumMips(ResourceHandleType* handle) const
+std::optional<uint32_t> ResourceManager::GetNumMips(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -439,7 +439,7 @@ std::optional<uint32_t> ResourceManager::GetNumMips(ResourceHandleType* handle) 
 }
 
 
-std::optional<uint32_t> ResourceManager::GetNumSamples(ResourceHandleType* handle) const
+std::optional<uint32_t> ResourceManager::GetNumSamples(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -455,7 +455,7 @@ std::optional<uint32_t> ResourceManager::GetNumSamples(ResourceHandleType* handl
 }
 
 
-std::optional<uint32_t> ResourceManager::GetPlaneCount(ResourceHandleType* handle) const
+std::optional<uint32_t> ResourceManager::GetPlaneCount(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -471,7 +471,7 @@ std::optional<uint32_t> ResourceManager::GetPlaneCount(ResourceHandleType* handl
 }
 
 
-std::optional<Color> ResourceManager::GetClearColor(ResourceHandleType* handle) const
+std::optional<Color> ResourceManager::GetClearColor(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -486,7 +486,7 @@ std::optional<Color> ResourceManager::GetClearColor(ResourceHandleType* handle) 
 }
 
 
-std::optional<float> ResourceManager::GetClearDepth(ResourceHandleType* handle) const
+std::optional<float> ResourceManager::GetClearDepth(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -501,7 +501,7 @@ std::optional<float> ResourceManager::GetClearDepth(ResourceHandleType* handle) 
 }
 
 
-std::optional<uint8_t> ResourceManager::GetClearStencil(ResourceHandleType* handle) const
+std::optional<uint8_t> ResourceManager::GetClearStencil(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -516,7 +516,7 @@ std::optional<uint8_t> ResourceManager::GetClearStencil(ResourceHandleType* hand
 }
 
 
-std::optional<size_t> ResourceManager::GetSize(ResourceHandleType* handle) const
+std::optional<size_t> ResourceManager::GetSize(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -531,7 +531,7 @@ std::optional<size_t> ResourceManager::GetSize(ResourceHandleType* handle) const
 }
 
 
-std::optional<size_t> ResourceManager::GetElementCount(ResourceHandleType* handle) const
+std::optional<size_t> ResourceManager::GetElementCount(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -546,7 +546,7 @@ std::optional<size_t> ResourceManager::GetElementCount(ResourceHandleType* handl
 }
 
 
-std::optional<size_t> ResourceManager::GetElementSize(ResourceHandleType* handle) const
+std::optional<size_t> ResourceManager::GetElementSize(const const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -561,7 +561,7 @@ std::optional<size_t> ResourceManager::GetElementSize(ResourceHandleType* handle
 }
 
 
-const GraphicsPipelineDesc& ResourceManager::GetGraphicsPipelineDesc(ResourceHandleType* handle) const
+const GraphicsPipelineDesc& ResourceManager::GetGraphicsPipelineDesc(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -587,7 +587,7 @@ uint32_t ResourceManager::GetNumRootParameters(const ResourceHandleType* handle)
 }
 
 
-DescriptorSetHandle ResourceManager::CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const
+DescriptorSetHandle ResourceManager::CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -614,7 +614,7 @@ DescriptorSetHandle ResourceManager::CreateDescriptorSet(ResourceHandleType* han
 }
 
 
-void ResourceManager::Update(ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const
+void ResourceManager::Update(const ResourceHandleType* handle, size_t sizeInBytes, size_t offset, const void* data) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -716,7 +716,7 @@ ResourceHandle ResourceManager::CreateColorBufferFromSwapChainImage(CVkImage* sw
 }
 
 
-VkImage ResourceManager::GetImage(ResourceHandleType* handle) const
+VkImage ResourceManager::GetImage(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -726,7 +726,7 @@ VkImage ResourceManager::GetImage(ResourceHandleType* handle) const
 }
 
 
-VkBuffer ResourceManager::GetBuffer(ResourceHandleType* handle) const
+VkBuffer ResourceManager::GetBuffer(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -736,7 +736,7 @@ VkBuffer ResourceManager::GetBuffer(ResourceHandleType* handle) const
 }
 
 
-VkImageView ResourceManager::GetImageViewSrv(ResourceHandleType* handle) const
+VkImageView ResourceManager::GetImageViewSrv(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -746,7 +746,7 @@ VkImageView ResourceManager::GetImageViewSrv(ResourceHandleType* handle) const
 }
 
 
-VkImageView ResourceManager::GetImageViewRtv(ResourceHandleType* handle) const
+VkImageView ResourceManager::GetImageViewRtv(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -756,7 +756,7 @@ VkImageView ResourceManager::GetImageViewRtv(ResourceHandleType* handle) const
 }
 
 
-VkImageView ResourceManager::GetImageViewDepth(ResourceHandleType* handle, DepthStencilAspect depthStencilAspect) const
+VkImageView ResourceManager::GetImageViewDepth(const ResourceHandleType* handle, DepthStencilAspect depthStencilAspect) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -771,7 +771,7 @@ VkImageView ResourceManager::GetImageViewDepth(ResourceHandleType* handle, Depth
 }
 
 
-VkDescriptorImageInfo ResourceManager::GetImageInfoSrv(ResourceHandleType* handle) const
+VkDescriptorImageInfo ResourceManager::GetImageInfoSrv(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -781,7 +781,7 @@ VkDescriptorImageInfo ResourceManager::GetImageInfoSrv(ResourceHandleType* handl
 }
 
 
-VkDescriptorImageInfo ResourceManager::GetImageInfoUav(ResourceHandleType* handle) const
+VkDescriptorImageInfo ResourceManager::GetImageInfoUav(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -791,7 +791,7 @@ VkDescriptorImageInfo ResourceManager::GetImageInfoUav(ResourceHandleType* handl
 }
 
 
-VkDescriptorImageInfo ResourceManager::GetImageInfoDepth(ResourceHandleType* handle, bool depthSrv) const
+VkDescriptorImageInfo ResourceManager::GetImageInfoDepth(const ResourceHandleType* handle, bool depthSrv) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -801,7 +801,7 @@ VkDescriptorImageInfo ResourceManager::GetImageInfoDepth(ResourceHandleType* han
 }
 
 
-VkDescriptorBufferInfo ResourceManager::GetBufferInfo(ResourceHandleType* handle) const
+VkDescriptorBufferInfo ResourceManager::GetBufferInfo(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -811,7 +811,7 @@ VkDescriptorBufferInfo ResourceManager::GetBufferInfo(ResourceHandleType* handle
 }
 
 
-VkBufferView ResourceManager::GetBufferView(ResourceHandleType* handle) const
+VkBufferView ResourceManager::GetBufferView(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -821,7 +821,7 @@ VkBufferView ResourceManager::GetBufferView(ResourceHandleType* handle) const
 }
 
 
-VkPipeline ResourceManager::GetGraphicsPipeline(ResourceHandleType* handle) const
+VkPipeline ResourceManager::GetGraphicsPipeline(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -831,7 +831,7 @@ VkPipeline ResourceManager::GetGraphicsPipeline(ResourceHandleType* handle) cons
 }
 
 
-VkPipelineLayout ResourceManager::GetPipelineLayout(ResourceHandleType* handle) const
+VkPipelineLayout ResourceManager::GetPipelineLayout(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -841,7 +841,7 @@ VkPipelineLayout ResourceManager::GetPipelineLayout(ResourceHandleType* handle) 
 }
 
 
-CVkDescriptorSetLayout* ResourceManager::GetDescriptorSetLayout(ResourceHandleType* handle, uint32_t paramIndex) const
+CVkDescriptorSetLayout* ResourceManager::GetDescriptorSetLayout(const ResourceHandleType* handle, uint32_t paramIndex) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -858,7 +858,7 @@ CVkDescriptorSetLayout* ResourceManager::GetDescriptorSetLayout(ResourceHandleTy
 }
 
 
-int ResourceManager::GetDescriptorSetIndexFromRootParameterIndex(ResourceHandleType* handle, uint32_t paramIndex) const
+int ResourceManager::GetDescriptorSetIndexFromRootParameterIndex(const ResourceHandleType* handle, uint32_t paramIndex) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -875,7 +875,7 @@ int ResourceManager::GetDescriptorSetIndexFromRootParameterIndex(ResourceHandleT
 }
 
 
-const std::vector<DescriptorBindingDesc>& ResourceManager::GetLayoutBindings(ResourceHandleType* handle, uint32_t paramIndex) const
+const std::vector<DescriptorBindingDesc>& ResourceManager::GetLayoutBindings(const ResourceHandleType* handle, uint32_t paramIndex) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
