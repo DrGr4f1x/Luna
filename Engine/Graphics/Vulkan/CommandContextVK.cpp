@@ -19,7 +19,6 @@
 #include "DeviceManagerVK.h"
 #include "QueueVK.h"
 #include "ResourceManagerVK.h"
-#include "RootSignatureManagerVK.h"
 #include "VulkanUtil.h"
 
 using namespace std;
@@ -172,7 +171,6 @@ void CommandContextVK::Initialize()
 
 	m_descriptorSetManager = GetVulkanDescriptorSetManager();
 	m_resourceManager = GetVulkanResourceManager();
-	m_rootSignatureManager = GetVulkanRootSignatureManager();
 }
 
 
@@ -568,7 +566,7 @@ void CommandContextVK::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	VkPipelineLayout pipelineLayout = m_rootSignatureManager->GetPipelineLayout(rootSignature.GetHandle().get());
+	VkPipelineLayout pipelineLayout = m_resourceManager->GetPipelineLayout(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{

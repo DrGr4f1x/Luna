@@ -26,7 +26,6 @@ namespace Luna::VK
 class DescriptorSetManager;
 class Queue;
 class ResourceManager;
-class RootSignatureManager;
 
 
 class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
@@ -60,7 +59,6 @@ public:
 
 	IDescriptorSetManager* GetDescriptorSetManager() override;
 	IResourceManager* GetResourceManager() override;
-	IRootSignatureManager* GetRootSignatureManager() override;
 
 	void ReleaseImage(CVkImage* image);
 	void ReleaseBuffer(CVkBuffer* buffer);
@@ -116,7 +114,6 @@ private:
 	// Vulkan resource managers
 	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
 	std::unique_ptr<ResourceManager> m_resourceManager;
-	std::unique_ptr<RootSignatureManager> m_rootSignatureManager;
 
 	// Swapchain
 	wil::com_ptr<CVkSwapchain> m_vkSwapChain;

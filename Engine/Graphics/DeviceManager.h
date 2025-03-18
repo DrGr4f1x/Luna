@@ -23,7 +23,6 @@ class CommandContext;
 class IDescriptorSetManager;
 class IPipelineStateManager;
 class IResourceManager;
-class IRootSignatureManager;
 
 
 struct DeviceManagerDesc
@@ -113,7 +112,6 @@ public:
 
 	virtual IDescriptorSetManager* GetDescriptorSetManager() = 0;
 	virtual IResourceManager* GetResourceManager() = 0;
-	virtual IRootSignatureManager* GetRootSignatureManager() = 0;
 };
 
 } // namespace Luna

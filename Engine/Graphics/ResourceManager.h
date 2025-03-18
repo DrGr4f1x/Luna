@@ -18,11 +18,13 @@ namespace Luna
 {
 
 // Forward declarations
+class DescriptorSetHandleType;
 class IResourceManager;
 struct ColorBufferDesc;
 struct DepthBufferDesc;
 struct GpuBufferDesc;
 struct GraphicsPipelineDesc;
+struct RootSignatureDesc;
 
 
 class __declspec(uuid("76EB2254-E7A6-4F2D-9037-A0FE41926CE2")) ResourceHandleType : public RefCounted<ResourceHandleType>
@@ -55,6 +57,7 @@ public:
 	virtual ResourceHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
 	virtual ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 	virtual ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
+	virtual ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 	virtual void DestroyHandle(ResourceHandleType* handle) = 0;
 
 	// General resource methods
@@ -86,6 +89,11 @@ public:
 
 	// Graphics pipeline methods
 	virtual const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const = 0;
+
+	// Root signature methods
+	virtual const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const = 0;
+	virtual uint32_t GetNumRootParameters(const ResourceHandleType* handle) const = 0;
+	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const = 0;
 };
 
 } // namespace Luna

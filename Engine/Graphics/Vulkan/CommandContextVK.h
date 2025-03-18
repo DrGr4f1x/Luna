@@ -35,7 +35,6 @@ class DescriptorSetManager;
 class GraphicsContext;
 class IDynamicDescriptorHeap;
 class ResourceManager;
-class RootSignatureManager;
 
 
 struct TextureBarrier
@@ -175,7 +174,6 @@ private:
 	// Managers
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	ResourceManager* m_resourceManager{ nullptr };
-	RootSignatureManager* m_rootSignatureManager{ nullptr };
 
 	// Resource barriers
 	std::vector<TextureBarrier> m_textureBarriers;

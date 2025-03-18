@@ -19,7 +19,6 @@
 #include "DirectXCommon.h"
 #include "Queue12.h"
 #include "ResourceManager12.h"
-#include "RootSignatureManager12.h"
 
 #if ENABLE_D3D12_DEBUG_MARKERS
 #include <pix3.h>
@@ -116,7 +115,6 @@ void CommandContext12::Initialize()
 
 	m_descriptorSetManager = GetD3D12DescriptorSetManager();
 	m_resourceManager = GetD3D12ResourceManager();
-	m_rootSignatureManager = GetD3D12RootSignatureManager();
 }
 
 
@@ -413,7 +411,7 @@ void CommandContext12::SetRootSignature(RootSignature& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	ID3D12RootSignature* d3d12RootSignature = m_rootSignatureManager->GetRootSignature(rootSignature.GetHandle().get());
+	ID3D12RootSignature* d3d12RootSignature = m_resourceManager->GetRootSignature(rootSignature.GetHandle().get());
 
 	if (m_type == CommandListType::Direct)
 	{

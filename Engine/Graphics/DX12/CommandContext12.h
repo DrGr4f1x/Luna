@@ -32,7 +32,6 @@ namespace Luna::DX12
 // Forward declarations
 class DescriptorSetManager;
 class ResourceManager;
-class RootSignatureManager;
 
 
 class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
@@ -158,7 +157,6 @@ private:
 	// Managers
 	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	ResourceManager* m_resourceManager{ nullptr };
-	RootSignatureManager* m_rootSignatureManager{ nullptr };
 
 	// Render target state
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 8> m_rtvs;

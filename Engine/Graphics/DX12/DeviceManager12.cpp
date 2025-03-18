@@ -19,7 +19,6 @@
 #include "DeviceCaps12.h"
 #include "Queue12.h"
 #include "ResourceManager12.h"
-#include "RootSignatureManager12.h"
 #include "Shader12.h"
 
 using namespace std;
@@ -523,12 +522,6 @@ IResourceManager* DeviceManager::GetResourceManager()
 }
 
 
-IRootSignatureManager* DeviceManager::GetRootSignatureManager()
-{
-	return m_rootSignatureManager.get();
-}
-
-
 uint8_t DeviceManager::GetFormatPlaneCount(DXGI_FORMAT format)
 {
 	uint8_t& planeCount = m_dxgiFormatPlaneCounts[format];
@@ -740,7 +733,6 @@ void DeviceManager::CreateResourceManagers()
 {
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_dxDevice.get());
 	m_resourceManager = make_unique<ResourceManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
-	m_rootSignatureManager = make_unique<RootSignatureManager>(m_dxDevice.get());
 }
 
 

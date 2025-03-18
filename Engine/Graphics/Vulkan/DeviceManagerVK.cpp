@@ -17,7 +17,6 @@
 #include "DescriptorSetManagerVK.h"
 #include "QueueVK.h"
 #include "ResourceManagerVK.h"
-#include "RootSignatureManagerVK.h"
 #include "VulkanUtil.h"
 
 using namespace std;
@@ -483,12 +482,6 @@ IResourceManager* DeviceManager::GetResourceManager()
 }
 
 
-IRootSignatureManager* DeviceManager::GetRootSignatureManager()
-{
-	return m_rootSignatureManager.get();
-}
-
-
 void DeviceManager::ReleaseImage(CVkImage* image)
 {
 	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
@@ -642,7 +635,6 @@ void DeviceManager::CreateResourceManagers()
 {
 	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_vkDevice.get());
 	m_resourceManager = make_unique<ResourceManager>(m_vkDevice.get(), m_vmaAllocator.get());
-	m_rootSignatureManager = make_unique<RootSignatureManager>(m_vkDevice.get());
 }
 
 

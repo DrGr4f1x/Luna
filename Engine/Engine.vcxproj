@@ -64,7 +64,6 @@
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
     <ClCompile Include="Graphics\DX12\ResourceManager12.cpp" />
-    <ClCompile Include="Graphics\DX12\RootSignatureManager12.cpp" />
     <ClCompile Include="Graphics\DX12\Shader12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GpuBuffer.cpp" />
@@ -80,7 +79,6 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\ResourceManagerVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\RootSignatureManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp" />
@@ -156,7 +154,6 @@
     <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\ResourceManager12.h" />
-    <ClInclude Include="Graphics\DX12\RootSignatureManager12.h" />
     <ClInclude Include="Graphics\DX12\Shader12.h" />
     <ClInclude Include="Graphics\DX12\Strings12.h" />
     <ClInclude Include="Graphics\Enums.h" />
@@ -177,7 +174,6 @@
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\HashVK.h" />
     <ClInclude Include="Graphics\Vulkan\ResourceManagerVK.h" />
-    <ClInclude Include="Graphics\Vulkan\RootSignatureManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h" />

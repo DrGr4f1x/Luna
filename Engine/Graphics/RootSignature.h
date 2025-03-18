@@ -357,43 +357,6 @@ struct RootSignatureDesc
 };
 
 
-class IRootSignatureManager;
-
-
-class __declspec(uuid("03216DC0-6CCA-4E66-B35D-9B2CD19868BF")) RootSignatureHandleType : public RefCounted<RootSignatureHandleType>
-{
-public:
-	RootSignatureHandleType(uint32_t index, IRootSignatureManager* manager)
-		: m_index{ index }
-		, m_manager{ manager }
-	{}
-
-	~RootSignatureHandleType();
-
-	uint32_t GetIndex() const { return m_index; }
-
-private:
-	uint32_t m_index{ 0 };
-	IRootSignatureManager* m_manager{ nullptr };
-};
-
-using RootSignatureHandle = wil::com_ptr<RootSignatureHandleType>;
-
-
-class IRootSignatureManager
-{
-public:
-	// Create/Destroy RootSignature
-	virtual RootSignatureHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
-	virtual void DestroyHandle(RootSignatureHandleType* handle) = 0;
-
-	// Platform agnostic functions
-	virtual const RootSignatureDesc& GetDesc(const RootSignatureHandleType* handle) const = 0;
-	virtual uint32_t GetNumRootParameters(const RootSignatureHandleType* handle) const = 0;
-	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(RootSignatureHandleType* handle, uint32_t index) const = 0;
-};
-
-
 class RootSignature
 {
 public:
@@ -407,13 +370,13 @@ public:
 
 	void Initialize(RootSignatureDesc& rootSignatureDesc);
 
-	RootSignatureHandle GetHandle() const { return m_handle; }
+	ResourceHandle GetHandle() const { return m_handle; }
 
 private:
 	const RootSignatureDesc& GetDesc() const;
 
 private:
-	RootSignatureHandle m_handle;
+	ResourceHandle m_handle;
 };
 
 } // namespace Luna

@@ -12,9 +12,10 @@
 
 #include "DynamicDescriptorHeap12.h"
 
+#include "Graphics\RootSignature.h"
 #include "CommandContext12.h"
 #include "DeviceManager12.h"
-#include "RootSignatureManager12.h"
+#include "ResourceManager12.h"
 
 using namespace std;
 
@@ -341,7 +342,7 @@ void DynamicDescriptorHeap::DescriptorHandleCache::ParseRootSignature(D3D12_DESC
 {
 	uint32_t currentOffset = 0;
 
-	auto manager = GetD3D12RootSignatureManager();
+	auto manager = GetD3D12ResourceManager();
 	auto handle = rootSig.GetHandle();
 
 	assert_msg(manager->GetNumRootParameters(handle.get()) <= 16, "Maybe we need to support something greater");

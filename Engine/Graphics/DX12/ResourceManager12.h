@@ -15,6 +15,7 @@
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceManager.h"
+#include "Graphics\RootSignature.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 
@@ -55,16 +56,26 @@ struct GpuBufferData
 };
 
 
+struct RootSignatureData
+{
+	wil::com_ptr<ID3D12RootSignature> rootSignature;
+	uint32_t descriptorTableBitmap{ 0 };
+	uint32_t samplerTableBitmap{ 0 };
+	std::vector<uint32_t> descriptorTableSizes;
+};
+
+
 class ResourceManager : public IResourceManager
 {
 	static const uint32_t MaxResources = (1 << 12);
 	static const uint32_t InvalidAllocation = ~0u;
 	enum ManagedResourceType
 	{
-		ManagedColorBuffer		= 0x1,
-		ManagedDepthBuffer		= 0x2,
-		ManagedGpuBuffer		= 0x4,
-		ManagedGraphicsPipeline	= 0x8,
+		ManagedColorBuffer			= 0x0001,
+		ManagedDepthBuffer			= 0x0002,
+		ManagedGpuBuffer			= 0x0004,
+		ManagedGraphicsPipeline		= 0x0008,
+		ManagedRootSignature		= 0x0010
 	};
 
 public:
@@ -76,6 +87,7 @@ public:
 	ResourceHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
+	ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	void DestroyHandle(ResourceHandleType* handle) override;
 
 	// General resource methods
@@ -108,6 +120,11 @@ public:
 	// Graphics pipeline state
 	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const override;
 
+	// Root signature methods
+	const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const override;
+	uint32_t GetNumRootParameters(const ResourceHandleType* handle) const override;
+	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const override;
+
 	// Platform-specific methods
 	ResourceHandle CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex);
 	ID3D12Resource* GetResource(ResourceHandleType* handle) const;
@@ -118,13 +135,18 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCBV(ResourceHandleType* handle) const;
 	uint64_t GetGpuAddress(ResourceHandleType* handle) const;
 	ID3D12PipelineState* GetGraphicsPipelineState(ResourceHandleType* handle) const;
+	ID3D12RootSignature* GetRootSignature(ResourceHandleType* handle) const;
+	uint32_t GetDescriptorTableBitmap(const ResourceHandleType* handle) const;
+	uint32_t GetSamplerTableBitmap(const ResourceHandleType* handle) const;
+	const std::vector<uint32_t>& GetDescriptorTableSize(const ResourceHandleType* handle) const;
 
 private:
-	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(ResourceHandleType* handle) const;
+	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(const ResourceHandleType* handle) const;
 	std::pair<ResourceData, ColorBufferData> CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc);
 	std::pair<ResourceData, DepthBufferData> CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc);
 	std::pair<ResourceData, GpuBufferData> CreateGpuBuffer_Internal(const GpuBufferDesc& gpuBufferDesc);
 	wil::com_ptr<ID3D12PipelineState> CreateGraphicsPipeline_Internal(const GraphicsPipelineDesc& pipelineDesc);
+	RootSignatureData CreateRootSignature_Internal(const RootSignatureDesc& rootSignatureDesc);
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
 
 private:
@@ -172,6 +194,10 @@ private:
 	TResourceCache<GraphicsPipelineDesc, wil::com_ptr<ID3D12PipelineState>, MaxResources> m_graphicsPipelineCache;
 	std::mutex m_pipelineStateMutex;
 	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_pipelineStateMap;
+
+	TResourceCache<RootSignatureDesc, RootSignatureData, MaxResources> m_rootSignatureCache;
+	std::mutex m_rootSignatureMutex;
+	std::map<size_t, wil::com_ptr<ID3D12RootSignature>> m_rootSignatureHashMap;
 };
 
 

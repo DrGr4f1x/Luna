@@ -14,17 +14,11 @@
 
 #include "GraphicsCommon.h"
 #include "DescriptorSet.h"
+#include "ResourceManager.h"
 
 
 namespace Luna
 {
-
-RootSignatureHandleType::~RootSignatureHandleType()
-{
-	assert(m_manager);
-	m_manager->DestroyHandle(this);
-}
-
 
 uint32_t RootSignature::GetNumRootParameters() const
 {
@@ -40,19 +34,19 @@ const RootParameter& RootSignature::GetRootParameter(uint32_t index) const
 
 DescriptorSetHandle RootSignature::CreateDescriptorSet(uint32_t index) const
 {
-	return GetRootSignatureManager()->CreateDescriptorSet(m_handle.get(), index);
+	return GetResourceManager()->CreateDescriptorSet(m_handle.get(), index);
 }
 
 
 void RootSignature::Initialize(RootSignatureDesc& desc)
 {
-	m_handle = GetRootSignatureManager()->CreateRootSignature(desc);
+	m_handle = GetResourceManager()->CreateRootSignature(desc);
 }
 
 
 const RootSignatureDesc& RootSignature::GetDesc() const
 {
-	return GetRootSignatureManager()->GetDesc(m_handle.get());
+	return GetResourceManager()->GetRootSignatureDesc(m_handle.get());
 }
 
 } // using namespace Luna

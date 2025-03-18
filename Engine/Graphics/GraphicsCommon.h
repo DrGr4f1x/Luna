@@ -21,7 +21,6 @@ namespace Luna
 // Forward declarations
 class IDescriptorSetManager;
 class IResourceManager;
-class IRootSignatureManager;
 
 
 // Constants
@@ -100,7 +99,6 @@ IDeviceManager* GetDeviceManager();
 
 IDescriptorSetManager* GetDescriptorSetManager();
 IResourceManager* GetResourceManager();
-IRootSignatureManager* GetRootSignatureManager();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

@@ -12,7 +12,6 @@
 
 #include "GraphicsCommon.h"
 
-#include "PipelineState.h"
 #include "DX12\DeviceManager12.h"
 #include "Vulkan\DeviceManagerVK.h"
 
@@ -129,12 +128,6 @@ IDescriptorSetManager* GetDescriptorSetManager()
 IResourceManager* GetResourceManager()
 {
 	return GetDeviceManager()->GetResourceManager();
-}
-
-
-IRootSignatureManager* GetRootSignatureManager()
-{
-	return GetDeviceManager()->GetRootSignatureManager();
 }
 
 } // namespace Luna

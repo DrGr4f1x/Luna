@@ -26,7 +26,6 @@ class DescriptorAllocator;
 class DescriptorSetManager;
 class Queue;
 class ResourceManager;
-class RootSignatureManager;
 
 
 struct DxgiRLOHelper
@@ -84,7 +83,6 @@ public:
 
 	IDescriptorSetManager* GetDescriptorSetManager() override;
 	IResourceManager* GetResourceManager() override;
-	IRootSignatureManager* GetRootSignatureManager() override;
 
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
@@ -145,7 +143,6 @@ private:
 	// DirectX resource managers
 	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
 	std::unique_ptr<ResourceManager> m_resourceManager;
-	std::unique_ptr<RootSignatureManager> m_rootSignatureManager;
 
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;

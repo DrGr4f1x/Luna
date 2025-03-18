@@ -59,16 +59,36 @@ struct GpuBufferData
 };
 
 
+struct DescriptorBindingDesc
+{
+	VkDescriptorType descriptorType;
+	uint32_t startSlot{ 0 };
+	uint32_t numDescriptors{ 1 };
+	uint32_t offset{ 0 };
+};
+
+
+struct RootSignatureData
+{
+	wil::com_ptr<CVkPipelineLayout> pipelineLayout;
+	std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+	std::unordered_map<uint32_t, std::vector<DescriptorBindingDesc>> layoutBindingMap;
+	std::unordered_map<uint32_t, uint32_t> rootParameterIndexToDescriptorSetMap;
+	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> descriptorSetLayouts;
+};
+
+
 class ResourceManager : public IResourceManager
 {
 	static const uint32_t MaxResources = (1 << 12);
 	static const uint32_t InvalidAllocation = ~0u;
 	enum ManagedResourceType
 	{
-		ManagedColorBuffer			= 0x1,
-		ManagedDepthBuffer			= 0x2,
-		ManagedGpuBuffer			= 0x4,
-		ManagedGraphicsPipeline		= 0x8
+		ManagedColorBuffer			= 0x0001,
+		ManagedDepthBuffer			= 0x0002,
+		ManagedGpuBuffer			= 0x0004,
+		ManagedGraphicsPipeline		= 0x0008,
+		ManagedRootSignature		= 0x0010
 	};
 
 public:
@@ -80,6 +100,7 @@ public:
 	ResourceHandle CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
+	ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 	void DestroyHandle(ResourceHandleType* handle) override;
 
 	// General resource methods
@@ -112,6 +133,11 @@ public:
 	// Graphics pipeline state
 	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(ResourceHandleType* handle) const override;
 
+	// Root signature methods
+	const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const override;
+	uint32_t GetNumRootParameters(const ResourceHandleType* handle) const override;
+	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(ResourceHandleType* handle, uint32_t rootParamIndex) const override;
+
 	// Platform specific methods
 	ResourceHandle CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 	VkImage GetImage(ResourceHandleType* handle) const;
@@ -125,13 +151,18 @@ public:
 	VkDescriptorBufferInfo GetBufferInfo(ResourceHandleType* handle) const;
 	VkBufferView GetBufferView(ResourceHandleType* handle) const;
 	VkPipeline GetGraphicsPipeline(ResourceHandleType* handle) const;
+	VkPipelineLayout GetPipelineLayout(ResourceHandleType* handle) const;
+	CVkDescriptorSetLayout* GetDescriptorSetLayout(ResourceHandleType* handle, uint32_t paramIndex) const;
+	int GetDescriptorSetIndexFromRootParameterIndex(ResourceHandleType* handle, uint32_t paramIndex) const;
+	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(ResourceHandleType* handle, uint32_t paramIndex) const;
 
 private:
-	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(ResourceHandleType* handle) const;
+	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(const ResourceHandleType* handle) const;
 	std::pair<ResourceData, ColorBufferData> CreateColorBuffer_Internal(const ColorBufferDesc& colorBufferDesc);
 	std::pair<ResourceData, DepthBufferData> CreateDepthBuffer_Internal(const DepthBufferDesc& depthBufferDesc);
 	std::pair<ResourceData, GpuBufferData> CreateGpuBuffer_Internal(const GpuBufferDesc& gpuBufferDesc);
 	wil::com_ptr<CVkPipeline> CreateGraphicsPipeline_Internal(const GraphicsPipelineDesc& pipelineDesc);
+	RootSignatureData CreateRootSignature_Internal(const RootSignatureDesc& rootSignatureDesc);
 	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
 	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
 
@@ -181,6 +212,10 @@ private:
 	std::mutex m_shaderModuleMutex;
 	std::map<size_t, wil::com_ptr<CVkShaderModule>> m_shaderModuleHashMap;
 	wil::com_ptr<CVkPipelineCache> m_pipelineCache;
+
+	TDataCache<RootSignatureDesc, RootSignatureData, MaxResources> m_rootSignatureCache;
+	std::mutex m_pipelineLayoutMutex;
+	std::map<size_t, wil::com_ptr<CVkPipelineLayout>> m_pipelineLayoutHashMap;
 };
 
 
