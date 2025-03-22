@@ -119,12 +119,6 @@ IDeviceManager* GetDeviceManager()
 }
 
 
-IDescriptorSetManager* GetDescriptorSetManager()
-{
-	return GetDeviceManager()->GetDescriptorSetManager();
-}
-
-
 IResourceManager* GetResourceManager()
 {
 	return GetDeviceManager()->GetResourceManager();

@@ -19,7 +19,6 @@ namespace Luna
 {
 
 // Forward declarations
-class IDescriptorSetManager;
 class IResourceManager;
 
 
@@ -97,7 +96,6 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
 
-IDescriptorSetManager* GetDescriptorSetManager();
 IResourceManager* GetResourceManager();
 
 // Graphics related log categories

@@ -15,7 +15,6 @@
 #include "Graphics\GraphicsCommon.h"
 
 #include "CommandContext12.h"
-#include "DescriptorSetManager12.h"
 #include "DeviceCaps12.h"
 #include "Queue12.h"
 #include "ResourceManager12.h"
@@ -510,12 +509,6 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IDescriptorSetManager* DeviceManager::GetDescriptorSetManager()
-{
-	return m_descriptorSetManager.get();
-}
-
-
 IResourceManager* DeviceManager::GetResourceManager()
 {
 	return m_resourceManager.get();
@@ -731,7 +724,6 @@ void DeviceManager::CreateDevice()
 
 void DeviceManager::CreateResourceManagers()
 {
-	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_dxDevice.get());
 	m_resourceManager = make_unique<ResourceManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 }
 

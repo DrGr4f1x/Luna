@@ -364,7 +364,7 @@ public:
 	uint32_t GetNumRootParameters() const;
 	const RootParameter& GetRootParameter(uint32_t index) const;
 
-	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(uint32_t index) const;
+	ResourceHandle CreateDescriptorSet(uint32_t index) const;
 
 	const RootParameter& operator[](uint32_t index) const { return GetRootParameter(index); }
 

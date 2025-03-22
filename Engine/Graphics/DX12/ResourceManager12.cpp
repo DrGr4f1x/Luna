@@ -13,7 +13,6 @@
 #include "ResourceManager12.h"
 
 #include "FileSystem.h"
-#include "DescriptorSetManager12.h"
 #include "Shader12.h"
 
 using namespace std;
@@ -93,6 +92,7 @@ ResourceManager::ResourceManager(ID3D12Device* device, D3D12MA::Allocator* alloc
 		m_gpuBufferCache.Reset(i);
 		m_graphicsPipelineCache.Reset(i);
 		m_rootSignatureCache.Reset(i);
+		m_descriptorSetCache.Reset(i);
 	}
 
 	g_resourceManager = this;
@@ -223,6 +223,7 @@ ResourceHandle ResourceManager::CreateRootSignature(const RootSignatureDesc& roo
 	std::lock_guard guard(m_allocationMutex);
 
 	// Get a root signature index allocation
+	assert(!m_rootSignatureCache.freeList.empty());
 	uint32_t rootSignatureIndex = m_rootSignatureCache.freeList.front();
 	m_rootSignatureCache.freeList.pop();
 
@@ -232,6 +233,35 @@ ResourceHandle ResourceManager::CreateRootSignature(const RootSignatureDesc& roo
 	m_rootSignatureCache.AddData(rootSignatureIndex, rootSignatureDesc, rootSignatureData);
 
 	return Create<ResourceHandleType>(rootSignatureIndex, ManagedRootSignature, this);
+}
+
+
+ResourceHandle ResourceManager::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+{
+	std::lock_guard guard(m_allocationMutex);
+
+	// Get a descriptor set index allocation
+	assert(!m_descriptorSetCache.freeList.empty());
+	uint32_t descriptorSetIndex = m_descriptorSetCache.freeList.front();
+	m_descriptorSetCache.freeList.pop();
+
+	DescriptorSetData data{
+		.descriptorHandle	= descriptorSetDesc.descriptorHandle,
+		.numDescriptors		= descriptorSetDesc.numDescriptors,
+		.isSamplerTable		= descriptorSetDesc.isSamplerTable,
+		.isRootBuffer		= descriptorSetDesc.isRootBuffer
+	};
+
+	assert(data.numDescriptors <= MaxDescriptorsPerTable);
+
+	for (uint32_t j = 0; j < MaxDescriptorsPerTable; ++j)
+	{
+		data.descriptors[j].ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+	}
+
+	m_descriptorSetCache.AddData(descriptorSetIndex, descriptorSetDesc, data);
+
+	return Create<ResourceHandleType>(descriptorSetIndex, ManagedDescriptorSet, this);
 }
 
 
@@ -266,6 +296,10 @@ void ResourceManager::DestroyHandle(const ResourceHandleType* handle)
 
 	case ManagedRootSignature:
 		m_rootSignatureCache.Reset(resourceIndex);
+		break;
+
+	case ManagedDescriptorSet:
+		m_descriptorSetCache.Reset(resourceIndex);
 		break;
 
 	default:
@@ -568,7 +602,7 @@ uint32_t ResourceManager::GetNumRootParameters(const ResourceHandleType* handle)
 }
 
 
-DescriptorSetHandle ResourceManager::CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const
+ResourceHandle ResourceManager::CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex)
 {
 	const auto& rootSignatureDesc = GetRootSignatureDesc(handle);
 
@@ -593,7 +627,156 @@ DescriptorSetHandle ResourceManager::CreateDescriptorSet(const ResourceHandleTyp
 		.isRootBuffer = isRootBuffer
 	};
 
-	return GetD3D12DescriptorSetManager()->CreateDescriptorSet(descriptorSetDesc);
+	return CreateDescriptorSet(descriptorSetDesc);
+}
+
+
+void ResourceManager::SetSRV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto colorBufferHandle = colorBuffer.GetHandle();
+
+	SetDescriptor(m_descriptorSetCache.dataArray[resourceIndex], slot, GetSRV(colorBufferHandle.get(), true));
+}
+
+
+void ResourceManager::SetSRV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto depthBufferHandle = depthBuffer.GetHandle();
+
+	SetDescriptor(m_descriptorSetCache.dataArray[resourceIndex], slot, GetSRV(depthBufferHandle.get(), depthSrv));
+}
+
+
+void ResourceManager::SetSRV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
+
+	if (m_descriptorSetCache.dataArray[resourceIndex].isRootBuffer)
+	{
+		assert(slot == 0);
+		m_descriptorSetCache.dataArray[resourceIndex].gpuAddress = GetGpuAddress(gpuBufferHandle.get());
+	}
+	else
+	{
+		SetDescriptor(m_descriptorSetCache.dataArray[resourceIndex], slot, GetSRV(gpuBufferHandle.get(), true));
+	}
+}
+
+
+void ResourceManager::SetUAV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto colorBufferHandle = colorBuffer.GetHandle();
+
+	SetDescriptor(m_descriptorSetCache.dataArray[resourceIndex], slot, GetUAV(colorBufferHandle.get(), uavIndex));
+}
+
+
+void ResourceManager::SetUAV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer)
+{ 
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	assert_msg(false, "Depth UAVs not yet supported");
+}
+
+
+void ResourceManager::SetUAV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
+
+	if (m_descriptorSetCache.dataArray[resourceIndex].isRootBuffer)
+	{
+		assert(slot == 0);
+		m_descriptorSetCache.dataArray[resourceIndex].gpuAddress = GetGpuAddress(gpuBufferHandle.get());
+	}
+	else
+	{
+		SetDescriptor(m_descriptorSetCache.dataArray[resourceIndex], slot, GetUAV(gpuBufferHandle.get()));
+	}
+}
+
+
+void ResourceManager::SetCBV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
+
+	if (m_descriptorSetCache.dataArray[resourceIndex].isRootBuffer)
+	{
+		assert(slot == 0);
+		m_descriptorSetCache.dataArray[resourceIndex].gpuAddress = GetGpuAddress(gpuBufferHandle.get());
+	}
+	else
+	{
+		SetDescriptor(m_descriptorSetCache.dataArray[resourceIndex], slot, GetCBV(gpuBufferHandle.get()));
+	}
+}
+
+
+void ResourceManager::SetDynamicOffset(const ResourceHandleType* handle, uint32_t offset) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	m_descriptorSetCache.dataArray[resourceIndex].dynamicOffset = offset;
+}
+
+
+void ResourceManager::UpdateGpuDescriptors(const ResourceHandleType* handle) 
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	if (data.dirtyBits == 0 || data.numDescriptors == 0)
+		return;
+
+	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = data.isSamplerTable
+		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	uint32_t descriptorSize = m_device->GetDescriptorHandleIncrementSize(heapType);
+
+	unsigned long setBit{ 0 };
+	uint32_t paramIndex{ 0 };
+	while (_BitScanForward(&setBit, data.dirtyBits))
+	{
+		DescriptorHandle offsetHandle = data.descriptorHandle + paramIndex * descriptorSize;
+		data.dirtyBits &= ~(1 << setBit);
+
+		m_device->CopyDescriptorsSimple(1, offsetHandle.GetCpuHandle(), data.descriptors[paramIndex], heapType);
+
+		++paramIndex;
+	}
+
+	assert(data.dirtyBits == 0);
 }
 
 
@@ -787,6 +970,66 @@ const vector<uint32_t>& ResourceManager::GetDescriptorTableSize(const ResourceHa
 	assert(type == ManagedRootSignature);
 
 	return m_rootSignatureCache.dataArray[resourceIndex].descriptorTableSizes;
+}
+
+
+bool ResourceManager::HasBindableDescriptors(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	const auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	return data.isRootBuffer || !data.descriptors.empty();
+}
+
+
+D3D12_GPU_DESCRIPTOR_HANDLE ResourceManager::GetGpuDescriptorHandle(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	const auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	return data.descriptorHandle.GetGpuHandle();
+}
+
+
+uint64_t ResourceManager::GetDescriptorSetGpuAddress(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	const auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	return data.gpuAddress;
+}
+
+
+uint64_t ResourceManager::GetDynamicOffset(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	const auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	return data.dynamicOffset;
+}
+
+
+uint64_t ResourceManager::GetGpuAddressWithOffset(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	const auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	return data.gpuAddress + data.dynamicOffset;
 }
 
 
@@ -1610,6 +1853,17 @@ wil::com_ptr<D3D12MA::Allocation> ResourceManager::AllocateBuffer(const GpuBuffe
 		IID_NULL, NULL);
 
 	return allocation;
+}
+
+
+void ResourceManager::SetDescriptor(DescriptorSetData& data, int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
+{
+	assert(slot >= 0 && slot < (int)data.numDescriptors);
+	if (data.descriptors[slot].ptr != descriptor.ptr)
+	{
+		data.descriptors[slot] = descriptor;
+		data.dirtyBits |= (1 << slot);
+	}
 }
 
 

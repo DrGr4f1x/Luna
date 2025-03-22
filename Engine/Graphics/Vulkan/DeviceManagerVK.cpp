@@ -14,7 +14,6 @@
 
 #include "CommandContextVK.h"
 #include "DescriptorAllocatorVK.h"
-#include "DescriptorSetManagerVK.h"
 #include "QueueVK.h"
 #include "ResourceManagerVK.h"
 #include "VulkanUtil.h"
@@ -470,12 +469,6 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IDescriptorSetManager* DeviceManager::GetDescriptorSetManager()
-{
-	return m_descriptorSetManager.get();
-}
-
-
 IResourceManager* DeviceManager::GetResourceManager()
 {
 	return m_resourceManager.get();
@@ -633,7 +626,6 @@ void DeviceManager::CreateDevice()
 
 void DeviceManager::CreateResourceManagers()
 {
-	m_descriptorSetManager = make_unique<DescriptorSetManager>(m_vkDevice.get());
 	m_resourceManager = make_unique<ResourceManager>(m_vkDevice.get(), m_vmaAllocator.get());
 }
 

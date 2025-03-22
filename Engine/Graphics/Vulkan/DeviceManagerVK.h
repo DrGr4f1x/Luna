@@ -23,7 +23,6 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class DescriptorSetManager;
 class Queue;
 class ResourceManager;
 
@@ -57,7 +56,6 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
-	IDescriptorSetManager* GetDescriptorSetManager() override;
 	IResourceManager* GetResourceManager() override;
 
 	void ReleaseImage(CVkImage* image);
@@ -112,7 +110,6 @@ private:
 	vkb::Swapchain m_vkbSwapchain;
 
 	// Vulkan resource managers
-	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
 	std::unique_ptr<ResourceManager> m_resourceManager;
 
 	// Swapchain

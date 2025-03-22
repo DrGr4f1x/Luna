@@ -31,7 +31,6 @@ namespace Luna::VK
 
 // Forward declarations
 class ComputeContext;
-class DescriptorSetManager;
 class GraphicsContext;
 class IDynamicDescriptorHeap;
 class ResourceManager;
@@ -145,7 +144,7 @@ public:
 private:
 	void ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
+	void SetDescriptors_Internal(uint32_t rootIndex, ResourceHandleType* resourceHandle);
 
 	void BindDescriptorHeaps() {}
 	void SetRenderingArea(const ColorBuffer& colorBuffer);
@@ -172,7 +171,6 @@ private:
 	bool m_isRendering{ false };
 
 	// Managers
-	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	ResourceManager* m_resourceManager{ nullptr };
 
 	// Resource barriers

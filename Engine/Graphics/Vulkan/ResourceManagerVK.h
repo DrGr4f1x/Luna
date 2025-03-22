@@ -22,6 +22,10 @@
 namespace Luna::VK
 {
 
+// Forward declarations
+class DescriptorPool;
+
+
 struct ResourceData
 {
 	wil::com_ptr<CVkImage> image{ nullptr };
@@ -78,6 +82,32 @@ struct RootSignatureData
 };
 
 
+struct DescriptorSetDesc
+{
+	CVkDescriptorSetLayout* descriptorSetLayout{ nullptr };
+	RootParameter rootParameter{};
+	VulkanBindingOffsets bindingOffsets{};
+	uint32_t numDescriptors{ 0 };
+	bool isDynamicBuffer{ false };
+};
+
+
+using DescriptorData = std::variant<VkDescriptorImageInfo, VkDescriptorBufferInfo, VkBufferView>;
+
+
+struct DescriptorSetData
+{
+	VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
+	VulkanBindingOffsets bindingOffsets;
+	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> writeDescriptorSets;
+	std::array<DescriptorData, MaxDescriptorsPerTable> descriptorData;
+	uint32_t numDescriptors{ 0 };
+	uint32_t dirtyBits{ 0 };
+	uint32_t dynamicOffset{ 0 };
+	bool isDynamicBuffer{ false };
+};
+
+
 class ResourceManager : public IResourceManager
 {
 	static const uint32_t MaxResources = (1 << 12);
@@ -88,7 +118,8 @@ class ResourceManager : public IResourceManager
 		ManagedDepthBuffer			= 0x0002,
 		ManagedGpuBuffer			= 0x0004,
 		ManagedGraphicsPipeline		= 0x0008,
-		ManagedRootSignature		= 0x0010
+		ManagedRootSignature		= 0x0010,
+		ManagedDescriptorSet		= 0x0020,
 	};
 
 public:
@@ -101,6 +132,7 @@ public:
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	ResourceHandle CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
 	void DestroyHandle(const ResourceHandleType* handle) override;
 
 	// General resource methods
@@ -136,7 +168,18 @@ public:
 	// Root signature methods
 	const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const override;
 	uint32_t GetNumRootParameters(const ResourceHandleType* handle) const override;
-	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const override;
+	ResourceHandle CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) override;
+
+	// Descriptor set methods
+	void SetSRV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer) override;
+	void SetSRV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv = true) override;
+	void SetSRV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
+	void SetUAV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex = 0) override;
+	void SetUAV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer) override;
+	void SetUAV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
+	void SetCBV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
+	void SetDynamicOffset(const ResourceHandleType* handle, uint32_t offset) override;
+	void UpdateGpuDescriptors(const ResourceHandleType* handle) override;
 
 	// Platform specific methods
 	ResourceHandle CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
@@ -155,6 +198,10 @@ public:
 	CVkDescriptorSetLayout* GetDescriptorSetLayout(const ResourceHandleType* handle, uint32_t paramIndex) const;
 	int GetDescriptorSetIndexFromRootParameterIndex(const ResourceHandleType* handle, uint32_t paramIndex) const;
 	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(const ResourceHandleType* handle, uint32_t paramIndex) const;
+	bool HasDescriptors(const ResourceHandleType* handle) const;
+	VkDescriptorSet GetDescriptorSet(const ResourceHandleType* handle) const;
+	uint32_t GetDynamicOffset(const ResourceHandleType* handle) const;
+	bool IsDynamicBuffer(const ResourceHandleType* handle) const;
 
 private:
 	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(const ResourceHandleType* handle) const;
@@ -165,6 +212,7 @@ private:
 	RootSignatureData CreateRootSignature_Internal(const RootSignatureDesc& rootSignatureDesc);
 	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
 	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
+	DescriptorSetData CreateDescriptorSet_Internal(const DescriptorSetDesc& descriptorSetDesc);
 
 private:
 	wil::com_ptr<CVkDevice> m_device;
@@ -216,6 +264,9 @@ private:
 	TDataCache<RootSignatureDesc, RootSignatureData, MaxResources> m_rootSignatureCache;
 	std::mutex m_pipelineLayoutMutex;
 	std::map<size_t, wil::com_ptr<CVkPipelineLayout>> m_pipelineLayoutHashMap;
+
+	TDataCache<DescriptorSetDesc, DescriptorSetData, MaxResources> m_descriptorSetCache;
+	std::unordered_map<VkDescriptorSetLayout, std::unique_ptr<DescriptorPool>> m_setPoolMapping;
 };
 
 

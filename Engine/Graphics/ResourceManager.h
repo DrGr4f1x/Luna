@@ -18,7 +18,10 @@ namespace Luna
 {
 
 // Forward declarations
+class ColorBuffer;
+class DepthBuffer;
 class DescriptorSetHandleType;
+class GpuBuffer;
 class IResourceManager;
 struct ColorBufferDesc;
 struct DepthBufferDesc;
@@ -93,7 +96,18 @@ public:
 	// Root signature methods
 	virtual const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const = 0;
 	virtual uint32_t GetNumRootParameters(const ResourceHandleType* handle) const = 0;
-	virtual wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const = 0;
+	virtual ResourceHandle CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) = 0;
+
+	// Descriptor set methods
+	virtual void SetSRV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer) = 0;
+	virtual void SetSRV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv = true) = 0;
+	virtual void SetSRV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetUAV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex = 0) = 0;
+	virtual void SetUAV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer) = 0;
+	virtual void SetUAV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetCBV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetDynamicOffset(const ResourceHandleType* handle, uint32_t offset) = 0;
+	virtual void UpdateGpuDescriptors(const ResourceHandleType* handle) = 0;
 };
 
 } // namespace Luna

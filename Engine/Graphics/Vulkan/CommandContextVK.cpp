@@ -15,7 +15,6 @@
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceSet.h"
 
-#include "DescriptorSetManagerVK.h"
 #include "DeviceManagerVK.h"
 #include "QueueVK.h"
 #include "ResourceManagerVK.h"
@@ -169,7 +168,6 @@ void CommandContextVK::Initialize()
 
 	m_dynamicDescriptorHeap = make_unique<DefaultDynamicDescriptorHeap>(m_device.get());
 
-	m_descriptorSetManager = GetVulkanDescriptorSetManager();
 	m_resourceManager = GetVulkanResourceManager();
 }
 
@@ -870,21 +868,21 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 }
 
 
-void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle)
+void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, ResourceHandleType* resourceHandle)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!m_descriptorSetManager->HasDescriptors(descriptorSetHandle))
+	if (!m_resourceManager->HasDescriptors(resourceHandle))
 		return;
 
-	m_descriptorSetManager->UpdateGpuDescriptors(descriptorSetHandle);
+	m_resourceManager->UpdateGpuDescriptors(resourceHandle);
 
-	VkDescriptorSet vkDescriptorSet = m_descriptorSetManager->GetDescriptorSet(descriptorSetHandle);
+	VkDescriptorSet vkDescriptorSet = m_resourceManager->GetDescriptorSet(resourceHandle);
 	if (vkDescriptorSet == VK_NULL_HANDLE)
 		return;
 
-	const uint32_t dynamicOffset = m_descriptorSetManager->GetDynamicOffset(descriptorSetHandle);
-	const bool isDynamicBuffer = m_descriptorSetManager->IsDynamicBuffer(descriptorSetHandle);
+	const uint32_t dynamicOffset = m_resourceManager->GetDynamicOffset(resourceHandle);
+	const bool isDynamicBuffer = m_resourceManager->IsDynamicBuffer(resourceHandle);
 
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,

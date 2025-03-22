@@ -30,13 +30,10 @@ TODO:
 -- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
 -- Take another look at Shaders.  Not super happy with how things are.
--- Trim GraphicsDeviceDesc - most of that stuff is on the DeviceManager, unneeded by the GraphicsDevice itself
--- Do a const pass on the Handle* parameters passed into the various Pool member functions
 -- Refactor Vulkan DescriptorSet, now that DescriptorSetPool exists
 -- Do a Vulkan DynamicDescriptorHeap implementation using mutable descriptors
 -- Do a Vulkan DynamicDescriptorHeap implementation using descriptor buffers
 -- Support dynamic buffers in Vulkan DynamicDescriptorHeap
--- Refactor various pools into single pool for all pool-managed resource types
 -- Rework Vulkan Queues to handle case where the device doesn't support separate compute/copy queues
 -- Run static analysis pass on solution
 
@@ -57,6 +54,8 @@ DONE:
 -- Implement DefaultDynamicDescriptorHeap for vanilla Vulkan (no extensions)
 -- Update to Vulkan API v1.4
 -- Ensure Vulkan works without installing Volk or VMA with the Vulkan SDK
+-- Refactor various pools into single pool for all pool-managed resource types
+-- Do a const pass on the Handle* parameters passed into the various Pool member functions
 
 
 WON'T DO:

@@ -13,7 +13,8 @@
 #include "ResourceManagerVK.h"
 
 #include "FileSystem.h"
-#include "DescriptorSetManagerVK.h"
+
+#include "DescriptorPoolVK.h"
 #include "VulkanUtil.h"
 
 
@@ -135,6 +136,7 @@ ResourceManager::ResourceManager(CVkDevice* device, CVmaAllocator* allocator)
 		m_gpuBufferCache.Reset(i);
 		m_graphicsPipelineCache.Reset(i);
 		m_rootSignatureCache.Reset(i);
+		m_descriptorSetCache.Reset(i);
 	}
 
 	m_pipelineCache = CreatePipelineCache();
@@ -275,6 +277,24 @@ ResourceHandle ResourceManager::CreateRootSignature(const RootSignatureDesc& roo
 }
 
 
+ResourceHandle ResourceManager::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+{
+	std::lock_guard guard(m_allocationMutex);
+
+	// Get a descriptor set index allocation
+	assert(!m_descriptorSetCache.freeList.empty());
+	uint32_t descriptorSetIndex = m_descriptorSetCache.freeList.front();
+	m_descriptorSetCache.freeList.pop();
+
+	// Allocate the descriptor set
+	auto descriptorSetData = CreateDescriptorSet_Internal(descriptorSetDesc);
+
+	m_descriptorSetCache.AddData(descriptorSetIndex, descriptorSetDesc, descriptorSetData);
+
+	return Create<ResourceHandleType>(descriptorSetIndex, ManagedDescriptorSet, this);
+}
+
+
 void ResourceManager::DestroyHandle(const ResourceHandleType* handle)
 {
 	std::lock_guard guard(m_allocationMutex);
@@ -306,6 +326,10 @@ void ResourceManager::DestroyHandle(const ResourceHandleType* handle)
 
 	case ManagedRootSignature:
 		m_rootSignatureCache.Reset(resourceIndex);
+		break;
+
+	case ManagedDescriptorSet:
+		m_descriptorSetCache.Reset(resourceIndex);
 		break;
 
 	default:
@@ -546,7 +570,7 @@ std::optional<size_t> ResourceManager::GetElementCount(const ResourceHandleType*
 }
 
 
-std::optional<size_t> ResourceManager::GetElementSize(const const ResourceHandleType* handle) const
+std::optional<size_t> ResourceManager::GetElementSize(const ResourceHandleType* handle) const
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -587,7 +611,7 @@ uint32_t ResourceManager::GetNumRootParameters(const ResourceHandleType* handle)
 }
 
 
-DescriptorSetHandle ResourceManager::CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const
+ResourceHandle ResourceManager::CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex)
 {
 	const auto [index, type, resourceIndex] = UnpackHandle(handle);
 
@@ -610,7 +634,247 @@ DescriptorSetHandle ResourceManager::CreateDescriptorSet(const ResourceHandleTyp
 		.isDynamicBuffer		= isDynamicBuffer
 	};
 
-	return GetVulkanDescriptorSetManager()->CreateDescriptorSet(descriptorSetDesc);
+	return CreateDescriptorSet(descriptorSetDesc);
+}
+
+
+void ResourceManager::SetSRV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
+
+	auto colorBufferHandle = colorBuffer.GetHandle();
+
+	writeSet.descriptorCount = 1;
+	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	writeSet.dstSet = data.descriptorSet;
+	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
+
+	data.descriptorData[slot] = GetImageInfoSrv(colorBufferHandle.get());
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
+
+	data.dirtyBits |= (1 << slot);
+}
+
+
+void ResourceManager::SetSRV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
+
+	auto depthBufferHandle = depthBuffer.GetHandle();
+
+	writeSet.descriptorCount = 1;
+	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	writeSet.dstSet = data.descriptorSet;
+	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
+
+	data.descriptorData[slot] = GetImageInfoDepth(depthBufferHandle.get(), depthSrv);
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
+
+	data.dirtyBits |= (1 << slot);
+}
+
+
+void ResourceManager::SetSRV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	if (data.isDynamicBuffer)
+	{
+		assert(slot == 0);
+	}
+
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
+
+	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
+
+	writeSet.descriptorCount = 1;
+	writeSet.dstSet = data.descriptorSet;
+	writeSet.dstBinding = slot + data.bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
+
+	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
+	{
+		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+		data.descriptorData[slot] = GetBufferView(gpuBufferHandle.get());
+		writeSet.pTexelBufferView = std::get_if<VkBufferView>(&data.descriptorData[slot]);
+	}
+	else
+	{
+		writeSet.descriptorType = data.isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		data.descriptorData[slot] = GetBufferInfo(gpuBufferHandle.get());
+		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&data.descriptorData[slot]);
+	}
+
+	data.dirtyBits |= (1 << slot);
+}
+
+
+void ResourceManager::SetUAV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
+
+	auto colorBufferHandle = colorBuffer.GetHandle();
+
+	writeSet.descriptorCount = 1;
+	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	writeSet.dstSet = data.descriptorSet;
+	writeSet.dstBinding = slot + data.bindingOffsets.unorderedAccess;
+	writeSet.dstArrayElement = 0;
+
+	data.descriptorData[slot] = GetImageInfoUav(colorBufferHandle.get());
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&data.descriptorData[slot]);
+
+	data.dirtyBits |= (1 << slot);
+}
+
+
+void ResourceManager::SetUAV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	assert_msg(false, "Depth UAVs not yet supported");
+}
+
+
+void ResourceManager::SetUAV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	if (data.isDynamicBuffer)
+	{
+		assert(slot == 0);
+	}
+
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
+
+	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
+
+	writeSet.descriptorCount = 1;
+	writeSet.dstSet = data.descriptorSet;
+	writeSet.dstBinding = slot + data.bindingOffsets.unorderedAccess;
+	writeSet.dstArrayElement = 0;
+
+	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
+	{
+		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+		data.descriptorData[slot] = GetBufferView(gpuBufferHandle.get());
+		writeSet.pTexelBufferView = std::get_if<VkBufferView>(&data.descriptorData[slot]);
+	}
+	else
+	{
+		writeSet.descriptorType = data.isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		data.descriptorData[slot] = GetBufferInfo(gpuBufferHandle.get());
+		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&data.descriptorData[slot]);
+	}
+
+	data.dirtyBits |= (1 << slot);
+}
+
+
+void ResourceManager::SetCBV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	if (data.isDynamicBuffer)
+	{
+		assert(slot == 0);
+	}
+
+	auto gpuBufferHandle = gpuBuffer.GetHandle();
+
+	VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[slot];
+
+	writeSet.descriptorCount = 1;
+	writeSet.descriptorType = data.isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	writeSet.dstSet = data.descriptorSet;
+	writeSet.dstBinding = slot + data.bindingOffsets.constantBuffer;
+	writeSet.dstArrayElement = 0;
+	data.descriptorData[slot] = GetBufferInfo(gpuBufferHandle.get());
+	writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&data.descriptorData[slot]);
+
+	data.dirtyBits |= (1 << slot);
+}
+
+
+void ResourceManager::SetDynamicOffset(const ResourceHandleType* handle, uint32_t offset)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	assert(data.isDynamicBuffer);
+
+	data.dynamicOffset = offset;
+}
+
+
+void ResourceManager::UpdateGpuDescriptors(const ResourceHandleType* handle)
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+
+	auto& data = m_descriptorSetCache.dataArray[resourceIndex];
+
+	if (data.dirtyBits == 0)
+		return;
+
+	array<VkWriteDescriptorSet, MaxDescriptorsPerTable> liveDescriptors;
+
+	unsigned long setBit{ 0 };
+	uint32_t paramIndex{ 0 };
+	while (_BitScanForward(&setBit, data.dirtyBits))
+	{
+		liveDescriptors[paramIndex++] = data.writeDescriptorSets[setBit];
+		data.dirtyBits &= ~(1 << setBit);
+	}
+
+	assert(data.dirtyBits == 0);
+
+	vkUpdateDescriptorSets(
+		m_device->Get(),
+		(uint32_t)paramIndex,
+		liveDescriptors.data(),
+		0,
+		nullptr);
 }
 
 
@@ -885,6 +1149,50 @@ const std::vector<DescriptorBindingDesc>& ResourceManager::GetLayoutBindings(con
 	assert(it != m_rootSignatureCache.dataArray[resourceIndex].layoutBindingMap.end());
 
 	return it->second;
+}
+
+
+bool ResourceManager::HasDescriptors(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+	const auto& data = m_descriptorSetCache.dataArray[index];
+
+	return (data.numDescriptors != 0) || data.isDynamicBuffer;
+}
+
+
+VkDescriptorSet ResourceManager::GetDescriptorSet(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+	const auto& data = m_descriptorSetCache.dataArray[index];
+
+	return data.descriptorSet;
+}
+
+
+uint32_t ResourceManager::GetDynamicOffset(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+	const auto& data = m_descriptorSetCache.dataArray[index];
+
+	return data.dynamicOffset;
+}
+
+
+bool ResourceManager::IsDynamicBuffer(const ResourceHandleType* handle) const
+{
+	const auto [index, type, resourceIndex] = UnpackHandle(handle);
+
+	assert(type == ManagedDescriptorSet);
+	const auto& data = m_descriptorSetCache.dataArray[index];
+
+	return data.isDynamicBuffer;
 }
 
 
@@ -1602,6 +1910,61 @@ wil::com_ptr<CVkPipelineCache> ResourceManager::CreatePipelineCache() const
 	}
 
 	return nullptr;
+}
+
+
+DescriptorSetData ResourceManager::CreateDescriptorSet_Internal(const DescriptorSetDesc& descriptorSetDesc)
+{
+	// Find or create descriptor set pool
+	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->Get();
+	DescriptorPool* pool{ nullptr };
+	auto it = m_setPoolMapping.find(vkDescriptorSetLayout);
+	if (it == m_setPoolMapping.end())
+	{
+		DescriptorPoolDesc descriptorPoolDesc{
+			.device						= m_device.get(),
+			.layout						= descriptorSetDesc.descriptorSetLayout,
+			.rootParameter				= descriptorSetDesc.rootParameter,
+			.poolSize					= MaxSetsPerPool,
+			.allowFreeDescriptorSets	= true
+		};
+
+		auto poolHandle = make_unique<DescriptorPool>(descriptorPoolDesc);
+		pool = poolHandle.get();
+		m_setPoolMapping.emplace(vkDescriptorSetLayout, std::move(poolHandle));
+	}
+	else
+	{
+		pool = it->second.get();
+	}
+
+	// Allocate descriptor set from pool
+	VkDescriptorSet vkDescriptorSet = pool->AllocateDescriptorSet();
+
+	DescriptorSetData data{
+		.descriptorSet		= vkDescriptorSet,
+		.bindingOffsets		= descriptorSetDesc.bindingOffsets,
+		.numDescriptors		= descriptorSetDesc.numDescriptors,
+		.isDynamicBuffer	= descriptorSetDesc.isDynamicBuffer
+	};
+
+	assert(data.numDescriptors <= MaxDescriptorsPerTable);
+
+	for (uint32_t j = 0; j < MaxDescriptorsPerTable; ++j)
+	{
+		VkWriteDescriptorSet& writeSet = data.writeDescriptorSets[j];
+		writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeSet.pNext = nullptr;
+		writeSet.dstBinding = 0;
+		writeSet.dstArrayElement = 0;
+		writeSet.descriptorCount = 0;
+		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+		writeSet.pImageInfo = nullptr;
+		writeSet.pBufferInfo = nullptr;
+		writeSet.pTexelBufferView = nullptr;
+	}
+
+	return data;
 }
 
 

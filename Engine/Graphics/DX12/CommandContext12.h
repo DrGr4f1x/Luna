@@ -30,7 +30,6 @@ namespace Luna::DX12
 {
 
 // Forward declarations
-class DescriptorSetManager;
 class ResourceManager;
 
 
@@ -122,7 +121,7 @@ protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
 	void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle);
+	void SetDescriptors_Internal(uint32_t rootIndex, ResourceHandleType* resourceHandle);
 	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 
 private:
@@ -155,7 +154,6 @@ private:
 	bool m_bHasPendingDebugEvent{ false };
 
 	// Managers
-	DescriptorSetManager* m_descriptorSetManager{ nullptr };
 	ResourceManager* m_resourceManager{ nullptr };
 
 	// Render target state

@@ -20,8 +20,6 @@ namespace Luna
 
 // Forward declarations
 class CommandContext;
-class IDescriptorSetManager;
-class IPipelineStateManager;
 class IResourceManager;
 
 
@@ -110,7 +108,6 @@ public:
 	virtual Format GetColorFormat() = 0;
 	virtual Format GetDepthFormat() = 0;
 
-	virtual IDescriptorSetManager* GetDescriptorSetManager() = 0;
 	virtual IResourceManager* GetResourceManager() = 0;
 };
 

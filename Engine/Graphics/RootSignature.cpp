@@ -32,7 +32,7 @@ const RootParameter& RootSignature::GetRootParameter(uint32_t index) const
 }
 
 
-DescriptorSetHandle RootSignature::CreateDescriptorSet(uint32_t index) const
+ResourceHandle RootSignature::CreateDescriptorSet(uint32_t index) const
 {
 	return GetResourceManager()->CreateDescriptorSet(m_handle.get(), index);
 }

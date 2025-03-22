@@ -23,7 +23,6 @@ namespace Luna::DX12
 // Forward declarations
 struct DeviceCaps;
 class DescriptorAllocator;
-class DescriptorSetManager;
 class Queue;
 class ResourceManager;
 
@@ -81,7 +80,6 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
-	IDescriptorSetManager* GetDescriptorSetManager() override;
 	IResourceManager* GetResourceManager() override;
 
 	// Texture formats
@@ -141,7 +139,6 @@ private:
 	std::unique_ptr<DeviceCaps> m_caps;
 
 	// DirectX resource managers
-	std::unique_ptr<DescriptorSetManager> m_descriptorSetManager;
 	std::unique_ptr<ResourceManager> m_resourceManager;
 
 	// Swap-chain objects

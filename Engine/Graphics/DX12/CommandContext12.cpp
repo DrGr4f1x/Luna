@@ -14,7 +14,6 @@
 
 #include "Graphics\ResourceSet.h"
 
-#include "DescriptorSetManager12.h"
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
 #include "Queue12.h"
@@ -113,7 +112,6 @@ void CommandContext12::Initialize()
 {
 	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
 
-	m_descriptorSetManager = GetD3D12DescriptorSetManager();
 	m_resourceManager = GetD3D12ResourceManager();
 }
 
@@ -848,17 +846,17 @@ void CommandContext12::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 }
 
 
-void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetHandleType* descriptorSetHandle)
+void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, ResourceHandleType* resourceHandle)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!m_descriptorSetManager->HasBindableDescriptors(descriptorSetHandle))
+	if (!m_resourceManager->HasBindableDescriptors(resourceHandle))
 		return;
 
 	// Copy descriptors
-	m_descriptorSetManager->UpdateGpuDescriptors(descriptorSetHandle);
+	m_resourceManager->UpdateGpuDescriptors(resourceHandle);
 
-	auto gpuDescriptor = m_descriptorSetManager->GetGpuDescriptorHandle(descriptorSetHandle);
+	auto gpuDescriptor = m_resourceManager->GetGpuDescriptorHandle(resourceHandle);
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
 		if (m_type == CommandListType::Direct)
@@ -870,9 +868,9 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 			m_commandList->SetComputeRootDescriptorTable(rootIndex, gpuDescriptor);
 		}
 	}
-	else if (m_descriptorSetManager->GetGpuAddress(descriptorSetHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	else if (m_resourceManager->GetDescriptorSetGpuAddress(resourceHandle) != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = m_descriptorSetManager->GetGpuAddressWithOffset(descriptorSetHandle);
+		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = m_resourceManager->GetGpuAddressWithOffset(resourceHandle);
 		if (m_type == CommandListType::Direct)
 		{
 			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);

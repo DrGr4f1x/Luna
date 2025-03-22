@@ -16,6 +16,7 @@
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceManager.h"
 #include "Graphics\RootSignature.h"
+#include "Graphics\DX12\DescriptorAllocator12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 
@@ -65,6 +66,30 @@ struct RootSignatureData
 };
 
 
+struct DescriptorSetDesc
+{
+	DescriptorHandle descriptorHandle;
+	uint32_t numDescriptors{ 0 };
+	bool isSamplerTable{ false };
+	bool isRootBuffer{ false };
+};
+
+
+// TODO: Put descriptorHandle, gpuAddress, and dynamicOffset into a separate struct - they're the hot data for the GPU.
+struct DescriptorSetData
+{
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, MaxDescriptorsPerTable> descriptors;
+	DescriptorHandle descriptorHandle;
+	uint64_t gpuAddress{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+	uint32_t numDescriptors{ 0 };
+	uint32_t dirtyBits{ 0 };
+	uint32_t dynamicOffset{ 0 };
+
+	bool isSamplerTable{ false };
+	bool isRootBuffer{ false };
+};
+
+
 class ResourceManager : public IResourceManager
 {
 	static const uint32_t MaxResources = (1 << 12);
@@ -75,7 +100,8 @@ class ResourceManager : public IResourceManager
 		ManagedDepthBuffer			= 0x0002,
 		ManagedGpuBuffer			= 0x0004,
 		ManagedGraphicsPipeline		= 0x0008,
-		ManagedRootSignature		= 0x0010
+		ManagedRootSignature		= 0x0010,
+		ManagedDescriptorSet		= 0x0020,
 	};
 
 public:
@@ -88,6 +114,7 @@ public:
 	ResourceHandle CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 	ResourceHandle CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ResourceHandle CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	ResourceHandle CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
 	void DestroyHandle(const ResourceHandleType* handle) override;
 
 	// General resource methods
@@ -123,7 +150,18 @@ public:
 	// Root signature methods
 	const RootSignatureDesc& GetRootSignatureDesc(const ResourceHandleType* handle) const override;
 	uint32_t GetNumRootParameters(const ResourceHandleType* handle) const override;
-	wil::com_ptr<DescriptorSetHandleType> CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) const override;
+	ResourceHandle CreateDescriptorSet(const ResourceHandleType* handle, uint32_t rootParamIndex) override;
+
+	// Descriptor set methods
+	void SetSRV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer) override;
+	void SetSRV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer, bool depthSrv = true) override;
+	void SetSRV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
+	void SetUAV(const ResourceHandleType* handle, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex = 0) override;
+	void SetUAV(const ResourceHandleType* handle, int slot, const DepthBuffer& depthBuffer) override;
+	void SetUAV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
+	void SetCBV(const ResourceHandleType* handle, int slot, const GpuBuffer& gpuBuffer) override;
+	void SetDynamicOffset(const ResourceHandleType* handle, uint32_t offset) override;
+	void UpdateGpuDescriptors(const ResourceHandleType* handle) override;
 
 	// Platform-specific methods
 	ResourceHandle CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex);
@@ -139,6 +177,11 @@ public:
 	uint32_t GetDescriptorTableBitmap(const ResourceHandleType* handle) const;
 	uint32_t GetSamplerTableBitmap(const ResourceHandleType* handle) const;
 	const std::vector<uint32_t>& GetDescriptorTableSize(const ResourceHandleType* handle) const;
+	bool HasBindableDescriptors(const ResourceHandleType* handle) const;
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle(const ResourceHandleType* handle) const;
+	uint64_t GetDescriptorSetGpuAddress(const ResourceHandleType* handle) const;
+	uint64_t GetDynamicOffset(const ResourceHandleType* handle) const;
+	uint64_t GetGpuAddressWithOffset(const ResourceHandleType* handle) const;
 
 private:
 	std::tuple<uint32_t, uint32_t, uint32_t> UnpackHandle(const ResourceHandleType* handle) const;
@@ -148,6 +191,7 @@ private:
 	wil::com_ptr<ID3D12PipelineState> CreateGraphicsPipeline_Internal(const GraphicsPipelineDesc& pipelineDesc);
 	RootSignatureData CreateRootSignature_Internal(const RootSignatureDesc& rootSignatureDesc);
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
+	void SetDescriptor(DescriptorSetData& data, int slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
 private:
 	wil::com_ptr<ID3D12Device> m_device;
@@ -198,6 +242,8 @@ private:
 	TResourceCache<RootSignatureDesc, RootSignatureData, MaxResources> m_rootSignatureCache;
 	std::mutex m_rootSignatureMutex;
 	std::map<size_t, wil::com_ptr<ID3D12RootSignature>> m_rootSignatureHashMap;
+
+	TResourceCache<DescriptorSetDesc, DescriptorSetData, MaxResources> m_descriptorSetCache;
 };
 
 
