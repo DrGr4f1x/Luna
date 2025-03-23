@@ -20,19 +20,25 @@ namespace Luna
 
 void BeginEvent(const std::string& event)
 {
+#if ENABLE_DEBUG_MARKERS
 	PIXBeginEvent(0, event.c_str());
+#endif
 }
 
 
 void EndEvent()
 {
+#if ENABLE_DEBUG_MARKERS
 	PIXEndEvent();
+#endif
 }
 
 
 void SetMarker(const std::string& marker)
 {
+#if ENABLE_DEBUG_MARKERS
 	PIXSetMarker(0, marker.c_str());
+#endif
 }
 
 } // namespace Luna
