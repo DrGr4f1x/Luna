@@ -274,8 +274,8 @@ void DeviceManager::CreateDeviceResources()
 
 	vkb::PhysicalDeviceSelector physicalDeviceSelector(m_vkbInstance);
 	physicalDeviceSelector.set_surface(m_vkSurface->Get());
-	physicalDeviceSelector.require_separate_compute_queue();
-	physicalDeviceSelector.require_separate_transfer_queue();
+	//physicalDeviceSelector.require_separate_compute_queue();
+	//physicalDeviceSelector.require_separate_transfer_queue();
 	auto physicalDeviceRet = physicalDeviceSelector.select();
 	if (!physicalDeviceRet)
 	{
