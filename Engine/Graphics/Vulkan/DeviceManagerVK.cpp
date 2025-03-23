@@ -647,13 +647,39 @@ void DeviceManager::CreateQueue(QueueType queueType)
 		break;
 
 	case QueueType::Compute:
-		queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::compute).value();
-		vkQueue = m_vkbDevice.get_queue(vkb::QueueType::compute).value();
+	{
+		auto queueIndexRes = m_vkbDevice.get_queue_index(vkb::QueueType::compute);
+		if (queueIndexRes)
+		{
+			queueIndex = queueIndexRes.value();
+			vkQueue = m_vkbDevice.get_queue(vkb::QueueType::compute).value();
+
+		}
+		else
+		{
+			// Fall back to graphics queue
+			queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+			vkQueue = m_vkbDevice.get_queue(vkb::QueueType::graphics).value();
+		}
+	}
 		break;
 
 	case QueueType::Copy:
-		queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::transfer).value();
-		vkQueue = m_vkbDevice.get_queue(vkb::QueueType::transfer).value();
+	{
+		auto queueIndexRes = m_vkbDevice.get_queue_index(vkb::QueueType::transfer);
+		if (queueIndexRes)
+		{
+			queueIndex = queueIndexRes.value();
+			vkQueue = m_vkbDevice.get_queue(vkb::QueueType::transfer).value();
+
+		}
+		else
+		{
+			// Fall back to graphics queue
+			queueIndex = m_vkbDevice.get_queue_index(vkb::QueueType::graphics).value();
+			vkQueue = m_vkbDevice.get_queue(vkb::QueueType::graphics).value();
+		}
+	}
 		break;
 
 	default:
