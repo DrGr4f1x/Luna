@@ -180,6 +180,8 @@ DeviceManager::~DeviceManager()
 
 void DeviceManager::BeginFrame()
 {
+	ScopedEvent event{ "DeviceManager::BeginFrame" };
+
 	// TODO Handle window resize here
 
 	// Schedule a Signal command in the queue.
@@ -204,6 +206,8 @@ void DeviceManager::BeginFrame()
 
 void DeviceManager::Present()
 {
+	ScopedEvent event{ "DeviceManager::Present" };
+
 	UINT vsync = m_bIsTearingSupported ? 0 : (m_desc.enableVSync ? 1 : 0);
 	UINT presentFlags = m_bIsTearingSupported ? DXGI_PRESENT_ALLOW_TEARING : 0;
 

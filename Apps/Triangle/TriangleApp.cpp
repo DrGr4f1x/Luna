@@ -120,6 +120,8 @@ void TriangleApp::Update()
 
 void TriangleApp::Render()
 {
+	ScopedEvent event{ "TriangleApp::Render" };
+
 	auto& context = GraphicsContext::Begin("Frame");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);

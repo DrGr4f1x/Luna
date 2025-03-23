@@ -130,6 +130,8 @@ DeviceManager::~DeviceManager()
 
 void DeviceManager::BeginFrame()
 { 
+	ScopedEvent event{ "DeviceManager::BeginFrame" };
+
 	VkFence waitFence = *m_presentFences[m_activeFrame];
 	vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 	vkResetFences(*m_vkDevice, 1, &waitFence);
@@ -149,6 +151,8 @@ void DeviceManager::BeginFrame()
 
 void DeviceManager::Present()
 { 
+	ScopedEvent event{ "DeviceManager::Present" };
+
 	VkSemaphore renderCompleteSemaphore = *m_renderCompleteSemaphores[m_renderCompleteSemaphoreIndex];
 
 	// Kick the render complete semaphore

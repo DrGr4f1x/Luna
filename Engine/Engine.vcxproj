@@ -43,6 +43,7 @@
     <ClCompile Include="Core\Math\BoundingBox.cpp" />
     <ClCompile Include="Core\Math\Frustum.cpp" />
     <ClCompile Include="Core\Math\Random.cpp" />
+    <ClCompile Include="Core\Profiling.cpp" />
     <ClCompile Include="Core\Utility.cpp" />
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="Graphics\Camera.cpp" />
@@ -127,6 +128,7 @@
     <ClInclude Include="Core\Math\Vector.h" />
     <ClInclude Include="Core\NonCopyable.h" />
     <ClInclude Include="Core\NonMovable.h" />
+    <ClInclude Include="Core\Profiling.h" />
     <ClInclude Include="Core\RefCounted.h" />
     <ClInclude Include="Core\Utility.h" />
     <ClInclude Include="Core\VectorMath.h" />

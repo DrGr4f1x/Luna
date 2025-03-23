@@ -170,6 +170,9 @@
     <ClCompile Include="Graphics\Vulkan\ResourceManagerVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Profiling.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -425,6 +428,9 @@
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\ResourceManagerVK.h">
       <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Profiling.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

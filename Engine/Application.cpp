@@ -134,6 +134,8 @@ void Application::Configure()
 
 void Application::Render()
 {
+	ScopedEvent event{ "Application::Render" };
+
 	auto& context = GraphicsContext::Begin("Frame");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
@@ -316,6 +318,8 @@ void Application::Finalize()
 
 bool Application::Tick()
 {
+	ScopedEvent event{ "Application::Tick" };
+
 	if (!m_bIsRunning)
 	{
 		return false;

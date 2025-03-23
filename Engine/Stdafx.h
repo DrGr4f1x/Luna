@@ -83,6 +83,7 @@
 #include "Core\NativeObjectPtr.h"
 #include "Core\NonCopyable.h"
 #include "Core\NonMovable.h"
+#include "Core\Profiling.h"
 #include "Core\RefCounted.h"
 #include "Core\Utility.h"
 #include "Core\VectorMath.h"
