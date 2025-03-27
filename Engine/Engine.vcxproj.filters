@@ -173,6 +173,12 @@
     <ClCompile Include="Core\Profiling.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\GpuResource.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\PixelBuffer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -461,12 +467,21 @@
     <Filter Include="External\volk">
       <UniqueIdentifier>{a92d6ce0-eb31-48a6-8c92-4697353a93f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics\Shaders">
+      <UniqueIdentifier>{7c537d5b-1c16-423d-9c65-8cd97eb4e865}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\Loaders">
+      <UniqueIdentifier>{767998e0-58e2-4189-ac3d-fd272850b2ee}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\Math\Functions.inl">
       <Filter>Core\Math</Filter>
     </None>
     <None Include="packages.config" />
+    <None Include="Graphics\Shaders\Common\Common.hlsli">
+      <Filter>Graphics\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

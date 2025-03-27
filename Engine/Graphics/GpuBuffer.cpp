@@ -30,35 +30,12 @@ void GpuBuffer::Initialize(const GpuBufferDesc& gpuBufferDesc)
 }
 
 
-ResourceType GpuBuffer::GetResourceType() const
-{
-	auto res = GetResourceManager()->GetResourceType(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
-
-
-ResourceState GpuBuffer::GetUsageState() const
-{
-	auto res = GetResourceManager()->GetUsageState(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
-
-
-void GpuBuffer::SetUsageState(ResourceState newState)
-{
-	GetResourceManager()->SetUsageState(m_handle.get(), newState);
-}
-
-
 size_t GpuBuffer::GetSize() const
 {
 	auto res = GetResourceManager()->GetSize(m_handle.get());
 	assert(res.has_value());
 	return *res;
 }
-
 
 
 size_t GpuBuffer::GetElementCount() const

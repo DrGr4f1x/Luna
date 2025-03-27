@@ -10,7 +10,7 @@
 
 #include "Stdafx.h"
 
-#include "DepthBuffer.h"
+#include "GpuResource.h"
 
 #include "GraphicsCommon.h"
 
@@ -18,25 +18,25 @@
 namespace Luna
 {
 
-void DepthBuffer::Initialize(const DepthBufferDesc& depthBufferDesc)
+ResourceType GpuResource::GetResourceType() const
 {
-	m_handle = GetResourceManager()->CreateDepthBuffer(depthBufferDesc);
-}
-
-
-float DepthBuffer::GetClearDepth() const
-{
-	auto res = GetResourceManager()->GetClearDepth(m_handle.get());
+	auto res = GetResourceManager()->GetResourceType(m_handle.get());
 	assert(res.has_value());
 	return *res;
 }
 
 
-uint8_t DepthBuffer::GetClearStencil() const
+ResourceState GpuResource::GetUsageState() const
 {
-	auto res = GetResourceManager()->GetClearStencil(m_handle.get());
+	auto res = GetResourceManager()->GetUsageState(m_handle.get());
 	assert(res.has_value());
 	return *res;
+}
+
+
+void GpuResource::SetUsageState(ResourceState usageState)
+{
+	GetResourceManager()->SetUsageState(m_handle.get(), usageState);
 }
 
 } // namespace Luna

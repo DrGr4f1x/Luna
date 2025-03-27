@@ -41,17 +41,10 @@ struct GpuBufferDesc
 };
 
 
-class GpuBuffer
+class GpuBuffer : public GpuResource
 {
 public:
-
 	void Initialize(const GpuBufferDesc& gpuBufferDesc);
-
-	ResourceHandle GetHandle() const { return m_handle; }
-
-	ResourceType GetResourceType() const;
-	ResourceState GetUsageState() const;
-	void SetUsageState(ResourceState newState);
 
 	size_t GetSize() const;
 	size_t GetElementCount() const;
@@ -59,9 +52,6 @@ public:
 	// TODO: Sweep the code for this stuff and use std::span (or a view?)
 	void Update(size_t sizeInBytes, const void* data);
 	void Update(size_t sizeInBytes, size_t offset, const void* data);
-
-private:
-	ResourceHandle m_handle;
 };
 
 } // namespace Luna

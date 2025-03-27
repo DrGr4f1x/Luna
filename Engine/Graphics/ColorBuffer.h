@@ -48,30 +48,14 @@ struct ColorBufferDesc
 };
 
 
-class ColorBuffer
+class ColorBuffer : public PixelBuffer
 {
 public:
 	void Initialize(const ColorBufferDesc& colorBufferDesc);
 
-	ResourceType GetResourceType() const;
-	ResourceState GetUsageState() const;
-	void SetUsageState(ResourceState newState);
-	uint64_t GetWidth() const;
-	uint32_t GetHeight() const;
-	uint32_t GetDepth() const;
-	uint32_t GetArraySize() const;
-	uint32_t GetNumMips() const;
-	uint32_t GetNumSamples() const;
-	uint32_t GetPlaneCount() const;
-	Format GetFormat() const;
-	TextureDimension GetDimension() const;
 	Color GetClearColor() const;
 
 	void SetHandle(ResourceHandleType* handle);
-	ResourceHandle GetHandle() const { return m_handle; }
-
-private:
-	ResourceHandle m_handle;
 };
 
 } // namespace Luna

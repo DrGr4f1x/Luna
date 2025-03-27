@@ -46,30 +46,13 @@ struct DepthBufferDesc
 };
 
 
-class DepthBuffer
+class DepthBuffer : public PixelBuffer
 {
 public:
 	void Initialize(const DepthBufferDesc& depthBufferDesc);
 
-	ResourceType GetResourceType() const;
-	ResourceState GetUsageState() const;
-	void SetUsageState(ResourceState newState);
-	uint64_t GetWidth() const;
-	uint32_t GetHeight() const;
-	uint32_t GetDepth() const;
-	uint32_t GetArraySize() const;
-	uint32_t GetNumMips() const;
-	uint32_t GetNumSamples() const;
-	uint32_t GetPlaneCount() const;
-	Format GetFormat() const;
-	TextureDimension GetDimension() const;
 	float GetClearDepth() const;
 	uint8_t GetClearStencil() const;
-
-	ResourceHandle GetHandle() const { return m_handle; }
-
-private:
-	ResourceHandle m_handle;
 };
 
 } // namespace Luna

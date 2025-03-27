@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include "Graphics\ResourceManager.h"
+
+
 namespace Luna
 {
 
@@ -18,22 +21,19 @@ enum class ResourceState : uint32_t;
 enum class ResourceType : uint32_t;
 
 
-class __declspec(uuid("D1269B10-4D09-4FDD-AB9B-1FDC9EE928E0")) IGpuResource : public IUnknown
+class GpuResource
 {
 public:
-	virtual ~IGpuResource() = default;
+	virtual ~GpuResource() = default;
 
-	virtual const std::string& GetName() const = 0;
-	virtual ResourceType GetResourceType() const noexcept = 0;
+	ResourceType GetResourceType() const;
+	ResourceState GetUsageState() const;
+	void SetUsageState(ResourceState usageState);
 
-	virtual ResourceState GetUsageState() const noexcept = 0;
-	virtual void SetUsageState(ResourceState usageState) noexcept = 0;
-	virtual ResourceState GetTransitioningState() const noexcept = 0;
-	virtual void SetTransitioningState(ResourceState transitioningState) noexcept = 0;
+	ResourceHandle GetHandle() const { return m_handle; }
 
-	virtual NativeObjectPtr GetNativeObject(NativeObjectType type, uint32_t index = 0) const noexcept = 0;
+protected:
+	ResourceHandle m_handle;
 };
-
-using GpuResourceHandle = wil::com_ptr<IGpuResource>;
 
 } // namespace Luna

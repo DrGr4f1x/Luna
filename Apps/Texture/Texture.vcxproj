@@ -19,8 +19,8 @@
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{TEMPLATE_GUID}</ProjectGuid>
-    <RootNamespace>TEMPLATE</RootNamespace>
+    <ProjectGuid>{37958CA0-DD7D-43E8-8D99-C055677155E9}</ProjectGuid>
+    <RootNamespace>Texture</RootNamespace>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <ApplicationType>Application</ApplicationType>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.22621.0</WindowsTargetPlatformVersion>
@@ -29,22 +29,35 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="TEMPLATEApp.cpp" />
+    <ClCompile Include="TextureApp.cpp" />
     <ClCompile Include="Stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Stdafx.h" />
-    <ClInclude Include="TEMPLATEApp.h" />
+    <ClInclude Include="TextureApp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Shaders\shaders.cfg" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\Engine.vcxproj">
       <Project>{ffe87dcb-69b8-4549-8d06-a681a29ef1d8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\TexturePS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Shaders\TextureVS.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -163,7 +176,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets" Condition="Exists('..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" />
     <Import Project="..\..\packages\glfw.3.4.0\build\native\glfw.targets" Condition="Exists('..\..\packages\glfw.3.4.0\build\native\glfw.targets')" />
-    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -171,11 +184,11 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets'))" />
     <Error Condition="!Exists('..\..\packages\glfw.3.4.0\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\glfw.3.4.0\build\native\glfw.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
   <Target Name="LunaBuildShaders" BeforeTargets="PrepareForBuild">
-    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\DXIL --platform DXIL --binary --shaderModel 6_5 --verbose --define DX12=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
-    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2 --verbose --define VK=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
+    <Exec Condition="Exists('$(ProjectDir)Shaders\shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\DXIL --platform DXIL --binary --shaderModel 6_5 --verbose --define DX12=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
+    <Exec Condition="Exists('$(ProjectDir)Shaders\shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2 --verbose --define VK=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
   </Target>
   <Target Name="LunaDeleteShaders" AfterTargets="Clean">
     <RemoveDir Directories="$(ProjectDir)Data\Shaders" />
