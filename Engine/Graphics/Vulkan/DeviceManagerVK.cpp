@@ -412,7 +412,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < (uint32_t)images.size(); ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i).get());
+		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i));
 		m_swapChainBuffers.push_back(swapChainBuffer);
 	}
 }

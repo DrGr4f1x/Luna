@@ -10,16 +10,17 @@
 
 #pragma once
 
-#include "Graphics\DeviceManager.h"
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
-
+#include "Graphics\ResourceHandle.h"
 
 namespace Luna
 {
 
 // Forward declarations
+class IDeviceManager;
 class IResourceManager;
+struct DeviceManagerDesc;
 
 
 // Constants

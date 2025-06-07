@@ -179,6 +179,48 @@
     <ClCompile Include="Graphics\PixelBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Texture.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\ColorBufferFactory12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\DepthBufferFactory12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\GpuBufferFactory12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\PipelineStateFactory12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\RootSignatureFactory12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\DescriptorSetFactory12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\ResourceHandle.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\ColorBufferFactoryVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DepthBufferFactoryVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\GpuBufferFactoryVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\PipelineStateFactoryVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\RootSignatureFactoryVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetFactoryVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -438,6 +480,48 @@
     <ClInclude Include="Core\Profiling.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Texture.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\ColorBufferFactory12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\DepthBufferFactory12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\GpuBufferFactory12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\PipelineStateFactory12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\RootSignatureFactory12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\DescriptorSetFactory12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\ResourceHandle.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\ColorBufferFactoryVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DepthBufferFactoryVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\GpuBufferFactoryVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\PipelineStateFactoryVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\RootSignatureFactoryVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetFactoryVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -485,5 +569,6 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

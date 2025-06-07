@@ -35,7 +35,6 @@
 #include "Graphics\Vulkan\EnumsVK.h"
 #include "Graphics\Vulkan\FormatsVK.h"
 #include "Graphics\Vulkan\HashVK.h"
-#include "Graphics\Vulkan\RefCountingImplVK.h"
 #include "Graphics\Vulkan\StringsVK.h"
 #include "Graphics\Vulkan\VersionVK.h"
 
@@ -48,6 +47,7 @@ namespace Luna::VK
 
 inline const uint32_t g_requiredVulkanApiVersion = VK_API_VERSION_1_3;
 inline LogCategory LogVulkan{ "LogVulkan" };
+
 
 void SetDebugName(VkDevice device, VkInstance obj, const std::string& name);
 void SetDebugName(VkDevice device, VkPhysicalDevice obj, const std::string& name);

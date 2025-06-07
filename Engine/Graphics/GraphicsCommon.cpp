@@ -20,6 +20,7 @@ using namespace Microsoft::WRL;
 
 Luna::IDeviceManager* g_deviceManager{ nullptr };
 
+
 namespace
 {
 

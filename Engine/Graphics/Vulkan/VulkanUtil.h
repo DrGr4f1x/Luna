@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\RefCountingImplVK.h"
 
 #ifdef CreateSemaphore
 #undef CreateSemaphore
@@ -74,6 +74,21 @@ struct ImageViewDesc
 	constexpr ImageViewDesc& SetBaseArraySlice(uint32_t value) noexcept { baseArraySlice = value; return *this; }
 	constexpr ImageViewDesc& SetArraySize(uint32_t value) noexcept { arraySize = value; return *this; }
 };
+
+
+struct ImageData
+{
+	wil::com_ptr<CVkImage> image{ nullptr };
+	ResourceState usageState{ ResourceState::Undefined };
+};
+
+
+struct BufferData
+{
+	wil::com_ptr<CVkBuffer> buffer{ nullptr };
+	ResourceState usageState{ ResourceState::Undefined };
+};
+
 
 wil::com_ptr<CVkImageView> CreateImageView(CVkDevice* device, const ImageViewDesc& desc);
 

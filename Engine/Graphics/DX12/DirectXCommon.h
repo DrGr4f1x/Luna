@@ -52,6 +52,13 @@ namespace Luna::DX12
 class GraphicsDevice;
 
 
+struct ResourceData
+{
+	wil::com_ptr<ID3D12Resource> resource;
+	ResourceState usageState;
+};
+
+
 void SetDebugName(IDXGIObject* object, const std::string& name);
 void SetDebugName(ID3D12Object* object, const std::string& name);
 

@@ -15,6 +15,8 @@
 #include "CommandContext.h"
 #include "GraphicsCommon.h"
 
+#include "ResourceManager.h"
+
 
 namespace Luna
 {

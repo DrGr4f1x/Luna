@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Graphics\ResourceManager.h"
+#include "Graphics\ResourceHandle.h"
 
 
 namespace Luna

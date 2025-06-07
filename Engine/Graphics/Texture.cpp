@@ -10,10 +10,17 @@
 
 #include "Stdafx.h"
 
-#include "ResourceManager.h"
+#include "Texture.h"
+
+#include "GraphicsCommon.h"
 
 
 namespace Luna
 {
+
+void Texture::Load(const std::string& filename, Format format, bool sRgb)
+{
+	//m_handle = GetResourceManager()->LoadTexture(filename, format, sRgb);
+}
 
 } // namespace Luna

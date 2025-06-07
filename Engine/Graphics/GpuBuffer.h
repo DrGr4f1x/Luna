@@ -10,10 +10,8 @@
 
 #pragma once
 
-#include "Graphics\Enums.h"
-#include "Graphics\Formats.h"
 #include "Graphics\GpuResource.h"
-#include "Graphics\ResourceManager.h"
+#include "Graphics\GraphicsCommon.h"
 
 
 namespace Luna
@@ -52,6 +50,42 @@ public:
 	// TODO: Sweep the code for this stuff and use std::span (or a view?)
 	void Update(size_t sizeInBytes, const void* data);
 	void Update(size_t sizeInBytes, size_t offset, const void* data);
+};
+
+
+class GpuBufferFactoryBase
+{
+protected:
+	static const uint32_t MaxResources = (1 << 10);
+	static const uint32_t InvalidAllocation = ~0u;
+
+public:
+	GpuBufferFactoryBase()
+	{
+		ClearDescs();
+	}
+
+	Format GetFormat(uint32_t index) const { return m_descs[index].format; }
+	size_t GetSize(uint32_t index) const { return m_descs[index].elementCount * m_descs[index].elementSize; }
+	size_t GetElementCount(uint32_t index) const { return m_descs[index].elementCount; }
+	size_t GetElementSize(uint32_t index) const { return m_descs[index].elementSize; }
+
+protected:
+	void ResetDesc(uint32_t index)
+	{
+		m_descs[index] = GpuBufferDesc{};
+	}
+
+	void ClearDescs()
+	{
+		for (uint32_t i = 0; i < MaxResources; ++i)
+		{
+			ResetDesc(i);
+		}
+	}
+
+protected:
+	std::array<GpuBufferDesc, MaxResources> m_descs;
 };
 
 } // namespace Luna

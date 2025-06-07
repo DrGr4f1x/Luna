@@ -10,10 +10,18 @@
 
 #include "Stdafx.h"
 
+#include "ResourceHandle.h"
+
 #include "ResourceManager.h"
 
 
 namespace Luna
 {
+
+ResourceHandleType::~ResourceHandleType()
+{
+	assert(m_manager);
+	m_manager->DestroyHandle(this);
+}
 
 } // namespace Luna

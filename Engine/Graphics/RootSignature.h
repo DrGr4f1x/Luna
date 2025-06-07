@@ -379,4 +379,40 @@ private:
 	ResourceHandle m_handle;
 };
 
+
+class RootSignatureFactoryBase
+{
+protected:
+	static const uint32_t MaxResources = (1 << 8);
+	static const uint32_t InvalidAllocation = ~0u;
+
+public:
+	RootSignatureFactoryBase()
+	{
+		ClearDescs();
+	}
+
+	const RootSignatureDesc& GetRootSignatureDesc(uint32_t index) const
+	{
+		return m_descs[index];
+	}
+	
+protected:
+	void ResetDesc(uint32_t index)
+	{
+		m_descs[index] = RootSignatureDesc{};
+	}
+
+	void ClearDescs()
+	{
+		for (uint32_t i = 0; i < MaxResources; ++i)
+		{
+			ResetDesc(i);
+		}
+	}
+
+protected:
+	std::array<RootSignatureDesc, MaxResources> m_descs;
+};
+
 } // namespace Luna

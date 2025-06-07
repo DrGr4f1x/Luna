@@ -10,10 +10,8 @@
 
 #pragma once
 
-#include "Graphics\Enums.h"
-#include "Graphics\Formats.h"
+#include "Graphics\GraphicsCommon.h"
 #include "Graphics\InputLayout.h"
-#include "Graphics\ResourceManager.h"
 #include "Graphics\RootSignature.h"
 
 
@@ -165,7 +163,7 @@ struct GraphicsPipelineDesc
 	std::vector<VertexStreamDesc> vertexStreams;
 	std::vector<VertexElementDesc> vertexElements;
 
-	wil::com_ptr<ResourceHandleType> rootSignature{ nullptr };
+	ResourceHandle rootSignature{ nullptr };
 
 	GraphicsPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
 	GraphicsPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
@@ -185,7 +183,7 @@ struct GraphicsPipelineDesc
 	GraphicsPipelineDesc& SetDomainShader(const std::string& value, const std::string& entry = "main") { domainShader.shaderFile = value; domainShader.entry = entry; return *this; }
 	GraphicsPipelineDesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPipelineDesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
-	GraphicsPipelineDesc& SetRootSignature(ResourceHandleType* value) { rootSignature = value; return *this; }
+	GraphicsPipelineDesc& SetRootSignature(ResourceHandle value) { rootSignature = value; return *this; }
 };
 
 
@@ -204,6 +202,42 @@ private:
 
 private:
 	ResourceHandle m_handle;
+};
+
+
+class PipelineStateFactoryBase
+{
+protected:
+	static const uint32_t MaxResources = (1 << 10);
+	static const uint32_t InvalidAllocation = ~0u;
+
+public:
+	PipelineStateFactoryBase()
+	{
+		ClearDescs();
+	}
+
+	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(uint32_t index) const
+	{
+		return m_graphicsPipelineDescs[index];
+	}
+
+protected:
+	void ResetDesc(uint32_t index)
+	{
+		m_graphicsPipelineDescs[index] = GraphicsPipelineDesc{};
+	}
+
+	void ClearDescs()
+	{
+		for (uint32_t i = 0; i < MaxResources; ++i)
+		{
+			ResetDesc(i);
+		}
+	}
+
+protected:
+	std::array<GraphicsPipelineDesc, MaxResources> m_graphicsPipelineDescs;
 };
 
 } // namespace

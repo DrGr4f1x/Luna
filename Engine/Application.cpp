@@ -16,6 +16,7 @@
 #include "InputSystem.h"
 
 #include "Graphics\CommandContext.h"
+#include "Graphics\DeviceManager.h"
 
 #include <glfw\glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32 1

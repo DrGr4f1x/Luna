@@ -14,7 +14,7 @@
 #include "Graphics\DeviceManager.h"
 #include "Graphics\Vulkan\DeviceCapsVK.h"
 #include "Graphics\Vulkan\ExtensionManagerVK.h"
-#include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\RefCountingImplVK.h"
 
 using namespace Microsoft::WRL;
 

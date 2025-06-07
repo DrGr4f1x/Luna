@@ -14,6 +14,8 @@
 
 #include "GraphicsCommon.h"
 
+#include "ResourceManager.h"
+
 
 namespace Luna
 {
@@ -32,7 +34,7 @@ Color ColorBuffer::GetClearColor() const
 }
 
 
-void ColorBuffer::SetHandle(ResourceHandleType* handle) 
+void ColorBuffer::SetHandle(ResourceHandle handle) 
 { 
 	m_handle = handle; 
 }

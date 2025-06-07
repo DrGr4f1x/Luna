@@ -434,7 +434,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
 		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i).get());
+		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i));
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 

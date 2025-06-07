@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Graphics\RootSignature.h"
-#include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\RefCountingImplVK.h"
 
 
 namespace Luna
