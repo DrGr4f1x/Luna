@@ -11,7 +11,8 @@
 #pragma once
 
 
-#include "FlagsVK.h"
+#include "Graphics\Vulkan\FlagsVK.h"
+#include "Graphics\Vulkan\VulkanApi.h"
 
 
 namespace Luna::VK

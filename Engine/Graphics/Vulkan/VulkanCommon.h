@@ -10,33 +10,18 @@
 
 #pragma once
 
-// Vulkan headers
-#define FORCE_VULKAN_VALIDATION 0
-#define ENABLE_VULKAN_VALIDATION (ENABLE_VALIDATION || FORCE_VULKAN_VALIDATION)
-
-#define FORCE_VULKAN_DEBUG_MARKERS 0
-#define ENABLE_VULKAN_DEBUG_MARKERS (ENABLE_DEBUG_MARKERS || FORCE_VULKAN_DEBUG_MARKERS)
-
-#define VK_USE_PLATFORM_WIN32_KHR
-#define VK_NO_PROTOTYPES 1
-#include <vulkan\vulkan.h>
-#pragma comment(lib, "vulkan-1.lib")
-
-#include <External/volk/volk.h>
-
-#define VMA_STATIC_VULKAN_FUNCTIONS 0
-#define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
-#include "External\VulkanMemoryAllocator\include\vk_mem_alloc.h"
-
-#include "External/vk-bootstrap/src/VkBootstrap.h"
+#include "Graphics\Vulkan\VulkanApi.h"
 
 #include "Graphics\GraphicsCommon.h"
 
 #include "Graphics\Vulkan\EnumsVK.h"
 #include "Graphics\Vulkan\FormatsVK.h"
 #include "Graphics\Vulkan\HashVK.h"
+#include "Graphics\Vulkan\RefCountingImplVK.h"
 #include "Graphics\Vulkan\StringsVK.h"
 #include "Graphics\Vulkan\VersionVK.h"
+#include "Graphics\Vulkan\VulkanUtil.h"
+
 
 #define VK_SUCCEEDED(resexpr) VkResult res = resexpr; res == VK_SUCCESS
 #define VK_FAILED(resexpr) VkResult res = resexpr; res != VK_SUCCESS

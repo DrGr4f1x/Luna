@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\VulkanApi.h"
 
 using namespace Microsoft::WRL;
 

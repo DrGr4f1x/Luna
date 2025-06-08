@@ -10,7 +10,9 @@
 
 #pragma once
 
-#include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Enums.h"
+#include "Graphics\Formats.h"
+#include "Graphics\Vulkan\VulkanApi.h"
 
 
 namespace Luna::VK

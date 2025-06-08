@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Graphics\Vulkan\CommandBufferPoolVK.h"
-#include "Graphics\Vulkan\RefCountingImplVK.h"
+#include "Graphics\Vulkan\VulkanCommon.h"
 
 
 namespace Luna::VK

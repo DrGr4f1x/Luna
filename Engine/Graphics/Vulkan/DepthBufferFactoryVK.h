@@ -11,8 +11,7 @@
 #pragma once
 
 #include "Graphics\DepthBuffer.h"
-#include "Graphics\Vulkan\RefCountingImplVK.h"
-#include "Graphics\Vulkan\VulkanUtil.h"
+#include "Graphics\Vulkan\VulkanCommon.h"
 
 
 namespace Luna

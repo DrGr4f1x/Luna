@@ -12,6 +12,8 @@
 
 #include "VulkanUtil.h"
 
+#include "VulkanCommon.h"
+
 using namespace std;
 
 

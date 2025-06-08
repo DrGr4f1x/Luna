@@ -10,7 +10,9 @@
 
 #pragma once
 
+#include "Graphics\Vulkan\EnumsVK.h"
 #include "Graphics\Vulkan\RefCountingImplVK.h"
+
 
 #ifdef CreateSemaphore
 #undef CreateSemaphore

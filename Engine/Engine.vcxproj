@@ -214,6 +214,7 @@
     <ClInclude Include="Graphics\Vulkan\RootSignatureFactoryVK.h" />
     <ClInclude Include="Graphics\Vulkan\StringsVK.h" />
     <ClInclude Include="Graphics\Vulkan\VersionVK.h" />
+    <ClInclude Include="Graphics\Vulkan\VulkanApi.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanCommon.h" />
     <ClInclude Include="Graphics\Vulkan\VulkanUtil.h" />
     <ClInclude Include="InputSystem.h" />
