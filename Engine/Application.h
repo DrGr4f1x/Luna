@@ -14,6 +14,10 @@
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\Camera.h"
 #include "Graphics\ColorBuffer.h"
+#include "Graphics\DepthBuffer.h"
+#include "Graphics\GpuBuffer.h"
+#include "Graphics\PipelineState.h"
+#include "Graphics\RootSignature.h"
 
 
 // Forward declarations
@@ -81,7 +85,7 @@ public:
 
 	void Run();
 
-	ColorBuffer& GetColorBuffer() const;
+	ColorBufferPtr GetColorBuffer() const;
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
@@ -101,6 +105,13 @@ protected:
 
 	Format GetColorFormat();
 	Format GetDepthFormat();
+
+	// Wrappers for graphics resource creation
+	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
+	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
+	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
+	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
+	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
 
 protected:
 	ApplicationInfo m_appInfo;

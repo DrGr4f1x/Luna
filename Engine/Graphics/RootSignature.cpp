@@ -12,41 +12,20 @@
 
 #include "RootSignature.h"
 
-#include "GraphicsCommon.h"
-#include "DescriptorSet.h"
-#include "ResourceManager.h"
-
 
 namespace Luna
 {
 
-uint32_t RootSignature::GetNumRootParameters() const
+uint32_t IRootSignature::GetNumRootParameters() const
 {
-	return (uint32_t)GetDesc().rootParameters.size();
+	return (uint32_t)m_desc.rootParameters.size();
 }
 
 
-const RootParameter& RootSignature::GetRootParameter(uint32_t index) const
+const RootParameter& IRootSignature::GetRootParameter(uint32_t index) const
 {
-	return GetDesc().rootParameters[index];
-}
-
-
-ResourceHandle RootSignature::CreateDescriptorSet(uint32_t index) const
-{
-	return GetResourceManager()->CreateDescriptorSet(m_handle.get(), index);
-}
-
-
-void RootSignature::Initialize(RootSignatureDesc& desc)
-{
-	m_handle = GetResourceManager()->CreateRootSignature(desc);
-}
-
-
-const RootSignatureDesc& RootSignature::GetDesc() const
-{
-	return GetResourceManager()->GetRootSignatureDesc(m_handle.get());
+	assert(index < (uint32_t)m_desc.rootParameters.size());
+	return m_desc.rootParameters[index];
 }
 
 } // using namespace Luna

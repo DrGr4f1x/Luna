@@ -39,53 +39,24 @@ struct GpuBufferDesc
 };
 
 
-class GpuBuffer : public GpuResource
+class IGpuBuffer : public IGpuResource
 {
 public:
-	void Initialize(const GpuBufferDesc& gpuBufferDesc);
+	Format GetFormat() const { return m_format; }
+	size_t GetBufferSize() const { return m_bufferSize; }
+	size_t GetElementSize() const { return m_elementSize; }
+	size_t GetElementCount() const { return m_elementCount; }
 
-	size_t GetSize() const;
-	size_t GetElementCount() const;
-	size_t GetElementSize() const;
-	// TODO: Sweep the code for this stuff and use std::span (or a view?)
-	void Update(size_t sizeInBytes, const void* data);
-	void Update(size_t sizeInBytes, size_t offset, const void* data);
+	virtual void Update(size_t sizeInBytes, const void* data) = 0;
+	virtual void Update(size_t sizeInBytes, size_t offset, const void* data) = 0;
+
+protected:
+	Format m_format{ Format::Unknown };
+	size_t m_bufferSize{ 0 };
+	size_t m_elementSize{ 0 };
+	size_t m_elementCount{ 0 };
 };
 
-
-class GpuBufferFactoryBase
-{
-protected:
-	static const uint32_t MaxResources = (1 << 10);
-	static const uint32_t InvalidAllocation = ~0u;
-
-public:
-	GpuBufferFactoryBase()
-	{
-		ClearDescs();
-	}
-
-	Format GetFormat(uint32_t index) const { return m_descs[index].format; }
-	size_t GetSize(uint32_t index) const { return m_descs[index].elementCount * m_descs[index].elementSize; }
-	size_t GetElementCount(uint32_t index) const { return m_descs[index].elementCount; }
-	size_t GetElementSize(uint32_t index) const { return m_descs[index].elementSize; }
-
-protected:
-	void ResetDesc(uint32_t index)
-	{
-		m_descs[index] = GpuBufferDesc{};
-	}
-
-	void ClearDescs()
-	{
-		for (uint32_t i = 0; i < MaxResources; ++i)
-		{
-			ResetDesc(i);
-		}
-	}
-
-protected:
-	std::array<GpuBufferDesc, MaxResources> m_descs;
-};
+using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 
 } // namespace Luna

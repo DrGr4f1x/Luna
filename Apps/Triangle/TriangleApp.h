@@ -50,7 +50,7 @@ private:
 	float m_zoom{ -2.5f };
 	Luna::CameraController m_controller;
 
-	Luna::DepthBuffer m_depthBuffer;
+	Luna::DepthBufferPtr m_depthBuffer;
 
 	// Vertex layout used in this example
 	struct Vertex
@@ -60,13 +60,13 @@ private:
 	};
 
 	// Vertex buffer and attributes
-	Luna::GpuBuffer m_vertexBuffer;
+	Luna::GpuBufferPtr m_vertexBuffer;
 
 	// Index buffer
-	Luna::GpuBuffer m_indexBuffer;
+	Luna::GpuBufferPtr m_indexBuffer;
 
 	// Uniform buffer block object
-	Luna::GpuBuffer m_constantBuffer;
+	Luna::GpuBufferPtr m_constantBuffer;
 
 	// Vertex shader constants
 	struct
@@ -76,10 +76,10 @@ private:
 	} m_vsConstants;
 
 	 // Root signature
-	Luna::RootSignature m_rootSignature;
+	Luna::RootSignaturePtr m_rootSignature;
 
 	// Pipeline state
-	Luna::GraphicsPipelineState m_graphicsPipeline;
+	Luna::GraphicsPipelineStatePtr m_graphicsPipeline;
 
 	// Resources
 	Luna::ResourceSet m_resources;

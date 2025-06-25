@@ -17,7 +17,6 @@ namespace Luna
 {
 
 class DescriptorSetPool;
-class RootSignature;
 struct RootParameter;
 
 } // namespace Luna
@@ -28,6 +27,7 @@ namespace Luna::VK
 
 // Forward declarations
 class DescriptorPoolCache;
+class RootSignature;
 
 
 class IDynamicDescriptorHeap

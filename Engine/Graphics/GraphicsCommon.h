@@ -12,14 +12,12 @@
 
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
-#include "Graphics\ResourceHandle.h"
 
 namespace Luna
 {
 
 // Forward declarations
 class IDeviceManager;
-class IResourceManager;
 struct DeviceManagerDesc;
 
 
@@ -96,8 +94,6 @@ struct AdapterInfo
 wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
-
-IResourceManager* GetResourceManager();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

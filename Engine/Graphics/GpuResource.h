@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Graphics\ResourceHandle.h"
+#include "Graphics\Resource.h"
 
 
 namespace Luna
@@ -21,19 +21,18 @@ enum class ResourceState : uint32_t;
 enum class ResourceType : uint32_t;
 
 
-class GpuResource
-{
+class IGpuResource : public IResource
+{ 
 public:
-	virtual ~GpuResource() = default;
-
-	ResourceType GetResourceType() const;
-	ResourceState GetUsageState() const;
-	void SetUsageState(ResourceState usageState);
-
-	ResourceHandle GetHandle() const { return m_handle; }
+	ResourceType GetResourceType() const { return m_type; }
+	ResourceState GetUsageState() const { return m_usageState; }
+	void SetUsageState(ResourceState usageState) { m_usageState = usageState; }
 
 protected:
-	ResourceHandle m_handle;
+	ResourceType m_type{ ResourceType::Unknown };
+	ResourceState m_usageState{ ResourceState::Common };
 };
+
+using GpuResourcePtr = std::shared_ptr<IGpuResource>;
 
 } // namespace Luna

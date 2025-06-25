@@ -12,31 +12,10 @@
 
 #include "DepthBuffer.h"
 
-#include "ResourceManager.h"
 
+// TODO: Delete me
 
 namespace Luna
 {
-
-void DepthBuffer::Initialize(const DepthBufferDesc& depthBufferDesc)
-{
-	m_handle = GetResourceManager()->CreateDepthBuffer(depthBufferDesc);
-}
-
-
-float DepthBuffer::GetClearDepth() const
-{
-	auto res = GetResourceManager()->GetClearDepth(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
-
-
-uint8_t DepthBuffer::GetClearStencil() const
-{
-	auto res = GetResourceManager()->GetClearStencil(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
 
 } // namespace Luna

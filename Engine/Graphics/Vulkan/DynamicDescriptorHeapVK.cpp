@@ -13,7 +13,7 @@
 #include "DynamicDescriptorHeapVK.h"
 
 #include "DescriptorPoolVK.h"
-#include "ResourceManagerVK.h"
+#include "RootSignatureVK.h"
 
 using namespace std;
 
@@ -76,14 +76,11 @@ void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootS
 {
 	Reset();
 
-	auto handle = rootSignature.GetHandle();
-	auto resourceManager = GetVulkanResourceManager();
-
 	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
-	const auto& rootSignatureDesc = resourceManager->GetRootSignatureDesc(handle.get());
+	const auto& rootSignatureDesc = rootSignature.GetDesc();
 
 	// Get the pipeline layout
-	m_pipelineLayout[pipeIndex] = resourceManager->GetPipelineLayout(handle.get());
+	m_pipelineLayout[pipeIndex] = rootSignature.GetPipelineLayout();
 
 	// Get the descriptor set layout for each root parameter and, if valid, set a bit in the
 	// m_activeDescriptorSetMap.  The only root parameter type that does not have a descriptor set layout
@@ -92,7 +89,7 @@ void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootS
 	for (uint32_t rootParamIndex = 0; rootParamIndex < numParams; ++rootParamIndex)
 	{
 		// Get layout
-		auto layout = resourceManager->GetDescriptorSetLayout(handle.get(), rootParamIndex);
+		auto layout = rootSignature.GetDescriptorSetLayout(rootParamIndex);
 
 		// Allocate descriptor set
 		auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParamIndex];
@@ -101,7 +98,7 @@ void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootS
 		descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
 
 		// Process descriptor bindings
-		const auto& bindings = resourceManager->GetLayoutBindings(handle.get(), rootParamIndex);
+		const auto& bindings = rootSignature.GetLayoutBindings(rootParamIndex);
 		for (const auto& binding : bindings)
 		{
 			for (uint32_t bindingIndex = 0; bindingIndex < binding.numDescriptors; ++bindingIndex)

@@ -10,41 +10,35 @@
 
 #pragma once
 
-#include "Graphics\ResourceManager.h"
-
-
 namespace Luna
 {
 
 // Forward declarations
-class ColorBuffer;
-class DepthBuffer;
-class GpuBuffer;
-class RootSignature;
+class IColorBuffer;
+class IDepthBuffer;
+class IGpuBuffer;
 
 
-class DescriptorSet
+class IDescriptorSet
 {
 public:
-	void Initialize(const RootSignature& rootSignature, uint32_t rootParamIndex);
+	virtual ~IDescriptorSet() = default;
 
-	// TODO: change 'int slot' to uint32_t
-	void SetSRV(int slot, const ColorBuffer& colorBuffer);
-	void SetSRV(int slot, const DepthBuffer& depthBuffer, bool depthSrv = true);
-	void SetSRV(int slot, const GpuBuffer& gpuBuffer);
+	virtual void SetSRV(uint32_t slot, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) = 0;
+	virtual void SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
 
-	void SetUAV(int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex = 0);
-	void SetUAV(int slot, const DepthBuffer& depthBuffer);
-	void SetUAV(int slot, const GpuBuffer& gpuBuffer);
+	virtual void SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) = 0;
+	virtual void SetUAV(uint32_t slot, const IDepthBuffer* depthBuffer) = 0;
+	virtual void SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
 
-	void SetCBV(int slot, const GpuBuffer& gpuBuffer);
+	virtual void SetCBV(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
 
-	void SetDynamicOffset(uint32_t offset);
+	virtual void SetDynamicOffset(uint32_t offset) = 0;
 
-	ResourceHandle GetHandle() const { return m_handle; }
-
-private:
-	ResourceHandle m_handle;
+	virtual void UpdateGpuDescriptors() = 0;
 };
+
+using DescriptorSetPtr = std::shared_ptr<IDescriptorSet>;
 
 } // namespace Luna

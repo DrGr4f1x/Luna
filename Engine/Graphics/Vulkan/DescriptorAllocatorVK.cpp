@@ -12,6 +12,7 @@
 
 #include "DescriptorAllocatorVK.h"
 
+#include "DeviceVK.h"
 #include "DeviceManagerVK.h"
 
 using namespace std;
@@ -41,10 +42,10 @@ VkDescriptorSet DescriptorSetAllocator::Allocate(VkDescriptorSetLayout layout)
 		.pSetLayouts			= &layout
 	};
 
-	auto device = GetVulkanDeviceManager()->GetDevice();
+	auto device = GetVulkanDevice();
 
 	VkDescriptorSet descSet{ VK_NULL_HANDLE };
-	auto res = vkAllocateDescriptorSets(device->Get(), &allocInfo, &descSet);
+	auto res = vkAllocateDescriptorSets(device->GetVulkanDevice(), &allocInfo, &descSet);
 
 	if (res != VK_SUCCESS)
 	{
@@ -52,7 +53,7 @@ VkDescriptorSet DescriptorSetAllocator::Allocate(VkDescriptorSetLayout layout)
 		allocInfo.descriptorPool = m_descriptorPool;
 	}
 
-	ThrowIfFailed(vkAllocateDescriptorSets(device->Get(), &allocInfo, &descSet));
+	ThrowIfFailed(vkAllocateDescriptorSets(device->GetVulkanDevice(), &allocInfo, &descSet));
 
 	return descSet;
 }
@@ -62,12 +63,12 @@ void DescriptorSetAllocator::DestroyAll()
 {
 	lock_guard<mutex> CS(sm_allocationMutex);
 
-	auto device = GetVulkanDeviceManager()->GetDevice();
+	auto device = GetVulkanDevice();
 
 	for (auto& pool : sm_descriptorPoolList)
 	{
-		vkResetDescriptorPool(device->Get(), pool, 0);
-		vkDestroyDescriptorPool(device->Get(), pool, nullptr);
+		vkResetDescriptorPool(device->GetVulkanDevice(), pool, 0);
+		vkDestroyDescriptorPool(device->GetVulkanDevice(), pool, nullptr);
 	}
 	sm_descriptorPoolList.clear();
 }
@@ -101,10 +102,10 @@ VkDescriptorPool DescriptorSetAllocator::RequestNewPool()
 		.pPoolSizes		= typeCounts
 	};
 
-	auto device = GetVulkanDeviceManager()->GetDevice();
+	auto device = GetVulkanDevice();
 
 	VkDescriptorPool pool{ VK_NULL_HANDLE };
-	ThrowIfFailed(vkCreateDescriptorPool(device->Get(), &createInfo, nullptr, &pool));
+	ThrowIfFailed(vkCreateDescriptorPool(device->GetVulkanDevice(), &createInfo, nullptr, &pool));
 
 	sm_descriptorPoolList.emplace_back(pool);
 

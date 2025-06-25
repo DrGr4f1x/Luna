@@ -15,9 +15,14 @@
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceSet.h"
 
+#include "ColorBufferVK.h"
+#include "DepthBufferVK.h"
+#include "DescriptorSetVK.h"
 #include "DeviceManagerVK.h"
+#include "GpuBufferVK.h"
 #include "QueueVK.h"
-#include "ResourceManagerVK.h"
+#include "PipelineStateVK.h"
+#include "RootSignatureVK.h"
 #include "VulkanUtil.h"
 
 using namespace std;
@@ -48,8 +53,7 @@ VkClearValue GetDepthStencilClearValue(float depth, uint32_t stencil)
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTarget)
 {
-	auto handle = renderTarget.GetHandle();
-	VkImageView imageView = GetVulkanResourceManager()->GetImageViewRtv(handle.get());
+	VkImageView imageView = renderTarget.GetImageViewRtv();
 
 	VkRenderingAttachmentInfo info{
 		.sType			= VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -67,10 +71,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTa
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	auto resourceManager = GetVulkanResourceManager();
-	auto handle = depthTarget.GetHandle();
-
-	VkImageView imageView = resourceManager->GetImageViewDepth(handle.get(), depthStencilAspect);
+	VkImageView imageView = depthTarget.GetImageView(depthStencilAspect);
 
 	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
@@ -167,8 +168,6 @@ void CommandContextVK::Initialize()
 	m_commandBuffer = GetVulkanDeviceManager()->GetQueue(m_type).RequestCommandBuffer();
 
 	m_dynamicDescriptorHeap = make_unique<DefaultDynamicDescriptorHeap>(m_device.get());
-
-	m_resourceManager = GetVulkanResourceManager();
 }
 
 
@@ -224,26 +223,28 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	auto handle = colorBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	assert(colorBufferVK != nullptr);
 
 	TextureBarrier barrier{
-		.image				= m_resourceManager->GetImage(handle.get()),
-		.format				= FormatToVulkan(colorBuffer.GetFormat()),
-		.imageAspect		= GetImageAspect(colorBuffer.GetFormat()),
-		.beforeState		= colorBuffer.GetUsageState(),
+		.image				= colorBufferVK->GetImage(),
+		.format				= FormatToVulkan(colorBuffer->GetFormat()),
+		.imageAspect		= GetImageAspect(colorBuffer->GetFormat()),
+		.beforeState		= colorBuffer->GetUsageState(),
 		.afterState			= newState,
-		.numMips			= colorBuffer.GetNumMips(),
+		.numMips			= colorBuffer->GetNumMips(),
 		.mipLevel			= 0,
-		.arraySizeOrDepth	= colorBuffer.GetArraySize(),
+		.arraySizeOrDepth	= colorBuffer->GetArraySize(),
 		.arraySlice			= 0,
 		.bWholeTexture		= true
 	};
 
 	m_textureBarriers.push_back(barrier);
 
-	colorBuffer.SetUsageState(newState);
+	colorBuffer->SetUsageState(newState);
 
 	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
 	{
@@ -252,26 +253,28 @@ void CommandContextVK::TransitionResource(ColorBuffer& colorBuffer, ResourceStat
 }
 
 
-void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	ResourceHandle handle = depthBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	assert(depthBufferVK != nullptr);
 
 	TextureBarrier barrier{
-		.image				= m_resourceManager->GetImage(handle.get()),
-		.format				= FormatToVulkan(depthBuffer.GetFormat()),
-		.imageAspect		= GetImageAspect(depthBuffer.GetFormat()),
-		.beforeState		= depthBuffer.GetUsageState(),
+		.image				= depthBufferVK->GetImage(),
+		.format				= FormatToVulkan(depthBuffer->GetFormat()),
+		.imageAspect		= GetImageAspect(depthBuffer->GetFormat()),
+		.beforeState		= depthBuffer->GetUsageState(),
 		.afterState			= newState,
-		.numMips			= depthBuffer.GetNumMips(),
+		.numMips			= depthBuffer->GetNumMips(),
 		.mipLevel			= 0,
-		.arraySizeOrDepth	= depthBuffer.GetArraySize(),
+		.arraySizeOrDepth	= depthBuffer->GetArraySize(),
 		.arraySlice			= 0,
 		.bWholeTexture		= true
 	};
 
 	m_textureBarriers.push_back(barrier);
 
-	depthBuffer.SetUsageState(newState);
+	depthBuffer->SetUsageState(newState);
 
 	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
 	{
@@ -280,20 +283,22 @@ void CommandContextVK::TransitionResource(DepthBuffer& depthBuffer, ResourceStat
 }
 
 
-void CommandContextVK::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	auto handle = gpuBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
 
 	BufferBarrier barrier{
-		.buffer			= m_resourceManager->GetBuffer(handle.get()),
-		.beforeState	= gpuBuffer.GetUsageState(),
+		.buffer			= gpuBufferVK->GetBuffer(),
+		.beforeState	= gpuBuffer->GetUsageState(),
 		.afterState		= newState,
-		.size			= gpuBuffer.GetSize()
+		.size			= gpuBuffer->GetBufferSize()
 	};
 
 	m_bufferBarriers.push_back(barrier);
 
-	gpuBuffer.SetUsageState(newState);
+	gpuBuffer->SetUsageState(newState);
 
 	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
 	{
@@ -363,24 +368,26 @@ void CommandContextVK::FlushResourceBarriers()
 }
 
 
-void CommandContextVK::ClearUAV(GpuBuffer& gpuBuffer)
+void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
 {
-	auto handle = gpuBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
 
 	uint32_t data = 0;
-	vkCmdFillBuffer(m_commandBuffer, m_resourceManager->GetBuffer(handle.get()), 0, VK_WHOLE_SIZE, data);
+	vkCmdFillBuffer(m_commandBuffer, gpuBufferVK->GetBuffer(), 0, VK_WHOLE_SIZE, data);
 }
 
 
-void CommandContextVK::ClearColor(ColorBuffer& colorBuffer)
+void CommandContextVK::ClearColor(IColorBuffer* colorBuffer)
 {
-	ClearColor(colorBuffer, colorBuffer.GetClearColor());
+	ClearColor(colorBuffer, colorBuffer->GetClearColor());
 }
 
 
-void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
+void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
-	ResourceState oldState = colorBuffer.GetUsageState();
+	ResourceState oldState = colorBuffer->GetUsageState();
 
 	TransitionResource(colorBuffer, ResourceState::CopyDest, false);
 
@@ -393,158 +400,189 @@ void CommandContextVK::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
 	VkImageSubresourceRange range{
 		.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
 		.baseMipLevel		= 0,
-		.levelCount			= colorBuffer.GetNumMips(),
+		.levelCount			= colorBuffer->GetNumMips(),
 		.baseArrayLayer		= 0,
-		.layerCount			= colorBuffer.GetArraySize()
+		.layerCount			= colorBuffer->GetArraySize()
 	};
 
 	FlushResourceBarriers();
 
-	auto handle = colorBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	assert(colorBufferVK != nullptr);
 
-	vkCmdClearColorImage(m_commandBuffer, m_resourceManager->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
+	vkCmdClearColorImage(m_commandBuffer, colorBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
 
 	TransitionResource(colorBuffer, oldState, false);
 }
 
 
-void CommandContextVK::ClearDepth(DepthBuffer& depthBuffer)
+void CommandContextVK::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
-void CommandContextVK::ClearStencil(DepthBuffer& depthBuffer)
+void CommandContextVK::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+void CommandContextVK::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil_Internal(DepthBuffer& depthBuffer, VkImageAspectFlags flags)
+void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags)
 {
-	ResourceState oldState = depthBuffer.GetUsageState();
+	ResourceState oldState = depthBuffer->GetUsageState();
 
 	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
 
 	VkClearDepthStencilValue depthVal{
-		.depth		= depthBuffer.GetClearDepth(),
-		.stencil	= depthBuffer.GetClearStencil()
+		.depth		= depthBuffer->GetClearDepth(),
+		.stencil	= depthBuffer->GetClearStencil()
 	};
 
 	VkImageSubresourceRange range{
 		.aspectMask			= flags,
 		.baseMipLevel		= 0,
-		.levelCount			= depthBuffer.GetNumMips(),
+		.levelCount			= depthBuffer->GetNumMips(),
 		.baseArrayLayer		= 0,
-		.layerCount			= depthBuffer.GetArraySize()
+		.layerCount			= depthBuffer->GetArraySize()
 	};
 
 	FlushResourceBarriers();
 
-	auto handle = depthBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	assert(depthBufferVK != nullptr);
 
-	vkCmdClearDepthStencilImage(m_commandBuffer, m_resourceManager->GetImage(handle.get()), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
+	vkCmdClearDepthStencilImage(m_commandBuffer, depthBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
 
 	TransitionResource(depthBuffer, oldState, false);
 }
 
 
-void CommandContextVK::BeginRendering(ColorBuffer& renderTarget)
+void CommandContextVK::BeginRendering(IColorBuffer* colorBuffer)
 {
 	ResetRenderTargets();
 
-	m_rtvs[0] = GetRenderingAttachmentInfo(renderTarget);
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	assert(colorBufferVK != nullptr);
+
+	m_rtvs[0] = GetRenderingAttachmentInfo(*colorBufferVK);
 	m_numRtvs = 1;
-	m_rtvFormats[0] = FormatToVulkan(renderTarget.GetFormat());
+	m_rtvFormats[0] = FormatToVulkan(colorBuffer->GetFormat());
 
-	SetRenderingArea(renderTarget);
+	SetRenderingArea(*colorBufferVK);
 
 	BeginRenderingBlock();
 }
 
 
-void CommandContextVK::BeginRendering(ColorBuffer& renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(IColorBuffer* colorBuffer, IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
-	m_rtvs[0] = GetRenderingAttachmentInfo(renderTarget);
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	assert(colorBufferVK != nullptr);
+
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	assert(depthBufferVK != nullptr);
+
+	m_rtvs[0] = GetRenderingAttachmentInfo(*colorBufferVK);
 	m_numRtvs = 1;
-	m_rtvFormats[0] = FormatToVulkan(renderTarget.GetFormat());
+	m_rtvFormats[0] = FormatToVulkan(colorBuffer->GetFormat());
 
-	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
+	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
 	m_hasDsv = true;
-	m_dsvFormat = FormatToVulkan(depthTarget.GetFormat());
+	m_dsvFormat = FormatToVulkan(depthBuffer->GetFormat());
 
-	SetRenderingArea(renderTarget);
-	SetRenderingArea(depthTarget);
+	SetRenderingArea(*colorBufferVK);
+	SetRenderingArea(*depthBufferVK);
 
 	BeginRenderingBlock();
 }
 
 
-void CommandContextVK::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
-	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
-	m_hasDsv = true;
-	m_dsvFormat = FormatToVulkan(depthTarget.GetFormat());
+	// TODO: Try this with GetPlatformObject()
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	assert(depthBufferVK != nullptr);
 
-	SetRenderingArea(depthTarget);
+	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
+	m_hasDsv = true;
+	m_dsvFormat = FormatToVulkan(depthBuffer->GetFormat());
+
+	SetRenderingArea(*depthBufferVK);
 
 	BeginRenderingBlock();
 }
 
 
-void CommandContextVK::BeginRendering(std::span<ColorBuffer> renderTargets)
+void CommandContextVK::BeginRendering(std::span<IColorBuffer*> colorBuffers)
 {
 	ResetRenderTargets();
-	assert(renderTargets.size() <= 8);
+	assert(colorBuffers.size() <= 8);
 
 	uint32_t i = 0;
-	for (const ColorBuffer& renderTarget : renderTargets)
+	for (const IColorBuffer* colorBuffer : colorBuffers)
 	{
-		m_rtvs[i] = GetRenderingAttachmentInfo(renderTarget);
-		m_rtvFormats[i] = FormatToVulkan(renderTarget.GetFormat());
+		// TODO: Try this with GetPlatformObject()
+		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+		assert(colorBufferVK != nullptr);
 
-		SetRenderingArea(renderTarget);
+		m_rtvs[i] = GetRenderingAttachmentInfo(*colorBufferVK);
+		m_rtvFormats[i] = FormatToVulkan(colorBuffer->GetFormat());
+
+		SetRenderingArea(*colorBufferVK);
 
 		++i;
 	}
-	m_numRtvs = (uint32_t)renderTargets.size();
+	m_numRtvs = (uint32_t)colorBuffers.size();
 
 	BeginRenderingBlock();
 }
 
 
-void CommandContextVK::BeginRendering(std::span<ColorBuffer> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(std::span<IColorBuffer*> colorBuffers, IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
-	assert(renderTargets.size() <= 8);
+	assert(colorBuffers.size() <= 8);
 
 	uint32_t i = 0;
-	for (const ColorBuffer& renderTarget : renderTargets)
+	for (const IColorBuffer* colorBuffer : colorBuffers)
 	{
-		m_rtvs[i] = GetRenderingAttachmentInfo(renderTarget);
-		m_rtvFormats[i] = FormatToVulkan(renderTarget.GetFormat());
+		// TODO: Try this with GetPlatformObject()
+		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+		assert(colorBufferVK != nullptr);
 
-		SetRenderingArea(renderTarget);
+		m_rtvs[i] = GetRenderingAttachmentInfo(*colorBufferVK);
+		m_rtvFormats[i] = FormatToVulkan(colorBuffer->GetFormat());
+
+		SetRenderingArea(*colorBufferVK);
 
 		++i;
 	}
-	m_numRtvs = (uint32_t)renderTargets.size();
+	m_numRtvs = (uint32_t)colorBuffers.size();
 
-	m_dsv = GetRenderingAttachmentInfo(depthTarget, depthStencilAspect);
+	// TODO: Try this with GetPlatformObject()
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	assert(depthBufferVK != nullptr);
+
+	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
 	m_hasDsv = true;
-	m_dsvFormat = FormatToVulkan(depthTarget.GetFormat());
+	m_dsvFormat = FormatToVulkan(depthBuffer->GetFormat());
 
-	SetRenderingArea(depthTarget);
+	SetRenderingArea(*depthBufferVK);
 
 	BeginRenderingBlock();
 }
@@ -560,42 +598,50 @@ void CommandContextVK::EndRendering()
 }
 
 
-void CommandContextVK::SetRootSignature(RootSignature& rootSignature)
+void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	VkPipelineLayout pipelineLayout = m_resourceManager->GetPipelineLayout(rootSignature.GetHandle().get());
+	// TODO: Try this with GetPlatformObject()
+	RootSignature* rootSignatureVK = (RootSignature*)rootSignature;
+	assert(rootSignatureVK != nullptr);
+
+	VkPipelineLayout pipelineLayout = rootSignatureVK->GetPipelineLayout();
 
 	if (m_type == CommandListType::Direct)
 	{
 		m_computePipelineLayout = VK_NULL_HANDLE;
 		m_graphicsPipelineLayout = pipelineLayout;
 
-		m_dynamicDescriptorHeap->ParseRootSignature(rootSignature, true);
+		m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, true);
 	}
 	else
 	{
 		m_graphicsPipelineLayout = VK_NULL_HANDLE;
 		m_computePipelineLayout = pipelineLayout;
 
-		m_dynamicDescriptorHeap->ParseRootSignature(rootSignature, false);
+		m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, false);
 	}
 
-	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
+	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
 	for (uint32_t i = 0; i < numRootParameters; ++i)
 	{
-		const auto& rootParameter = rootSignature.GetRootParameter(i);
+		const auto& rootParameter = rootSignature->GetRootParameter(i);
 		// TODO: Store this in the RootSignatureManager so we don't have to do this conversion every frame.
 		m_shaderStages[i] = ShaderStageToVulkan(rootParameter.shaderVisibility);
 	}
 }
 
 
-void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline)
+void CommandContextVK::SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline)
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	VkPipeline vkPipeline = m_resourceManager->GetGraphicsPipeline(graphicsPipeline.GetHandle().get());
+	// TODO: Try this with GetPlatformObject()
+	GraphicsPipelineState* graphicsPipelineVK = (GraphicsPipelineState*)graphicsPipeline;
+	assert(graphicsPipelineVK != nullptr);
+
+	VkPipeline vkPipeline = graphicsPipelineVK->GetPipelineState();
 
 	if (vkPipeline != m_graphicsPipeline)
 	{
@@ -726,16 +772,19 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer)
+void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
 {
-	auto handle = gpuBuffer.GetHandle();
-	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, m_resourceManager->GetBufferInfo(handle.get()), true);
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
+
+	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, gpuBufferVK->GetBufferInfo(), true);
 }
 
 
-void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
+void CommandContextVK::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
-	SetDescriptors_Internal(rootIndex, descriptorSet.GetHandle().get());
+	SetDescriptors_Internal(rootIndex, descriptorSet);
 }
 
 
@@ -744,89 +793,118 @@ void CommandContextVK::SetResources(ResourceSet& resourceSet)
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		SetDescriptors_Internal(i, resourceSet[i].GetHandle().get());
+		SetDescriptors_Internal(i, resourceSet[i].get());
 	}
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer)
 {
-	auto handle = colorBuffer.GetHandle();
-	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, m_resourceManager->GetImageInfoSrv(handle.get()), true);
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	assert(colorBufferVK != colorBuffer);
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoSrv(), true);
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv)
 {
-	auto handle = depthBuffer.GetHandle();
-	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, m_resourceManager->GetImageInfoDepth(handle.get(), depthSrv), true);
-}
+	// TODO: Try this with GetPlatformObject()
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	assert(depthBufferVK != nullptr);
 
-
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
-{
-	auto handle = gpuBuffer.GetHandle();
-	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
+	if (depthSrv)
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, m_resourceManager->GetBufferView(handle.get()), true);
+		m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, depthBufferVK->GetImageInfoDepth(), true);
 	}
 	else
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, m_resourceManager->GetBufferInfo(handle.get()), true);
+		m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, depthBufferVK->GetImageInfoStencil(), true);
 	}
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
 {
-	auto handle = colorBuffer.GetHandle();
-	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, m_resourceManager->GetImageInfoUav(handle.get()), true);
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
+
+	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
+	{
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetBufferView(), true);
+	}
+	else
+	{
+		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
+	}
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer)
+{
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	assert(colorBufferVK != colorBuffer);
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoUav(), true);
+}
+
+
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer)
 {
 	assert(false);
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
 {
-	auto handle = gpuBuffer.GetHandle();
-	if (gpuBuffer.GetResourceType() == ResourceType::TypedBuffer)
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
+
+	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, m_resourceManager->GetBufferView(handle.get()), true);
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetBufferView(), true);
 	}
 	else
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, m_resourceManager->GetBufferInfo(handle.get()), true);
+		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
 	}
 }
 
 
-void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer)
+void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
 {
-	auto handle = gpuBuffer.GetHandle();
-	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, m_resourceManager->GetBufferInfo(handle.get()), true);
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
+
+	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
 }
 
 
-void CommandContextVK::SetIndexBuffer(const GpuBuffer& gpuBuffer)
+void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 {
-	auto handle = gpuBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
 
-	const bool is16Bit = gpuBuffer.GetElementSize() == sizeof(uint16_t);
+	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
 	const VkIndexType indexType = is16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
-	vkCmdBindIndexBuffer(m_commandBuffer, m_resourceManager->GetBuffer(handle.get()), 0, indexType);
+	vkCmdBindIndexBuffer(m_commandBuffer, gpuBufferVK->GetBuffer(), 0, indexType);
 }
 
 
-void CommandContextVK::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
+void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
 {
-	auto handle = gpuBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
 
 	VkDeviceSize offsets[1] = { 0 };
-	VkBuffer buffers[1] = { m_resourceManager->GetBuffer(handle.get()) };
+	VkBuffer buffers[1] = { gpuBufferVK->GetBuffer() };
 	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
 }
 
@@ -849,18 +927,20 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
-void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto deviceManager = GetVulkanDeviceManager();
-	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetDevice(), deviceManager->GetAllocator(), bufferData, numBytes);
+	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetVulkanDevice(), deviceManager->GetAllocator(), bufferData, numBytes);
 
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
-	auto handle = destBuffer.GetHandle();
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer;
+	assert(destBufferVK != nullptr);
 
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, m_resourceManager->GetBuffer(handle.get()), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, destBufferVK->GetBuffer(), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
@@ -868,21 +948,29 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBuffer& destBuffer, const vo
 }
 
 
-void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, ResourceHandleType* resourceHandle)
+void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
-	if (!m_resourceManager->HasDescriptors(resourceHandle))
+	// TODO: Try this with GetPlatformObject()
+	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
+	assert(descriptorSetVK != nullptr);
+
+	if (!descriptorSetVK->HasDescriptors())
+	{
 		return;
+	}
 
-	m_resourceManager->UpdateGpuDescriptors(resourceHandle);
+	descriptorSet->UpdateGpuDescriptors();
 
-	VkDescriptorSet vkDescriptorSet = m_resourceManager->GetDescriptorSet(resourceHandle);
+	VkDescriptorSet vkDescriptorSet = descriptorSetVK->GetDescriptorSet();
 	if (vkDescriptorSet == VK_NULL_HANDLE)
+	{
 		return;
+	}
 
-	const uint32_t dynamicOffset = m_resourceManager->GetDynamicOffset(resourceHandle);
-	const bool isDynamicBuffer = m_resourceManager->IsDynamicBuffer(resourceHandle);
+	const uint32_t dynamicOffset = descriptorSetVK->GetDynamicOffset();
+	const bool isDynamicBuffer = descriptorSetVK->IsDynamicBuffer();
 
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,

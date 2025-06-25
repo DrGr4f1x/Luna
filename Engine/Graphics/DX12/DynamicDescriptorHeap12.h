@@ -13,19 +13,13 @@
 #include "Graphics\DX12\DescriptorAllocator12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
-namespace Luna
-{
-
-class RootSignature;
-
-} // namespace Luna
-
 
 namespace Luna::DX12
 {
 
 // Forward declarations
 class CommandContext12;
+class RootSignature;
 
 
 class DynamicDescriptorHeap

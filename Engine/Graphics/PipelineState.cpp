@@ -12,28 +12,9 @@
 
 #include "PipelineState.h"
 
-#include "GraphicsCommon.h"
-#include "ResourceManager.h"
-
+// TODO: Delete me
 
 namespace Luna
 {
-
-PrimitiveTopology GraphicsPipelineState::GetPrimitiveTopology() const
-{
-	return GetDesc().topology;
-}
-
-
-void GraphicsPipelineState::Initialize(GraphicsPipelineDesc& desc)
-{
-	m_handle = GetResourceManager()->CreateGraphicsPipeline(desc);
-}
-
-
-const GraphicsPipelineDesc& GraphicsPipelineState::GetDesc() const
-{
-	return GetResourceManager()->GetGraphicsPipelineDesc(m_handle.get());
-}
 
 } // namespace Luna

@@ -14,31 +14,9 @@
 
 #include "GraphicsCommon.h"
 
-#include "ResourceManager.h"
-
+// TODO: Delete me
 
 namespace Luna
 {
-
-ResourceType GpuResource::GetResourceType() const
-{
-	auto res = GetResourceManager()->GetResourceType(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
-
-
-ResourceState GpuResource::GetUsageState() const
-{
-	auto res = GetResourceManager()->GetUsageState(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
-
-
-void GpuResource::SetUsageState(ResourceState usageState)
-{
-	GetResourceManager()->SetUsageState(m_handle.get(), usageState);
-}
 
 } // namespace Luna

@@ -14,8 +14,8 @@
 
 #include "CommandContextVK.h"
 #include "DescriptorAllocatorVK.h"
+#include "DeviceVK.h"
 #include "QueueVK.h"
-#include "ResourceManagerVK.h"
 #include "VulkanUtil.h"
 
 using namespace std;
@@ -300,8 +300,6 @@ void DeviceManager::CreateDeviceResources()
 
 	CreateDevice();
 
-	CreateResourceManagers();
-
 	// Create queues
 	CreateQueue(QueueType::Graphics);
 	CreateQueue(QueueType::Compute);
@@ -411,9 +409,8 @@ void DeviceManager::CreateWindowSizeDependentResources()
 	m_swapChainBuffers.reserve(images.size());
 	for (uint32_t i = 0; i < (uint32_t)images.size(); ++i)
 	{
-		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i));
-		m_swapChainBuffers.push_back(swapChainBuffer);
+		ColorBufferPtr swapChainBuffer = m_device->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i);
+		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 }
 
@@ -455,7 +452,7 @@ void DeviceManager::FreeContext(CommandContext* usedContext)
 }
 
 
-ColorBuffer& DeviceManager::GetColorBuffer()
+Luna::ColorBufferPtr DeviceManager::GetColorBuffer()
 {
 	return m_swapChainBuffers[m_swapChainIndex];
 }
@@ -473,9 +470,9 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IResourceManager* DeviceManager::GetResourceManager()
-{
-	return m_resourceManager.get();
+IDevice* DeviceManager::GetDevice() 
+{ 
+	return m_device.get(); 
 }
 
 
@@ -497,7 +494,7 @@ void DeviceManager::ReleaseBuffer(CVkBuffer* buffer)
 }
 
 
-CVkDevice* DeviceManager::GetDevice() const
+CVkDevice* DeviceManager::GetVulkanDevice() const
 {
 	return m_vkDevice.get();
 }
@@ -625,12 +622,8 @@ void DeviceManager::CreateDevice()
 	{
 		LogError(LogVulkan) << "Failed to create VmaAllocator.  Error code: " << res << endl;
 	}
-}
 
-
-void DeviceManager::CreateResourceManagers()
-{
-	m_resourceManager = make_unique<ResourceManager>(m_vkDevice.get(), m_vmaAllocator.get());
+	m_device = std::make_unique<Device>(m_vkDevice.get(), m_vmaAllocator.get());
 }
 
 

@@ -11,8 +11,7 @@
 #pragma once
 
 #include "Graphics\GraphicsCommon.h"
-
-using namespace std;
+#include "Graphics\DescriptorSet.h"
 
 
 namespace Luna
@@ -21,7 +20,6 @@ namespace Luna
 // Forward declarations
 class IDescriptorSet;
 class IResourceSet;
-class DescriptorSetHandleType;
 
 
 struct DescriptorRange
@@ -194,13 +192,13 @@ struct RootParameter
 				{
 					if (isSamplerTable && table[i].descriptorType != DescriptorType::Sampler)
 					{
-						LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
+						LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << std::endl;
 						return false;
 					}
 
 					if (!isSamplerTable && table[i].descriptorType == DescriptorType::Sampler)
 					{
-						LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << endl;
+						LogError(LogGraphics) << "RootSignature table " << i << " contains both sampler and non-sampler descriptors, which is not allowed." << std::endl;
 						return false;
 					}
 				}
@@ -357,62 +355,23 @@ struct RootSignatureDesc
 };
 
 
-class RootSignature
+class IRootSignature
 {
 public:
-	
+	virtual ~IRootSignature() = default;
+
+	virtual DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const = 0;
+
+	const RootSignatureDesc& GetDesc() const { return m_desc; }
 	uint32_t GetNumRootParameters() const;
 	const RootParameter& GetRootParameter(uint32_t index) const;
 
-	ResourceHandle CreateDescriptorSet(uint32_t index) const;
-
 	const RootParameter& operator[](uint32_t index) const { return GetRootParameter(index); }
 
-	void Initialize(RootSignatureDesc& rootSignatureDesc);
-
-	ResourceHandle GetHandle() const { return m_handle; }
-
-private:
-	const RootSignatureDesc& GetDesc() const;
-
-private:
-	ResourceHandle m_handle;
+protected:
+	RootSignatureDesc m_desc{};
 };
 
-
-class RootSignatureFactoryBase
-{
-protected:
-	static const uint32_t MaxResources = (1 << 8);
-	static const uint32_t InvalidAllocation = ~0u;
-
-public:
-	RootSignatureFactoryBase()
-	{
-		ClearDescs();
-	}
-
-	const RootSignatureDesc& GetRootSignatureDesc(uint32_t index) const
-	{
-		return m_descs[index];
-	}
-	
-protected:
-	void ResetDesc(uint32_t index)
-	{
-		m_descs[index] = RootSignatureDesc{};
-	}
-
-	void ClearDescs()
-	{
-		for (uint32_t i = 0; i < MaxResources; ++i)
-		{
-			ResetDesc(i);
-		}
-	}
-
-protected:
-	std::array<RootSignatureDesc, MaxResources> m_descs;
-};
+using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 
 } // namespace Luna

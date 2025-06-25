@@ -91,6 +91,9 @@ struct BufferData
 	ResourceState usageState{ ResourceState::Undefined };
 };
 
+bool QueryLinearTilingFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags);
+bool QueryOptimalTilingFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags);
+bool QueryBufferFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags);
 
 wil::com_ptr<CVkImageView> CreateImageView(CVkDevice* device, const ImageViewDesc& desc);
 

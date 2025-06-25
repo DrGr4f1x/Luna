@@ -119,10 +119,4 @@ IDeviceManager* GetDeviceManager()
 	return g_deviceManager;
 }
 
-
-IResourceManager* GetResourceManager()
-{
-	return GetDeviceManager()->GetResourceManager();
-}
-
 } // namespace Luna

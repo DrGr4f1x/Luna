@@ -12,10 +12,10 @@
 
 #include "DynamicDescriptorHeap12.h"
 
-#include "Graphics\RootSignature.h"
 #include "CommandContext12.h"
+#include "Device12.h"
 #include "DeviceManager12.h"
-#include "ResourceManager12.h"
+#include "RootSignature12.h"
 
 using namespace std;
 
@@ -62,9 +62,9 @@ D3D12_GPU_DESCRIPTOR_HANDLE DynamicDescriptorHeap::UploadDirect(D3D12_CPU_DESCRI
 	DescriptorHandle destHandle = m_firstDescriptor + m_currentOffset * m_descriptorSize;
 	m_currentOffset += 1;
 
-	auto device = GetD3D12DeviceManager()->GetDevice();
+	auto device = GetD3D12Device();
 
-	device->CopyDescriptorsSimple(1, destHandle.GetCpuHandle(), handle, m_descriptorType);
+	device->GetD3D12Device()->CopyDescriptorsSimple(1, destHandle.GetCpuHandle(), handle, m_descriptorType);
 
 	return destHandle.GetGpuHandle();
 }
@@ -96,8 +96,8 @@ D3D12_GPU_DESCRIPTOR_HANDLE DynamicDescriptorHeap::UploadDirect(D3D12_CPU_DESCRI
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDesc.NodeMask = 1;
 		wil::com_ptr<ID3D12DescriptorHeap> heapPtr;
-		auto device = GetD3D12DeviceManager()->GetDevice();
-		assert_succeeded(device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heapPtr)));
+		auto device = GetD3D12Device();
+		assert_succeeded(device->GetD3D12Device()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&heapPtr)));
 		sm_descriptorHeapPool[idx].emplace_back(heapPtr);
 		return heapPtr.get();
 	}
@@ -241,7 +241,7 @@ void DynamicDescriptorHeap::DescriptorHandleCache::CopyAndBindStaleTables(
 	D3D12_CPU_DESCRIPTOR_HANDLE srcDescriptorRangeStarts[kMaxDescriptorsPerCopy];
 	uint32_t srcDescriptorRangeSizes[kMaxDescriptorsPerCopy];
 
-	auto device = GetD3D12DeviceManager()->GetDevice();
+	auto device = GetD3D12Device();
 
 	for (uint32_t i = 0; i < staleParamCount; ++i)
 	{
@@ -270,7 +270,7 @@ void DynamicDescriptorHeap::DescriptorHandleCache::CopyAndBindStaleTables(
 			// If we run out of temp room, copy what we've got so far
 			if (numSrcDescriptorRanges + descriptorCount > kMaxDescriptorsPerCopy)
 			{
-				device->CopyDescriptors(
+				device->GetD3D12Device()->CopyDescriptors(
 					numDestDescriptorRanges, destDescriptorRangeStarts, destDescriptorRangeSizes,
 					numSrcDescriptorRanges, srcDescriptorRangeStarts, srcDescriptorRangeSizes,
 					type);
@@ -298,7 +298,7 @@ void DynamicDescriptorHeap::DescriptorHandleCache::CopyAndBindStaleTables(
 		}
 	}
 
-	device->CopyDescriptors(
+	device->GetD3D12Device()->CopyDescriptors(
 		numDestDescriptorRanges, destDescriptorRangeStarts, destDescriptorRangeSizes,
 		numSrcDescriptorRanges, srcDescriptorRangeStarts, srcDescriptorRangeSizes,
 		type);
@@ -342,18 +342,15 @@ void DynamicDescriptorHeap::DescriptorHandleCache::ParseRootSignature(D3D12_DESC
 {
 	uint32_t currentOffset = 0;
 
-	auto manager = GetD3D12ResourceManager();
-	auto handle = rootSig.GetHandle();
-
-	assert_msg(manager->GetNumRootParameters(handle.get()) <= 16, "Maybe we need to support something greater");
+	assert_msg(rootSig.GetNumRootParameters() <= 16, "Maybe we need to support something greater");
 
 	m_staleRootParamsBitMap = 0;
 	m_rootDescriptorTablesBitMap = (type == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER ?
-		manager->GetSamplerTableBitmap(handle.get()) : manager->GetDescriptorTableBitmap(handle.get()));
+		rootSig.GetSamplerTableBitmap() : rootSig.GetDescriptorTableBitmap());
 
 	unsigned long tableParams = m_rootDescriptorTablesBitMap;
 	unsigned long rootIndex;
-	const vector<uint32_t> descriptorTableSize = manager->GetDescriptorTableSize(handle.get());
+	const vector<uint32_t>& descriptorTableSize = rootSig.GetDescriptorTableSizes();
 	while (_BitScanForward(&rootIndex, tableParams))
 	{
 		tableParams ^= (1 << rootIndex);

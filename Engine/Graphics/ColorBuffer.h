@@ -46,56 +46,15 @@ struct ColorBufferDesc
 };
 
 
-class ColorBuffer : public PixelBuffer
+class IColorBuffer : public IPixelBuffer
 {
 public:
-	void Initialize(const ColorBufferDesc& colorBufferDesc);
+	Color GetClearColor() const { return m_clearColor; }
 
-	Color GetClearColor() const;
-
-	void SetHandle(ResourceHandle handle);
+protected:
+	Color m_clearColor{ DirectX::Colors::Black };
 };
 
-
-class ColorBufferFactoryBase
-{
-protected:
-	static const uint32_t MaxResources = (1 << 10);
-	static const uint32_t InvalidAllocation = ~0u;
-
-public:
-	ColorBufferFactoryBase()
-	{
-		ClearDescs();
-	}
-
-	Format GetFormat(uint32_t index) const { return m_descs[index].format; }
-
-	uint64_t GetWidth(uint32_t index) const { return m_descs[index].width; }
-	uint32_t GetHeight(uint32_t index) const { return m_descs[index].height; }
-	uint32_t GetDepthOrArraySize(uint32_t index) const { return m_descs[index].arraySizeOrDepth; }
-	uint32_t GetNumMips(uint32_t index) const { return m_descs[index].numMips; }
-	uint32_t GetNumSamples(uint32_t index) const { return m_descs[index].numSamples; }
-	uint32_t GetPlaneCount(uint32_t index) const { return m_descs[index].planeCount; }
-
-	Color GetClearColor(uint32_t index) const { return m_descs[index].clearColor; }
-
-protected:
-	void ResetDesc(uint32_t index)
-	{
-		m_descs[index] = ColorBufferDesc{};
-	}
-
-	void ClearDescs()
-	{
-		for (uint32_t i = 0; i < MaxResources; ++i)
-		{
-			ResetDesc(i);
-		}
-	}
-
-protected:
-	std::array<ColorBufferDesc, MaxResources> m_descs;
-};
+using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
 
 } // namespace Luna

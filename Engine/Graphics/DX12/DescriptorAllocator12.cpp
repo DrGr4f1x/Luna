@@ -12,10 +12,10 @@
 
 #include "DescriptorAllocator12.h"
 
+#include "Device12.h"
 #include "DeviceManager12.h"
 
 using namespace std;
-using namespace Microsoft::WRL;
 
 
 namespace Luna::DX12
@@ -74,9 +74,9 @@ ID3D12DescriptorHeap* DescriptorAllocator::RequestNewHeap(ID3D12Device* device)
 
 void UserDescriptorHeap::Create(const string& debugHeapName)
 {
-	auto device = GetD3D12DeviceManager()->GetDevice();
+	auto device = GetD3D12Device();
 
-	ThrowIfFailed(device->CreateDescriptorHeap(&m_heapDesc, IID_PPV_ARGS(&m_heap)));
+	ThrowIfFailed(device->GetD3D12Device()->CreateDescriptorHeap(&m_heapDesc, IID_PPV_ARGS(&m_heap)));
 
 	SetDebugName(m_heap.get(), debugHeapName);
 

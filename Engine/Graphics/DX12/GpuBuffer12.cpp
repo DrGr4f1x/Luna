@@ -1,0 +1,54 @@
+//
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author:  David Elder
+//
+
+#include "Stdafx.h"
+
+#include "GpuBuffer12.h"
+
+
+namespace Luna::DX12
+{
+
+void GpuBuffer::Update(size_t sizeInBytes, const void* data)
+{
+	Update(sizeInBytes, 0, data);
+}
+
+
+void GpuBuffer::Update(size_t sizeInBytes, size_t offset, const void* data)
+{
+	assert((sizeInBytes + offset) <= GetBufferSize());
+	assert(m_isCpuWriteable);
+
+	CD3DX12_RANGE readRange(0, 0);
+
+	ID3D12Resource* resource = m_allocation->GetResource();
+
+	// Map uniform buffer and update it
+	uint8_t* pData = nullptr;
+	ThrowIfFailed(resource->Map(0, &readRange, reinterpret_cast<void**>(&pData)));
+	memcpy((void*)(pData + offset), data, sizeInBytes);
+	// Unmap after data has been copied
+	// Note: Since we requested a host coherent memory type for the uniform buffer, the write is instantly visible to the GPU
+	resource->Unmap(0, nullptr);
+}
+
+
+uint64_t GpuBuffer::GetGpuAddress() const
+{
+	if (m_allocation && m_allocation->GetResource())
+	{
+		return m_allocation->GetResource()->GetGPUVirtualAddress();
+	}
+
+	return D3D12_GPU_VIRTUAL_ADDRESS_NULL;
+}
+
+} // namespace Luna::DX12

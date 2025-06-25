@@ -59,7 +59,7 @@ void TriangleApp::Startup()
 		.elementSize	= sizeof(Vertex),
 		.initialData	= vertexData.data()
 	};
-	m_vertexBuffer.Initialize(vertexBufferDesc);
+	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
 
 	// Setup indices
 	vector<uint32_t> indexData = { 0, 1, 2 };
@@ -71,7 +71,7 @@ void TriangleApp::Startup()
 		.elementSize	= sizeof(uint32_t),
 		.initialData	= indexData.data()
 	};
-	m_indexBuffer.Initialize(indexBufferDesc);
+	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
 
 	// Setup constant buffer
 	GpuBufferDesc constantBufferDesc{
@@ -82,7 +82,7 @@ void TriangleApp::Startup()
 		.elementSize	= sizeof(m_vsConstants),
 		.initialData	= nullptr
 	};
-	m_constantBuffer.Initialize(constantBufferDesc);
+	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
 	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
 
 	// Setup camera
@@ -124,22 +124,22 @@ void TriangleApp::Render()
 
 	auto& context = GraphicsContext::Begin("Frame");
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::RenderTarget);
 	Color clearColor{ DirectX::Colors::CornflowerBlue };
-	context.ClearColor(GetColorBuffer(), clearColor);
+	context.ClearColor(GetColorBuffer().get(), clearColor);
 
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearDepth(m_depthBuffer);
+	context.TransitionResource(m_depthBuffer.get(), ResourceState::DepthWrite);
+	context.ClearDepth(m_depthBuffer.get());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer().get(), m_depthBuffer.get());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.SetRootSignature(m_rootSignature);
-	context.SetGraphicsPipeline(m_graphicsPipeline);
+	context.SetRootSignature(m_rootSignature.get());
+	context.SetGraphicsPipeline(m_graphicsPipeline.get());
 
 	context.SetResources(m_resources);
-	context.SetConstantBuffer(0, m_constantBuffer);
+	context.SetConstantBuffer(0, m_constantBuffer.get());
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
@@ -153,14 +153,14 @@ void TriangleApp::Render()
 	};
 	context.SetDynamicVB(0, 3, sizeof(Vertex), vertexData.data());*/
 
-	context.SetVertexBuffer(0, m_vertexBuffer);
+	context.SetVertexBuffer(0, m_vertexBuffer.get());
 	
-	context.SetIndexBuffer(m_indexBuffer);
+	context.SetIndexBuffer(m_indexBuffer.get());
 
-	context.DrawIndexed((uint32_t)m_indexBuffer.GetElementCount());
+	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
 
 	context.EndRendering();
-	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::Present);
 
 	context.Finish();
 }
@@ -188,7 +188,7 @@ void TriangleApp::InitDepthBuffer()
 		.format			= GetDepthFormat()
 	};
 
-	m_depthBuffer.Initialize(depthBufferDesc);
+	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 
@@ -200,7 +200,7 @@ void TriangleApp::InitRootSignature()
 		.rootParameters		= { RootParameter::RootCBV(0, ShaderStage::Vertex) }
 	};
 
-	m_rootSignature.Initialize(rootSignatureDesc);
+	m_rootSignature = CreateRootSignature(rootSignatureDesc);
 }
 
 
@@ -230,17 +230,17 @@ void TriangleApp::InitPipelineState()
 		.pixelShader		= { .shaderFile = "TrianglePS" },
 		.vertexStreams		= { vertexStreamDesc },
 		.vertexElements		= vertexElements,
-		.rootSignature		= m_rootSignature.GetHandle()
+		.rootSignature		= m_rootSignature
 	};
 
-	m_graphicsPipeline.Initialize(desc);
+	m_graphicsPipeline = CreateGraphicsPipelineState(desc);
 }
 
 
 void TriangleApp::InitResources()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
+	m_resources.Initialize(m_rootSignature.get());
+	m_resources.SetCBV(0, 0, m_constantBuffer.get());
 }
 
 
@@ -249,5 +249,5 @@ void TriangleApp::UpdateConstantBuffer()
 	// Update matrices
 	m_vsConstants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
 
-	m_constantBuffer.Update(sizeof(m_vsConstants), &m_vsConstants);
+	m_constantBuffer->Update(sizeof(m_vsConstants), &m_vsConstants);
 }

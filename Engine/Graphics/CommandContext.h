@@ -17,16 +17,16 @@ namespace Luna
 {
 
 // Forward declarations
-class ColorBuffer;
+class IColorBuffer;
 class CommandContext;
 class ComputeContext;
-class DepthBuffer;
-class DescriptorSet;
-class GpuBuffer;
+class IDepthBuffer;
+class IDescriptorSet;
+class IGpuBuffer;
 class GraphicsContext;
-class GraphicsPipelineState;
+class IGraphicsPipelineState;
 class ResourceSet;
-class RootSignature;
+class IRootSignature;
 
 
 class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
@@ -52,30 +52,30 @@ public:
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
-	virtual void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	// Graphics context
-	virtual void ClearUAV(GpuBuffer& gpuBuffer) = 0;
+	virtual void ClearUAV(IGpuBuffer* gpuBuffer) = 0;
 	// TODO: Figure out how to implement this for Vulkan
 	//virtual void ClearUAV(IColorBuffer* colorBuffer) = 0;
-	virtual void ClearColor(ColorBuffer& colorBuffer) = 0;
-	virtual void ClearColor(ColorBuffer& colorBuffer, Color clearColor) = 0;
-	virtual void ClearDepth(DepthBuffer& depthBuffer) = 0;
-	virtual void ClearStencil(DepthBuffer& depthBuffer) = 0;
-	virtual void ClearDepthAndStencil(DepthBuffer& depthBuffer) = 0;
+	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
+	virtual void ClearColor(IColorBuffer* colorBuffer, Color clearColor) = 0;
+	virtual void ClearDepth(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearStencil(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearDepthAndStencil(IDepthBuffer* depthBuffer) = 0;
 
-	virtual void BeginRendering(ColorBuffer& renderTarget) = 0;
-	virtual void BeginRendering(ColorBuffer& renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
-	virtual void BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
-	virtual void BeginRendering(std::span<ColorBuffer> renderTargets) = 0;
-	virtual void BeginRendering(std::span<ColorBuffer> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(IColorBuffer* renderTarget) = 0;
+	virtual void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets) = 0;
+	virtual void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
-	virtual void SetRootSignature(RootSignature& rootSignature) = 0;
-	virtual void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline) = 0;
+	virtual void SetRootSignature(IRootSignature* rootSignature) = 0;
+	virtual void SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -90,22 +90,22 @@ public:
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
-	virtual void SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer) = 0;
-	virtual void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet) = 0;
+	virtual void SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) = 0;
 	virtual void SetResources(ResourceSet& resourceSet) = 0;
 
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) = 0;
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv) = 0;
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv) = 0;
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer) = 0;
 
-	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer) = 0;
-	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer) = 0;
-	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer) = 0;
+	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer) = 0;
 
-	virtual void SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer) = 0;
 
-	virtual void SetIndexBuffer(const GpuBuffer& gpuBuffer) = 0;
-	virtual void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer) = 0;
+	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
 
 	virtual void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) = 0;
@@ -115,7 +115,7 @@ public:
 	// Compute context
 	
 protected:
-	virtual void InitializeBuffer_Internal(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
+	virtual void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
 };
 
 
@@ -151,14 +151,14 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
-	static void InitializeBuffer(GpuBuffer& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
+	static void InitializeBuffer(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
 
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
 
-	void TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 	
 	void BeginFrame();
 
@@ -175,23 +175,23 @@ public:
 		return CommandContext::Begin(id).GetGraphicsContext();
 	}
 
-	void ClearUAV(GpuBuffer& gpuBuffer);
-	//void ClearUAV(ColorBuffer& colorBuffer);
-	void ClearColor(ColorBuffer& colorBuffer);
-	void ClearColor(ColorBuffer& colorBuffer, Color clearColor);
-	void ClearDepth(DepthBuffer& depthBuffer);
-	void ClearStencil(DepthBuffer& depthBuffer);
-	void ClearDepthAndStencil(DepthBuffer& depthBuffer);
+	void ClearUAV(IGpuBuffer* gpuBuffer);
+	//void ClearUAV(IColorBuffer* colorBuffer);
+	void ClearColor(IColorBuffer* colorBuffer);
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor);
+	void ClearDepth(IDepthBuffer* depthBuffer);
+	void ClearStencil(IDepthBuffer* depthBuffer);
+	void ClearDepthAndStencil(IDepthBuffer* depthBuffer);
 
-	void BeginRendering(ColorBuffer& renderTarget);
-	void BeginRendering(ColorBuffer& renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
-	void BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
-	void BeginRendering(std::span<ColorBuffer> renderTargets);
-	void BeginRendering(std::span<ColorBuffer> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(IColorBuffer* renderTarget);
+	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(std::span<IColorBuffer*> renderTargets);
+	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
-	void SetRootSignature(RootSignature& rootSignature);
-	void SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline);
+	void SetRootSignature(IRootSignature* rootSignature);
+	void SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
@@ -207,22 +207,22 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
-	void SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer);
-	void SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet);
+	void SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer);
+	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
-	void SetSRV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv = true);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv = true);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer);
 
-	void SetUAV(uint32_t rootIndex, uint32_t offset, const ColorBuffer& colorBuffer);
-	void SetUAV(uint32_t rootIndex, uint32_t offset, const DepthBuffer& depthBuffer);
-	void SetUAV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer);
 
-	void SetCBV(uint32_t rootIndex, uint32_t offset, const GpuBuffer& gpuBuffer);
+	void SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer);
 
-	void SetIndexBuffer(const GpuBuffer& gpuBuffer);
-	void SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer);
+	void SetIndexBuffer(const IGpuBuffer* gpuBuffer);
+	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer);
 
 	void Draw(uint32_t vertexCount, uint32_t vertexStartOffset = 0);
 	void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation = 0, int32_t baseVertexLocation = 0);
@@ -282,19 +282,19 @@ inline void CommandContext::Initialize()
 }
 
 
-inline void CommandContext::TransitionResource(ColorBuffer& colorBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(colorBuffer, newState, bFlushImmediate);
 }
 
 
-inline void CommandContext::TransitionResource(DepthBuffer& depthBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(depthBuffer, newState, bFlushImmediate);
 }
 
 
-inline void CommandContext::TransitionResource(GpuBuffer& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
 }
@@ -306,7 +306,7 @@ inline void CommandContext::BeginFrame()
 }
 
 
-inline void GraphicsContext::ClearUAV(GpuBuffer& gpuBuffer)
+inline void GraphicsContext::ClearUAV(IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->ClearUAV(gpuBuffer);
 }
@@ -318,61 +318,61 @@ inline void GraphicsContext::ClearUAV(GpuBuffer& gpuBuffer)
 //}
 
 
-inline void GraphicsContext::ClearColor(ColorBuffer& colorBuffer)
+inline void GraphicsContext::ClearColor(IColorBuffer* colorBuffer)
 {
 	m_contextImpl->ClearColor(colorBuffer);
 }
 
 
-inline void GraphicsContext::ClearColor(ColorBuffer& colorBuffer, Color clearColor)
+inline void GraphicsContext::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	m_contextImpl->ClearColor(colorBuffer, clearColor);
 }
 
 
-inline void GraphicsContext::ClearDepth(DepthBuffer& depthBuffer)
+inline void GraphicsContext::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearDepth(depthBuffer);
 }
 
 
-inline void GraphicsContext::ClearStencil(DepthBuffer& depthBuffer)
+inline void GraphicsContext::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearStencil(depthBuffer);
 }
 
 
-inline void GraphicsContext::ClearDepthAndStencil(DepthBuffer& depthBuffer)
+inline void GraphicsContext::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->ClearDepthAndStencil(depthBuffer);
 }
 
 
-inline void GraphicsContext::BeginRendering(ColorBuffer& renderTarget)
+inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget)
 {
 	m_contextImpl->BeginRendering(renderTarget);
 }
 
 
-inline void GraphicsContext::BeginRendering(ColorBuffer& renderTarget, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	m_contextImpl->BeginRendering(renderTarget, depthTarget, depthStencilAspect);
 }
 
 
-inline void GraphicsContext::BeginRendering(DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	m_contextImpl->BeginRendering(depthTarget, depthStencilAspect);
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<ColorBuffer> renderTargets)
+inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTargets)
 {
 	m_contextImpl->BeginRendering(renderTargets);
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<ColorBuffer> renderTargets, DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
 {
 	m_contextImpl->BeginRendering(renderTargets, depthTarget, depthStencilAspect);
 }
@@ -384,13 +384,13 @@ inline void GraphicsContext::EndRendering()
 }
 
 
-inline void GraphicsContext::SetRootSignature(RootSignature& rootSignature)
+inline void GraphicsContext::SetRootSignature(IRootSignature* rootSignature)
 {
 	m_contextImpl->SetRootSignature(rootSignature);
 }
 
 
-inline void GraphicsContext::SetGraphicsPipeline(GraphicsPipelineState& graphicsPipeline)
+inline void GraphicsContext::SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline)
 {
 	m_contextImpl->SetGraphicsPipeline(graphicsPipeline);
 }
@@ -475,13 +475,13 @@ inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam
 }
 
 
-inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, const GpuBuffer& gpuBuffer)
+inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->SetConstantBuffer(rootIndex, gpuBuffer);
 }
 
 
-inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, DescriptorSet& descriptorSet)
+inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	m_contextImpl->SetDescriptors(rootIndex, descriptorSet);
 }
@@ -493,55 +493,55 @@ inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const IColorBuffer* colorBuffer)
 {
 	m_contextImpl->SetSRV(rootParam, offset, colorBuffer);
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer, bool depthSrv)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv)
 {
 	m_contextImpl->SetSRV(rootParam, offset, depthBuffer, depthSrv);
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, const IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->SetSRV(rootParam, offset, gpuBuffer);
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const ColorBuffer& colorBuffer)
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const IColorBuffer* colorBuffer)
 {
 	m_contextImpl->SetUAV(rootParam, offset, colorBuffer);
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const DepthBuffer& depthBuffer)
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const IDepthBuffer* depthBuffer)
 {
 	m_contextImpl->SetUAV(rootParam, offset, depthBuffer);
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, const IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->SetUAV(rootParam, offset, gpuBuffer);
 }
 
 
-inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, const GpuBuffer& gpuBuffer)
+inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, const IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->SetCBV(rootParam, offset, gpuBuffer);
 }
 
 
-inline void GraphicsContext::SetIndexBuffer(const GpuBuffer& gpuBuffer)
+inline void GraphicsContext::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->SetIndexBuffer(gpuBuffer);
 }
 
 
-inline void GraphicsContext::SetVertexBuffer(uint32_t slot, const GpuBuffer& gpuBuffer)
+inline void GraphicsContext::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
 {
 	m_contextImpl->SetVertexBuffer(slot, gpuBuffer);
 }

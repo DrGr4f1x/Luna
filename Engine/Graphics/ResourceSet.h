@@ -18,37 +18,37 @@ namespace Luna
 {
 
 // Forward declarations
-class ColorBuffer;
-class DepthBuffer;
-class GpuBuffer;
-class RootSignature;
+class IColorBuffer;
+class IDepthBuffer;
+class IGpuBuffer;
+class IRootSignature;
 
 
 class ResourceSet
 {
 public:
-	void Initialize(const RootSignature& rootSignature);
+	void Initialize(const IRootSignature* rootSignature);
 
 	// TODO: change 'int param' and 'int slot' to uint32_t
-	void SetSRV(int param, int slot, const ColorBuffer& colorBuffer);
-	void SetSRV(int param, int slot, const DepthBuffer& depthBuffer, bool depthSrv = true);
-	void SetSRV(int param, int slot, const GpuBuffer& gpuBuffer);
+	void SetSRV(int param, int slot, const IColorBuffer* colorBuffer);
+	void SetSRV(int param, int slot, const IDepthBuffer* depthBuffer, bool depthSrv = true);
+	void SetSRV(int param, int slot, const IGpuBuffer* gpuBuffer);
 
-	void SetUAV(int param, int slot, const ColorBuffer& colorBuffer, uint32_t uavIndex = 0);
-	void SetUAV(int param, int slot, const DepthBuffer& depthBuffer);
-	void SetUAV(int param, int slot, const GpuBuffer& gpuBuffer);
+	void SetUAV(int param, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0);
+	void SetUAV(int param, int slot, const IDepthBuffer* depthBuffer);
+	void SetUAV(int param, int slot, const IGpuBuffer* gpuBuffer);
 
-	void SetCBV(int param, int slot, const GpuBuffer& gpuBuffer);
+	void SetCBV(int param, int slot, const IGpuBuffer* gpuBuffer);
 
 	void SetDynamicOffset(int param, uint32_t offset);
 
 	uint32_t GetNumDescriptorSets() const { return (uint32_t)m_descriptorSets.size(); }
 
-	DescriptorSet& operator[](uint32_t index);
-	const DescriptorSet& operator[](uint32_t index) const;
+	DescriptorSetPtr& operator[](uint32_t index);
+	const DescriptorSetPtr& operator[](uint32_t index) const;
 
 private:
-	std::vector<DescriptorSet> m_descriptorSets;
+	std::vector<DescriptorSetPtr> m_descriptorSets;
 };
 
 } // namespace Luna

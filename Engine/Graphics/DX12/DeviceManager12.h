@@ -23,6 +23,7 @@ namespace Luna::DX12
 // Forward declarations
 struct DeviceCaps;
 class DescriptorAllocator;
+class Device;
 class Queue;
 class ResourceManager;
 
@@ -75,12 +76,12 @@ public:
 	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
 	void FreeContext(CommandContext* usedContext) final;
 
-	ColorBuffer& GetColorBuffer() final;
+	Luna::ColorBufferPtr GetColorBuffer() final;
 
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
-	IResourceManager* GetResourceManager() override;
+	IDevice* GetDevice() override;
 
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
@@ -92,12 +93,11 @@ public:
 	void ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation = nullptr);
 	void ReleaseAllocation(D3D12MA::Allocation* allocation);
 
-	ID3D12Device* GetDevice() { return m_dxDevice.get(); }
+	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }
 	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
 
 private:
 	void CreateDevice();
-	void CreateResourceManagers();
 	std::vector<AdapterInfo> EnumerateAdapters();
 	HRESULT EnumAdapter(int32_t adapterIdx, DXGI_GPU_PREFERENCE gpuPreference, IDXGIFactory6* dxgiFactory6, IDXGIAdapter** adapter);
 
@@ -138,12 +138,12 @@ private:
 	// DirectX caps
 	std::unique_ptr<DeviceCaps> m_caps;
 
-	// DirectX resource managers
-	std::unique_ptr<ResourceManager> m_resourceManager;
+	// DirectX device wrapper
+	std::unique_ptr<Device> m_device;
 
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
-	std::vector<ColorBuffer> m_swapChainBuffers;
+	std::vector<ColorBufferPtr> m_swapChainBuffers;
 	uint32_t m_backBufferIndex{ 0 };
 	Format m_swapChainFormat;
 

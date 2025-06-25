@@ -44,56 +44,17 @@ struct DepthBufferDesc
 };
 
 
-class DepthBuffer : public PixelBuffer
+class IDepthBuffer : public IPixelBuffer
 {
 public:
-	void Initialize(const DepthBufferDesc& depthBufferDesc);
+	float GetClearDepth() const { return m_clearDepth; }
+	uint8_t GetClearStencil() const { return m_clearStencil; }
 
-	float GetClearDepth() const;
-	uint8_t GetClearStencil() const;
+protected:
+	float m_clearDepth{ 0.0f };
+	uint8_t m_clearStencil{ 0 };
 };
 
-
-class DepthBufferFactoryBase
-{
-protected:
-	static const uint32_t MaxResources = (1 << 8);
-	static const uint32_t InvalidAllocation = ~0u;
-
-public:
-	DepthBufferFactoryBase()
-	{
-		ClearDescs();
-	}
-
-	Format GetFormat(uint32_t index) const { return m_descs[index].format; }
-
-	uint64_t GetWidth(uint32_t index) const { return m_descs[index].width; }
-	uint32_t GetHeight(uint32_t index) const { return m_descs[index].height; }
-	uint32_t GetDepthOrArraySize(uint32_t index) const { return m_descs[index].arraySizeOrDepth; }
-	uint32_t GetNumMips(uint32_t index) const { return m_descs[index].numMips; }
-	uint32_t GetNumSamples(uint32_t index) const { return m_descs[index].numSamples; }
-	uint32_t GetPlaneCount(uint32_t index) const { return 1; /* TODO: return a real value here */ }
-
-	float GetClearDepth(uint32_t index) const { return m_descs[index].clearDepth; }
-	uint8_t GetClearStencil(uint32_t index) const { return m_descs[index].clearStencil; }
-
-protected:
-	void ResetDesc(uint32_t index)
-	{
-		m_descs[index] = DepthBufferDesc{};
-	}
-
-	void ClearDescs()
-	{
-		for (uint32_t i = 0; i < MaxResources; ++i)
-		{
-			ResetDesc(i);
-		}
-	}
-
-protected:
-	std::array<DepthBufferDesc, MaxResources> m_descs;
-};
+using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 
 } // namespace Luna

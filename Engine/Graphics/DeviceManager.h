@@ -20,7 +20,7 @@ namespace Luna
 
 // Forward declarations
 class CommandContext;
-class IResourceManager;
+class IDevice;
 
 
 struct DeviceManagerDesc
@@ -103,12 +103,12 @@ public:
 	virtual CommandContext* AllocateContext(CommandListType commandListType) = 0;
 	virtual void FreeContext(CommandContext* usedContext) = 0;
 
-	virtual ColorBuffer& GetColorBuffer() = 0;
+	virtual ColorBufferPtr GetColorBuffer() = 0;
 
 	virtual Format GetColorFormat() = 0;
 	virtual Format GetDepthFormat() = 0;
 
-	virtual IResourceManager* GetResourceManager() = 0;
+	virtual IDevice* GetDevice() = 0;
 };
 
 } // namespace Luna

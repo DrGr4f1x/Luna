@@ -163,7 +163,7 @@ struct GraphicsPipelineDesc
 	std::vector<VertexStreamDesc> vertexStreams;
 	std::vector<VertexElementDesc> vertexElements;
 
-	ResourceHandle rootSignature{ nullptr };
+	RootSignaturePtr rootSignature;
 
 	GraphicsPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
 	GraphicsPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
@@ -183,61 +183,24 @@ struct GraphicsPipelineDesc
 	GraphicsPipelineDesc& SetDomainShader(const std::string& value, const std::string& entry = "main") { domainShader.shaderFile = value; domainShader.entry = entry; return *this; }
 	GraphicsPipelineDesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPipelineDesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
-	GraphicsPipelineDesc& SetRootSignature(ResourceHandle value) { rootSignature = value; return *this; }
+	GraphicsPipelineDesc& SetRootSignature(RootSignaturePtr value) { rootSignature = value; return *this; }
 };
 
 
-class GraphicsPipelineState
+class IGraphicsPipelineState
 {
 public:
-	// TODO: get this from the PipelineStateManager
-	PrimitiveTopology GetPrimitiveTopology() const;
+	virtual ~IGraphicsPipelineState() = default;
 
-	void Initialize(GraphicsPipelineDesc& pipelineDesc);
+	IRootSignature* GetRootSignature() const { return m_rootSignature.get(); }
 
-	ResourceHandle GetHandle() const { return m_handle; }
+	PrimitiveTopology GetPrimitiveTopology() const { return m_desc.topology; }
 
-private:
-	const GraphicsPipelineDesc& GetDesc() const;
-
-private:
-	ResourceHandle m_handle;
+protected:
+	RootSignaturePtr m_rootSignature;
+	GraphicsPipelineDesc m_desc{};
 };
 
-
-class PipelineStateFactoryBase
-{
-protected:
-	static const uint32_t MaxResources = (1 << 10);
-	static const uint32_t InvalidAllocation = ~0u;
-
-public:
-	PipelineStateFactoryBase()
-	{
-		ClearDescs();
-	}
-
-	const GraphicsPipelineDesc& GetGraphicsPipelineDesc(uint32_t index) const
-	{
-		return m_graphicsPipelineDescs[index];
-	}
-
-protected:
-	void ResetDesc(uint32_t index)
-	{
-		m_graphicsPipelineDescs[index] = GraphicsPipelineDesc{};
-	}
-
-	void ClearDescs()
-	{
-		for (uint32_t i = 0; i < MaxResources; ++i)
-		{
-			ResetDesc(i);
-		}
-	}
-
-protected:
-	std::array<GraphicsPipelineDesc, MaxResources> m_graphicsPipelineDescs;
-};
+using GraphicsPipelineStatePtr = std::shared_ptr<IGraphicsPipelineState>;
 
 } // namespace

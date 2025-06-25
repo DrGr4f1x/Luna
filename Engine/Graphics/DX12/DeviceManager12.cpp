@@ -15,9 +15,9 @@
 #include "Graphics\GraphicsCommon.h"
 
 #include "CommandContext12.h"
+#include "Device12.h"
 #include "DeviceCaps12.h"
 #include "Queue12.h"
-#include "ResourceManager12.h"
 #include "Shader12.h"
 
 using namespace std;
@@ -28,6 +28,7 @@ namespace Luna::DX12
 {
 
 DeviceManager* g_d3d12DeviceManager{ nullptr };
+
 
 bool IsDirectXAgilitySDKAvailable()
 {
@@ -308,8 +309,6 @@ void DeviceManager::CreateDeviceResources()
 	}
 
 	CreateDevice();
-	
-	CreateResourceManagers();
 
 	// Create queues
 	m_queues[(uint32_t)QueueType::Graphics] = make_unique<Queue>(m_dxDevice.get(), QueueType::Graphics);
@@ -433,8 +432,7 @@ void DeviceManager::CreateWindowSizeDependentResources()
     // and create render target views for each of them.
 	for (uint32_t i = 0; i < backBufferCount; ++i)
 	{
-		ColorBuffer swapChainBuffer;
-		swapChainBuffer.SetHandle(m_resourceManager->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i));
+		ColorBufferPtr swapChainBuffer = m_device->CreateColorBufferFromSwapChain(m_dxSwapChain.get(), i);
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 
@@ -495,7 +493,7 @@ void DeviceManager::FreeContext(CommandContext* usedContext)
 }
 
 
-ColorBuffer& DeviceManager::GetColorBuffer()
+Luna::ColorBufferPtr DeviceManager::GetColorBuffer()
 {
 	return m_swapChainBuffers[m_backBufferIndex];
 }
@@ -513,9 +511,9 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
-IResourceManager* DeviceManager::GetResourceManager()
-{
-	return m_resourceManager.get();
+IDevice* DeviceManager::GetDevice()
+{ 
+	return m_device.get(); 
 }
 
 
@@ -722,13 +720,9 @@ void DeviceManager::CreateDevice()
 	};
 	assert_succeeded(D3D12MA::CreateAllocator(&allocatorDesc, &m_d3d12maAllocator));
 
+	m_device = std::make_unique<Device>(m_dxDevice.get(), m_d3d12maAllocator.get());
+
 	// TODO: Create descriptor allocators
-}
-
-
-void DeviceManager::CreateResourceManagers()
-{
-	m_resourceManager = make_unique<ResourceManager>(m_dxDevice.get(), m_d3d12maAllocator.get());
 }
 
 
@@ -1060,7 +1054,7 @@ uint8_t GetFormatPlaneCount(DXGI_FORMAT format)
 
 uint32_t GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE type)
 {
-	return GetD3D12DeviceManager()->GetDevice()->GetDescriptorHandleIncrementSize(type);
+	return GetD3D12DeviceManager()->GetD3D12Device()->GetDescriptorHandleIncrementSize(type);
 }
 
 } // namespace Luna::DX12

@@ -23,6 +23,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
+class Device;
 class Queue;
 class ResourceManager;
 
@@ -51,17 +52,17 @@ public:
 	CommandContext* AllocateContext(CommandListType commandListType) final;
 	void FreeContext(CommandContext* usedContext) final;
 
-	ColorBuffer& GetColorBuffer() final;
+	Luna::ColorBufferPtr GetColorBuffer() final;
 
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
-	IResourceManager* GetResourceManager() override;
+	IDevice* GetDevice() override;
 
 	void ReleaseImage(CVkImage* image);
 	void ReleaseBuffer(CVkBuffer* buffer);
 
-	CVkDevice* GetDevice() const;
+	CVkDevice* GetVulkanDevice() const;
 	CVmaAllocator* GetAllocator() const;
 
 	// Extensions
@@ -74,7 +75,6 @@ private:
 
 	void CreateSurface();
 	void CreateDevice();
-	void CreateResourceManagers();
 	void CreateQueue(QueueType queueType);
 
 	void ResizeSwapChain();
@@ -109,8 +109,8 @@ private:
 	vkb::Device m_vkbDevice;
 	vkb::Swapchain m_vkbSwapchain;
 
-	// Vulkan resource managers
-	std::unique_ptr<ResourceManager> m_resourceManager;
+	// Device wrapper
+	std::unique_ptr<Device> m_device;
 
 	// Swapchain
 	wil::com_ptr<CVkSwapchain> m_vkSwapChain;
@@ -122,7 +122,7 @@ private:
 	Format m_swapChainFormat;
 
 	// Swapchain color buffers
-	std::vector<ColorBuffer> m_swapChainBuffers;
+	std::vector<ColorBufferPtr> m_swapChainBuffers;
 
 	// Queues and queue families
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;

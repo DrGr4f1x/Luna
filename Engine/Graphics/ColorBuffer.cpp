@@ -14,29 +14,9 @@
 
 #include "GraphicsCommon.h"
 
-#include "ResourceManager.h"
-
+// TODO: delete me
 
 namespace Luna
 {
-
-void ColorBuffer::Initialize(const ColorBufferDesc& ColorBufferDesc)
-{
-	m_handle = GetResourceManager()->CreateColorBuffer(ColorBufferDesc);
-}
-
-
-Color ColorBuffer::GetClearColor() const
-{
-	auto res = GetResourceManager()->GetClearColor(m_handle.get());
-	assert(res.has_value());
-	return *res;
-}
-
-
-void ColorBuffer::SetHandle(ResourceHandle handle) 
-{ 
-	m_handle = handle; 
-}
 
 } // namespace Luna

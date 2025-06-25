@@ -16,6 +16,7 @@
 #include "InputSystem.h"
 
 #include "Graphics\CommandContext.h"
+#include "Graphics\Device.h"
 #include "Graphics\DeviceManager.h"
 
 #include <glfw\glfw3.h>
@@ -139,12 +140,12 @@ void Application::Render()
 
 	auto& context = GraphicsContext::Begin("Frame");
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::RenderTarget);
+	context.ClearColor(GetColorBuffer().get(), DirectX::Colors::CornflowerBlue);
 
 	// Rendering code goes here
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.TransitionResource(GetColorBuffer().get(), ResourceState::Present);
 	context.Finish();
 }
 
@@ -196,7 +197,7 @@ void Application::Run()
 }
 
 
-ColorBuffer& Application::GetColorBuffer() const
+ColorBufferPtr Application::GetColorBuffer() const
 {
 	return m_deviceManager->GetColorBuffer();
 }
@@ -268,6 +269,36 @@ Format Application::GetColorFormat()
 Format Application::GetDepthFormat()
 {
 	return m_deviceManager->GetDepthFormat();
+}
+
+
+ColorBufferPtr Application::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
+{ 
+	return m_deviceManager->GetDevice()->CreateColorBuffer(colorBufferDesc);
+}
+
+
+DepthBufferPtr Application::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
+{
+	return m_deviceManager->GetDevice()->CreateDepthBuffer(depthBufferDesc);
+}
+
+
+GpuBufferPtr Application::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+{
+	return m_deviceManager->GetDevice()->CreateGpuBuffer(gpuBufferDesc);
+}
+
+
+RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+{
+	return m_deviceManager->GetDevice()->CreateRootSignature(rootSignatureDesc);
+}
+
+
+GraphicsPipelineStatePtr Application::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+{
+	return m_deviceManager->GetDevice()->CreateGraphicsPipelineState(pipelineDesc);
 }
 
 
