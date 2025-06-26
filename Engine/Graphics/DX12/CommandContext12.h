@@ -69,15 +69,15 @@ public:
 	void ClearStencil(DepthBufferPtr depthBuffer) override;
 	void ClearDepthAndStencil(DepthBufferPtr depthBuffer) override;
 
-	void BeginRendering(IColorBuffer* renderTarget) override;
-	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(std::span<IColorBuffer*> renderTargets) override;
-	void BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(ColorBufferPtr renderTarget) override;
+	void BeginRendering(ColorBufferPtr renderTarget, DepthBufferPtr depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(DepthBufferPtr depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<ColorBufferPtr> renderTargets) override;
+	void BeginRendering(std::span<ColorBufferPtr> renderTargets, DepthBufferPtr depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
-	void SetRootSignature(IRootSignature* rootSignature) override;
-	void SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline) override;
+	void SetRootSignature(RootSignaturePtr rootSignature) override;
+	void SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -91,22 +91,22 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
-	void SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
-	void SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
+	void SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr gpuBuffer) override;
+	void SetDescriptors(uint32_t rootIndex, DescriptorSetPtr descriptorSet) override;
 	void SetResources(ResourceSet& resourceSet) override;
 
-	void SetSRV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer) override;
-	void SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv) override;
-	void SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer) override;
 
-	void SetUAV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer) override;
-	void SetUAV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer) override;
-	void SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer) override;
+	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer) override;
 
-	void SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer) override;
+	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer) override;
 
-	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
-	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+	void SetIndexBuffer(GpuBufferPtr gpuBuffer) override;
+	void SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer) override;
 
 	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
@@ -121,7 +121,7 @@ protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
 	void InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet* descriptorSet);
+	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet);
 	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 
 private:

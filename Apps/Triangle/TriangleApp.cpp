@@ -131,15 +131,15 @@ void TriangleApp::Render()
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(GetColorBuffer().get(), m_depthBuffer.get());
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.SetRootSignature(m_rootSignature.get());
-	context.SetGraphicsPipeline(m_graphicsPipeline.get());
+	context.SetRootSignature(m_rootSignature);
+	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	context.SetResources(m_resources);
-	context.SetConstantBuffer(0, m_constantBuffer.get());
+	context.SetConstantBuffer(0, m_constantBuffer);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
@@ -153,9 +153,9 @@ void TriangleApp::Render()
 	};
 	context.SetDynamicVB(0, 3, sizeof(Vertex), vertexData.data());*/
 
-	context.SetVertexBuffer(0, m_vertexBuffer.get());
+	context.SetVertexBuffer(0, m_vertexBuffer);
 	
-	context.SetIndexBuffer(m_indexBuffer.get());
+	context.SetIndexBuffer(m_indexBuffer);
 
 	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
 

@@ -314,18 +314,18 @@ void CommandContext12::ClearDepthAndStencil(DepthBufferPtr depthBuffer)
 }
 
 
-void CommandContext12::BeginRendering(IColorBuffer* renderTarget)
+void CommandContext12::BeginRendering(ColorBufferPtr colorBuffer)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* renderTarget12 = (ColorBuffer*)renderTarget;
-	assert(renderTarget12 != nullptr);
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	assert(colorBuffer12 != nullptr);
 
-	m_rtvs[0] = renderTarget12->GetRtvHandle();
-	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+	m_rtvs[0] = colorBuffer12->GetRtvHandle();
+	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
 	BindRenderTargets();
@@ -334,25 +334,25 @@ void CommandContext12::BeginRendering(IColorBuffer* renderTarget)
 }
 
 
-void CommandContext12::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(ColorBufferPtr colorBuffer, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* renderTarget12 = (ColorBuffer*)renderTarget;
-	assert(renderTarget12 != nullptr);
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	assert(colorBuffer12 != nullptr);
 
-	DepthBuffer* depthTarget12 = (DepthBuffer*)depthTarget;
-	assert(depthTarget12 != nullptr);
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	assert(depthBuffer12 != nullptr);
 
-	m_rtvs[0] = renderTarget12->GetRtvHandle();
-	m_rtvFormats[0] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+	m_rtvs[0] = colorBuffer12->GetRtvHandle();
+	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
-	m_dsv = depthTarget12->GetDsvHandle(depthStencilAspect);
-	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
 	BindRenderTargets();
@@ -361,18 +361,18 @@ void CommandContext12::BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* 
 }
 
 
-void CommandContext12::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthTarget12 = (DepthBuffer*)depthTarget;
-	assert(depthTarget12 != nullptr);
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	assert(depthBuffer12 != nullptr);
 
-	m_dsv = depthTarget12->GetDsvHandle(depthStencilAspect);
-	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
 	BindRenderTargets();
@@ -381,26 +381,26 @@ void CommandContext12::BeginRendering(IDepthBuffer* depthTarget, DepthStencilAsp
 }
 
 
-void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
+void CommandContext12::BeginRendering(std::span<ColorBufferPtr> colorBuffers)
 {
 	assert(!m_isRendering);
-	assert(renderTargets.size() <= 8);
+	assert(colorBuffers.size() <= 8);
 
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
 	uint32_t i = 0;
-	for (const IColorBuffer* renderTarget : renderTargets)
+	for (const auto& colorBuffer : colorBuffers)
 	{
-		const ColorBuffer* renderTarget12 = (ColorBuffer*)renderTarget;
-		assert(renderTarget12 != nullptr);
+		const ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+		assert(colorBuffer12 != nullptr);
 
-		m_rtvs[i] = renderTarget12->GetRtvHandle();
-		m_rtvFormats[i] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+		m_rtvs[i] = colorBuffer12->GetRtvHandle();
+		m_rtvFormats[i] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 		++i;
 	}
-	m_numRtvs = (uint32_t)renderTargets.size();
+	m_numRtvs = (uint32_t)colorBuffers.size();
 
 	BindRenderTargets();
 
@@ -408,31 +408,32 @@ void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets)
 }
 
 
-void CommandContext12::BeginRendering(std::span<IColorBuffer*> renderTargets, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(std::span<ColorBufferPtr> colorBuffers, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
-	assert(renderTargets.size() <= 8);
+	assert(colorBuffers.size() <= 8);
 
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
 	uint32_t i = 0;
-	for (const IColorBuffer* renderTarget : renderTargets)
+	for (const auto& colorBuffer : colorBuffers)
 	{
-		const ColorBuffer* renderTarget12 = (ColorBuffer*)renderTarget;
-		assert(renderTarget12 != nullptr);
+		const ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+		assert(colorBuffer12 != nullptr);
 
-		m_rtvs[i] = renderTarget12->GetRtvHandle();
-		m_rtvFormats[i] = FormatToDxgi(renderTarget->GetFormat()).rtvFormat;
+		m_rtvs[i] = colorBuffer12->GetRtvHandle();
+		m_rtvFormats[i] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 		++i;
 	}
-	m_numRtvs = (uint32_t)renderTargets.size();
+	m_numRtvs = (uint32_t)colorBuffers.size();
 
-	DepthBuffer* depthTarget12 = (DepthBuffer*)depthTarget;
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	assert(depthBuffer12 != nullptr);
 
-	m_dsv = depthTarget12->GetDsvHandle(depthStencilAspect);
-	m_dsvFormat = FormatToDxgi(depthTarget->GetFormat()).rtvFormat;
+	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
+	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
 	BindRenderTargets();
@@ -448,12 +449,12 @@ void CommandContext12::EndRendering()
 }
 
 
-void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
+void CommandContext12::SetRootSignature(RootSignaturePtr rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	RootSignature* rootSignature12 = (RootSignature*)rootSignature;
+	RootSignature* rootSignature12 = (RootSignature*)rootSignature.get();
 	assert(rootSignature12 != nullptr);
 
 	ID3D12RootSignature* d3d12RootSignature = rootSignature12->GetRootSignature();
@@ -487,10 +488,10 @@ void CommandContext12::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
-void CommandContext12::SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline)
+void CommandContext12::SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipeline)
 {
 	// TODO: Try this with GetPlatformObject()
-	GraphicsPipelineState* graphicsPipeline12 = (GraphicsPipelineState*)graphicsPipeline;
+	GraphicsPipelineState* graphicsPipeline12 = (GraphicsPipelineState*)graphicsPipeline.get();
 	assert(graphicsPipeline12 != nullptr);
 
 	m_computePipelineState = nullptr;
@@ -658,12 +659,12 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContext12::SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr gpuBuffer)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
@@ -679,7 +680,7 @@ void CommandContext12::SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* g
 }
 
 
-void CommandContext12::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+void CommandContext12::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
 {
 	SetDescriptors_Internal(rootIndex, descriptorSet);
 }
@@ -698,15 +699,15 @@ void CommandContext12::SetResources(ResourceSet& resourceSet)
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		SetDescriptors_Internal(i, resourceSet[i].get());
+		SetDescriptors_Internal(i, resourceSet[i]);
 	}
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	auto descriptor = colorBuffer12->GetSrvHandle();
@@ -715,10 +716,10 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const IColorB
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	auto descriptor = depthBuffer12->GetSrvHandle(depthSrv);
@@ -727,10 +728,10 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthB
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	auto descriptor = gpuBuffer12->GetSrvHandle();
@@ -739,10 +740,10 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuf
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer)
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	// TODO: Need a UAV index parameter
@@ -752,17 +753,17 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const IColorB
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer)
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer)
 {
 	// TODO: support this
 	assert(false);
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	auto descriptor = gpuBuffer12->GetUavHandle();
@@ -771,10 +772,10 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuf
 }
 
 
-void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	auto descriptor = gpuBuffer12->GetCbvHandle();
@@ -783,10 +784,10 @@ void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuf
 }
 
 
-void CommandContext12::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetIndexBuffer(GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
@@ -799,10 +800,10 @@ void CommandContext12::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 }
 
 
-void CommandContext12::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	D3D12_VERTEX_BUFFER_VIEW vbv{
@@ -924,12 +925,12 @@ void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 }
 
 
-void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet;
+	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet.get();
 	assert(descriptorSet12 != nullptr);
 
 	if (!descriptorSet12->HasBindableDescriptors())

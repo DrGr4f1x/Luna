@@ -466,12 +466,12 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr depthBuffer,
 }
 
 
-void CommandContextVK::BeginRendering(IColorBuffer* colorBuffer)
+void CommandContextVK::BeginRendering(ColorBufferPtr colorBuffer)
 {
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
 	m_rtvs[0] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -484,15 +484,15 @@ void CommandContextVK::BeginRendering(IColorBuffer* colorBuffer)
 }
 
 
-void CommandContextVK::BeginRendering(IColorBuffer* colorBuffer, IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(ColorBufferPtr colorBuffer, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	m_rtvs[0] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -510,12 +510,12 @@ void CommandContextVK::BeginRendering(IColorBuffer* colorBuffer, IDepthBuffer* d
 }
 
 
-void CommandContextVK::BeginRendering(IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
@@ -528,16 +528,16 @@ void CommandContextVK::BeginRendering(IDepthBuffer* depthBuffer, DepthStencilAsp
 }
 
 
-void CommandContextVK::BeginRendering(std::span<IColorBuffer*> colorBuffers)
+void CommandContextVK::BeginRendering(std::span<ColorBufferPtr> colorBuffers)
 {
 	ResetRenderTargets();
 	assert(colorBuffers.size() <= 8);
 
 	uint32_t i = 0;
-	for (const IColorBuffer* colorBuffer : colorBuffers)
+	for (ColorBufferPtr colorBuffer : colorBuffers)
 	{
 		// TODO: Try this with GetPlatformObject()
-		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 		assert(colorBufferVK != nullptr);
 
 		m_rtvs[i] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -553,16 +553,16 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> colorBuffers)
 }
 
 
-void CommandContextVK::BeginRendering(std::span<IColorBuffer*> colorBuffers, IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(std::span<ColorBufferPtr> colorBuffers, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 	assert(colorBuffers.size() <= 8);
 
 	uint32_t i = 0;
-	for (const IColorBuffer* colorBuffer : colorBuffers)
+	for (ColorBufferPtr colorBuffer : colorBuffers)
 	{
 		// TODO: Try this with GetPlatformObject()
-		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 		assert(colorBufferVK != nullptr);
 
 		m_rtvs[i] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -575,7 +575,7 @@ void CommandContextVK::BeginRendering(std::span<IColorBuffer*> colorBuffers, IDe
 	m_numRtvs = (uint32_t)colorBuffers.size();
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
@@ -598,12 +598,12 @@ void CommandContextVK::EndRendering()
 }
 
 
-void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
+void CommandContextVK::SetRootSignature(RootSignaturePtr rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	RootSignature* rootSignatureVK = (RootSignature*)rootSignature;
+	RootSignature* rootSignatureVK = (RootSignature*)rootSignature.get();
 	assert(rootSignatureVK != nullptr);
 
 	VkPipelineLayout pipelineLayout = rootSignatureVK->GetPipelineLayout();
@@ -633,12 +633,12 @@ void CommandContextVK::SetRootSignature(IRootSignature* rootSignature)
 }
 
 
-void CommandContextVK::SetGraphicsPipeline(IGraphicsPipelineState* graphicsPipeline)
+void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipeline)
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
 	// TODO: Try this with GetPlatformObject()
-	GraphicsPipelineState* graphicsPipelineVK = (GraphicsPipelineState*)graphicsPipeline;
+	GraphicsPipelineState* graphicsPipelineVK = (GraphicsPipelineState*)graphicsPipeline.get();
 	assert(graphicsPipelineVK != nullptr);
 
 	VkPipeline vkPipeline = graphicsPipelineVK->GetPipelineState();
@@ -772,17 +772,17 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, gpuBufferVK->GetBufferInfo(), true);
 }
 
 
-void CommandContextVK::SetDescriptors(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
 {
 	SetDescriptors_Internal(rootIndex, descriptorSet);
 }
@@ -793,25 +793,25 @@ void CommandContextVK::SetResources(ResourceSet& resourceSet)
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		SetDescriptors_Internal(i, resourceSet[i].get());
+		SetDescriptors_Internal(i, resourceSet[i]);
 	}
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
-	assert(colorBufferVK != colorBuffer);
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	assert(colorBufferVK != nullptr);
 
 	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoSrv(), true);
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer, bool depthSrv)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	if (depthSrv)
@@ -825,10 +825,10 @@ void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IDepthB
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
@@ -842,26 +842,26 @@ void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, const IGpuBuf
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IColorBuffer* colorBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
-	assert(colorBufferVK != colorBuffer);
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	assert(colorBufferVK != nullptr);
 
 	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoUav(), true);
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IDepthBuffer* depthBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer)
 {
 	assert(false);
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
@@ -875,20 +875,20 @@ void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, const IGpuBuf
 }
 
 
-void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
 }
 
 
-void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetIndexBuffer(GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
@@ -897,10 +897,10 @@ void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 }
 
 
-void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	VkDeviceSize offsets[1] = { 0 };
@@ -948,12 +948,12 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 }
 
 
-void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet* descriptorSet)
+void CommandContextVK::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
+	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet.get();
 	assert(descriptorSetVK != nullptr);
 
 	if (!descriptorSetVK->HasDescriptors())
