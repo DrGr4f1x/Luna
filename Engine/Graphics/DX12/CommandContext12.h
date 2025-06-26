@@ -55,19 +55,19 @@ public:
 	void BeginFrame() override {}
 	uint64_t Finish(bool bWaitForCompletion) override;
 
-	void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	// Graphics context
-	void ClearUAV(IGpuBuffer* gpuBuffer) override;
-	//void ClearUAV(ColorBuffer& colorBuffer) override;
-	void ClearColor(IColorBuffer* colorBuffer) override;
-	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
-	void ClearDepth(IDepthBuffer* depthBuffer) override;
-	void ClearStencil(IDepthBuffer* depthBuffer) override;
-	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
+	void ClearUAV(GpuBufferPtr gpuBuffer) override;
+	//void ClearUAV(ColorBufferPtr colorBuffer) override;
+	void ClearColor(ColorBufferPtr colorBuffer) override;
+	void ClearColor(ColorBufferPtr colorBuffer, Color clearColor) override;
+	void ClearDepth(DepthBufferPtr depthBuffer) override;
+	void ClearStencil(DepthBufferPtr depthBuffer) override;
+	void ClearDepthAndStencil(DepthBufferPtr depthBuffer) override;
 
 	void BeginRendering(IColorBuffer* renderTarget) override;
 	void BeginRendering(IColorBuffer* renderTarget, IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
@@ -120,7 +120,7 @@ public:
 protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
-	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, IDescriptorSet* descriptorSet);
 	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 

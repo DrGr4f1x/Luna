@@ -201,7 +201,7 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 		.imageLayout	= GetImageLayout(ResourceState::UnorderedAccess)
 	};
 
-	ColorBufferPtr colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
+	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
 
 	colorBuffer->m_device = this;
 	colorBuffer->m_type = colorBufferDesc.resourceType;
@@ -301,7 +301,7 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
 	};
 
-	DepthBufferPtr depthBuffer = std::make_shared<Luna::VK::DepthBuffer>();
+	auto depthBuffer = std::make_shared<Luna::VK::DepthBuffer>();
 
 	depthBuffer->m_device = this;
 	depthBuffer->m_type = depthBufferDesc.resourceType;
@@ -365,7 +365,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 		bufferView = Create<CVkBufferView>(m_device.get(), vkBufferView);
 	}
 
-	GpuBufferPtr gpuBuffer = std::make_shared<GpuBuffer>();
+	auto gpuBuffer = std::make_shared<GpuBuffer>();
 
 	gpuBuffer->m_device = this;
 	gpuBuffer->m_type = gpuBufferDesc.resourceType;
@@ -381,7 +381,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 
 	if (gpuBufferDesc.initialData)
 	{
-		CommandContext::InitializeBuffer(gpuBuffer.get(), gpuBufferDesc.initialData, gpuBuffer->GetBufferSize());
+		CommandContext::InitializeBuffer(gpuBuffer, gpuBufferDesc.initialData, gpuBuffer->GetBufferSize());
 	}
 
 	return gpuBuffer;
@@ -546,7 +546,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		pPipelineLayout = *pipelineLayoutRef;
 	}
 
-	RootSignaturePtr rootSignature = std::make_shared<RootSignature>();
+	auto rootSignature = std::make_shared<RootSignature>();
 
 	rootSignature->m_device = this;
 	rootSignature->m_desc = rootSignatureDesc;
@@ -800,7 +800,7 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 		LogError(LogVulkan) << "Failed to create VkPipeline (graphics).  Error code: " << res << endl;
 	}
 
-	GraphicsPipelineStatePtr pipelineState = std::make_shared<GraphicsPipelineState>();
+	auto pipelineState = std::make_shared<GraphicsPipelineState>();
 
 	pipelineState->m_device = this;
 	pipelineState->m_pipelineState = pipeline;
@@ -839,7 +839,7 @@ Luna::DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& desc
 	// Allocate descriptor set from pool
 	VkDescriptorSet vkDescriptorSet = pool->AllocateDescriptorSet();
 
-	DescriptorSetPtr descriptorSet = std::make_shared<DescriptorSet>();
+	auto descriptorSet = std::make_shared<DescriptorSet>();
 
 	descriptorSet->m_device = this;
 	descriptorSet->m_descriptorSet = vkDescriptorSet;
@@ -894,7 +894,7 @@ Luna::ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapC
 	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
 	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
 
-	ColorBufferPtr colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
+	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
 
 	colorBuffer->m_device = this;
 	colorBuffer->m_type = colorBufferDesc.resourceType;

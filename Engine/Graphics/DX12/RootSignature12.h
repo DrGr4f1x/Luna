@@ -42,6 +42,4 @@ protected:
 	std::vector<uint32_t> m_descriptorTableSizes;
 };
 
-using RootSignaturePtr = std::shared_ptr<RootSignature>;
-
 } // namespace Luna::DX12

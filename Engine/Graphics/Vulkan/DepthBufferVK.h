@@ -43,6 +43,4 @@ protected:
 	VkDescriptorImageInfo m_imageInfoStencil{};
 };
 
-using DepthBufferPtr = std::shared_ptr<DepthBuffer>;
-
 } // namespace Luna::VK

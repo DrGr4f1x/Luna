@@ -39,6 +39,4 @@ protected:
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> m_uavHandles;
 };
 
-using ColorBufferPtr = std::shared_ptr<ColorBuffer>;
-
 } // namespace Luna::DX12

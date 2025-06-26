@@ -32,6 +32,4 @@ protected:
 	wil::com_ptr<ID3D12PipelineState> m_pipelineState;
 };
 
-using GraphicsPipelineStatePtr = std::shared_ptr<GraphicsPipelineState>;
-
 } // namespace Luna::DX12

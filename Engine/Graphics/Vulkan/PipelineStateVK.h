@@ -33,6 +33,4 @@ protected:
 	wil::com_ptr<CVkPipeline> m_pipelineState;
 };
 
-using GraphicsPipelineStatePtr = std::shared_ptr<GraphicsPipelineState>;
-
 } // namespace Luna::VK

@@ -30,15 +30,15 @@ class DescriptorSet : public IDescriptorSet
 	friend class Device;
 
 public:
-	void SetSRV(uint32_t slot, const IColorBuffer* colorBuffer) override;
-	void SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) override;
-	void SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+	void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) override;
+	void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
+	void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
 
-	void SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) override;
-	void SetUAV(uint32_t slot, const IDepthBuffer* depthBuffer) override;
-	void SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+	void SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0) override;
+	void SetUAV(uint32_t slot, DepthBufferPtr depthBuffer) override;
+	void SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
 
-	void SetCBV(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
+	void SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
 
 	void SetDynamicOffset(uint32_t offset) override;
 
@@ -61,7 +61,5 @@ protected:
 	uint32_t m_dynamicOffset{ 0 };
 	bool m_isDynamicBuffer{ false };
 };
-
-using DescriptorSetPtr = std::shared_ptr<DescriptorSet>;
 
 } // namespace Luna::VK

@@ -21,11 +21,11 @@
 namespace Luna::DX12
 {
 
-void DescriptorSet::SetSRV(uint32_t slot, const IColorBuffer* colorBuffer)
+void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
+	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	auto descriptor = colorBuffer12->GetSrvHandle();
@@ -33,11 +33,11 @@ void DescriptorSet::SetSRV(uint32_t slot, const IColorBuffer* colorBuffer)
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
+	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	auto descriptor = depthBuffer12->GetSrvHandle(depthSrv);
@@ -45,11 +45,11 @@ void DescriptorSet::SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool 
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	if (m_isRootBuffer)
@@ -65,11 +65,11 @@ void DescriptorSet::SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer)
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
+	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	auto descriptor = colorBuffer12->GetUavHandle(uavIndex);
@@ -77,22 +77,22 @@ void DescriptorSet::SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint3
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IDepthBuffer* depthBuffer)
+void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
+	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	assert_msg(false, "Depth UAVs not yet supported");
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	if (m_isRootBuffer)
@@ -108,11 +108,11 @@ void DescriptorSet::SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer)
 }
 
 
-void DescriptorSet::SetCBV(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	if (m_isRootBuffer)

@@ -165,11 +165,11 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContext12::TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	ResourceState oldState = colorBuffer->GetUsageState();
@@ -188,11 +188,11 @@ void CommandContext12::TransitionResource(IColorBuffer* colorBuffer, ResourceSta
 }
 
 
-void CommandContext12::TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	ResourceState oldState = depthBuffer->GetUsageState();
@@ -211,11 +211,11 @@ void CommandContext12::TransitionResource(IDepthBuffer* depthBuffer, ResourceSta
 }
 
 
-void CommandContext12::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 
 	ResourceState oldState = gpuBuffer->GetUsageState();
 
@@ -243,71 +243,71 @@ void CommandContext12::FlushResourceBarriers()
 }
 
 
-void CommandContext12::ClearUAV(IGpuBuffer* gpuBuffer)
+void CommandContext12::ClearUAV(GpuBufferPtr gpuBuffer)
 {
 	// TODO: We need to allocate a GPU descriptor, so need to implement dynamic descriptor heaps to do this.
 }
 
 
-void CommandContext12::ClearColor(IColorBuffer* colorBuffer)
+void CommandContext12::ClearColor(ColorBufferPtr colorBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvHandle(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+void CommandContext12::ClearColor(ColorBufferPtr colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
 	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvHandle(), clearColor.GetPtr(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearDepth(IDepthBuffer* depthBuffer)
+void CommandContext12::ClearDepth(DepthBufferPtr depthBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearStencil(IDepthBuffer* depthBuffer)
+void CommandContext12::ClearStencil(DepthBufferPtr depthBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
+void CommandContext12::ClearDepthAndStencil(DepthBufferPtr depthBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
 	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
@@ -905,10 +905,10 @@ void CommandContext12::InsertUAVBarrier_Internal(ID3D12Resource* resource, bool 
 }
 
 
-void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer;
+	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer.get();
 	assert(destBuffer12 != nullptr);
 
 	auto deviceManager = GetD3D12DeviceManager();

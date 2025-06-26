@@ -223,10 +223,10 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContextVK::TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
 	TextureBarrier barrier{
@@ -253,10 +253,10 @@ void CommandContextVK::TransitionResource(IColorBuffer* colorBuffer, ResourceSta
 }
 
 
-void CommandContextVK::TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	TextureBarrier barrier{
@@ -283,10 +283,10 @@ void CommandContextVK::TransitionResource(IDepthBuffer* depthBuffer, ResourceSta
 }
 
 
-void CommandContextVK::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	BufferBarrier barrier{
@@ -368,10 +368,10 @@ void CommandContextVK::FlushResourceBarriers()
 }
 
 
-void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
+void CommandContextVK::ClearUAV(GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	uint32_t data = 0;
@@ -379,13 +379,13 @@ void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
 }
 
 
-void CommandContextVK::ClearColor(IColorBuffer* colorBuffer)
+void CommandContextVK::ClearColor(ColorBufferPtr colorBuffer)
 {
 	ClearColor(colorBuffer, colorBuffer->GetClearColor());
 }
 
 
-void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
+void CommandContextVK::ClearColor(ColorBufferPtr colorBuffer, Color clearColor)
 {
 	ResourceState oldState = colorBuffer->GetUsageState();
 
@@ -408,7 +408,7 @@ void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
 	vkCmdClearColorImage(m_commandBuffer, colorBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
@@ -417,25 +417,25 @@ void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 }
 
 
-void CommandContextVK::ClearDepth(IDepthBuffer* depthBuffer)
+void CommandContextVK::ClearDepth(DepthBufferPtr depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
-void CommandContextVK::ClearStencil(IDepthBuffer* depthBuffer)
+void CommandContextVK::ClearStencil(DepthBufferPtr depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
+void CommandContextVK::ClearDepthAndStencil(DepthBufferPtr depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags)
+void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr depthBuffer, VkImageAspectFlags flags)
 {
 	ResourceState oldState = depthBuffer->GetUsageState();
 
@@ -457,7 +457,7 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	vkCmdClearDepthStencilImage(m_commandBuffer, depthBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
@@ -927,7 +927,7 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
-void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	auto deviceManager = GetVulkanDeviceManager();
 	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetVulkanDevice(), deviceManager->GetAllocator(), bufferData, numBytes);
@@ -936,7 +936,7 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer;
+	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer.get();
 	assert(destBufferVK != nullptr);
 
 	VkBufferCopy copyRegion{ .size = numBytes };

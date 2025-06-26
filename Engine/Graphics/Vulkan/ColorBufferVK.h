@@ -41,6 +41,4 @@ protected:
 	VkDescriptorImageInfo m_imageInfoUav{};
 };
 
-using ColorBufferPtr = std::shared_ptr<ColorBuffer>;
-
 } // namespace Luna::VK

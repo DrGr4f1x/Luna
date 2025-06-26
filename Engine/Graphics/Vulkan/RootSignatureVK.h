@@ -48,6 +48,4 @@ protected:
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> m_descriptorSetLayouts;
 };
 
-using RootSignaturePtr = std::shared_ptr<RootSignature>;
-
 } // namespace Luna::VK

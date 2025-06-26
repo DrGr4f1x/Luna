@@ -23,11 +23,11 @@ using namespace std;
 namespace Luna::VK
 {
 
-void DescriptorSet::SetSRV(uint32_t slot, const IColorBuffer* colorBuffer)
+void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
+	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
 	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
@@ -46,11 +46,11 @@ void DescriptorSet::SetSRV(uint32_t slot, const IColorBuffer* colorBuffer)
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
+	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
@@ -69,11 +69,11 @@ void DescriptorSet::SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool 
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	if (m_isDynamicBuffer)
@@ -106,11 +106,11 @@ void DescriptorSet::SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer)
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
+	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
 	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
@@ -129,22 +129,22 @@ void DescriptorSet::SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint3
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IDepthBuffer* depthBuffer)
+void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
+	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
 	assert_msg(false, "Depth UAVs not yet supported");
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	if (m_isDynamicBuffer)
@@ -177,11 +177,11 @@ void DescriptorSet::SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer)
 }
 
 
-void DescriptorSet::SetCBV(uint32_t slot, const IGpuBuffer* gpuBuffer)
+void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
 	if (m_isDynamicBuffer)

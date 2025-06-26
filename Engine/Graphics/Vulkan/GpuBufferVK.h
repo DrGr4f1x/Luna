@@ -42,6 +42,4 @@ protected:
 	bool m_isCpuWriteable{ false };
 };
 
-using GpuBufferPtr = std::shared_ptr<GpuBuffer>;
-
 } // namespace Luna::VK

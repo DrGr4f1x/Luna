@@ -37,6 +37,4 @@ protected:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_stencilSrvHandle{};
 };
 
-using DepthBufferPtr = std::shared_ptr<DepthBuffer>;
-
 } // namespace Luna::DX12

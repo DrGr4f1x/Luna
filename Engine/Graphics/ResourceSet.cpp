@@ -18,7 +18,7 @@
 namespace Luna
 {
 
-void ResourceSet::Initialize(const IRootSignature* rootSignature)
+void ResourceSet::Initialize(RootSignaturePtr rootSignature)
 {
 	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
 	
@@ -34,49 +34,49 @@ void ResourceSet::Initialize(const IRootSignature* rootSignature)
 }
 
 
-void ResourceSet::SetSRV(int param, int slot, const IColorBuffer* colorBuffer)
+void ResourceSet::SetSRV(int param, int slot, ColorBufferPtr colorBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetSRV(slot, colorBuffer);
 }
 
 
-void ResourceSet::SetSRV(int param, int slot, const IDepthBuffer* depthBuffer, bool depthSrv)
+void ResourceSet::SetSRV(int param, int slot, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetSRV(slot, depthBuffer, depthSrv);
 }
 
 
-void ResourceSet::SetSRV(int param, int slot, const IGpuBuffer* gpuBuffer)
+void ResourceSet::SetSRV(int param, int slot, GpuBufferPtr gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetSRV(slot, gpuBuffer);
 }
 
 
-void ResourceSet::SetUAV(int param, int slot, const IColorBuffer* colorBuffer, uint32_t uavIndex)
+void ResourceSet::SetUAV(int param, int slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetUAV(slot, colorBuffer, uavIndex);
 }
 
 
-void ResourceSet::SetUAV(int param, int slot, const IDepthBuffer* depthBuffer)
+void ResourceSet::SetUAV(int param, int slot, DepthBufferPtr depthBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetUAV(slot, depthBuffer);
 }
 
 
-void ResourceSet::SetUAV(int param, int slot, const IGpuBuffer* gpuBuffer)
+void ResourceSet::SetUAV(int param, int slot, GpuBufferPtr gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetUAV(slot, gpuBuffer);
 }
 
 
-void ResourceSet::SetCBV(int param, int slot, const IGpuBuffer* gpuBuffer)
+void ResourceSet::SetCBV(int param, int slot, GpuBufferPtr gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetCBV(slot, gpuBuffer);

@@ -222,7 +222,7 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 
 	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
 
-	ColorBufferPtr colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>();
+	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>();
 
 	colorBuffer->m_device = this;
 	colorBuffer->m_type = colorBufferDesc.resourceType;
@@ -352,7 +352,7 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 
 	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 
-	DepthBufferPtr depthBuffer = std::make_shared<Luna::DX12::DepthBuffer>();
+	auto depthBuffer = std::make_shared<Luna::DX12::DepthBuffer>();
 
 	depthBuffer->m_device = this;
 	depthBuffer->m_type = depthBufferDesc.resourceType;
@@ -497,7 +497,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 		m_device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 	}
 
-	GpuBufferPtr gpuBuffer = std::make_shared<GpuBuffer>();
+	auto gpuBuffer = std::make_shared<GpuBuffer>();
 
 	gpuBuffer->m_device = this;
 	gpuBuffer->m_type = gpuBufferDesc.resourceType;
@@ -514,7 +514,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 	if (gpuBufferDescIn.initialData)
 	{
-		CommandContext::InitializeBuffer(gpuBuffer.get(), gpuBufferDescIn.initialData, gpuBuffer->GetBufferSize());
+		CommandContext::InitializeBuffer(gpuBuffer, gpuBufferDescIn.initialData, gpuBuffer->GetBufferSize());
 	}
 
 	return gpuBuffer;
@@ -686,7 +686,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		pRootSignature = *rootSignatureRef;
 	}
 
-	RootSignaturePtr rootSignature = std::make_shared<RootSignature>();
+	auto rootSignature = std::make_shared<RootSignature>();
 
 	rootSignature->m_device = this;
 	rootSignature->m_desc = rootSignatureDesc;
@@ -897,7 +897,7 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 		pPipelineState = *pipelineStateRef;
 	}
 
-	GraphicsPipelineStatePtr pipelineState = std::make_shared<GraphicsPipelineState>();
+	auto pipelineState = std::make_shared<GraphicsPipelineState>();
 
 	pipelineState->m_device = this;
 	pipelineState->m_pipelineState = pPipelineState;
@@ -908,7 +908,7 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 
 Luna::DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
-	DescriptorSetPtr descriptorSet = std::make_shared<DescriptorSet>();
+	auto descriptorSet = std::make_shared<DescriptorSet>();
 
 	descriptorSet->m_device = this;
 	for (uint32_t i = 0; i < MaxDescriptorsPerTable; ++i)
@@ -941,7 +941,7 @@ Luna::ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swap
 	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
 	const uint8_t planeCount = GetFormatPlaneCount(resourceDesc.Format);
 
-	ColorBufferPtr colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>();
+	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>();
 
 	colorBuffer->m_device = this;
 	colorBuffer->m_type = ResourceType::Texture2D;

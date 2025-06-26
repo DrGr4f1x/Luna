@@ -18,21 +18,25 @@ class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
 
+using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
+using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
+using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
+
 
 class IDescriptorSet
 {
 public:
 	virtual ~IDescriptorSet() = default;
 
-	virtual void SetSRV(uint32_t slot, const IColorBuffer* colorBuffer) = 0;
-	virtual void SetSRV(uint32_t slot, const IDepthBuffer* depthBuffer, bool depthSrv = true) = 0;
-	virtual void SetSRV(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) = 0;
+	virtual void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) = 0;
+	virtual void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;
 
-	virtual void SetUAV(uint32_t slot, const IColorBuffer* colorBuffer, uint32_t uavIndex = 0) = 0;
-	virtual void SetUAV(uint32_t slot, const IDepthBuffer* depthBuffer) = 0;
-	virtual void SetUAV(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0) = 0;
+	virtual void SetUAV(uint32_t slot, DepthBufferPtr depthBuffer) = 0;
+	virtual void SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;
 
-	virtual void SetCBV(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;
 
 	virtual void SetDynamicOffset(uint32_t offset) = 0;
 
