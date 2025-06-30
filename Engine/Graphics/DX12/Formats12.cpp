@@ -102,11 +102,11 @@ const DxgiFormatMapping& FormatToDxgi(Format engineFormat)
 Format DxgiToFormat(DXGI_FORMAT format)
 {
 	static bool initialized = false;
-	static std::array<Format, DXGI_FORMAT_V408 + 1> remapTable;
+	static std::array<Format, DXGI_FORMAT_A4B4G4R4_UNORM + 1> remapTable;
 
 	if (!initialized)
 	{
-		for (uint32_t i = 0; i < DXGI_FORMAT_V408 + 1; ++i)
+		for (uint32_t i = 0; i < DXGI_FORMAT_A4B4G4R4_UNORM + 1; ++i)
 		{
 			remapTable[i] = Format::Unknown;
 		}
@@ -184,7 +184,11 @@ Format DxgiToFormat(DXGI_FORMAT format)
 		initialized = true;
 	}
 
-	return remapTable[format];
+	if (format < remapTable.size())
+	{
+		return remapTable[format];
+	}
+	return Format::Unknown;
 }
 
 

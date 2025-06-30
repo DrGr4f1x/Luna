@@ -23,6 +23,7 @@
 #include "QueueVK.h"
 #include "PipelineStateVK.h"
 #include "RootSignatureVK.h"
+#include "TextureVK.h"
 #include "VulkanUtil.h"
 
 using namespace std;
@@ -299,6 +300,36 @@ void CommandContextVK::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState 
 	m_bufferBarriers.push_back(barrier);
 
 	gpuBuffer->SetUsageState(newState);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContextVK::TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate)
+{
+	// TODO: Try this with GetPlatformObject()
+	Texture* textureVK = (Texture*)texture.Get();
+	assert(textureVK != nullptr);
+
+	TextureBarrier barrier{
+		.image				= textureVK->GetImage(),
+		.format				= FormatToVulkan(texture->GetFormat()),
+		.imageAspect		= GetImageAspect(texture->GetFormat()),
+		.beforeState		= texture->GetUsageState(),
+		.afterState			= newState,
+		.numMips			= texture->GetNumMips(),
+		.mipLevel			= 0,
+		.arraySizeOrDepth	= texture->GetArraySize(),
+		.arraySlice			= 0,
+		.bWholeTexture		= true
+	};
+
+	m_textureBarriers.push_back(barrier);
+
+	texture->SetUsageState(newState);
 
 	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
 	{
@@ -842,6 +873,16 @@ void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 }
 
 
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture)
+{
+	// TODO: Try this with GetPlatformObject()
+	Texture* textureVK = (Texture*)texture.Get();
+	assert(textureVK != nullptr);
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, textureVK->GetImageInfoSrv(), true);
+}
+
+
 void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
@@ -945,6 +986,78 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetVulkanDeviceManager()->ReleaseBuffer(stagingBuffer.get());
+}
+
+
+void CommandContextVK::InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit)
+{
+	const bool isTexture3D = texInit.dimension == TextureDimension::Texture3D;
+	const uint32_t effectiveArraySize = isTexture3D ? 1 : texInit.arraySizeOrDepth;
+	const uint32_t numSubResources = effectiveArraySize * texInit.numMips;
+	vector<VkBufferImageCopy> bufferCopyRegions(numSubResources);
+	
+	uint32_t offset = 0;
+	uint32_t index = 0;
+
+	for (uint32_t i = 0; i < effectiveArraySize; ++i)
+	{
+		uint64_t width = texInit.width;
+		uint32_t height = texInit.height;
+		uint32_t depth = texInit.arraySizeOrDepth;
+		for (uint32_t j = 0; j < texInit.numMips; ++j)
+		{
+			VkBufferImageCopy bufferCopyRegion{
+				.bufferOffset = offset,
+				.imageSubresource = {
+					.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+					.mipLevel = j,
+					.baseArrayLayer = i,
+					.layerCount = 1 },
+				.imageExtent = {
+					.width = (uint32_t)width,
+					.height = height,
+					.depth = isTexture3D ? depth : 1 }
+			};
+
+			bufferCopyRegions[index] = bufferCopyRegion;
+
+			size_t numBytes = 0;
+			GetSurfaceInfo(width, height, texInit.format, &numBytes, nullptr, nullptr);
+
+			offset += (uint32_t)numBytes;
+			++index;
+
+			width = width >> 1;
+			height = height >> 1;
+			depth = depth >> 1;
+
+			width = std::max<uint64_t>(width, 1);
+			height = std::max<uint32_t>(height, 1);
+			depth = std::max<uint32_t>(depth, 1);
+		}
+	}
+
+	auto deviceManager = GetVulkanDeviceManager();
+	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetVulkanDevice(), deviceManager->GetAllocator(), texInit.baseData, texInit.totalBytes);
+
+	// TODO: Try this with GetPlatformObject()
+	Texture* textureVK = (Texture*)destTexture.Get();
+	assert(textureVK != nullptr);
+
+	// Copy from the upload buffer to the destination texture
+	TransitionResource(destTexture, ResourceState::CopyDest, true);
+
+	vkCmdCopyBufferToImage(
+		m_commandBuffer,
+		stagingBuffer->Get(),
+		textureVK->GetImage(),
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		numSubResources,
+		bufferCopyRegions.data());
+
+	TransitionResource(destTexture, ResourceState::ShaderResource, true);
+
+	deviceManager->ReleaseBuffer(stagingBuffer.get());
 }
 
 

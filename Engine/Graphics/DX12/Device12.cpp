@@ -22,7 +22,9 @@
 #include "GpuBuffer12.h"
 #include "PipelineState12.h"
 #include "RootSignature12.h"
+#include "Sampler12.h"
 #include "Shader12.h"
+#include "Texture12.h"
 
 using namespace std;
 
@@ -582,8 +584,9 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 				d3d12Range.RangeType = DescriptorTypeToDX12(range.descriptorType);
 				d3d12Range.NumDescriptors = range.numDescriptors;
 				d3d12Range.BaseShaderRegister = range.startRegister;
-				d3d12Range.RegisterSpace = rootParameter.registerSpace;
+				d3d12Range.RegisterSpace = range.registerSpace;
 				d3d12Range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+				d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 			}
 			param.DescriptorTable.pDescriptorRanges = pRanges;
 		}
@@ -667,7 +670,17 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 	{
 		wil::com_ptr<ID3DBlob> pOutBlob, pErrorBlob;
 
-		assert_succeeded(D3D12SerializeVersionedRootSignature(&d3d12RootSignatureDesc, &pOutBlob, &pErrorBlob));
+		HRESULT hr = S_OK;
+		hr = D3DX12SerializeVersionedRootSignature(&d3d12RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &pOutBlob, &pErrorBlob);
+		if (hr != S_OK)
+		{
+			LogError(LogDirectX) << "Error compiling root signature, HRESULT  0x" << std::hex << std::setw(8) << hr << endl;
+			if (pErrorBlob)
+			{
+				LogError(LogDirectX) << (const char*)pErrorBlob->GetBufferPointer() << endl;
+			}
+			return nullptr;
+		}
 
 		assert_succeeded(m_device->CreateRootSignature(0, pOutBlob->GetBufferPointer(), pOutBlob->GetBufferSize(),
 			IID_PPV_ARGS(&pRootSignature)));
@@ -906,7 +919,7 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 }
 
 
-Luna::DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
 	auto descriptorSet = std::make_shared<DescriptorSet>();
 
@@ -924,7 +937,159 @@ Luna::DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& desc
 }
 
 
-Luna::ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex)
+SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
+{
+	D3D12_SAMPLER_DESC d3d12SamplerDesc{
+		.Filter				= TextureFilterToDX12(samplerDesc.filter),
+		.AddressU			= TextureAddressToDX12(samplerDesc.addressU),
+		.AddressV			= TextureAddressToDX12(samplerDesc.addressV),
+		.AddressW			= TextureAddressToDX12(samplerDesc.addressW),
+		.MipLODBias			= samplerDesc.mipLODBias,
+		.MaxAnisotropy		= samplerDesc.maxAnisotropy,
+		.ComparisonFunc		= ComparisonFuncToDX12(samplerDesc.comparisonFunc),
+		.BorderColor	= 
+			{ samplerDesc.borderColor.R(), samplerDesc.borderColor.G(), samplerDesc.borderColor.B(), samplerDesc.borderColor.A() },
+		.MinLOD				= { samplerDesc.minLOD },
+		.MaxLOD				= { samplerDesc.maxLOD }
+	};
+
+	D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle;
+
+	const size_t hashValue = Utility::HashState(&d3d12SamplerDesc);
+
+	std::lock_guard lock(m_samplerMutex);
+
+	auto iter = m_samplerMap.find(hashValue);
+	if (iter != m_samplerMap.end())
+	{
+		samplerHandle = iter->second;
+	}
+	else
+	{
+		samplerHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+		m_device->CreateSampler(&d3d12SamplerDesc, samplerHandle);
+
+		m_samplerMap[hashValue] = samplerHandle;
+	}
+
+	auto samplerPtr = std::make_shared<Sampler>();
+
+	samplerPtr->m_device = this;
+	samplerPtr->m_samplerHandle = samplerHandle;
+
+	return samplerPtr;
+}
+
+
+ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
+{
+	Texture* tex = new Texture();
+	tex->m_name = name;
+	tex->m_mapKey = mapKey;
+	return tex;
+}
+
+
+bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texInit)
+{
+	Texture* texture12 = (Texture*)texture;
+	assert(texture12 != nullptr);
+
+	texture12->m_device = this;
+	texture12->m_type = TextureDimensionToResourceType(texInit.dimension);
+	texture12->m_usageState = ResourceState::CopyDest;
+	texture12->m_width = texInit.width;
+	texture12->m_height = texInit.height;
+	texture12->m_arraySizeOrDepth = texInit.arraySizeOrDepth;
+	texture12->m_numMips = texInit.numMips;
+	texture12->m_numSamples = 1;
+	texture12->m_planeCount = GetFormatPlaneCount(FormatToDxgi(texInit.format).resourceFormat);
+	texture12->m_format = texInit.format;
+
+	// TODO: Allocate this with D3D12MA
+
+	D3D12_RESOURCE_DESC texDesc{
+		.Dimension			= GetResourceDimension(texture12->m_type),
+		.Width				= texture12->m_width,
+		.Height				= texture12->m_height,
+		.DepthOrArraySize	= static_cast<UINT16>(texture12->m_arraySizeOrDepth),
+		.MipLevels			= (UINT16)texture12->m_numMips,
+		.Format				= FormatToDxgi(texture12->m_format).resourceFormat,
+		.SampleDesc			= { .Count = 1, .Quality = 0 },
+		.Layout				= D3D12_TEXTURE_LAYOUT_UNKNOWN,
+		.Flags				= D3D12_RESOURCE_FLAG_NONE
+	};
+	
+	D3D12_HEAP_PROPERTIES heapProps{
+		.Type					= D3D12_HEAP_TYPE_DEFAULT,
+		.CPUPageProperty		= D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+		.MemoryPoolPreference	= D3D12_MEMORY_POOL_UNKNOWN,
+		.CreationNodeMask		= 1,
+		.VisibleNodeMask		= 1
+	};
+	
+	ID3D12Resource* resource = nullptr;
+	assert_succeeded(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &texDesc,
+		ResourceStateToDX12(texture12->m_usageState), nullptr, IID_PPV_ARGS(&resource)));
+
+	texture12->m_resource.attach(resource);
+
+	SetDebugName(texture12->GetResource(), texture12->m_name);
+
+	// Copy initial data
+	CommandContext::InitializeTexture(texture, texInit);
+
+	// Create SRV
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = GetSRVDimension(texture12->GetResourceType());
+	srvDesc.Format = FormatToDxgi(texture12->GetFormat()).srvFormat;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	switch (texture12->GetResourceType())
+	{
+	case ResourceType::Texture1D:
+		srvDesc.Texture1D.MipLevels = texture12->GetNumMips();
+		break;
+	case ResourceType::Texture1D_Array:
+		srvDesc.Texture1DArray.MipLevels = texture12->GetNumMips();
+		srvDesc.Texture1DArray.ArraySize = texture12->GetArraySize();
+		break;
+	case ResourceType::Texture2D:
+	case ResourceType::Texture2DMS:
+		srvDesc.Texture2D.MipLevels = texture12->GetNumMips();
+		break;
+	case ResourceType::Texture2D_Array:
+	case ResourceType::Texture2DMS_Array:
+		srvDesc.Texture2DArray.MipLevels = texture12->GetNumMips();
+		srvDesc.Texture2DArray.ArraySize = texture12->GetArraySize();
+		break;
+	case ResourceType::TextureCube:
+		srvDesc.TextureCube.MipLevels = texture12->GetNumMips();
+		break;
+	case ResourceType::TextureCube_Array:
+		srvDesc.TextureCubeArray.MipLevels = texture12->GetNumMips();
+		srvDesc.TextureCubeArray.NumCubes = texture12->GetArraySize();
+		break;
+	case ResourceType::Texture3D:
+		srvDesc.Texture3D.MipLevels = texture12->GetNumMips();
+		break;
+
+	default:
+		assert(false);
+		return false;
+	}
+
+	if (texture12->m_srvHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+	{
+		texture12->m_srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
+	m_device->CreateShaderResourceView(texture12->GetResource(), &srvDesc, texture12->m_srvHandle);
+
+	return true;
+}
+
+
+ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex)
 {
 	wil::com_ptr<ID3D12Resource> displayPlane;
 	assert_succeeded(swapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));

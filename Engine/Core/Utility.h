@@ -17,6 +17,7 @@ const uint32_t BUFFER_SIZE = 1024;
 
 inline void Print(const char* msg) { printf(msg); }
 inline void Print(const wchar_t* msg) { wprintf(msg); }
+inline void Flush() { fflush(stdout); }
 
 inline void Printf(const char* format, ...)
 {
@@ -87,6 +88,7 @@ void ExitFatal(const std::string& message, const std::string& caption);
 		Utility::PrintSubMessage("\'" #isFalse "\' is false"); \
 		Utility::PrintSubMessage(__VA_ARGS__); \
 		Utility::Print("\n"); \
+		Utility::Flush(); \
 		__debugbreak(); \
 	}
 
@@ -98,6 +100,7 @@ void ExitFatal(const std::string& message, const std::string& caption);
 		Utility::PrintSubMessage(L"hr = %s", err.ErrorMessage()); \
 		Utility::PrintSubMessage(__VA_ARGS__); \
 		Utility::Print("\n"); \
+		Utility::Flush(); \
 		__debugbreak(); \
 	}
 
@@ -111,6 +114,7 @@ void ExitFatal(const std::string& message, const std::string& caption);
 		Utility::PrintSubMessage("\'" #isTrue "\' is true"); \
 		Utility::PrintSubMessage(__VA_ARGS__); \
 		Utility::Print("\n"); \
+		Utility::Flush(); \
 	} \
 }
 

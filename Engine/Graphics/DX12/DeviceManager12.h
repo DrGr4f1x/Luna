@@ -12,6 +12,7 @@
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
+#include "Graphics\Texture.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 using namespace Microsoft::WRL;
@@ -25,7 +26,6 @@ struct DeviceCaps;
 class DescriptorAllocator;
 class Device;
 class Queue;
-class ResourceManager;
 
 
 struct DxgiRLOHelper
@@ -141,6 +141,9 @@ private:
 	// DirectX device wrapper
 	std::unique_ptr<Device> m_device;
 
+	// Texture manager
+	std::unique_ptr<TextureManager> m_textureManager;
+
 	// Swap-chain objects
 	wil::com_ptr<IDXGISwapChain3> m_dxSwapChain;
 	std::vector<ColorBufferPtr> m_swapChainBuffers;
@@ -172,6 +175,7 @@ private:
 	std::queue<CommandContext*> m_availableContexts[4];
 
 	// Deferred resource release
+	std::mutex m_deferredReleaseMutex;
 	struct DeferredReleaseResource
 	{
 		uint64_t fenceValue;

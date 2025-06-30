@@ -478,6 +478,8 @@ IDevice* DeviceManager::GetDevice()
 
 void DeviceManager::ReleaseImage(CVkImage* image)
 {
+	lock_guard lock(m_deferredReleaseMutex);
+
 	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
 
 	DeferredReleaseResource resource{ nextFence, image, nullptr };
@@ -487,6 +489,8 @@ void DeviceManager::ReleaseImage(CVkImage* image)
 
 void DeviceManager::ReleaseBuffer(CVkBuffer* buffer)
 {
+	lock_guard lock(m_deferredReleaseMutex);
+
 	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
 
 	DeferredReleaseResource resource{ nextFence, nullptr, buffer };
@@ -624,6 +628,8 @@ void DeviceManager::CreateDevice()
 	}
 
 	m_device = std::make_unique<Device>(m_vkDevice.get(), m_vmaAllocator.get());
+
+	m_textureManager = std::make_unique<TextureManager>(m_device.get());
 }
 
 
@@ -724,6 +730,8 @@ void DeviceManager::QueueSignalSemaphore(QueueType queueType, VkSemaphore semaph
 
 void DeviceManager::ReleaseDeferredResources()
 {
+	lock_guard lock(m_deferredReleaseMutex);
+
 	auto resourceIt = m_deferredResources.begin();
 	while (resourceIt != m_deferredResources.end())
 	{

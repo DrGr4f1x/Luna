@@ -18,6 +18,8 @@
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\RootSignature.h"
+#include "Graphics\Sampler.h"
+#include "Graphics\Texture.h"
 
 
 // Forward declarations
@@ -112,6 +114,10 @@ protected:
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
 	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
+	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc);
+
+	// Wrappers for resource loading
+
 
 protected:
 	ApplicationInfo m_appInfo;

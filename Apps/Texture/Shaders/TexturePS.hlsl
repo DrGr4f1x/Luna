@@ -21,11 +21,8 @@ struct PSInput
 };
 
 
-VK_BINDING(0, 1)
-Texture2D colorTex : register(t0);
-
-VK_BINDING(0, 2)
-SamplerState linearSampler : register(s0);
+Texture2D colorTex : register(t0, space1);
+SamplerState linearSampler : register(s0, space2);
 
 
 float4 main(PSInput input) : SV_TARGET

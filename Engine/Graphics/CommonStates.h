@@ -16,7 +16,7 @@ namespace Luna
 struct BlendStateDesc;
 struct DepthStencilStateDesc;
 struct RasterizerStateDesc;
-
+struct SamplerDesc;
 
 namespace CommonStates
 {
@@ -44,6 +44,17 @@ const DepthStencilStateDesc& DepthStateReadWriteReversed();
 const DepthStencilStateDesc& DepthStateReadOnly();
 const DepthStencilStateDesc& DepthStateReadOnlyReversed();
 const DepthStencilStateDesc& DepthStateTestEqual();
+
+// Sampler states
+const SamplerDesc& SamplerLinearWrap();
+const SamplerDesc& SamplerAnisoWrap();
+const SamplerDesc& SamplerShadow();
+const SamplerDesc& SamplerLinearClamp();
+const SamplerDesc& SamplerVolumeWrap();
+const SamplerDesc& SamplerPointClamp();
+const SamplerDesc& SamplerPointBorder();
+const SamplerDesc& SamplerLinearBorder();
+const SamplerDesc& SamplerLinearMirror();
 
 } // namespace CommonStates
 

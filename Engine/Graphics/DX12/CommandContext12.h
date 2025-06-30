@@ -13,6 +13,8 @@
 #include "Graphics\CommandContext.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\DynamicDescriptorHeap12.h"
+#include "Graphics\DX12\LinearAllocator12.h"
+
 
 using namespace Microsoft::WRL;
 
@@ -28,10 +30,6 @@ class DescriptorSetHandleType;
 
 namespace Luna::DX12
 {
-
-// Forward declarations
-class ResourceManager;
-
 
 class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
 	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
@@ -58,6 +56,7 @@ public:
 	void TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	// Graphics context
@@ -98,6 +97,7 @@ public:
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv) override;
 	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture) override;
 
 	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) override;
 	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer) override;
@@ -121,8 +121,14 @@ protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
 	void InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet);
 	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
+
+	DynAlloc ReserveUploadMemory(size_t sizeInBytes)
+	{
+		return m_cpuLinearAllocator.Allocate(sizeInBytes);
+	}
 
 private:
 	void BindDescriptorHeaps();
@@ -150,6 +156,9 @@ private:
 	uint32_t m_numBarriersToFlush{ 0 };
 
 	ID3D12DescriptorHeap* m_currentDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+
+	LinearAllocator m_cpuLinearAllocator;
+	LinearAllocator m_gpuLinearAllocator;
 
 	bool m_bHasPendingDebugEvent{ false };
 

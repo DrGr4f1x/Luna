@@ -59,6 +59,16 @@ void CommandContext::InitializeBuffer(GpuBufferPtr destBuffer, const void* buffe
 }
 
 
+void CommandContext::InitializeTexture(TexturePtr destTexture, const TextureInitializer& texInit)
+{
+	CommandContext& initContext = CommandContext::Begin();
+
+	initContext.m_contextImpl->InitializeTexture_Internal(destTexture, texInit);
+
+	initContext.Finish(true);
+}
+
+
 ComputeContext& ComputeContext::Begin(const string id, bool bAsync)
 {
 	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Direct;

@@ -138,4 +138,6 @@ inline Format RemoveSrgb(Format format)
 	}
 }
 
+void GetSurfaceInfo(size_t width, size_t height, Format format, size_t* outNumBytes, size_t* outRowBytes, size_t* outNumRows);
+
 } // namespace Luna

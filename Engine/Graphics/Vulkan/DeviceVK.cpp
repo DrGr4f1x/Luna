@@ -23,6 +23,8 @@
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
 #include "RootSignatureVK.h"
+#include "SamplerVK.h"
+#include "TextureVK.h"
 
 using namespace std;
 
@@ -134,7 +136,7 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator)
 }
 
 
-Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
+ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
 	// Create image
 	ImageDesc imageDesc{
@@ -224,7 +226,7 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 }
 
 
-Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
+DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
 	// Create depth image
 	ImageDesc imageDesc{
@@ -326,7 +328,7 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 }
 
 
-Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
@@ -388,7 +390,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 }
 
 
-Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
 	// Validate RootSignatureDesc
 	if (!rootSignatureDesc.Validate())
@@ -559,7 +561,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 }
 
 
-Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
 {
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -809,7 +811,7 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 }
 
 
-Luna::DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
@@ -850,7 +852,138 @@ Luna::DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& desc
 	return descriptorSet;
 }
 
-Luna::ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex)
+
+SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
+{
+	VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
+
+	VkSamplerCreateInfo createInfo{
+		.sType						= VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+		.pNext						= nullptr,
+		.flags						= 0,
+		.magFilter					= filterMapping.magFilter,
+		.minFilter					= filterMapping.minFilter,
+		.mipmapMode					= filterMapping.mipFilter,
+		.addressModeU				= TextureAddressToVulkan(samplerDesc.addressU),
+		.addressModeV				= TextureAddressToVulkan(samplerDesc.addressV),
+		.addressModeW				= TextureAddressToVulkan(samplerDesc.addressW),
+		.mipLodBias					= samplerDesc.mipLODBias,
+		.anisotropyEnable			= filterMapping.isAnisotropic,
+		.maxAnisotropy				= (float)samplerDesc.maxAnisotropy,
+		.compareEnable				= filterMapping.isComparisonEnabled,
+		.compareOp					= ComparisonFuncToVulkan(samplerDesc.comparisonFunc),
+		.minLod						= samplerDesc.minLOD,
+		.maxLod						= samplerDesc.maxLOD,
+		.borderColor				= VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK, // TODO
+		.unnormalizedCoordinates	= VK_FALSE
+	};
+
+	wil::com_ptr<CVkSampler> pSampler;
+
+	size_t hashValue = Utility::HashState(&createInfo);
+
+	std::lock_guard lock(m_samplerMutex);
+
+	auto iter = m_samplerMap.find(hashValue);
+	if (iter != m_samplerMap.end())
+	{
+		pSampler = iter->second;
+	}
+	else
+	{
+		VkSampler vkSampler = VK_NULL_HANDLE;
+		vkCreateSampler(m_device->Get(), &createInfo, nullptr, &vkSampler);
+
+		pSampler = Create<CVkSampler>(m_device.get(), vkSampler);
+	}
+
+	VkDescriptorImageInfo imageInfoSampler{
+		.sampler		= pSampler->Get(),
+		.imageView		= VK_NULL_HANDLE,
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	auto samplerPtr = std::make_shared<Sampler>();
+
+	samplerPtr->m_device = this;
+	samplerPtr->m_sampler = pSampler;
+	samplerPtr->m_imageInfoSampler = imageInfoSampler;
+
+	return samplerPtr;
+};
+
+
+ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
+{
+	Texture* tex = new Texture();
+	tex->m_name = name;
+	tex->m_mapKey = mapKey;
+	return tex;
+}
+
+
+bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texInit)
+{
+	Texture* textureVK = (Texture*)texture;
+	assert(textureVK != nullptr);
+
+	textureVK->m_device = this;
+	textureVK->m_type = TextureDimensionToResourceType(texInit.dimension);
+	textureVK->m_usageState = ResourceState::Undefined;
+	textureVK->m_width = texInit.width;
+	textureVK->m_height = texInit.height;
+	textureVK->m_arraySizeOrDepth = texInit.arraySizeOrDepth;
+	textureVK->m_numMips = texInit.numMips;
+	textureVK->m_numSamples = 1;
+	textureVK->m_planeCount = 1;
+	textureVK->m_format = texInit.format;
+
+	// Create image
+	ImageDesc imageDesc{
+		.name = textureVK->m_name,
+		.width = texInit.width,
+		.height = texInit.height,
+		.arraySizeOrDepth = texInit.arraySizeOrDepth,
+		.format = texInit.format,
+		.numMips = texInit.numMips,
+		.numSamples = 1,
+		.resourceType = textureVK->m_type,
+		.imageUsage = GpuImageUsage::ShaderResource | GpuImageUsage::CopyDest,
+		.memoryAccess = MemoryAccess::GpuReadWrite
+	};
+
+	textureVK->m_image = CreateImage(imageDesc);
+
+	// Shader resource view
+	ImageViewDesc imageViewDesc{
+		.image = textureVK->m_image.get(),
+		.name = textureVK->m_name,
+		.resourceType = textureVK->GetResourceType(),
+		.imageUsage = GpuImageUsage::ShaderResource,
+		.format = textureVK->GetFormat(),
+		.imageAspect = ImageAspect::Color,
+		.baseMipLevel = 0,
+		.mipCount = textureVK->GetNumMips(),
+		.baseArraySlice = 0,
+		.arraySize = textureVK->GetArraySize()
+	};
+	textureVK->m_imageViewSrv = CreateImageView(imageViewDesc);
+
+	VkDescriptorImageInfo imageInfoSrv{
+		.sampler = VK_NULL_HANDLE,
+		.imageView = textureVK->m_imageViewSrv->Get(),
+		.imageLayout = GetImageLayout(ResourceState::ShaderResource)
+	};
+	textureVK->m_imageInfoSrv = imageInfoSrv;
+
+	// Copy initial data
+	CommandContext::InitializeTexture(texture, texInit);
+
+	return true;
+}
+
+
+ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex)
 {
 	const std::string name = std::format("Primary Swapchain Image {}", imageIndex);
 

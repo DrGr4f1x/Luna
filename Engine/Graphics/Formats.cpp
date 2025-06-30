@@ -209,4 +209,77 @@ uint32_t BlockSize(Format format)
 	}
 }
 
+
+void GetSurfaceInfo(size_t width, size_t height, Format format, size_t* outNumBytes, size_t* outRowBytes, size_t* outNumRows)
+{
+	size_t numBytes = 0;
+	size_t rowBytes = 0;
+	size_t numRows = 0;
+
+	bool bc = false;
+	size_t bpe = 0;
+
+	switch (format)
+	{
+	case Format::BC1_UNorm:
+	case Format::BC1_UNorm_Srgb:
+	case Format::BC4_SNorm:
+	case Format::BC4_UNorm:
+		bc = true;
+		bpe = 8;
+		break;
+
+	case Format::BC2_UNorm:
+	case Format::BC2_UNorm_Srgb:
+	case Format::BC3_UNorm:
+	case Format::BC3_UNorm_Srgb:
+	case Format::BC5_SNorm:
+	case Format::BC5_UNorm:
+	case Format::BC6H_SFloat:
+	case Format::BC6H_UFloat:
+	case Format::BC7_UNorm:
+	case Format::BC7_UNorm_Srgb:
+		bc = true;
+		bpe = 16;
+		break;
+	}
+
+	if (bc)
+	{
+		size_t numBlocksWide = 0;
+		if (width > 0)
+		{
+			numBlocksWide = std::max<size_t>(1, (width + 3) / 4);
+		}
+		size_t numBlocksHigh = 0;
+		if (height > 0)
+		{
+			numBlocksHigh = std::max<size_t>(1, (height + 3) / 4);
+		}
+		rowBytes = numBlocksWide * bpe;
+		numRows = numBlocksHigh;
+		numBytes = rowBytes * numBlocksHigh;
+	}
+	else
+	{
+		size_t bpp = BitsPerPixel(format);
+		rowBytes = (width * bpp + 7) / 8; // round up to nearest byte
+		numRows = height;
+		numBytes = rowBytes * height;
+	}
+
+	if (outNumBytes)
+	{
+		*outNumBytes = numBytes;
+	}
+	if (outRowBytes)
+	{
+		*outRowBytes = rowBytes;
+	}
+	if (outNumRows)
+	{
+		*outNumRows = numRows;
+	}
+}
+
 } // namespace Luna

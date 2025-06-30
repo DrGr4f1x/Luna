@@ -212,6 +212,24 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Texture.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Loaders\DDSTextureLoader.cpp">
+      <Filter>Graphics\Loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Loaders\KTXTextureLoader.cpp">
+      <Filter>Graphics\Loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Loaders\STBTextureLoader.cpp">
+      <Filter>Graphics\Loaders</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\Texture12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\TextureVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -511,6 +529,36 @@
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Texture.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Loaders\DDSTextureLoader.h">
+      <Filter>Graphics\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Loaders\KTXTextureLoader.h">
+      <Filter>Graphics\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Loaders\STBTextureLoader.h">
+      <Filter>Graphics\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Loaders\dds.h">
+      <Filter>Graphics\Loaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\Texture12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\TextureVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Sampler.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\Sampler12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\SamplerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>

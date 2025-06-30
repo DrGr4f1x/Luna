@@ -13,6 +13,8 @@
 #include "CommonStates.h"
 
 #include "PipelineState.h"
+#include "Sampler.h"
+
 
 namespace Luna::CommonStates
 {
@@ -488,6 +490,108 @@ const DepthStencilStateDesc& CommonStates::DepthStateTestEqual()
 	}
 
 	return depthStencilStateDesc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerLinearWrap()
+{
+	static SamplerDesc desc{ .filter = TextureFilter::MinMagMipLinear };
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerAnisoWrap()
+{
+	static SamplerDesc desc{ .maxAnisotropy = 8 };
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerShadow()
+{
+	static SamplerDesc desc{ 
+		.filter				= TextureFilter::ComparisonMinMagLinearMipPoint, 
+		.addressU			= TextureAddress::Clamp,
+		.addressV			= TextureAddress::Clamp,
+		.addressW			= TextureAddress::Clamp,
+		.comparisonFunc		= ComparisonFunc::GreaterEqual
+	};
+
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerLinearClamp()
+{
+	static SamplerDesc desc{ 
+		.filter = TextureFilter::MinMagMipLinear, 
+		.addressU = TextureAddress::Clamp,
+		.addressV = TextureAddress::Clamp,
+		.addressW = TextureAddress::Clamp
+	};
+
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerVolumeWrap()
+{
+	static SamplerDesc desc{ .filter = TextureFilter::MinMagMipPoint };
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerPointClamp()
+{
+	static SamplerDesc desc{ 
+		.filter = TextureFilter::MinMagMipPoint, 
+		.addressU = TextureAddress::Clamp,
+		.addressV = TextureAddress::Clamp,
+		.addressW = TextureAddress::Clamp
+	};
+
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerPointBorder()
+{
+	static SamplerDesc desc{ 
+		.filter = TextureFilter::MinMagMipPoint, 
+		.addressU = TextureAddress::Clamp,
+		.addressV = TextureAddress::Clamp,
+		.addressW = TextureAddress::Clamp,
+		.borderColor = DirectX::Colors::Transparent
+	};
+
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerLinearBorder()
+{
+	static SamplerDesc desc{ 
+		.filter = TextureFilter::MinMagMipLinear, 
+		.addressU = TextureAddress::Clamp,
+		.addressV = TextureAddress::Clamp,
+		.addressW = TextureAddress::Clamp,
+		.borderColor = DirectX::Colors::Transparent
+	};
+	
+	return desc;
+}
+
+
+const SamplerDesc& CommonStates::SamplerLinearMirror()
+{
+	static SamplerDesc desc{ 
+		.filter = TextureFilter::MinMagMipLinear, 
+		.addressU = TextureAddress::Mirror,
+		.addressV = TextureAddress::Mirror,
+		.addressW = TextureAddress::Mirror
+	};
+
+	return desc;
 }
 
 } // namespace Luna::CommonStates

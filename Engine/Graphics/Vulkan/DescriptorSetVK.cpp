@@ -16,6 +16,8 @@
 #include "DepthBufferVK.h"
 #include "DeviceVK.h"
 #include "GpuBufferVK.h"
+#include "SamplerVK.h"
+#include "TextureVK.h"
 
 using namespace std;
 
@@ -101,6 +103,29 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo();
 		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
 	}
+
+	m_dirtyBits |= (1 << slot);
+}
+
+
+void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
+{
+	// TODO: Try this with GetPlatformObject()
+
+	const Texture* textureVK = (const Texture*)texture.Get();
+	assert(textureVK != nullptr);
+
+	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+
+	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	writeSet.descriptorCount = 1;
+	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	writeSet.dstSet = m_descriptorSet;
+	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstArrayElement = 0;
+
+	m_descriptorData[slot] = textureVK->GetImageInfoSrv();
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
 
 	m_dirtyBits |= (1 << slot);
 }
@@ -199,6 +224,28 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	writeSet.dstArrayElement = 0;
 	m_descriptorData[slot] = gpuBufferVK->GetBufferInfo();
 	writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
+
+	m_dirtyBits |= (1 << slot);
+}
+
+
+void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
+{
+	// TODO: Try this with GetPlatformObject()
+
+	const Sampler* samplerVK = (const Sampler*)sampler.get();
+	assert(samplerVK != nullptr);
+
+	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+
+	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	writeSet.descriptorCount = 1;
+	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+	writeSet.dstSet = m_descriptorSet;
+	writeSet.dstBinding = slot + m_bindingOffsets.sampler;
+	writeSet.dstArrayElement = 0;
+	m_descriptorData[slot] = samplerVK->GetImageInfoSampler();
+	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
 
 	m_dirtyBits |= (1 << slot);
 }

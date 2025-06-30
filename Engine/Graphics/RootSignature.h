@@ -27,137 +27,151 @@ struct DescriptorRange
 	DescriptorType descriptorType{ DescriptorType::None };
 	uint32_t startRegister{ 0 };
 	uint32_t numDescriptors{ 1 };
+	uint32_t registerSpace{ 0 };
 
 	constexpr DescriptorRange& SetDescriptorType(DescriptorType value) noexcept { descriptorType = value; return *this; }
 	constexpr DescriptorRange& SetStartRegister(uint32_t value) noexcept { startRegister = value; return *this; }
 	constexpr DescriptorRange& SetNumDescriptors(uint32_t value) noexcept { numDescriptors = value; return *this; }
+	constexpr DescriptorRange& SetRegisterSpace(uint32_t value) noexcept { registerSpace = value; return *this; }
 
-	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::ConstantBuffer,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TextureSRV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange TextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange TextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TextureUAV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange TypedBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange TypedBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TypedBufferSRV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange TypedBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange TypedBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TypedBufferUAV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange StructuredBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange StructuredBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::StructuredBufferSRV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange StructuredBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange StructuredBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::StructuredBufferUAV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
-	static DescriptorRange RawBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange RawBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RawBufferSRV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange RawBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange RawBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RawBufferUAV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange Sampler(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange Sampler(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::Sampler,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange RayTracingAccelStruct(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange RayTracingAccelStruct(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RayTracingAccelStruct,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}
 
 
-	static DescriptorRange SamplerFeedbackTextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1)
+	static DescriptorRange SamplerFeedbackTextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::SamplerFeedbackTextureUAV,
 			.startRegister		= startRegister,
-			.numDescriptors		= numDescriptors
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
 		};
 		return res;
 	}

@@ -221,6 +221,8 @@ void Application::SetDefaultSearchPaths()
 		m_fileSystem->AddSearchPath("Data\\Shaders\\DXIL");
 		m_fileSystem->AddSearchPath("Data\\Shaders\\SPIRV");
 		m_fileSystem->AddSearchPath("Data\\Shaders\\DXBC");
+		m_fileSystem->AddSearchPath("Data\\Textures");
+		m_fileSystem->AddSearchPath("Data\\Models");
 		m_fileSystem->AddSearchPath("..\\Data");
 		m_fileSystem->AddSearchPath("..\\Data\\Shaders");
 		m_fileSystem->AddSearchPath("..\\Data\\Shaders\\DXIL");
@@ -299,6 +301,12 @@ RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootS
 GraphicsPipelineStatePtr Application::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
 {
 	return m_deviceManager->GetDevice()->CreateGraphicsPipelineState(pipelineDesc);
+}
+
+
+SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
+{
+	return m_deviceManager->GetDevice()->CreateSampler(samplerDesc);
 }
 
 

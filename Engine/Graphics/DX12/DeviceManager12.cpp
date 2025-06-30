@@ -17,6 +17,7 @@
 #include "CommandContext12.h"
 #include "Device12.h"
 #include "DeviceCaps12.h"
+#include "LinearAllocator12.h"
 #include "Queue12.h"
 #include "Shader12.h"
 
@@ -172,6 +173,7 @@ DeviceManager::~DeviceManager()
 	Shader::DestroyAll();
 	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Destroy();
 	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Destroy();
+	LinearAllocator::DestroyAll();
 
 	extern Luna::IDeviceManager* g_deviceManager;
 	g_deviceManager = nullptr;
@@ -592,6 +594,8 @@ void DeviceManager::HandleDeviceLost()
 
 void DeviceManager::ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation)
 {
+	lock_guard lock(m_deferredReleaseMutex);
+
 	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
 
 	DeferredReleaseResource deferredResource{ nextFence, resource, allocation };
@@ -601,6 +605,8 @@ void DeviceManager::ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocatio
 
 void DeviceManager::ReleaseAllocation(D3D12MA::Allocation* allocation)
 {
+	lock_guard lock(m_deferredReleaseMutex);
+
 	uint64_t nextFence = GetQueue(QueueType::Graphics).GetNextFenceValue();
 
 	DeferredReleaseResource deferredResource{ nextFence, nullptr, allocation };
@@ -721,6 +727,8 @@ void DeviceManager::CreateDevice()
 	assert_succeeded(D3D12MA::CreateAllocator(&allocatorDesc, &m_d3d12maAllocator));
 
 	m_device = std::make_unique<Device>(m_dxDevice.get(), m_d3d12maAllocator.get());
+
+	m_textureManager = std::make_unique<TextureManager>(m_device.get());
 
 	// TODO: Create descriptor allocators
 }
@@ -1019,6 +1027,8 @@ void DeviceManager::ReleaseSwapChainBuffers()
 
 void DeviceManager::ReleaseDeferredResources()
 {
+	lock_guard lock(m_deferredReleaseMutex);
+
 	auto resourceIt = m_deferredResources.begin();
 	while (resourceIt != m_deferredResources.end())
 	{

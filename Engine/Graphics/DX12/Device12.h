@@ -32,17 +32,22 @@ class Device : public IDevice
 public:
 	Device(ID3D12Device* device, D3D12MA::Allocator* allocator);
 
-	Luna::ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
-	Luna::DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
-	Luna::GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
+	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
+	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
+	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
-	Luna::RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
-	Luna::GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) override;
+	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) override;
 
-	Luna::DescriptorSetPtr CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
+	DescriptorSetPtr CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
 
-	Luna::ColorBufferPtr CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex);
+	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
+
+	ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) override;
+	bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) override;
+
+	ColorBufferPtr CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain, uint32_t imageIndex);
 
 	ID3D12Device* GetD3D12Device() { return m_device.get(); }
 
@@ -60,6 +65,10 @@ protected:
 	// Graphics pipeline state cache
 	std::mutex m_graphicsPipelineStateMutex;
 	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_graphicsPipelineStateHashMap;
+
+	// Sampler state cache
+	std::mutex m_samplerMutex;
+	std::map<size_t, D3D12_CPU_DESCRIPTOR_HANDLE> m_samplerMap;
 };
 
 

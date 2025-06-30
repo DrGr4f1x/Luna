@@ -33,12 +33,15 @@ public:
 	void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
+	void SetSRV(uint32_t slot, TexturePtr texture) override;
 
 	void SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0) override;
 	void SetUAV(uint32_t slot, DepthBufferPtr depthBuffer) override;
 	void SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
 
 	void SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
+
+	void SetSampler(uint32_t slot, SamplerPtr sampler) override;
 
 	void SetDynamicOffset(uint32_t offset) override;
 

@@ -13,6 +13,7 @@
 #include "ResourceSet.h"
 
 #include "RootSignature.h"
+#include "Texture.h"
 
 
 namespace Luna
@@ -55,6 +56,13 @@ void ResourceSet::SetSRV(int param, int slot, GpuBufferPtr gpuBuffer)
 }
 
 
+void ResourceSet::SetSRV(int param, int slot, TexturePtr texture)
+{
+	assert(param < (int)m_descriptorSets.size());
+	m_descriptorSets[param]->SetSRV(slot, texture);
+}
+
+
 void ResourceSet::SetUAV(int param, int slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
 	assert(param < (int)m_descriptorSets.size());
@@ -80,6 +88,13 @@ void ResourceSet::SetCBV(int param, int slot, GpuBufferPtr gpuBuffer)
 {
 	assert(param < (int)m_descriptorSets.size());
 	m_descriptorSets[param]->SetCBV(slot, gpuBuffer);
+}
+
+
+void ResourceSet::SetSampler(int param, int slot, SamplerPtr sampler)
+{
+	assert(param < (int)m_descriptorSets.size());
+	m_descriptorSets[param]->SetSampler(slot, sampler);
 }
 
 

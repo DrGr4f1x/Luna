@@ -11,7 +11,7 @@
 #pragma once
 
 #include "Graphics\Enums.h"
-
+#include "Graphics\Texture.h"
 
 namespace Luna
 {
@@ -63,6 +63,7 @@ public:
 	virtual void TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	// Graphics context
@@ -105,6 +106,7 @@ public:
 	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) = 0;
 	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv) = 0;
 	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer) = 0;
+	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture) = 0;
 
 	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) = 0;
 	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer) = 0;
@@ -124,6 +126,7 @@ public:
 	
 protected:
 	virtual void InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
+	virtual void InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit) = 0;
 };
 
 
@@ -160,6 +163,7 @@ public:
 	}
 
 	static void InitializeBuffer(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
+	static void InitializeTexture(TexturePtr destTexture, const TextureInitializer& texInit);
 
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
@@ -167,6 +171,7 @@ public:
 	void TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate = false);
 	
 	void BeginFrame();
 
@@ -222,6 +227,7 @@ public:
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv = true);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture);
 
 	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer);
 	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer);
@@ -305,6 +311,12 @@ inline void CommandContext::TransitionResource(DepthBufferPtr depthBuffer, Resou
 inline void CommandContext::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
+}
+
+
+inline void CommandContext::TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate)
+{
+	m_contextImpl->TransitionResource(texture, newState, bFlushImmediate);
 }
 
 
@@ -516,6 +528,12 @@ inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, DepthBu
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, GpuBufferPtr gpuBuffer)
 {
 	m_contextImpl->SetSRV(rootParam, offset, gpuBuffer);
+}
+
+
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, TexturePtr texture)
+{
+	m_contextImpl->SetSRV(rootParam, offset, texture);
 }
 
 

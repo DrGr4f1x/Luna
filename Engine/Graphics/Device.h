@@ -18,6 +18,8 @@
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\RootSignature.h"
+#include "Graphics\Sampler.h"
+#include "Graphics\Texture.h"
 
 
 namespace Luna
@@ -25,6 +27,8 @@ namespace Luna
 
 class IDevice
 {
+	friend class TextureManager;
+
 public:
 	virtual ~IDevice() = default;
 
@@ -35,6 +39,11 @@ public:
 	virtual RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 
 	virtual GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) = 0;
+
+	virtual SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) = 0;
+
+	virtual ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) = 0;
+	virtual bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) = 0;
 };
 
 using DevicePtr = std::shared_ptr<IDevice>;

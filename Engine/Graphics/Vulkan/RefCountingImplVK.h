@@ -651,7 +651,7 @@ private:
 
 
 //
-// VKDescriptorPool
+// VkDescriptorPool
 //
 class __declspec(uuid("5F4C0CA9-0DAB-4B07-8CE7-DC35FBC79839")) CVkDescriptorPool
 	: public RefCounted<CVkDescriptorPool>
@@ -680,6 +680,39 @@ public:
 private:
 	wil::com_ptr<CVkDevice> m_device;
 	VkDescriptorPool m_descriptorPool{ VK_NULL_HANDLE };
+};
+
+
+//
+// VkSampler
+//
+class __declspec(uuid("3AD5FC80-E8B2-475E-B67F-50FF123F56E8")) CVkSampler
+	: public RefCounted<CVkSampler>
+	, public NonCopyable
+{
+public:
+	CVkSampler() noexcept = default;
+	CVkSampler(CVkDevice* device, VkSampler sampler)
+		: m_device{ device }
+		, m_sampler{ sampler }
+	{
+	}
+
+	~CVkSampler()
+	{
+		Destroy();
+	}
+
+	VkSampler Get() const noexcept { return m_sampler; }
+	operator VkSampler() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkSampler m_sampler{ VK_NULL_HANDLE };
 };
 
 } // namespace Luna::VK

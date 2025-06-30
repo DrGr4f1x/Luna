@@ -22,12 +22,14 @@ class IColorBuffer;
 class IDepthBuffer;
 class IGpuBuffer;
 class IRootSignature;
+class ISampler;
+class TexturePtr;
 
 using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
 using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
-
+using SamplerPtr = std::shared_ptr<ISampler>;
 
 class ResourceSet
 {
@@ -38,12 +40,15 @@ public:
 	void SetSRV(int param, int slot, ColorBufferPtr colorBuffer);
 	void SetSRV(int param, int slot, DepthBufferPtr depthBuffer, bool depthSrv = true);
 	void SetSRV(int param, int slot, GpuBufferPtr gpuBuffer);
+	void SetSRV(int param, int slot, TexturePtr texture);
 
 	void SetUAV(int param, int slot, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0);
 	void SetUAV(int param, int slot, DepthBufferPtr depthBuffer);
 	void SetUAV(int param, int slot, GpuBufferPtr gpuBuffer);
 
 	void SetCBV(int param, int slot, GpuBufferPtr gpuBuffer);
+
+	void SetSampler(int param, int slot, SamplerPtr sampler);
 
 	void SetDynamicOffset(int param, uint32_t offset);
 

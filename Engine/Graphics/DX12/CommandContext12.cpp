@@ -23,6 +23,7 @@
 #include "Queue12.h"
 #include "RootSignature12.h"
 #include "PipelineState12.h"
+#include "Texture12.h"
 
 
 #if ENABLE_D3D12_DEBUG_MARKERS
@@ -55,6 +56,8 @@ CommandContext12::CommandContext12(CommandListType type)
 	: m_type{ type }
 	, m_dynamicViewDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV }
 	, m_dynamicSamplerDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER }
+	, m_cpuLinearAllocator{ kCpuWritable }
+	, m_gpuLinearAllocator{ kGpuExclusive }
 {
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 }
@@ -150,9 +153,8 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 	cmdQueue.DiscardAllocator(fenceValue, m_currentAllocator);
 	m_currentAllocator = nullptr;
 
-	// TODO
-	//m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
-	//m_gpuLinearAllocator.CleanupUsedPages(fenceValue);
+	m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
+	m_gpuLinearAllocator.CleanupUsedPages(fenceValue);
 	m_dynamicViewDescriptorHeap.CleanupUsedHeaps(fenceValue);
 	m_dynamicSamplerDescriptorHeap.CleanupUsedHeaps(fenceValue);
 
@@ -230,6 +232,28 @@ void CommandContext12::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState 
 	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
 
 	gpuBuffer->SetUsageState(newState);
+}
+
+
+void CommandContext12::TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate)
+{
+	// TODO: Try this with GetPlatformObject()
+
+	Texture* texture12 = (Texture*)texture.Get();
+
+	ResourceState oldState = texture->GetUsageState();
+
+	if (m_type == CommandListType::Compute)
+	{
+		assert(IsValidComputeResourceState(oldState));
+		assert(IsValidComputeResourceState(newState));
+	}
+
+	ID3D12Resource* resource = texture12->GetResource();
+
+	TransitionResource_Internal(resource, ResourceStateToDX12(oldState), ResourceStateToDX12(newState), bFlushImmediate);
+
+	texture->SetUsageState(newState);
 }
 
 
@@ -740,6 +764,18 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 }
 
 
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture)
+{
+	// TODO: Try this with GetPlatformObject()
+	Texture* texture12 = (Texture*)texture.Get();
+	assert(texture12 != nullptr);
+
+	auto descriptor = texture12->GetSrvHandle();
+
+	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+}
+
+
 void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
@@ -922,6 +958,29 @@ void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
 	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
+}
+
+
+void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit)
+{
+	Texture* texture12 = (Texture*)destTexture.Get();
+	assert(texture12 != nullptr);
+
+	// Copy subresource info from Luna struct to D3D12 struct
+	const uint32_t numSubresources = (uint32_t)texInit.subResourceData.size();
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources{ numSubresources };
+	for (uint32_t i = 0; i < numSubresources; ++i)
+	{
+		D3D12_SUBRESOURCE_DATA& d3d12SubResourceData = subresources[i];
+		d3d12SubResourceData.pData = texInit.subResourceData[i].data;
+		d3d12SubResourceData.RowPitch = texInit.subResourceData[i].rowPitch;
+		d3d12SubResourceData.SlicePitch = texInit.subResourceData[i].slicePitch;
+	}
+
+	uint64_t uploadBufferSize = GetRequiredIntermediateSize(texture12->GetResource(), 0, numSubresources);
+	DynAlloc mem = ReserveUploadMemory(uploadBufferSize);
+	UpdateSubresources(m_commandList, texture12->GetResource(), mem.buffer, 0, 0, numSubresources, subresources.data());
+	TransitionResource(destTexture, ResourceState::GenericRead, true);
 }
 
 

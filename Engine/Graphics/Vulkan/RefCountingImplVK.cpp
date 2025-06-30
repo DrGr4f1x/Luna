@@ -164,4 +164,11 @@ void CVkDescriptorPool::Destroy()
 	m_descriptorPool = VK_NULL_HANDLE;
 }
 
+
+void CVkSampler::Destroy()
+{
+	vkDestroySampler(GetDevice(), m_sampler, nullptr);
+	m_sampler = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

@@ -503,45 +503,34 @@ inline TextureDimension ResourceTypeToTextureDimension(ResourceType resourceType
 {
 	switch (resourceType)
 	{
-	case ResourceType::Texture1D:
-		return TextureDimension::Texture1D;
-		break;
+	case ResourceType::Texture1D:			return TextureDimension::Texture1D;			break;
+	case ResourceType::Texture1D_Array:		return TextureDimension::Texture1D_Array;	break;
+	case ResourceType::Texture2D:			return TextureDimension::Texture2D;			break;
+	case ResourceType::Texture2D_Array:		return TextureDimension::Texture2D_Array;	break;
+	case ResourceType::Texture2DMS:			return TextureDimension::Texture2DMS;		break;
+	case ResourceType::Texture2DMS_Array:	return TextureDimension::Texture2DMS_Array;	break;
+	case ResourceType::TextureCube:			return TextureDimension::TextureCube;		break;
+	case ResourceType::TextureCube_Array:	return TextureDimension::TextureCube_Array;	break;
+	case ResourceType::Texture3D:			return TextureDimension::Texture3D;			break;
+	default:								return TextureDimension::Unknown;			break;
+	}
+}
 
-	case ResourceType::Texture1D_Array:
-		return TextureDimension::Texture1D_Array;
-		break;
 
-	case ResourceType::Texture2D:
-		return TextureDimension::Texture2D;
-		break;
-
-	case ResourceType::Texture2D_Array:
-		return TextureDimension::Texture2D_Array;
-		break;
-
-	case ResourceType::Texture2DMS:
-		return TextureDimension::Texture2DMS;
-		break;
-
-	case ResourceType::Texture2DMS_Array:
-		return TextureDimension::Texture2DMS_Array;
-		break;
-
-	case ResourceType::TextureCube:
-		return TextureDimension::TextureCube;
-		break;
-
-	case ResourceType::TextureCube_Array:
-		return TextureDimension::TextureCube_Array;
-		break;
-
-	case ResourceType::Texture3D:
-		return TextureDimension::Texture3D;
-		break;
-
-	default:
-		return TextureDimension::Unknown;
-		break;
+inline ResourceType TextureDimensionToResourceType(TextureDimension dimension)
+{
+	switch (dimension)
+	{
+	case TextureDimension::Texture1D:			return ResourceType::Texture1D;			break;
+	case TextureDimension::Texture1D_Array:		return ResourceType::Texture1D_Array;	break;
+	case TextureDimension::Texture2D:			return ResourceType::Texture2D;			break;
+	case TextureDimension::Texture2D_Array:		return ResourceType::Texture2D_Array;	break;
+	case TextureDimension::Texture2DMS:			return ResourceType::Texture2DMS;		break;
+	case TextureDimension::Texture2DMS_Array:	return ResourceType::Texture2DMS_Array;	break;
+	case TextureDimension::TextureCube:			return ResourceType::TextureCube;		break;
+	case TextureDimension::TextureCube_Array:	return ResourceType::TextureCube_Array;	break;
+	case TextureDimension::Texture3D:			return ResourceType::Texture3D;			break;
+	default:									return ResourceType::Unknown;			break;
 	}
 }
 

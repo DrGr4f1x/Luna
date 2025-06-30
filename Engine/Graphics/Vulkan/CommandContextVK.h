@@ -80,6 +80,7 @@ public:
 	void TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(DepthBufferPtr depthBuffer, ResourceState newSTate, bool bFlushImmediate) override;
 	void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	void ClearUAV(GpuBufferPtr gpuBuffer) override;
@@ -119,6 +120,7 @@ public:
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv) override;
 	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer) override;
+	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture) override;
 
 	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer) override;
 	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer) override;
@@ -137,6 +139,7 @@ public:
 private:
 	void ClearDepthAndStencil_Internal(DepthBufferPtr depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeTexture_Internal(TexturePtr texture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet);
 
 	void BindDescriptorHeaps() {}

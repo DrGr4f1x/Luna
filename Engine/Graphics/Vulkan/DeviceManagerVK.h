@@ -12,6 +12,7 @@
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
+#include "Graphics\Texture.h"
 #include "Graphics\Vulkan\DeviceCapsVK.h"
 #include "Graphics\Vulkan\ExtensionManagerVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
@@ -25,7 +26,6 @@ namespace Luna::VK
 // Forward declarations
 class Device;
 class Queue;
-class ResourceManager;
 
 
 class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
@@ -112,6 +112,9 @@ private:
 	// Device wrapper
 	std::unique_ptr<Device> m_device;
 
+	// Texture manager
+	std::unique_ptr<TextureManager> m_textureManager;
+
 	// Swapchain
 	wil::com_ptr<CVkSwapchain> m_vkSwapChain;
 	// TODO - get rid of this, just use m_swapChainBuffers below
@@ -141,6 +144,7 @@ private:
 	std::queue<CommandContext*> m_availableContexts[4];
 
 	// Deferred resource release
+	std::mutex m_deferredReleaseMutex;
 	struct DeferredReleaseResource
 	{
 		uint64_t fenceValue;

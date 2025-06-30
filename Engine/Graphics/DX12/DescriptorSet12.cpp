@@ -16,6 +16,8 @@
 #include "DepthBuffer12.h"
 #include "Device12.h"
 #include "GpuBuffer12.h"
+#include "Sampler12.h"
+#include "Texture12.h"
 
 
 namespace Luna::DX12
@@ -62,6 +64,18 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		auto descriptor = gpuBuffer12->GetSrvHandle();
 		SetDescriptor(slot, descriptor);
 	}
+}
+
+
+void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
+{
+	// TODO: Try this with GetPlatformObject()
+
+	const Texture* texture12 = (const Texture*)texture.Get();
+	assert(texture12 != nullptr);
+
+	auto descriptor = texture12->GetSrvHandle();
+	SetDescriptor(slot, descriptor);
 }
 
 
@@ -125,6 +139,18 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		auto descriptor = gpuBuffer12->GetCbvHandle();
 		SetDescriptor(slot, descriptor);
 	}
+}
+
+
+void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
+{
+	// TODO: Try this with GetPlatformObject()
+
+	const Sampler* sampler12 = (const Sampler*)sampler.get();
+	assert(sampler12 != nullptr);
+
+	auto descriptor = sampler12->GetSamplerHandle();
+	SetDescriptor(slot, descriptor);
 }
 
 
