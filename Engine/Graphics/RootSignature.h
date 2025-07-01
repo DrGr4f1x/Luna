@@ -34,7 +34,7 @@ struct DescriptorRange
 	constexpr DescriptorRange& SetNumDescriptors(uint32_t value) noexcept { numDescriptors = value; return *this; }
 	constexpr DescriptorRange& SetRegisterSpace(uint32_t value) noexcept { registerSpace = value; return *this; }
 
-	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::ConstantBuffer,
@@ -46,7 +46,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TextureSRV,
@@ -58,7 +58,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange TextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TextureUAV,
@@ -70,7 +70,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TypedBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange TypedBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TypedBufferSRV,
@@ -82,7 +82,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TypedBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange TypedBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TypedBufferUAV,
@@ -94,7 +94,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange StructuredBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange StructuredBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::StructuredBufferSRV,
@@ -106,7 +106,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange StructuredBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange StructuredBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::StructuredBufferUAV,
@@ -117,7 +117,7 @@ struct DescriptorRange
 		return res;
 	}
 
-	static DescriptorRange RawBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange RawBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RawBufferSRV,
@@ -129,7 +129,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange RawBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange RawBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RawBufferUAV,
@@ -141,7 +141,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange Sampler(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange Sampler(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::Sampler,
@@ -153,7 +153,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange RayTracingAccelStruct(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange RayTracingAccelStruct(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RayTracingAccelStruct,
@@ -165,7 +165,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange SamplerFeedbackTextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 1)
+	static DescriptorRange SamplerFeedbackTextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::SamplerFeedbackTextureUAV,
@@ -318,30 +318,14 @@ struct RootParameter
 using RootParameters = std::vector<RootParameter>;
 
 
-struct VulkanBindingOffsets
-{
-	uint32_t shaderResource{ 0 };
-	uint32_t sampler{ 128 };
-	uint32_t constantBuffer{ 256 };
-	uint32_t unorderedAccess{ 384 };
-
-	constexpr VulkanBindingOffsets& SetShaderResourceOffset(uint32_t value) { shaderResource = value; return *this; }
-	constexpr VulkanBindingOffsets& SetSamplerOffset(uint32_t value) { sampler = value; return *this; }
-	constexpr VulkanBindingOffsets& SetConstantBufferOffset(uint32_t value) { constantBuffer = value; return *this; }
-	constexpr VulkanBindingOffsets& SetUnorderedAccessViewOffset(uint32_t value) { unorderedAccess = value; return *this; }
-};
-
-
 struct RootSignatureDesc
 {
 	std::string name{};
 	RootSignatureFlags flags{ RootSignatureFlags::None };
-	VulkanBindingOffsets bindingOffsets{};
 	RootParameters rootParameters;
 
 	RootSignatureDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr RootSignatureDesc& SetFlags(RootSignatureFlags value) noexcept { flags = value; return *this; }
-	RootSignatureDesc& SetBindingOffsets(VulkanBindingOffsets value) noexcept { bindingOffsets = value; return *this; }
 	RootSignatureDesc& SetRootParameters(const RootParameters& value) { rootParameters = value; return *this; }
 	RootSignatureDesc& AppendRootParameters(const RootParameters& value)
 	{

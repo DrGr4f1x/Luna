@@ -31,7 +31,6 @@ struct DescriptorSetDesc
 {
 	CVkDescriptorSetLayout* descriptorSetLayout{ nullptr };
 	RootParameter rootParameter{};
-	VulkanBindingOffsets bindingOffsets{};
 	uint32_t numDescriptors{ 0 };
 	bool isDynamicBuffer{ false };
 };

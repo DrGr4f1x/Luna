@@ -47,29 +47,6 @@ inline VkDescriptorType RootParameterTypeToVulkanDescriptorType(RootParameterTyp
 }
 
 
-inline uint32_t GetDescriptorOffset(VulkanBindingOffsets bindingOffsets, VkDescriptorType descriptorType)
-{
-	switch (descriptorType)
-	{
-	case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-	case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
-	case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
-	case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:	return bindingOffsets.shaderResource;
-
-	case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
-	case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
-	case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
-	case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:		return bindingOffsets.unorderedAccess;
-
-	case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-	case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:		return bindingOffsets.constantBuffer;
-
-	case VK_DESCRIPTOR_TYPE_SAMPLER:					return bindingOffsets.sampler;
-	}
-	return 0;
-}
-
-
 pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
 {
 	auto fileSystem = GetFileSystem();
@@ -438,9 +415,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
 			vkBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);
 
-			offset = GetDescriptorOffset(rootSignatureDesc.bindingOffsets, vkBinding.descriptorType);
-
-			vkBinding.binding = rootParameter.startRegister + offset;
+			vkBinding.binding = rootParameter.startRegister;
 			vkBinding.descriptorCount = 1;
 			vkBinding.stageFlags = shaderStageFlags;
 			vkBinding.pImmutableSamplers = nullptr;
@@ -461,9 +436,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 				vkBinding.descriptorCount = range.numDescriptors;
 				vkBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
 
-				offset = GetDescriptorOffset(rootSignatureDesc.bindingOffsets, vkBinding.descriptorType);
-
-				vkBinding.binding = range.startRegister + offset;
+				vkBinding.binding = range.startRegister;
 				vkBinding.stageFlags = shaderStageFlags;
 				vkBinding.pImmutableSamplers = nullptr;
 
@@ -845,7 +818,6 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 
 	descriptorSet->m_device = this;
 	descriptorSet->m_descriptorSet = vkDescriptorSet;
-	descriptorSet->m_bindingOffsets = descriptorSetDesc.bindingOffsets;
 	descriptorSet->m_numDescriptors = descriptorSetDesc.numDescriptors;
 	descriptorSet->m_isDynamicBuffer = descriptorSetDesc.isDynamicBuffer;
 

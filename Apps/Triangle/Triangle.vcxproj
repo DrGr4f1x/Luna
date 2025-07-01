@@ -194,7 +194,7 @@
   </Target>
   <Target Name="LunaBuildShaders" BeforeTargets="PrepareForBuild">
     <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\DXIL --platform DXIL --binary --shaderModel 6_5 --verbose --define DX12=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
-    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\SPIRV --platform SPIRV --binary --shaderModel 6_5 --tRegShift 0 --sRegShift 128 --bRegShift 256 --uRegShift 384 --vulkanVersion 1.2 --verbose --define VK=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
+    <Exec Condition="Exists('$(ProjectDir)Shaders/shaders.cfg')" WorkingDirectory="$(ProjectDir)Shaders" Command="$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)Data\Shaders\SPIRV --platform SPIRV --binary --shaderModel 6_5 --vulkanVersion 1.2 --verbose --define VK=1 --include $(ProjectDir)..\..\Engine\Graphics\Shaders\Common" LogStandardErrorAsError="true" />
   </Target>
   <Target Name="LunaDeleteShaders" AfterTargets="Clean">
     <RemoveDir Directories="$(ProjectDir)Data\Shaders" />

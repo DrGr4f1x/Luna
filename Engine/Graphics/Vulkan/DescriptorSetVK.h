@@ -56,7 +56,6 @@ protected:
 	Device* m_device{ nullptr };
 
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
-	VulkanBindingOffsets m_bindingOffsets;
 	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> m_writeDescriptorSets;
 	std::array<DescriptorData, MaxDescriptorsPerTable> m_descriptorData;
 	uint32_t m_numDescriptors{ 0 };

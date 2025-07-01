@@ -29,7 +29,6 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 	DescriptorSetDesc descriptorSetDesc{
 		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex].get(),
 		.rootParameter			= rootParam,
-		.bindingOffsets			= m_desc.bindingOffsets,
 		.numDescriptors			= rootParam.GetNumDescriptors(),
 		.isDynamicBuffer		= isDynamicBuffer
 	};

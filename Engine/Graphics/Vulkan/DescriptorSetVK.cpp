@@ -38,7 +38,7 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 
 	m_descriptorData[slot] = colorBufferVK->GetImageInfoSrv();
@@ -61,7 +61,7 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 
 	m_descriptorData[slot] = depthSrv ? depthBufferVK->GetImageInfoDepth() : depthBufferVK->GetImageInfoStencil();
@@ -88,7 +88,7 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	writeSet.descriptorCount = 1;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
@@ -121,7 +121,7 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.shaderResource;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 
 	m_descriptorData[slot] = textureVK->GetImageInfoSrv();
@@ -144,7 +144,7 @@ void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t u
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.unorderedAccess;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 
 	m_descriptorData[slot] = colorBufferVK->GetImageInfoUav();
@@ -182,7 +182,7 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	writeSet.descriptorCount = 1;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.unorderedAccess;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
@@ -220,7 +220,7 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.constantBuffer;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 	m_descriptorData[slot] = gpuBufferVK->GetBufferInfo();
 	writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
@@ -242,7 +242,7 @@ void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 	writeSet.descriptorCount = 1;
 	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot + m_bindingOffsets.sampler;
+	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
 	m_descriptorData[slot] = samplerVK->GetImageInfoSampler();
 	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
