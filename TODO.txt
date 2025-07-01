@@ -56,10 +56,11 @@ DONE:
 -- Ensure Vulkan works without installing Volk or VMA with the Vulkan SDK
 -- Refactor various pools into single pool for all pool-managed resource types
 -- Do a const pass on the Handle* parameters passed into the various Pool member functions
+-- Texture loading
+    -- DDS
 
 
 WON'T DO:
-[Note: Using a Handle/Pool design instead.]
 -- Try out std::variant for platform data, e.g. ID3D12Resource & VkImage
     -- ColorBuffer
     -- DepthBuffer
