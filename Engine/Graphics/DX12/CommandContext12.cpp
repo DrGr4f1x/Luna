@@ -958,14 +958,23 @@ void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 
 	auto deviceManager = GetD3D12DeviceManager();
 
-	wil::com_ptr<D3D12MA::Allocation> stagingAllocation = CreateStagingBuffer(deviceManager->GetAllocator(), bufferData, numBytes);
+	wil::com_ptr<D3D12MA::Allocation> stagingBuffer = ReserveUploadMemory(numBytes);
 
-	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the default texture
+	// Copy data to mapped staging buffer memory
+	auto resource = stagingBuffer->GetResource();
+	void* mappedPtr{ nullptr };
+	assert_succeeded(resource->Map(0, nullptr, &mappedPtr));
+
+	memcpy(mappedPtr, bufferData, numBytes);
+
+	resource->Unmap(0, nullptr);
+
+	// Schedule a GPU data copy from the staging buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(destBuffer12->GetResource(), offset, stagingAllocation->GetResource(), 0, numBytes);
+	m_commandList->CopyBufferRegion(destBuffer12->GetResource(), offset, stagingBuffer->GetResource(), 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 
-	GetD3D12DeviceManager()->ReleaseAllocation(stagingAllocation.get());
+	GetD3D12DeviceManager()->ReleaseAllocation(stagingBuffer.get());
 }
 
 
@@ -984,6 +993,7 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const 
 
 	uint64_t uploadBufferSize = GetRequiredIntermediateSize(texture12->GetResource(), 0, numSubresources);
 	auto stagingBuffer = ReserveUploadMemory(uploadBufferSize);
+
 	UpdateSubresources(m_commandList, texture12->GetResource(), stagingBuffer->GetResource(), 0, 0, numSubresources, subresources.data());
 	TransitionResource(destTexture, ResourceState::GenericRead, true);
 

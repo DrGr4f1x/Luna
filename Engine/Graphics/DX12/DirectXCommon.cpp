@@ -53,45 +53,4 @@ D3D12_RESOURCE_FLAGS CombineResourceFlags(uint32_t fragmentCount)
 	return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | flags;
 }
 
-
-wil::com_ptr<D3D12MA::Allocation> CreateStagingBuffer(D3D12MA::Allocator* allocator, const void* initialData, size_t numBytes)
-{
-	// Create an upload buffer
-	auto resourceDesc = D3D12_RESOURCE_DESC{
-		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
-		.Alignment			= 0,
-		.Width				= numBytes,
-		.Height				= 1,
-		.DepthOrArraySize	= 1,
-		.MipLevels			= 1,
-		.Format				= DXGI_FORMAT_UNKNOWN,
-		.SampleDesc			= { .Count = 1, .Quality = 0 },
-		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		.Flags				= D3D12_RESOURCE_FLAG_NONE
-	};
-
-	auto allocationDesc = D3D12MA::ALLOCATION_DESC{ .HeapType = D3D12_HEAP_TYPE_UPLOAD };
-
-	wil::com_ptr<D3D12MA::Allocation> allocation;
-	HRESULT hr = allocator->CreateResource(
-		&allocationDesc,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_COMMON,
-		nullptr,
-		&allocation,
-		IID_NULL, nullptr);
-
-	SetDebugName(allocation->GetResource(), "Staging Buffer");
-
-	auto resource = allocation->GetResource();
-	void* mappedPtr{ nullptr };
-	assert_succeeded(resource->Map(0, nullptr, &mappedPtr));
-
-	memcpy(mappedPtr, initialData, numBytes);
-
-	resource->Unmap(0, nullptr);
-
-	return allocation;
-}
-
 } // namespace Luna::DX12

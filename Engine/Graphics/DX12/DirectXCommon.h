@@ -63,7 +63,6 @@ void SetDebugName(IDXGIObject* object, const std::string& name);
 void SetDebugName(ID3D12Object* object, const std::string& name);
 
 D3D12_RESOURCE_FLAGS CombineResourceFlags(uint32_t fragmentCount);
-wil::com_ptr<D3D12MA::Allocation> CreateStagingBuffer(D3D12MA::Allocator* allocator, const void* initialData, size_t numBytes);
 D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
 uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
 uint32_t GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE type);

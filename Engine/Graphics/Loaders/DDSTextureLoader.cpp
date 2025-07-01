@@ -296,8 +296,8 @@ static bool FillInitData(size_t width,
 
 				// Fill in data for Vulkan
 				subResourceData.bufferOffset = offset;
-				subResourceData.mipLevel = i;
-				subResourceData.baseArrayLayer = j;
+				subResourceData.mipLevel = (uint32_t)i;
+				subResourceData.baseArrayLayer = (uint32_t)j;
 				subResourceData.layerCount = 1;
 				subResourceData.width = (uint32_t)w;
 				subResourceData.height = (uint32_t)h;
