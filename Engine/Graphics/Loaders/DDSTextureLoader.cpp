@@ -291,8 +291,8 @@ static bool FillInitData(size_t width,
 				// Fill in data for DX12
 				auto& subResourceData = outTexInit.subResourceData[index];
 				subResourceData.data = (const void*)pSrcBits;
-				subResourceData.rowPitch = static_cast<uint32_t>(rowBytes);
-				subResourceData.slicePitch = static_cast<uint32_t>(numBytes);
+				subResourceData.rowPitch = (uint32_t)rowBytes;
+				subResourceData.slicePitch = (uint32_t)numBytes;
 
 				// Fill in data for Vulkan
 				subResourceData.bufferOffset = offset;
