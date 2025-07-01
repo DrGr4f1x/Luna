@@ -262,6 +262,7 @@ static bool FillInitData(size_t width,
 
 	size_t numBytes = 0;
 	size_t rowBytes = 0;
+	size_t offset = 0;
 	const std::byte* pSrcBits = bitData;
 	const std::byte* pEndBits = bitData + bitSize;
 
@@ -286,9 +287,22 @@ static bool FillInitData(size_t width,
 
 				assert(index < mipCount * arraySize);
 				_Analysis_assume_(index < mipCount * arraySize);
-				outTexInit.subResourceData[index].data = (const void*)pSrcBits;
-				outTexInit.subResourceData[index].rowPitch = static_cast<uint32_t>(rowBytes);
-				outTexInit.subResourceData[index].slicePitch = static_cast<uint32_t>(numBytes);
+
+				// Fill in data for DX12
+				auto& subResourceData = outTexInit.subResourceData[index];
+				subResourceData.data = (const void*)pSrcBits;
+				subResourceData.rowPitch = static_cast<uint32_t>(rowBytes);
+				subResourceData.slicePitch = static_cast<uint32_t>(numBytes);
+
+				// Fill in data for Vulkan
+				subResourceData.bufferOffset = offset;
+				subResourceData.mipLevel = i;
+				subResourceData.baseArrayLayer = j;
+				subResourceData.layerCount = 1;
+				subResourceData.width = (uint32_t)w;
+				subResourceData.height = (uint32_t)h;
+				subResourceData.depth = (uint32_t)d;
+
 				++index;
 			}
 			else if (!j)
@@ -303,6 +317,7 @@ static bool FillInitData(size_t width,
 			}
 
 			pSrcBits += numBytes * d;
+			offset += (uint32_t)numBytes;
 
 			w = w >> 1;
 			h = h >> 1;

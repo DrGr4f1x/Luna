@@ -52,6 +52,18 @@ static bool IsValidComputeResourceState(ResourceState state)
 }
 
 
+inline D3D12_SUBRESOURCE_DATA TextureSubResourceDataToDX12(const TextureSubresourceData& data)
+{
+	D3D12_SUBRESOURCE_DATA subResourceData{
+		.pData			= data.data,
+		.RowPitch		= (LONG_PTR)data.rowPitch,
+		.SlicePitch		= (LONG_PTR)data.slicePitch
+	};
+
+	return subResourceData;
+}
+
+
 CommandContext12::CommandContext12(CommandListType type)
 	: m_type{ type }
 	, m_dynamicViewDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV }
@@ -971,10 +983,7 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const 
 	std::vector<D3D12_SUBRESOURCE_DATA> subresources{ numSubresources };
 	for (uint32_t i = 0; i < numSubresources; ++i)
 	{
-		D3D12_SUBRESOURCE_DATA& d3d12SubResourceData = subresources[i];
-		d3d12SubResourceData.pData = texInit.subResourceData[i].data;
-		d3d12SubResourceData.RowPitch = texInit.subResourceData[i].rowPitch;
-		d3d12SubResourceData.SlicePitch = texInit.subResourceData[i].slicePitch;
+		subresources[i] = TextureSubResourceDataToDX12(texInit.subResourceData[i]);
 	}
 
 	uint64_t uploadBufferSize = GetRequiredIntermediateSize(texture12->GetResource(), 0, numSubresources);

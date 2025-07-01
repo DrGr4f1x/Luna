@@ -108,6 +108,25 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTar
 }
 
 
+VkBufferImageCopy TextureSubResourceDataToVulkan(const TextureSubresourceData& data, VkImageAspectFlags aspectMask)
+{
+	VkBufferImageCopy bufferImageCopy{
+		.bufferOffset = data.bufferOffset,
+		.imageSubresource = {
+			.aspectMask			= aspectMask,
+			.mipLevel			= data.mipLevel,
+			.baseArrayLayer		= data.baseArrayLayer,
+			.layerCount			= data.layerCount },
+		.imageExtent = {
+			.width = data.width,
+			.height = data.height,
+			.depth = data.depth }
+	};
+
+	return bufferImageCopy;
+}
+
+
 void CommandContextVK::BeginEvent(const string& label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
@@ -996,45 +1015,9 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr destTexture, const 
 	const uint32_t numSubResources = effectiveArraySize * texInit.numMips;
 	vector<VkBufferImageCopy> bufferCopyRegions(numSubResources);
 	
-	uint32_t offset = 0;
-	uint32_t index = 0;
-
-	for (uint32_t i = 0; i < effectiveArraySize; ++i)
+	for (uint32_t i = 0; i < numSubResources; ++i)
 	{
-		uint64_t width = texInit.width;
-		uint32_t height = texInit.height;
-		uint32_t depth = texInit.arraySizeOrDepth;
-		for (uint32_t j = 0; j < texInit.numMips; ++j)
-		{
-			VkBufferImageCopy bufferCopyRegion{
-				.bufferOffset = offset,
-				.imageSubresource = {
-					.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-					.mipLevel = j,
-					.baseArrayLayer = i,
-					.layerCount = 1 },
-				.imageExtent = {
-					.width = (uint32_t)width,
-					.height = height,
-					.depth = isTexture3D ? depth : 1 }
-			};
-
-			bufferCopyRegions[index] = bufferCopyRegion;
-
-			size_t numBytes = 0;
-			GetSurfaceInfo(width, height, texInit.format, &numBytes, nullptr, nullptr);
-
-			offset += (uint32_t)numBytes;
-			++index;
-
-			width = width >> 1;
-			height = height >> 1;
-			depth = depth >> 1;
-
-			width = std::max<uint64_t>(width, 1);
-			height = std::max<uint32_t>(height, 1);
-			depth = std::max<uint32_t>(depth, 1);
-		}
+		bufferCopyRegions[i] = TextureSubResourceDataToVulkan(texInit.subResourceData[i], VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
 	auto deviceManager = GetVulkanDeviceManager();

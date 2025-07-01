@@ -24,9 +24,19 @@ class TexturePtr;
 
 struct TextureSubresourceData
 {
+	// For D3D12_SUBRESOURCE_DATA
 	const void* data{ nullptr };
 	uint64_t rowPitch{ 0 };
 	uint64_t slicePitch{ 0 };
+
+	// For VkBufferImageCopy
+	size_t bufferOffset{ 0 };
+	uint32_t mipLevel{ 0 };
+	uint32_t baseArrayLayer{ 0 };
+	uint32_t layerCount{ 0 };
+	uint32_t width{ 0 };
+	uint32_t height{ 0 };
+	uint32_t depth{ 0 };
 };
 
 
