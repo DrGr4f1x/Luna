@@ -13,7 +13,6 @@
 #include "Graphics\CommandContext.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\DynamicDescriptorHeap12.h"
-#include "Graphics\DX12\LinearAllocator12.h"
 
 
 using namespace Microsoft::WRL;
@@ -125,10 +124,7 @@ protected:
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet);
 	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 
-	DynAlloc ReserveUploadMemory(size_t sizeInBytes)
-	{
-		return m_cpuLinearAllocator.Allocate(sizeInBytes);
-	}
+	wil::com_ptr<D3D12MA::Allocation> ReserveUploadMemory(size_t sizeInBytes);
 
 private:
 	void BindDescriptorHeaps();
@@ -156,9 +152,6 @@ private:
 	uint32_t m_numBarriersToFlush{ 0 };
 
 	ID3D12DescriptorHeap* m_currentDescriptorHeaps[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
-
-	LinearAllocator m_cpuLinearAllocator;
-	LinearAllocator m_gpuLinearAllocator;
 
 	bool m_bHasPendingDebugEvent{ false };
 

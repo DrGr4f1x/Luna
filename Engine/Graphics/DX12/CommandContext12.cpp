@@ -68,8 +68,6 @@ CommandContext12::CommandContext12(CommandListType type)
 	: m_type{ type }
 	, m_dynamicViewDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV }
 	, m_dynamicSamplerDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER }
-	, m_cpuLinearAllocator{ kCpuWritable }
-	, m_gpuLinearAllocator{ kGpuExclusive }
 {
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 }
@@ -165,8 +163,6 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 	cmdQueue.DiscardAllocator(fenceValue, m_currentAllocator);
 	m_currentAllocator = nullptr;
 
-	m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
-	m_gpuLinearAllocator.CleanupUsedPages(fenceValue);
 	m_dynamicViewDescriptorHeap.CleanupUsedHeaps(fenceValue);
 	m_dynamicSamplerDescriptorHeap.CleanupUsedHeaps(fenceValue);
 
@@ -987,9 +983,11 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const 
 	}
 
 	uint64_t uploadBufferSize = GetRequiredIntermediateSize(texture12->GetResource(), 0, numSubresources);
-	DynAlloc mem = ReserveUploadMemory(uploadBufferSize);
-	UpdateSubresources(m_commandList, texture12->GetResource(), mem.buffer, 0, 0, numSubresources, subresources.data());
+	auto stagingBuffer = ReserveUploadMemory(uploadBufferSize);
+	UpdateSubresources(m_commandList, texture12->GetResource(), stagingBuffer->GetResource(), 0, 0, numSubresources, subresources.data());
 	TransitionResource(destTexture, ResourceState::GenericRead, true);
+
+	GetD3D12DeviceManager()->ReleaseAllocation(stagingBuffer.get());
 }
 
 
@@ -1046,6 +1044,42 @@ void CommandContext12::SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32
 	{
 		m_dynamicViewDescriptorHeap.SetComputeDescriptorHandles(rootIndex, offset, numDescriptors, handles);
 	}
+}
+
+
+wil::com_ptr<D3D12MA::Allocation> CommandContext12::ReserveUploadMemory(size_t sizeInBytes)
+{
+	auto deviceManager = GetD3D12DeviceManager();
+	auto allocator = deviceManager->GetAllocator();
+
+	// Create an upload buffer
+	auto resourceDesc = D3D12_RESOURCE_DESC{
+		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
+		.Alignment			= 0,
+		.Width				= sizeInBytes,
+		.Height				= 1,
+		.DepthOrArraySize	= 1,
+		.MipLevels			= 1,
+		.Format				= DXGI_FORMAT_UNKNOWN,
+		.SampleDesc			= { .Count = 1, .Quality = 0 },
+		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+		.Flags				= D3D12_RESOURCE_FLAG_NONE
+	};
+
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{ .HeapType = D3D12_HEAP_TYPE_UPLOAD };
+
+	wil::com_ptr<D3D12MA::Allocation> allocation;
+	HRESULT hr = allocator->CreateResource(
+		&allocationDesc,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_COMMON,
+		nullptr,
+		&allocation,
+		IID_NULL, nullptr);
+
+	SetDebugName(allocation->GetResource(), "Staging Buffer");
+
+	return allocation;
 }
 
 
