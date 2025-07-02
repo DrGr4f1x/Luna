@@ -84,6 +84,7 @@ public:
 	virtual void OnWindowRefresh();
 	virtual void OnWindowClose();
 	virtual void OnWindowPosition(int xPos, int yPos);
+	virtual void OnMousePosition(uint32_t x, uint32_t y);
 
 	void Run();
 
@@ -132,6 +133,10 @@ protected:
 
 	// Frame timer
 	StepTimer m_timer;
+
+	uint32_t m_mouseX{ 0 };
+	uint32_t m_mouseY{ 0 };
+	bool m_mouseMoveHandled{ false };
 
 	// Camera
 	Camera m_camera;

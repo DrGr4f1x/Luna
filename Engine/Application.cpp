@@ -80,6 +80,13 @@ void GlfwWindowPositionCallback(GLFWwindow* pWindow, int xPos, int yPos)
 	pApplication->OnWindowPosition(xPos, yPos);
 }
 
+void GlfwMousePositionCallback(GLFWwindow* pWindow, double xPos, double yPos)
+{
+	using namespace Luna;
+	auto pApplication = reinterpret_cast<Application*>(glfwGetWindowUserPointer(pWindow));
+	pApplication->OnMousePosition((uint32_t)xPos, (uint32_t)yPos);
+}
+
 } // anonymous namespace
 
 
@@ -168,6 +175,13 @@ void Application::OnWindowClose()
 
 void Application::OnWindowPosition(int xPos, int yPos)
 { }
+
+
+void Application::OnMousePosition(uint32_t x, uint32_t y)
+{
+	m_mouseX = x;
+	m_mouseY = y;
+}
 
 
 void Application::Run()
@@ -371,6 +385,8 @@ bool Application::Tick()
 		return false;
 	}	
 
+	m_inputSystem->Update();
+
 	// Close on Escape key
 	if (m_inputSystem->IsFirstPressed(DigitalInput::kKey_escape))
 	{
@@ -413,6 +429,7 @@ bool Application::CreateAppWindow()
 	glfwSetWindowRefreshCallback(m_pWindow, GlfwWindowRefreshCallback);
 	glfwSetWindowCloseCallback(m_pWindow, GlfwWindowCloseCallback);
 	glfwSetWindowPosCallback(m_pWindow, GlfwWindowPositionCallback);
+	glfwSetCursorPosCallback(m_pWindow, GlfwMousePositionCallback);
 
 	return true;
 }

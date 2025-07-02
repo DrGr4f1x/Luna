@@ -97,10 +97,12 @@ void TextureApp::Startup()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
+	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, m_zoom));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.025f);
+	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
 
 	UpdateConstantBuffer();
@@ -124,6 +126,8 @@ void TextureApp::Shutdown()
 void TextureApp::Update()
 {
 	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds());
+
+	UpdateConstantBuffer();
 }
 
 
