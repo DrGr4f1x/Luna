@@ -55,15 +55,19 @@ TextureDimension GetTextureDimension(ktxTexture* texture)
 
 void FlipImageVertically(std::byte* data, size_t width, size_t height, size_t rowPitch)
 {
+	std::byte temp[16384 * 16];
+
 	for (size_t j = 0; j < height / 2; ++j)
 	{
 		std::byte* row1 = data + (j * rowPitch);
 		std::byte* row2 = data + (height - 1 - j) * rowPitch;
+		
+		if (row1 == row2)
+			break;
 
-		for (size_t i = 0; i < rowPitch; ++i)
-		{
-			std::swap(row1[i], row2[i]);
-		}
+		memcpy(temp, row1, rowPitch);
+		memcpy(row1, row2, rowPitch);
+		memcpy(row2, temp, rowPitch);
 	}
 }
 
