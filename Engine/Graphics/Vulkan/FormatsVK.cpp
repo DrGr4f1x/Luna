@@ -106,6 +106,30 @@ VkFormat FormatToVulkan(Format engineFormat)
 }
 
 
+Format VulkanToFormat(VkFormat vkFormat)
+{
+	static bool initialized = false;
+	static std::unordered_map<VkFormat, Format> s_vulkanToEngineMap;
+
+	if (!initialized)
+	{
+		for (const auto& formatMap : s_formatMap)
+		{
+			s_vulkanToEngineMap[formatMap.vkFormat] = formatMap.engineFormat;
+		}
+		initialized = true;
+	}
+
+	auto iter = s_vulkanToEngineMap.find(vkFormat);
+	if (iter != s_vulkanToEngineMap.end())
+	{
+		return iter->second;
+	}
+
+	return Format::Unknown;
+}
+
+
 VkImageAspectFlags GetImageAspect(Format format)
 {
 	VkImageAspectFlags imageAspect{ 0 };

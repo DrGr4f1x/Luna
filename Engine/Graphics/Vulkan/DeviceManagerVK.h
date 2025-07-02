@@ -12,6 +12,7 @@
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
+#include "Graphics\Limits.h"
 #include "Graphics\Texture.h"
 #include "Graphics\Vulkan\DeviceCapsVK.h"
 #include "Graphics\Vulkan\ExtensionManagerVK.h"
@@ -26,6 +27,26 @@ namespace Luna::VK
 // Forward declarations
 class Device;
 class Queue;
+
+
+class Limits : public ILimits
+{
+public:
+	explicit Limits(VkPhysicalDeviceLimits limits);
+	~Limits();
+
+	uint32_t ConstantBufferAlignment() const override { return 256; }
+	uint32_t MaxTextureDimension1D() const override { return m_limits.maxImageDimension1D; }
+	uint32_t MaxTextureDimension2D() const override { return m_limits.maxImageDimension2D; }
+	uint32_t MaxTextureDimension3D() const override { return m_limits.maxImageDimension3D; }
+	uint32_t MaxTextureDimensionCube() const override { return m_limits.maxImageDimensionCube; }
+	uint32_t MaxTexture1DArrayElements() const override { return m_limits.maxImageArrayLayers; }
+	uint32_t MaxTexture2DArrayElements() const override { return m_limits.maxImageArrayLayers;; }
+	uint32_t MaxTextureMipLevels() const override { return 15; }
+
+protected:
+	VkPhysicalDeviceLimits m_limits;
+};
 
 
 class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
@@ -111,6 +132,9 @@ private:
 
 	// Device wrapper
 	std::unique_ptr<Device> m_device;
+
+	// Device limits
+	std::unique_ptr<Limits> m_limits;
 
 	// Texture manager
 	std::unique_ptr<TextureManager> m_textureManager;

@@ -98,6 +98,23 @@ VkBool32 DebugMessageCallback(
 }
 
 
+Limits::Limits(VkPhysicalDeviceLimits limits)
+	: m_limits{ limits }
+{
+	extern Luna::ILimits* g_limits;
+	assert(g_limits == nullptr);
+
+	g_limits = this;
+}
+
+
+Limits::~Limits()
+{
+	extern Luna::ILimits* g_limits;
+	g_limits = nullptr;
+}
+
+
 DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	: m_desc{ desc }
 {
@@ -293,6 +310,8 @@ void DeviceManager::CreateDeviceResources()
 	{
 		m_caps.LogCaps();
 	}
+
+	m_limits = std::make_unique<Limits>(m_vkbPhysicalDevice.properties.limits);
 
 	// Device extensions
 	m_extensionManager.InitializeDevice(m_vkbPhysicalDevice);

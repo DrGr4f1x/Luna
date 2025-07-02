@@ -143,6 +143,22 @@ DeviceRLDOHelper::~DeviceRLDOHelper()
 }
 
 
+Limits::Limits()
+{
+	extern Luna::ILimits* g_limits;
+	assert(g_limits == nullptr);
+
+	g_limits = this;
+}
+
+
+Limits::~Limits()
+{
+	extern Luna::ILimits* g_limits;
+	g_limits = nullptr;
+}
+
+
 DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	: m_desc{ desc }
 	, m_deviceRLDOHelper{ desc.enableValidation }
@@ -159,6 +175,8 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 
 	g_deviceManager = this;
 	g_d3d12DeviceManager = this;
+
+	m_limits = std::make_unique<Limits>();
 }
 
 

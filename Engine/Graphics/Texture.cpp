@@ -230,9 +230,9 @@ bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filen
 		{
 			CreateDDSTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
 		}
-		else if (extension == ".ktx")
+		else if (extension == ".ktx" || extension == ".ktx2")
 		{
-
+			CreateKTXTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
 		}
 		else
 		{
@@ -252,6 +252,104 @@ TextureManager* GetTextureManager()
 {
 	assert(g_textureManager != nullptr);
 	return g_textureManager;
+}
+
+
+bool FillTextureInitializer(
+	size_t width,
+	size_t height,
+	size_t depth,
+	size_t mipCount,
+	size_t arraySize,
+	Format format,
+	size_t maxSize,
+	size_t bitSize,
+	std::byte* bitData,
+	size_t& skipMip,
+	TextureInitializer& outTexInit)
+{
+	if (!bitData || outTexInit.subResourceData.empty())
+	{
+		return false;
+	}
+
+	skipMip = 0;
+	outTexInit.width = 0;
+	outTexInit.height = 0;
+	outTexInit.arraySizeOrDepth = 0;
+	outTexInit.baseData = bitData;
+	outTexInit.totalBytes = bitSize;
+
+	size_t numBytes = 0;
+	size_t rowBytes = 0;
+	size_t offset = 0;
+	std::byte* pSrcBits = bitData;
+	std::byte* pEndBits = bitData + bitSize;
+
+	size_t index = 0;
+	for (size_t j = 0; j < arraySize; j++)
+	{
+		size_t w = width;
+		size_t h = height;
+		size_t d = depth;
+		for (size_t i = 0; i < mipCount; i++)
+		{
+			GetSurfaceInfo(w, h, format, &numBytes, &rowBytes, nullptr);
+
+			if ((mipCount <= 1) || !maxSize || (w <= maxSize && h <= maxSize && d <= maxSize))
+			{
+				if (!outTexInit.width)
+				{
+					outTexInit.width = w;
+					outTexInit.height = (uint32_t)h;
+					outTexInit.arraySizeOrDepth = (uint32_t)d;
+				}
+
+				assert(index < mipCount * arraySize);
+				_Analysis_assume_(index < mipCount * arraySize);
+
+				// Fill in data for DX12
+				auto& subResourceData = outTexInit.subResourceData[index];
+				subResourceData.data = pSrcBits;
+				subResourceData.rowPitch = (uint32_t)rowBytes;
+				subResourceData.slicePitch = (uint32_t)numBytes;
+
+				// Fill in data for Vulkan
+				subResourceData.bufferOffset = offset;
+				subResourceData.mipLevel = (uint32_t)i;
+				subResourceData.baseArrayLayer = (uint32_t)j;
+				subResourceData.layerCount = 1;
+				subResourceData.width = (uint32_t)w;
+				subResourceData.height = (uint32_t)h;
+				subResourceData.depth = (uint32_t)d;
+
+				++index;
+			}
+			else if (!j)
+			{
+				// Count number of skipped mipmaps (first item only)
+				++skipMip;
+			}
+
+			if (pSrcBits + (numBytes * d) > pEndBits)
+			{
+				return false;
+			}
+
+			pSrcBits += numBytes * d;
+			offset += (uint32_t)numBytes;
+
+			w = w >> 1;
+			h = h >> 1;
+			d = d >> 1;
+
+			w = std::max<size_t>(w, 1);
+			h = std::max<size_t>(h, 1);
+			d = std::max<size_t>(d, 1);
+		}
+	}
+
+	return (index > 0);
 }
 
 } // namespace Luna

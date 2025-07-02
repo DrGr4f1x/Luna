@@ -24,7 +24,7 @@ bool CreateDDSTextureFromMemory(
 	IDevice* device, 
 	ITexture* texture, 
 	const std::string& textureName, 
-	const std::byte* data, 
+	std::byte* data, 
 	size_t dataSize, 
 	Format format, 
 	bool forceSrgb);

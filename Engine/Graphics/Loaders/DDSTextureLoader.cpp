@@ -13,6 +13,7 @@
 #include "DDSTextureLoader.h"
 
 #include "Graphics\Device.h"
+#include "Graphics\Limits.h"
 #include "Graphics\Texture.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "dds.h"
@@ -236,109 +237,12 @@ static DXGI_FORMAT DDSPixelFormatToDxgi(const DDS_PIXELFORMAT& ddpf)
 }
 
 
-static bool FillInitData(size_t width,
-	size_t height,
-	size_t depth,
-	size_t mipCount,
-	size_t arraySize,
-	Format format,
-	size_t maxSize,
-	size_t bitSize,
-	const std::byte* bitData,
-	size_t& skipMip,
-	TextureInitializer& outTexInit)
-{
-	if (!bitData || outTexInit.subResourceData.empty())
-	{
-		return false;
-	}
-
-	skipMip = 0;
-	outTexInit.width = 0;
-	outTexInit.height = 0;
-	outTexInit.arraySizeOrDepth = 0;
-	outTexInit.baseData = bitData;
-	outTexInit.totalBytes = bitSize;
-
-	size_t numBytes = 0;
-	size_t rowBytes = 0;
-	size_t offset = 0;
-	const std::byte* pSrcBits = bitData;
-	const std::byte* pEndBits = bitData + bitSize;
-
-	size_t index = 0;
-	for (size_t j = 0; j < arraySize; j++)
-	{
-		size_t w = width;
-		size_t h = height;
-		size_t d = depth;
-		for (size_t i = 0; i < mipCount; i++)
-		{
-			GetSurfaceInfo(w, h, format, &numBytes, &rowBytes, nullptr);
-
-			if ((mipCount <= 1) || !maxSize || (w <= maxSize && h <= maxSize && d <= maxSize))
-			{
-				if (!outTexInit.width)
-				{
-					outTexInit.width = w;
-					outTexInit.height = (uint32_t)h;
-					outTexInit.arraySizeOrDepth = (uint32_t)d;
-				}
-
-				assert(index < mipCount * arraySize);
-				_Analysis_assume_(index < mipCount * arraySize);
-
-				// Fill in data for DX12
-				auto& subResourceData = outTexInit.subResourceData[index];
-				subResourceData.data = (const void*)pSrcBits;
-				subResourceData.rowPitch = (uint32_t)rowBytes;
-				subResourceData.slicePitch = (uint32_t)numBytes;
-
-				// Fill in data for Vulkan
-				subResourceData.bufferOffset = offset;
-				subResourceData.mipLevel = (uint32_t)i;
-				subResourceData.baseArrayLayer = (uint32_t)j;
-				subResourceData.layerCount = 1;
-				subResourceData.width = (uint32_t)w;
-				subResourceData.height = (uint32_t)h;
-				subResourceData.depth = (uint32_t)d;
-
-				++index;
-			}
-			else if (!j)
-			{
-				// Count number of skipped mipmaps (first item only)
-				++skipMip;
-			}
-
-			if (pSrcBits + (numBytes * d) > pEndBits)
-			{
-				return false;
-			}
-
-			pSrcBits += numBytes * d;
-			offset += (uint32_t)numBytes;
-
-			w = w >> 1;
-			h = h >> 1;
-			d = d >> 1;
-
-			w = std::max<size_t>(w, 1);
-			h = std::max<size_t>(h, 1);
-			d = std::max<size_t>(d, 1);
-		}
-	}
-
-	return (index > 0);
-}
-
-
 bool CreateTextureFromDDS(
 	IDevice* device, 
 	ITexture* texture, 
 	const std::string& textureName, 
 	const DDS_HEADER* header, 
-	const std::byte* bitData, 
+	std::byte* bitData, 
 	size_t bitDataSize,
 	size_t maxSize,
 	Format format, 
@@ -491,8 +395,8 @@ bool CreateTextureFromDDS(
 	{
 	case TextureDimension::Texture1D:
 	case TextureDimension::Texture1D_Array:
-		if ((arraySize > D3D12_REQ_TEXTURE1D_ARRAY_AXIS_DIMENSION) ||
-			(width > D3D12_REQ_TEXTURE1D_U_DIMENSION))
+		if ((arraySize > Limits::MaxTexture1DArrayElements()) ||
+			(width > Limits::MaxTextureDimension1D()))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a 1D texture, but has invalid dimensions" <<  std::endl;
 			return false;
@@ -501,9 +405,9 @@ bool CreateTextureFromDDS(
 
 	case TextureDimension::Texture2D:
 	case TextureDimension::Texture2D_Array:
-		if ((arraySize > D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION) ||
-			(width > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) ||
-			(height > D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION))
+		if ((arraySize > Limits::MaxTexture2DArrayElements()) ||
+			(width > Limits::MaxTextureDimension2D()) ||
+			(height > Limits::MaxTextureDimension2D()))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a 2D texture, but has invalid dimensions" << std::endl;
 			return false;
@@ -513,19 +417,20 @@ bool CreateTextureFromDDS(
 	case TextureDimension::TextureCube:
 	case TextureDimension::TextureCube_Array:
 		// This is the right bound because we set arraySize to (NumCubes*6) above
-		if ((arraySize > D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION) ||
-			(width > D3D12_REQ_TEXTURECUBE_DIMENSION) ||
-			(height > D3D12_REQ_TEXTURECUBE_DIMENSION))
+		if ((arraySize > Limits::MaxTexture2DArrayElements()) ||
+			(width > Limits::MaxTextureDimensionCube()) ||
+			(height > Limits::MaxTextureDimensionCube()))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a cube-map texture, but has invalid dimensions" << std::endl;
 			return false;
 		}
+		break;
 
 	case TextureDimension::Texture3D:
 		if ((arraySize > 1) ||
-			(width > D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION) ||
-			(height > D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION) ||
-			(depth > D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION))
+			(width > Limits::MaxTextureDimension3D()) ||
+			(height > Limits::MaxTextureDimension3D()) ||
+			(depth > Limits::MaxTextureDimension3D()))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a 3D texture, but has invalid dimensions" << std::endl;
 			return false;
@@ -533,7 +438,7 @@ bool CreateTextureFromDDS(
 		break;
 
 	default:
-		LogWarning(LogDDS) << "File " << textureName << " invalid dimension" << std::endl;
+		LogWarning(LogDDS) << "File " << textureName << " has invalid dimension" << std::endl;
 		return false;
 	}
 
@@ -546,15 +451,15 @@ bool CreateTextureFromDDS(
 		.arraySizeOrDepth = arraySize > 1 ? arraySize : depth,
 		.numMips = static_cast<uint32_t>(mipCount)
 	};
-	const uint32_t subResourceCount = static_cast<uint32_t>(mipCount) * arraySize;
-	texInit.subResourceData.reserve(subResourceCount);
-	for (uint32_t i = 0; i < subResourceCount; ++i)
+	const uint32_t numSubresources = static_cast<uint32_t>(mipCount) * arraySize;
+	texInit.subResourceData.reserve(numSubresources);
+	for (uint32_t i = 0; i < numSubresources; ++i)
 	{
 		texInit.subResourceData.push_back(TextureSubresourceData{});
 	}
 
 	size_t skipMip = 0;
-	bool dataOk = FillInitData(width, height, depth, mipCount, arraySize, format, maxSize, bitDataSize, bitData, skipMip, texInit);
+	bool dataOk = FillTextureInitializer(width, height, depth, mipCount, arraySize, format, maxSize, bitDataSize, bitData, skipMip, texInit);
 
 	if (dataOk)
 	{
@@ -565,7 +470,7 @@ bool CreateTextureFromDDS(
 }
 
 
-bool CreateDDSTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, const std::byte* data, size_t dataSize, Format format, bool forceSrgb)
+bool CreateDDSTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
 {
 	assert(device != nullptr);
 	assert(texture != nullptr);

@@ -19,6 +19,8 @@ namespace Luna::VK
 
 VkFormat FormatToVulkan(Format engineFormat);
 
+Format VulkanToFormat(VkFormat vkFormat);
+
 VkImageAspectFlags GetImageAspect(Format format);
 
 inline bool IsDepthFormat(VkFormat format)

@@ -25,7 +25,7 @@ class TexturePtr;
 struct TextureSubresourceData
 {
 	// For D3D12_SUBRESOURCE_DATA
-	const void* data{ nullptr };
+	std::byte* data{ nullptr };
 	uint64_t rowPitch{ 0 };
 	uint64_t slicePitch{ 0 };
 
@@ -50,7 +50,7 @@ struct TextureInitializer
 	uint32_t numMips{ 1 };
 	std::vector<TextureSubresourceData> subResourceData;
 
-	const void* baseData{ nullptr };
+	std::byte* baseData{ nullptr };
 	size_t totalBytes{ 0 };
 };
 
@@ -128,5 +128,18 @@ protected:
 
 
 TextureManager* GetTextureManager();
+
+bool FillTextureInitializer(
+	size_t width,
+	size_t height,
+	size_t depth,
+	size_t mipCount,
+	size_t arraySize,
+	Format format,
+	size_t maxSize,
+	size_t bitSize,
+	std::byte* bitData,
+	size_t& skipMip,
+	TextureInitializer& outTexInit);
 
 } // namespace Luna

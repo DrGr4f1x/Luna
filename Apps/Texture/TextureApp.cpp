@@ -248,7 +248,8 @@ void TextureApp::InitResources()
 
 void TextureApp::LoadAssets()
 {
-	m_texture = GetTextureManager()->Load("DirectXLogo.dds");
+	//m_texture = GetTextureManager()->Load("DirectXLogo.dds");
+	m_texture = GetTextureManager()->Load("vulkan_cloth_rgba.ktx");
 	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
