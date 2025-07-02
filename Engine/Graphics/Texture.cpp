@@ -236,7 +236,7 @@ bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filen
 		}
 		else
 		{
-
+			CreateTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
 		}
 
 		loadSucceeded = tex->IsValid();

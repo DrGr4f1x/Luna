@@ -19,6 +19,9 @@ namespace Luna
 class IDevice;
 class ITexture;
 
-bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, const uint8_t* data, size_t dataSize, Format format, bool forceSrgb);
+bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb);
+
+// STB texture log category
+inline LogCategory LogSTB{ "LogSTB" };
 
 } // namespace Luna
