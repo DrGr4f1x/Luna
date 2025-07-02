@@ -117,7 +117,7 @@ protected:
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc);
 
 	// Wrappers for resource loading
-
+	TexturePtr LoadTexture(const std::string& filename, bool forceSrgb = false);
 
 protected:
 	ApplicationInfo m_appInfo;

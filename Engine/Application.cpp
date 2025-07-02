@@ -310,6 +310,12 @@ SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
 }
 
 
+TexturePtr Application::LoadTexture(const std::string& filename, bool forceSrgb)
+{
+	return GetTextureManager()->Load(filename, forceSrgb);
+}
+
+
 bool Application::Initialize()
 {
 	// Create core engine systems
