@@ -165,30 +165,4 @@ wil::com_ptr<CVkSemaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType se
 	return nullptr;
 }
 
-
-wil::com_ptr<CVkBuffer> CreateStagingBuffer(CVkDevice* device, CVmaAllocator* allocator, const void* initialData, size_t numBytes)
-{
-	VkBufferCreateInfo stagingBufferInfo{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO ,
-		.size = numBytes,
-		.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-	};
-
-	VmaAllocationCreateInfo stagingAllocCreateInfo{
-		.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT,
-		.usage = VMA_MEMORY_USAGE_CPU_ONLY
-	};
-
-	VkBuffer stagingBuffer{ VK_NULL_HANDLE };
-	VmaAllocation stagingBufferAlloc{ VK_NULL_HANDLE };
-	VmaAllocationInfo stagingAllocInfo{};
-
-	vmaCreateBuffer(*allocator, &stagingBufferInfo, &stagingAllocCreateInfo, &stagingBuffer, &stagingBufferAlloc, &stagingAllocInfo);
-
-	memcpy(stagingAllocInfo.pMappedData, initialData, numBytes);
-
-	return Create<CVkBuffer>(device, allocator, stagingBuffer, stagingBufferAlloc);
-}
-
 } // namespace Luna::VK

@@ -13,6 +13,7 @@
 #include "Graphics\CommandContext.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\Vulkan\DynamicDescriptorHeapVK.h"
+#include "Graphics\Vulkan\LinearAllocatorVK.h"
 
 using namespace Microsoft::WRL;
 
@@ -83,6 +84,8 @@ public:
 	void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
+	DynAlloc ReserveUploadMemory(size_t sizeInBytes) override;
+
 	void ClearUAV(GpuBufferPtr gpuBuffer) override;
 	//void ClearUAV(ColorBufferPtr colorBuffer) override;
 	void ClearColor(ColorBufferPtr colorBuffer) override;
@@ -130,6 +133,10 @@ public:
 
 	void SetIndexBuffer(GpuBufferPtr gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer) override;
+	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc) override;
+	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data) override;
+	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc) override;
+	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data) override;
 
 	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
@@ -188,6 +195,8 @@ private:
 	VkPipeline m_graphicsPipeline{ VK_NULL_HANDLE };
 	VkPipeline m_computePipeline{ VK_NULL_HANDLE };
 	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
+
+	LinearAllocator m_cpuLinearAllocator;
 };
 
 } // namespace Luna::VK

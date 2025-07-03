@@ -29,6 +29,8 @@ public:
 	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
 
 	ID3D12Resource* GetResource() const { return m_allocation->GetResource(); }
+	D3D12MA::Allocation* GetAllocation() const { return m_allocation.get(); }
+
 	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const { return m_srvHandle; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetUavHandle() const { return m_uavHandle; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCbvHandle() const { return m_cbvHandle; }

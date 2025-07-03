@@ -531,6 +531,12 @@ Format DeviceManager::GetDepthFormat()
 }
 
 
+const string& DeviceManager::GetDeviceName() const
+{
+	return m_deviceName;
+}
+
+
 IDevice* DeviceManager::GetDevice()
 { 
 	return m_device.get(); 
@@ -715,6 +721,8 @@ void DeviceManager::CreateDevice()
 
 		LogInfo(LogDirectX) << "Selected D3D12 adapter " << chosenAdapterIdx << endl;
 	}
+
+	m_deviceName = adapterInfos[chosenAdapterIdx].name;
 
 	m_bIsAgilitySDKAvailable = IsDirectXAgilitySDKAvailable();
 	LogInfo(LogDirectX) << "Agility SDK " << (m_bIsAgilitySDKAvailable ? "is" : "is not") << " available." << endl;

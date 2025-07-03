@@ -44,6 +44,10 @@ public:
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 
+	TexturePtr CreateTexture1D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture2D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture3D(const TextureDesc& textureDesc);
+
 	ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) override;
 	bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) override;
 
@@ -53,6 +57,7 @@ public:
 
 protected:
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
+	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
 protected:
 	wil::com_ptr<ID3D12Device> m_device;

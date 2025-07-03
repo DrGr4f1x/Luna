@@ -96,9 +96,6 @@
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="..\External\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
       <Filter>External\D3D12MemoryAllocator</Filter>
     </ClCompile>
@@ -232,6 +229,36 @@
     </ClCompile>
     <ClCompile Include="Graphics\Limits.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\UIOverlay.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\backends\imgui_impl_dx12.cpp">
+      <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\backends\imgui_impl_vulkan.cpp">
+      <Filter>External\imgui\backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\misc\cpp\imgui_stdlib.cpp">
+      <Filter>External\imgui\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_demo.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_draw.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_tables.cpp">
+      <Filter>External\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_widgets.cpp">
+      <Filter>External\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -418,9 +445,6 @@
     <ClInclude Include="Graphics\GpuBuffer.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\LinearAllocator12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
       <Filter>External\D3D12MemoryAllocator</Filter>
     </ClInclude>
@@ -567,6 +591,39 @@
     <ClInclude Include="Graphics\Limits.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\UIOverlay.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\imgui.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\backends\imgui_impl_dx12.h">
+      <Filter>External\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\backends\imgui_impl_glfw.h">
+      <Filter>External\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\backends\imgui_impl_vulkan.h">
+      <Filter>External\imgui\backends</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\misc\cpp\imgui_stdlib.h">
+      <Filter>External\imgui\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\imconfig.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\imgui_internal.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\imstb_rectpack.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\imstb_textedit.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\imgui\imstb_truetype.h">
+      <Filter>External\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -602,6 +659,15 @@
     <Filter Include="Graphics\Loaders">
       <UniqueIdentifier>{767998e0-58e2-4189-ac3d-fd272850b2ee}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\imgui">
+      <UniqueIdentifier>{a1b5cbda-4177-45e2-9b8a-f735d56873e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\imgui\backends">
+      <UniqueIdentifier>{e2b457ab-45d1-493a-a499-8bdda845a9d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\imgui\misc">
+      <UniqueIdentifier>{b6f615ff-07e5-4362-a334-00921dbb0734}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Core\Math\Functions.inl">
@@ -615,5 +681,13 @@
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Graphics\Shaders\UIVS.hlsl">
+      <Filter>Graphics\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Graphics\Shaders\UIPS.hlsl">
+      <Filter>Graphics\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

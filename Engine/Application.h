@@ -20,6 +20,7 @@
 #include "Graphics\RootSignature.h"
 #include "Graphics\Sampler.h"
 #include "Graphics\Texture.h"
+#include "Graphics\UIOverlay.h"
 
 
 // Forward declarations
@@ -109,6 +110,9 @@ protected:
 	Format GetColorFormat();
 	Format GetDepthFormat();
 
+	void PrepareUI();
+	void RenderUI(GraphicsContext& context);
+
 	// Wrappers for graphics resource creation
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
@@ -127,9 +131,10 @@ protected:
 	HWND m_hwnd{};
 	HINSTANCE m_hinst{};
 
-	bool m_bIsRunning{ false };
-	bool m_bIsVisible{ true };
-	bool m_bIsWindowFocused{ false };
+	bool m_isRunning{ false };
+	bool m_isVisible{ true };
+	bool m_isWindowFocused{ false };
+	bool m_showUI{ true };
 
 	// Frame timer
 	StepTimer m_timer;
@@ -147,6 +152,8 @@ protected:
 	std::unique_ptr<InputSystem> m_inputSystem;
 
 	wil::com_ptr<IDeviceManager> m_deviceManager;
+
+	std::unique_ptr<UIOverlay> m_uiOverlay;
 
 private:
 	bool Initialize();

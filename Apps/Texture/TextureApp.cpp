@@ -125,9 +125,18 @@ void TextureApp::Shutdown()
 
 void TextureApp::Update()
 {
-	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds());
+	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
 
 	UpdateConstantBuffer();
+}
+
+
+void TextureApp::UpdateUI()
+{
+	if (m_uiOverlay->Header("Settings"))
+	{
+		m_uiOverlay->SliderFloat("LOD bias", &m_constants.lodBias, 0.0f, (float)m_texture->GetNumMips());
+	}
 }
 
 
@@ -156,6 +165,8 @@ void TextureApp::Render()
 	context.SetIndexBuffer(m_indexBuffer);
 
 	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
+
+	RenderUI(context);
 
 	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
@@ -252,9 +263,15 @@ void TextureApp::InitResources()
 
 void TextureApp::LoadAssets()
 {
-	//m_texture = LoadTexture("DirectXLogo.dds");
-	m_texture = LoadTexture("vulkan_cloth_rgba.ktx");
-	//m_texture = LoadTexture("XII_BLACK_1kx1k.jpg");
+	if (m_appInfo.api == GraphicsApi::D3D12)
+	{
+		m_texture = LoadTexture("DirectXLogo.dds");
+	}
+	else
+	{
+		m_texture = LoadTexture("vulkan_cloth_rgba.ktx");
+	}
+	
 	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 

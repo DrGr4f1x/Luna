@@ -99,6 +99,8 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
+	const std::string& GetDeviceName() const override;
+
 	IDevice* GetDevice() override;
 
 	// Texture formats
@@ -155,6 +157,7 @@ private:
 
 	// DirectX caps
 	std::unique_ptr<DeviceCaps> m_caps;
+	std::string m_deviceName;
 
 	// DirectX limits
 	std::unique_ptr<Limits> m_limits;

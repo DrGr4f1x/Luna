@@ -13,6 +13,7 @@
 #include "Graphics\CommandContext.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\DynamicDescriptorHeap12.h"
+#include "Graphics\DX12\LinearAllocator12.h"
 
 
 using namespace Microsoft::WRL;
@@ -57,6 +58,8 @@ public:
 	void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
+
+	DynAlloc ReserveUploadMemory(size_t sizeInBytes) override;
 
 	// Graphics context
 	void ClearUAV(GpuBufferPtr gpuBuffer) override;
@@ -106,6 +109,10 @@ public:
 
 	void SetIndexBuffer(GpuBufferPtr gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer) override;
+	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc) override;
+	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data) override;
+	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc) override;
+	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data) override;
 
 	void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
@@ -123,8 +130,6 @@ protected:
 	void InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet);
 	void SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
-
-	wil::com_ptr<D3D12MA::Allocation> ReserveUploadMemory(size_t sizeInBytes);
 
 private:
 	void BindDescriptorHeaps();
@@ -145,6 +150,8 @@ private:
 
 	DynamicDescriptorHeap m_dynamicViewDescriptorHeap;
 	DynamicDescriptorHeap m_dynamicSamplerDescriptorHeap;
+
+	LinearAllocator m_cpuLinearAllocator;
 
 	D3D12_PRIMITIVE_TOPOLOGY m_primitiveTopology;
 

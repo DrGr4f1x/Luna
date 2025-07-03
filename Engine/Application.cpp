@@ -23,6 +23,7 @@
 #define GLFW_EXPOSE_NATIVE_WIN32 1
 #include <glfw\glfw3native.h>
 
+#include "imgui.h"
 #include <CLI11\CLI11.hpp>
 
 #pragma comment(lib, "runtimeobject.lib")
@@ -181,6 +182,12 @@ void Application::OnMousePosition(uint32_t x, uint32_t y)
 {
 	m_mouseX = x;
 	m_mouseY = y;
+
+	if (m_showUI)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		m_mouseMoveHandled = io.WantCaptureMouse;
+	}
 }
 
 
@@ -196,13 +203,13 @@ void Application::Run()
 		return;
 	}
 
-	while (m_bIsRunning && !glfwWindowShouldClose(m_pWindow))
+	while (m_isRunning && !glfwWindowShouldClose(m_pWindow))
 	{
 		glfwPollEvents();
 
 		UpdateWindowSize();
 
-		m_bIsRunning = Tick();
+		m_isRunning = Tick();
 	}
 
 	m_deviceManager->WaitForGpu();
@@ -256,12 +263,12 @@ void Application::UpdateWindowSize()
 
 	if (width == 0 || height == 0)
 	{
-		m_bIsVisible = false;
+		m_isVisible = false;
 		return;
 	}
 
-	m_bIsVisible = true;
-	m_bIsWindowFocused = glfwGetWindowAttrib(m_pWindow, GLFW_FOCUSED) == 1;
+	m_isVisible = true;
+	m_isWindowFocused = glfwGetWindowAttrib(m_pWindow, GLFW_FOCUSED) == 1;
 
 	if ((int)m_appInfo.width != width || (int)m_appInfo.height != height)
 	{
@@ -285,6 +292,52 @@ Format Application::GetColorFormat()
 Format Application::GetDepthFormat()
 {
 	return m_deviceManager->GetDepthFormat();
+}
+
+
+void Application::PrepareUI()
+{
+	if (!m_showUI)
+		return;
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.DisplaySize = ImVec2((float)GetWindowWidth(), (float)GetWindowHeight());
+	io.DeltaTime = (float)m_timer.GetElapsedSeconds();
+
+	io.MousePos = ImVec2((float)m_mouseX, (float)m_mouseY);
+	io.MouseDown[0] = m_inputSystem->IsPressed(DigitalInput::kMouse0);
+	io.MouseDown[1] = m_inputSystem->IsPressed(DigitalInput::kMouse1);
+
+	ImGui::NewFrame();
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+	ImGui::SetNextWindowPos(ImVec2(10, 10));
+	ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_FirstUseEver);
+	string caption = m_appNameWithApi;
+	ImGui::Begin(caption.c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	ImGui::TextUnformatted(m_appInfo.name.c_str());
+	ImGui::TextUnformatted(m_deviceManager->GetDeviceName().c_str());
+	ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / m_timer.GetFramesPerSecond()), m_timer.GetFramesPerSecond());
+
+	ImGui::PushItemWidth(110.0f * m_uiOverlay->GetScale());
+	UpdateUI();
+	ImGui::PopItemWidth();
+
+	ImGui::End();
+	ImGui::PopStyleVar();
+	ImGui::Render();
+
+	m_uiOverlay->Update();
+}
+
+
+void Application::RenderUI(GraphicsContext& context)
+{
+	if (!m_showUI)
+		return;
+
+	m_uiOverlay->Render(context);
 }
 
 
@@ -359,9 +412,12 @@ bool Application::Initialize()
 	m_deviceManager->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
 
+	m_uiOverlay = make_unique<UIOverlay>();
+	m_uiOverlay->Startup(m_pWindow, m_appInfo.api, GetWindowWidth(), GetWindowHeight(), GetColorFormat(), GetDepthFormat());
+
 	Startup();
 
-	m_bIsRunning = true;
+	m_isRunning = true;
 
 	return true;
 }
@@ -370,6 +426,8 @@ bool Application::Initialize()
 void Application::Finalize()
 {
 	Shutdown();
+
+	m_uiOverlay->Shutdown();
 
 	glfwDestroyWindow(m_pWindow);
 	m_pWindow = nullptr;
@@ -380,7 +438,7 @@ bool Application::Tick()
 {
 	ScopedEvent event{ "Application::Tick" };
 
-	if (!m_bIsRunning)
+	if (!m_isRunning)
 	{
 		return false;
 	}	
@@ -392,6 +450,10 @@ bool Application::Tick()
 	{
 		return false;
 	}
+
+	// Check toggle UI with '\'
+	if (m_inputSystem->IsFirstPressed(DigitalInput::kKey_backslash))
+		m_showUI = !m_showUI;
 
 	// Tick the timer and update
 	uint32_t frameCount = m_timer.GetFrameCount();
@@ -410,7 +472,9 @@ bool Application::Tick()
 		glfwSetWindowTitle(m_pWindow, windowTitle.c_str());
 	}
 
-	return m_bIsRunning;
+	PrepareUI();
+
+	return m_isRunning;
 }
 
 

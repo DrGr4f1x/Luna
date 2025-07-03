@@ -53,6 +53,10 @@ public:
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 
+	TexturePtr CreateTexture1D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture2D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture3D(const TextureDesc& textureDesc);
+
 	ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) override;
 	bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) override;
 
@@ -66,6 +70,8 @@ protected:
 
 	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
 	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
+
+	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

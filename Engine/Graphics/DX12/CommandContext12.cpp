@@ -68,6 +68,7 @@ CommandContext12::CommandContext12(CommandListType type)
 	: m_type{ type }
 	, m_dynamicViewDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV }
 	, m_dynamicSamplerDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER }
+	, m_cpuLinearAllocator{ kCpuWritable }
 {
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 }
@@ -165,6 +166,7 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 
 	m_dynamicViewDescriptorHeap.CleanupUsedHeaps(fenceValue);
 	m_dynamicSamplerDescriptorHeap.CleanupUsedHeaps(fenceValue);
+	m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
 
 	if (bWaitForCompletion)
 	{
@@ -272,6 +274,12 @@ void CommandContext12::FlushResourceBarriers()
 		m_commandList->ResourceBarrier(m_numBarriersToFlush, m_resourceBarrierBuffer);
 		m_numBarriersToFlush = 0;
 	}
+}
+
+
+DynAlloc CommandContext12::ReserveUploadMemory(size_t sizeInBytes)
+{
+	return m_cpuLinearAllocator.Allocate(sizeInBytes);
 }
 
 
@@ -859,6 +867,71 @@ void CommandContext12::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
 }
 
 
+void CommandContext12::SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc)
+{
+	const size_t bufferSize = numVertices * vertexStride;
+
+	D3D12_VERTEX_BUFFER_VIEW vbv{
+		.BufferLocation		= dynAlloc.gpuAddress,
+		.SizeInBytes		= (uint32_t)bufferSize,
+		.StrideInBytes		= (uint32_t)vertexStride
+	};
+	m_commandList->IASetVertexBuffers(slot, 1, &vbv);
+}
+
+
+void CommandContext12::SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data)
+{
+	assert(data != nullptr && Math::IsAligned(data, 16));
+
+	const size_t bufferSize = Math::AlignUp(numVertices * vertexStride, 16);
+
+	DynAlloc dynAlloc = ReserveUploadMemory(bufferSize);
+
+	SIMDMemCopy(dynAlloc.dataPtr, data, bufferSize >> 4);
+
+	D3D12_VERTEX_BUFFER_VIEW vbv{
+		.BufferLocation		= dynAlloc.gpuAddress,
+		.SizeInBytes		= (uint32_t)bufferSize,
+		.StrideInBytes		= (uint32_t)vertexStride
+	};
+	m_commandList->IASetVertexBuffers(slot, 1, &vbv);
+}
+
+
+void CommandContext12::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc)
+{
+	const size_t elementSize = indexSize16Bit ? sizeof(uint16_t) : sizeof(uint32_t);
+
+	D3D12_INDEX_BUFFER_VIEW ibv{
+		.BufferLocation		= dynAlloc.gpuAddress,
+		.SizeInBytes		= (uint32_t)(indexCount * elementSize),
+		.Format				= indexSize16Bit ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT
+	};
+	m_commandList->IASetIndexBuffer(&ibv);
+}
+
+
+void CommandContext12::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data)
+{
+	assert(data != nullptr && Math::IsAligned(data, 16));
+
+	const size_t elementSize = indexSize16Bit ? sizeof(uint16_t) : sizeof(uint32_t);
+	const size_t bufferSize = Math::AlignUp(indexCount * elementSize, 16);
+
+	DynAlloc dynAlloc = ReserveUploadMemory(bufferSize);
+
+	SIMDMemCopy(dynAlloc.dataPtr, data, bufferSize >> 4);
+
+	D3D12_INDEX_BUFFER_VIEW ibv{
+		.BufferLocation		= dynAlloc.gpuAddress,
+		.SizeInBytes		= (uint32_t)(indexCount * elementSize),
+		.Format				= indexSize16Bit ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT
+	};
+	m_commandList->IASetIndexBuffer(&ibv);
+}
+
+
 void CommandContext12::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 	uint32_t startVertexLocation, uint32_t startInstanceLocation)
 {
@@ -956,25 +1029,15 @@ void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer.get();
 	assert(destBuffer12 != nullptr);
 
-	auto deviceManager = GetD3D12DeviceManager();
-
-	wil::com_ptr<D3D12MA::Allocation> stagingBuffer = ReserveUploadMemory(numBytes);
-
-	// Copy data to mapped staging buffer memory
-	auto resource = stagingBuffer->GetResource();
-	void* mappedPtr{ nullptr };
-	assert_succeeded(resource->Map(0, nullptr, &mappedPtr));
-
-	memcpy(mappedPtr, bufferData, numBytes);
-
-	resource->Unmap(0, nullptr);
+	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the destination buffer
+	DynAlloc mem = ReserveUploadMemory(numBytes);
+	SIMDMemCopy(mem.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
+	ID3D12Resource* stagingBuffer = reinterpret_cast<ID3D12Resource*>(mem.resource);
 
 	// Schedule a GPU data copy from the staging buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
-	m_commandList->CopyBufferRegion(destBuffer12->GetResource(), offset, stagingBuffer->GetResource(), 0, numBytes);
+	m_commandList->CopyBufferRegion(destBuffer12->GetResource(), offset, stagingBuffer, 0, numBytes);
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
-
-	GetD3D12DeviceManager()->ReleaseAllocation(stagingBuffer.get());
 }
 
 
@@ -991,13 +1054,13 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const 
 		subresources[i] = TextureSubResourceDataToDX12(texInit.subResourceData[i]);
 	}
 
+	// Copy data to the intermediate upload heap and then schedule a copy from the upload heap to the destination texture
 	uint64_t uploadBufferSize = GetRequiredIntermediateSize(texture12->GetResource(), 0, numSubresources);
-	auto stagingBuffer = ReserveUploadMemory(uploadBufferSize);
+	DynAlloc mem = ReserveUploadMemory(uploadBufferSize);
+	ID3D12Resource* stagingBuffer = reinterpret_cast<ID3D12Resource*>(mem.resource);
 
-	UpdateSubresources(m_commandList, texture12->GetResource(), stagingBuffer->GetResource(), 0, 0, numSubresources, subresources.data());
+	UpdateSubresources(m_commandList, texture12->GetResource(), stagingBuffer, 0, 0, numSubresources, subresources.data());
 	TransitionResource(destTexture, ResourceState::GenericRead, true);
-
-	GetD3D12DeviceManager()->ReleaseAllocation(stagingBuffer.get());
 }
 
 
@@ -1054,42 +1117,6 @@ void CommandContext12::SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32
 	{
 		m_dynamicViewDescriptorHeap.SetComputeDescriptorHandles(rootIndex, offset, numDescriptors, handles);
 	}
-}
-
-
-wil::com_ptr<D3D12MA::Allocation> CommandContext12::ReserveUploadMemory(size_t sizeInBytes)
-{
-	auto deviceManager = GetD3D12DeviceManager();
-	auto allocator = deviceManager->GetAllocator();
-
-	// Create an upload buffer
-	auto resourceDesc = D3D12_RESOURCE_DESC{
-		.Dimension			= D3D12_RESOURCE_DIMENSION_BUFFER,
-		.Alignment			= 0,
-		.Width				= sizeInBytes,
-		.Height				= 1,
-		.DepthOrArraySize	= 1,
-		.MipLevels			= 1,
-		.Format				= DXGI_FORMAT_UNKNOWN,
-		.SampleDesc			= { .Count = 1, .Quality = 0 },
-		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		.Flags				= D3D12_RESOURCE_FLAG_NONE
-	};
-
-	auto allocationDesc = D3D12MA::ALLOCATION_DESC{ .HeapType = D3D12_HEAP_TYPE_UPLOAD };
-
-	wil::com_ptr<D3D12MA::Allocation> allocation;
-	HRESULT hr = allocator->CreateResource(
-		&allocationDesc,
-		&resourceDesc,
-		D3D12_RESOURCE_STATE_COMMON,
-		nullptr,
-		&allocation,
-		IID_NULL, nullptr);
-
-	SetDebugName(allocation->GetResource(), "Staging Buffer");
-
-	return allocation;
 }
 
 

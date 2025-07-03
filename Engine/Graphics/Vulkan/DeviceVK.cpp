@@ -885,6 +885,24 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 };
 
 
+TexturePtr Device::CreateTexture1D(const TextureDesc& textureDesc)
+{
+	return CreateTextureSimple(TextureDimension::Texture1D, textureDesc);
+}
+
+
+TexturePtr Device::CreateTexture2D(const TextureDesc& textureDesc)
+{
+	return CreateTextureSimple(TextureDimension::Texture2D, textureDesc);
+}
+
+
+TexturePtr Device::CreateTexture3D(const TextureDesc& textureDesc)
+{
+	return CreateTextureSimple(TextureDimension::Texture3D, textureDesc);
+}
+
+
 ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
 {
 	Texture* tex = new Texture();
@@ -1166,6 +1184,39 @@ wil::com_ptr<CVkPipelineCache> Device::CreatePipelineCache() const
 	}
 
 	return nullptr;
+}
+
+
+TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc)
+{
+	const size_t height = dimension == TextureDimension::Texture1D ? 1 : textureDesc.height;
+	const size_t depth = dimension == TextureDimension::Texture3D ? textureDesc.depth : 1;
+
+	size_t numBytes = 0;
+	size_t rowPitch = 0;
+	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr);
+
+	TextureInitializer texInit{ .format = textureDesc.format, .dimension = dimension };
+	texInit.subResourceData.push_back(TextureSubresourceData{});
+
+	size_t skipMip = 0;
+	FillTextureInitializer(
+		textureDesc.width,
+		height,
+		depth,
+		1, // numMips
+		1, // arraySize
+		textureDesc.format,
+		0, // maxSize
+		numBytes,
+		textureDesc.data,
+		skipMip,
+		texInit);
+
+	TexturePtr texture = CreateUninitializedTexture(textureDesc.name, textureDesc.name);
+	InitializeTexture(texture.Get(), texInit);
+
+	return texture;
 }
 
 

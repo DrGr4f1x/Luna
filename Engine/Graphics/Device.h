@@ -42,6 +42,10 @@ public:
 
 	virtual SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) = 0;
 
+	virtual TexturePtr CreateTexture1D(const TextureDesc& textureDesc) = 0;
+	virtual TexturePtr CreateTexture2D(const TextureDesc& textureDesc) = 0;
+	virtual TexturePtr CreateTexture3D(const TextureDesc& textureDesc) = 0;
+
 	virtual ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) = 0;
 	virtual bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) = 0;
 };

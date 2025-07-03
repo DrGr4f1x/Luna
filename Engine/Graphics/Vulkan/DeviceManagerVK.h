@@ -78,6 +78,8 @@ public:
 	Format GetColorFormat() final;
 	Format GetDepthFormat() final;
 
+	const std::string& GetDeviceName() const override;
+
 	IDevice* GetDevice() override;
 
 	void ReleaseImage(CVkImage* image);
@@ -115,6 +117,7 @@ private:
 	ExtensionManager m_extensionManager;
 	VulkanVersionInfo m_versionInfo{};
 	DeviceCaps m_caps;
+	std::string m_deviceName;
 
 	// Vulkan instance objects owned by the DeviceManager
 	wil::com_ptr<CVkInstance> m_vkInstance;

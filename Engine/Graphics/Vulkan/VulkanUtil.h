@@ -99,6 +99,5 @@ wil::com_ptr<CVkImageView> CreateImageView(CVkDevice* device, const ImageViewDes
 
 wil::com_ptr<CVkFence> CreateFence(CVkDevice* device, bool bSignalled);
 wil::com_ptr<CVkSemaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, uint64_t initialValue);
-wil::com_ptr<CVkBuffer> CreateStagingBuffer(CVkDevice* device, CVmaAllocator* allocator, const void* initialData, size_t numBytes);
 
 }

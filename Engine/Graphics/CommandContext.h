@@ -66,6 +66,8 @@ public:
 	virtual void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
+	virtual DynAlloc ReserveUploadMemory(size_t sizeInBytes) = 0;
+
 	// Graphics context
 	virtual void ClearUAV(GpuBufferPtr gpuBuffer) = 0;
 	// TODO: Figure out how to implement this for Vulkan
@@ -116,6 +118,10 @@ public:
 
 	virtual void SetIndexBuffer(GpuBufferPtr gpuBuffer) = 0;
 	virtual void SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;
+	virtual void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc) = 0;
+	virtual void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data) = 0;
+	virtual void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc) = 0;
+	virtual void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data) = 0;
 
 	virtual void DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) = 0;
@@ -172,7 +178,10 @@ public:
 	void TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate = false);
-	
+	void FlushResourceBarriers();
+
+	DynAlloc ReserveUploadMemory(size_t sizeInBytes);
+
 	void BeginFrame();
 
 protected:
@@ -237,6 +246,10 @@ public:
 
 	void SetIndexBuffer(GpuBufferPtr gpuBuffer);
 	void SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer);
+	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc);
+	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data);
+	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc);
+	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data);
 
 	void Draw(uint32_t vertexCount, uint32_t vertexStartOffset = 0);
 	void DrawIndexed(uint32_t indexCount, uint32_t startIndexLocation = 0, int32_t baseVertexLocation = 0);
@@ -251,6 +264,25 @@ class ComputeContext : public CommandContext
 {
 public:
 	static ComputeContext& Begin(const std::string id = "", bool bAsync = false);
+};
+
+
+class ScopedDrawEvent
+{
+public:
+	ScopedDrawEvent(CommandContext& context, const std::string& label)
+		: m_context(context)
+	{
+		context.BeginEvent(label);
+	}
+
+	~ScopedDrawEvent()
+	{
+		m_context.EndEvent();
+	}
+
+private:
+	CommandContext& m_context;
 };
 
 
@@ -317,6 +349,18 @@ inline void CommandContext::TransitionResource(GpuBufferPtr gpuBuffer, ResourceS
 inline void CommandContext::TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(texture, newState, bFlushImmediate);
+}
+
+
+inline void CommandContext::FlushResourceBarriers()
+{
+	m_contextImpl->FlushResourceBarriers();
+}
+
+
+inline DynAlloc CommandContext::ReserveUploadMemory(size_t sizeInBytes)
+{
+	return m_contextImpl->ReserveUploadMemory(sizeInBytes);
 }
 
 
@@ -570,6 +614,30 @@ inline void GraphicsContext::SetIndexBuffer(GpuBufferPtr gpuBuffer)
 inline void GraphicsContext::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	m_contextImpl->SetVertexBuffer(slot, gpuBuffer);
+}
+
+
+inline void GraphicsContext::SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc)
+{
+	m_contextImpl->SetDynamicVertexBuffer(slot, numVertices, vertexStride, dynAlloc);
+}
+
+
+inline void GraphicsContext::SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data)
+{
+	m_contextImpl->SetDynamicVertexBuffer(slot, numVertices, vertexStride, data);
+}
+
+
+inline void GraphicsContext::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc)
+{
+	m_contextImpl->SetDynamicIndexBuffer(indexCount, indexSize16Bit, dynAlloc);
+}
+
+
+inline void GraphicsContext::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data)
+{
+	m_contextImpl->SetDynamicIndexBuffer(indexCount, indexSize16Bit, data);
 }
 
 

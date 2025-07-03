@@ -91,6 +91,16 @@ struct AdapterInfo
 };
 
 
+struct DynAlloc
+{
+	void* resource{ nullptr };
+	size_t offset{ 0 };
+	size_t size{ 0 };
+	void* dataPtr{ nullptr };
+	uint64_t gpuAddress{ 0 };
+};
+
+
 wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();

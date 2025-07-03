@@ -15,6 +15,7 @@
 #include "CommandContextVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "DeviceVK.h"
+#include "LinearAllocatorVK.h"
 #include "QueueVK.h"
 #include "VulkanUtil.h"
 
@@ -138,6 +139,7 @@ DeviceManager::~DeviceManager()
 	assert(m_deferredResources.empty());
 
 	DescriptorSetAllocator::DestroyAll();
+	LinearAllocator::DestroyAll();
 
 	extern Luna::IDeviceManager* g_deviceManager;
 	g_deviceManager = nullptr;
@@ -312,6 +314,7 @@ void DeviceManager::CreateDeviceResources()
 	}
 
 	m_limits = std::make_unique<Limits>(m_vkbPhysicalDevice.properties.limits);
+	m_deviceName = m_vkbPhysicalDevice.properties.deviceName;
 
 	// Device extensions
 	m_extensionManager.InitializeDevice(m_vkbPhysicalDevice);
@@ -486,6 +489,12 @@ Format DeviceManager::GetColorFormat()
 Format DeviceManager::GetDepthFormat()
 {
 	return m_desc.depthBufferFormat;
+}
+
+
+const string& DeviceManager::GetDeviceName() const
+{
+	return m_deviceName;
 }
 
 

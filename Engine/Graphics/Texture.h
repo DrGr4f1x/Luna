@@ -55,6 +55,17 @@ struct TextureInitializer
 };
 
 
+struct TextureDesc
+{
+	std::string name;
+	uint64_t width{ 0 };
+	uint32_t height{ 0 };
+	uint32_t depth{ 0 };
+	Format format{ Format::Unknown };
+	std::byte* data{ nullptr };
+};
+
+
 class ITexture : public IPixelBuffer
 {
 	friend class TextureManager;

@@ -10,75 +10,41 @@
 
 #pragma once
 
-#include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\Vulkan\VulkanCommon.h"
 
+// Constant blocks must be multiples of 16 constants @ 16 bytes each
 #define DEFAULT_ALIGN 256
 
-// TODO: Replace this entire thing with D3D12MA (See D3D12Sample.cpp in the D3D12MemoryAllocator project)
 
-namespace Luna::DX12
+namespace Luna::VK
 {
 
 class LinearAllocationPage
 {
 public:
-	LinearAllocationPage(ID3D12Resource* resource, ResourceState usage)
+	LinearAllocationPage(CVkBuffer* buffer, ResourceState usage)
+		: m_buffer{ buffer }
+		, m_usage{ usage }
 	{
-		m_resource.attach(resource);
-		m_usageState = usage;
-		m_gpuVirtualAddress = m_resource->GetGPUVirtualAddress();
-		m_resource->Map(0, nullptr, &m_cpuVirtualAddress);
+		Map();
 	}
 
-	
 	~LinearAllocationPage()
 	{
 		Unmap();
 	}
 
+	void Map();
+	void Unmap();
 
-	void Map()
-	{
-		if (m_cpuVirtualAddress == nullptr)
-		{
-			m_resource->Map(0, nullptr, &m_cpuVirtualAddress);
-		}
-	}
+	VkBuffer GetBuffer() const { return m_buffer->Get(); }
 
-
-	void Unmap()
-	{
-		if (m_cpuVirtualAddress != nullptr)
-		{
-			m_resource->Unmap(0, nullptr);
-			m_cpuVirtualAddress = nullptr;
-		}
-	}
-
-
-	ID3D12Resource* GetResource() const { return m_resource.get(); }
-
-public:
 	void* m_cpuVirtualAddress{ nullptr };
-	D3D12_GPU_VIRTUAL_ADDRESS m_gpuVirtualAddress{ D3D12_GPU_VIRTUAL_ADDRESS_NULL };
-
 
 protected:
-	wil::com_ptr<ID3D12Resource> m_resource;
-	ResourceState m_usageState{ ResourceState::Undefined };
-	ResourceState m_transitioningState{ ResourceState::Undefined };
-	ResourceType m_type{ ResourceType::Unknown };
-};
-
-
-enum LinearAllocatorType
-{
-	kInvalidAllocator = -1,
-
-	kGpuExclusive = 0,		// DEFAULT   GPU-writeable (via UAV)
-	kCpuWritable = 1,		// UPLOAD CPU-writeable (but write combined)
-
-	kNumAllocatorTypes
+	wil::com_ptr<CVkBuffer> m_buffer;
+	ResourceType m_type{ ResourceType::ConstantBuffer | ResourceType::VertexBuffer | ResourceType::IndexBuffer };
+	ResourceState m_usage{ ResourceState::Undefined };
 };
 
 
@@ -107,9 +73,6 @@ public:
 	void Destroy() { m_pagePool.clear(); }
 
 private:
-	static LinearAllocatorType sm_autoType;
-
-	LinearAllocatorType m_allocationType;
 	std::vector<std::unique_ptr<LinearAllocationPage>> m_pagePool;
 	std::queue<std::pair<uint64_t, LinearAllocationPage*>> m_retiredPages;
 	std::queue<std::pair<uint64_t, LinearAllocationPage*>> m_deletionQueue;
@@ -122,14 +85,12 @@ class LinearAllocator
 {
 public:
 
-	LinearAllocator(LinearAllocatorType type)
-		: m_allocationType(type)
-		, m_pageSize(0)
+	LinearAllocator()
+		: m_pageSize(0)
 		, m_curOffset(~(size_t)0)
 		, m_curPage(nullptr)
 	{
-		assert(type > kInvalidAllocator && type < kNumAllocatorTypes);
-		m_pageSize = (type == kGpuExclusive ? kGpuAllocatorPageSize : kCpuAllocatorPageSize);
+		m_pageSize = kCpuAllocatorPageSize;
 	}
 
 
@@ -140,16 +101,14 @@ public:
 
 	static void DestroyAll()
 	{
-		sm_pageManager[0].Destroy();
-		sm_pageManager[1].Destroy();
+		sm_pageManager.Destroy();
 	}
 
 private:
 	DynAlloc AllocateLargePage(size_t sizeInBytes);
 
-	static LinearAllocatorPageManager sm_pageManager[2];
+	static LinearAllocatorPageManager sm_pageManager;
 
-	LinearAllocatorType m_allocationType;
 	size_t m_pageSize;
 	size_t m_curOffset;
 	LinearAllocationPage* m_curPage{ nullptr };
@@ -157,4 +116,4 @@ private:
 	std::vector<LinearAllocationPage*> m_largePageList;
 };
 
-} // namespace Luna::DX12
+} // namespace Luna::VK

@@ -21,6 +21,51 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\External\imgui\backends\imgui_impl_dx12.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\backends\imgui_impl_glfw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\backends\imgui_impl_vulkan.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_demo.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_draw.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\imgui_widgets.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\External\imgui\misc\cpp\imgui_stdlib.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\External\vk-bootstrap\src\VkBootstrap.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -87,6 +132,7 @@
     <ClCompile Include="Graphics\RootSignature.cpp" />
     <ClCompile Include="Graphics\Shader.cpp" />
     <ClCompile Include="Graphics\Texture.cpp" />
+    <ClCompile Include="Graphics\UIOverlay.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
@@ -95,6 +141,7 @@
     <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\GpuBufferVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\LinearAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
@@ -120,6 +167,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
+    <ClInclude Include="..\External\imgui\backends\imgui_impl_dx12.h" />
+    <ClInclude Include="..\External\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="..\External\imgui\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="..\External\imgui\imconfig.h" />
+    <ClInclude Include="..\External\imgui\imgui.h" />
+    <ClInclude Include="..\External\imgui\imgui_internal.h" />
+    <ClInclude Include="..\External\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\External\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\External\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\External\imgui\misc\cpp\imgui_stdlib.h" />
     <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrap.h" />
     <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrapDispatch.h" />
     <ClInclude Include="..\External\volk\volk.h" />
@@ -203,6 +260,7 @@
     <ClInclude Include="Graphics\Sampler.h" />
     <ClInclude Include="Graphics\Shader.h" />
     <ClInclude Include="Graphics\Texture.h" />
+    <ClInclude Include="Graphics\UIOverlay.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
@@ -212,6 +270,7 @@
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\HashVK.h" />
+    <ClInclude Include="Graphics\Vulkan\LinearAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\PipelineStateVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
@@ -239,7 +298,26 @@
   <ItemGroup>
     <None Include="Core\Math\Functions.inl" />
     <None Include="Graphics\Shaders\Common\Common.hlsli" />
+    <None Include="Graphics\Shaders\shaders.cfg" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Graphics\Shaders\UIPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="Graphics\Shaders\UIVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">true</ExcludedFromBuild>
+    </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -308,7 +386,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -334,7 +412,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -361,7 +439,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -395,5 +473,12 @@
     <Error Condition="!Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.616.1\build\native\Microsoft.Direct3D.D3D12.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.616.1\build\native\Microsoft.Direct3D.D3D12.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Direct3D.D3D12.1.616.1\build\native\Microsoft.Direct3D.D3D12.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Direct3D.D3D12.1.616.1\build\native\Microsoft.Direct3D.D3D12.targets'))" />
+  </Target>
+  <Target Name="LunaBuildShaders" BeforeTargets="PrepareForBuild">
+    <Exec Condition="Exists('$(ProjectDir)Graphics\Shaders\shaders.cfg')" WorkingDirectory="$(ProjectDir)Graphics\Shaders" Command="$(ProjectDir)../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)..\Apps\Data\Shaders\DXIL --platform DXIL --binary --shaderModel 6_5 --verbose --define DX12=1 --include $(ProjectDir)Graphics\Shaders\Common" LogStandardErrorAsError="true" />
+    <Exec Condition="Exists('$(ProjectDir)Graphics\Shaders\shaders.cfg')" WorkingDirectory="$(ProjectDir)Graphics\Shaders" Command="$(ProjectDir)../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config shaders.cfg --out $(ProjectDir)..\Apps\Data\Shaders\SPIRV --platform SPIRV --binary --shaderModel 6_5 --vulkanVersion 1.2 --verbose --define VK=1 --include $(ProjectDir)Graphics\Shaders\Common" LogStandardErrorAsError="true" />
+  </Target>
+  <Target Name="LunaDeleteShaders" AfterTargets="Clean">
+    <RemoveDir Directories="$(ProjectDir)..\Apps\Data\Shaders" />
   </Target>
 </Project>

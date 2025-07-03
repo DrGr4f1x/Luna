@@ -233,6 +233,7 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 	// Recycle dynamic allocations
 	//m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
 	m_dynamicDescriptorHeap->CleanupUsedPools(fenceValue);
+	m_cpuLinearAllocator.CleanupUsedPages(fenceValue);
 
 	if (bWaitForCompletion)
 	{
@@ -415,6 +416,12 @@ void CommandContextVK::FlushResourceBarriers()
 
 	m_textureBarriers.clear();
 	m_bufferBarriers.clear();
+}
+
+
+DynAlloc CommandContextVK::ReserveUploadMemory(size_t sizeInBytes)
+{
+	return m_cpuLinearAllocator.Allocate(sizeInBytes);
 }
 
 
@@ -969,6 +976,51 @@ void CommandContextVK::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
 }
 
 
+void CommandContextVK::SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc)
+{
+	VkDeviceSize offsets[1] = { dynAlloc.offset };
+	VkBuffer buffers[1] = { reinterpret_cast<VkBuffer>(dynAlloc.resource) };
+	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
+}
+
+
+void CommandContextVK::SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data)
+{
+	const size_t sizeInBytes = numVertices * vertexStride;
+
+	DynAlloc dynAlloc = ReserveUploadMemory(sizeInBytes);
+
+	memcpy(dynAlloc.dataPtr, data, sizeInBytes);
+
+	VkDeviceSize offsets[1] = { 0 };
+	VkBuffer buffers[1] = { reinterpret_cast<VkBuffer>(dynAlloc.gpuAddress) };
+	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
+}
+
+
+void CommandContextVK::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc)
+{
+	const VkIndexType indexType = indexSize16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
+	VkDeviceSize offset{ dynAlloc.offset };
+	vkCmdBindIndexBuffer(m_commandBuffer, reinterpret_cast<VkBuffer>(dynAlloc.resource), offset, indexType);
+}
+
+
+void CommandContextVK::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, const void* data)
+{
+	const size_t elementSize = indexSize16Bit ? sizeof(uint16_t) : sizeof(uint32_t);
+	const size_t sizeInBytes = indexCount * elementSize;
+
+	DynAlloc dynAlloc = ReserveUploadMemory(sizeInBytes);
+
+	memcpy(dynAlloc.dataPtr, data, sizeInBytes);
+
+	const VkIndexType indexType = indexSize16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
+	VkDeviceSize offset{ 0 };
+	vkCmdBindIndexBuffer(m_commandBuffer, reinterpret_cast<VkBuffer>(dynAlloc.gpuAddress), offset, indexType);
+}
+
+
 void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 	uint32_t startVertexLocation, uint32_t startInstanceLocation)
 {
@@ -989,8 +1041,9 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 
 void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
-	auto deviceManager = GetVulkanDeviceManager();
-	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetVulkanDevice(), deviceManager->GetAllocator(), bufferData, numBytes);
+	DynAlloc dynAlloc = ReserveUploadMemory(numBytes);
+
+	SIMDMemCopy(dynAlloc.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
 
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
@@ -1000,11 +1053,9 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 	assert(destBufferVK != nullptr);
 
 	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, *stagingBuffer, destBufferVK->GetBuffer(), 1, &copyRegion);
+	vkCmdCopyBuffer(m_commandBuffer, reinterpret_cast<VkBuffer>(dynAlloc.resource), destBufferVK->GetBuffer(), 1, &copyRegion);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
-
-	GetVulkanDeviceManager()->ReleaseBuffer(stagingBuffer.get());
 }
 
 
@@ -1020,8 +1071,9 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr destTexture, const 
 		bufferCopyRegions[i] = TextureSubResourceDataToVulkan(texInit.subResourceData[i], VK_IMAGE_ASPECT_COLOR_BIT);
 	}
 
-	auto deviceManager = GetVulkanDeviceManager();
-	auto stagingBuffer = CreateStagingBuffer(deviceManager->GetVulkanDevice(), deviceManager->GetAllocator(), texInit.baseData, texInit.totalBytes);
+	DynAlloc dynAlloc = ReserveUploadMemory(texInit.totalBytes);
+
+	SIMDMemCopy(dynAlloc.dataPtr, texInit.baseData, Math::DivideByMultiple(texInit.totalBytes, 16));
 
 	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)destTexture.Get();
@@ -1032,15 +1084,13 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr destTexture, const 
 
 	vkCmdCopyBufferToImage(
 		m_commandBuffer,
-		stagingBuffer->Get(),
+		reinterpret_cast<VkBuffer>(dynAlloc.resource),
 		textureVK->GetImage(),
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
 		numSubResources,
 		bufferCopyRegions.data());
 
 	TransitionResource(destTexture, ResourceState::ShaderResource, true);
-
-	deviceManager->ReleaseBuffer(stagingBuffer.get());
 }
 
 

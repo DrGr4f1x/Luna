@@ -10,37 +10,47 @@
 
 #include "Stdafx.h"
 
-#include "LinearAllocator12.h"
+#include "LinearAllocatorVK.h"
 
-#include "Device12.h"
-#include "DeviceManager12.h"
-
+#include "DeviceVK.h"
+#include "DeviceManagerVK.h"
 
 using namespace std;
 
 
-namespace Luna::DX12
+namespace Luna::VK
 {
 
-LinearAllocatorType LinearAllocatorPageManager::sm_autoType = kGpuExclusive;
-
-
-LinearAllocatorPageManager::LinearAllocatorPageManager()
+void LinearAllocationPage::Map()
 {
-	m_allocationType = sm_autoType;
-	sm_autoType = (LinearAllocatorType)(sm_autoType + 1);
-	assert(sm_autoType <= kNumAllocatorTypes);
+	if (m_cpuVirtualAddress == nullptr)
+	{
+		ThrowIfFailed(vmaMapMemory(m_buffer->GetAllocator(), m_buffer->GetAllocation(), (void**)&m_cpuVirtualAddress));
+	}
 }
 
 
-LinearAllocatorPageManager LinearAllocator::sm_pageManager[2];
+void LinearAllocationPage::Unmap()
+{
+	if (m_cpuVirtualAddress != nullptr)
+	{
+		vmaUnmapMemory(m_buffer->GetAllocator(), m_buffer->GetAllocation());
+		m_cpuVirtualAddress = nullptr;
+	}
+}
+
+
+LinearAllocatorPageManager::LinearAllocatorPageManager() = default;
+
+
+LinearAllocatorPageManager LinearAllocator::sm_pageManager;
 
 
 LinearAllocationPage* LinearAllocatorPageManager::RequestPage()
 {
 	lock_guard<mutex> lockGuard(m_mutex);
 
-	DeviceManager* deviceManager = GetD3D12DeviceManager();
+	auto deviceManager = GetVulkanDeviceManager();
 
 	while (!m_retiredPages.empty() && deviceManager->IsFenceComplete(m_retiredPages.front().first))
 	{
@@ -57,7 +67,7 @@ LinearAllocationPage* LinearAllocatorPageManager::RequestPage()
 	}
 	else
 	{
-		pagePtr = CreateNewPage();
+		pagePtr = CreateNewPage(kCpuAllocatorPageSize);
 		m_pagePool.emplace_back(pagePtr);
 	}
 
@@ -80,7 +90,7 @@ void LinearAllocatorPageManager::FreeLargePages(uint64_t fenceValue, const vecto
 {
 	lock_guard<mutex> lockGuard(m_mutex);
 
-	DeviceManager* deviceManager = GetD3D12DeviceManager();
+	auto deviceManager = GetVulkanDeviceManager();
 
 	while (!m_deletionQueue.empty() && deviceManager->IsFenceComplete(m_deletionQueue.front().first))
 	{
@@ -98,55 +108,41 @@ void LinearAllocatorPageManager::FreeLargePages(uint64_t fenceValue, const vecto
 
 LinearAllocationPage* LinearAllocatorPageManager::CreateNewPage(size_t pageSize)
 {
-	D3D12_HEAP_PROPERTIES heapProps;
-	heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-	heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-	heapProps.CreationNodeMask = 1;
-	heapProps.VisibleNodeMask = 1;
+	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	ResourceType type = ResourceType::ConstantBuffer | ResourceType::VertexBuffer | ResourceType::IndexBuffer;
 
-	D3D12_RESOURCE_DESC resourceDesc;
-	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	resourceDesc.Alignment = 0;
-	resourceDesc.Height = 1;
-	resourceDesc.DepthOrArraySize = 1;
-	resourceDesc.MipLevels = 1;
-	resourceDesc.Format = DXGI_FORMAT_UNKNOWN;
-	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.SampleDesc.Quality = 0;
-	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size	= pageSize,
+		.usage	= GetBufferUsageFlags(type) | transferFlags
+	};
 
-	ResourceState defaultUsage;
+	VmaAllocationCreateInfo allocCreateInfo{};
+	allocCreateInfo.flags = GetMemoryFlags(MemoryAccess::CpuMapped);
+	allocCreateInfo.usage = GetMemoryUsage(MemoryAccess::CpuMapped);
 
-	if (m_allocationType == kGpuExclusive)
-	{
-		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-		resourceDesc.Width = pageSize == 0 ? kGpuAllocatorPageSize : pageSize;
-		resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		defaultUsage = ResourceState::UnorderedAccess;
-	}
-	else
-	{
-		heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-		resourceDesc.Width = pageSize == 0 ? kCpuAllocatorPageSize : pageSize;
-		resourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-		defaultUsage = ResourceState::GenericRead;
-	}
+	VkBuffer vkBuffer{ VK_NULL_HANDLE };
+	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
 
-	ID3D12Resource* buffer = nullptr;
-	auto device = GetD3D12Device()->GetD3D12Device();
+	auto deviceManager = GetVulkanDeviceManager();
+	auto device = deviceManager->GetVulkanDevice();
 
-	assert_succeeded(device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
-		&resourceDesc, ResourceStateToDX12(defaultUsage), nullptr, IID_PPV_ARGS(&buffer)));
+	auto res = vmaCreateBuffer(deviceManager->GetAllocator()->Get(), &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+	assert(res == VK_SUCCESS);
 
-	SetDebugName(buffer, "LinearAllocator Page");
+	SetDebugName(device->Get(), vkBuffer, "Linear Allocator Page");
 
-	return new LinearAllocationPage(buffer, defaultUsage);
+	auto buffer = Create<CVkBuffer>(device, deviceManager->GetAllocator(), vkBuffer, vmaBufferAllocation);
+
+	LinearAllocationPage* page = new LinearAllocationPage(buffer.get(), ResourceState::GenericRead);
+	return page;
 }
 
 
 void LinearAllocator::CleanupUsedPages(uint64_t fenceID)
 {
-	sm_pageManager[m_allocationType].FreeLargePages(fenceID, m_largePageList);
+	sm_pageManager.FreeLargePages(fenceID, m_largePageList);
+
 	m_largePageList.clear();
 
 	if (m_curPage == nullptr)
@@ -158,22 +154,21 @@ void LinearAllocator::CleanupUsedPages(uint64_t fenceID)
 	m_curPage = nullptr;
 	m_curOffset = 0;
 
-	sm_pageManager[m_allocationType].DiscardPages(fenceID, m_retiredPages);
+	sm_pageManager.DiscardPages(fenceID, m_retiredPages);
 	m_retiredPages.clear();
 }
 
 
 DynAlloc LinearAllocator::AllocateLargePage(size_t sizeInBytes)
 {
-	LinearAllocationPage* oneOff = sm_pageManager[m_allocationType].CreateNewPage(sizeInBytes);
+	LinearAllocationPage* oneOff = sm_pageManager.CreateNewPage(sizeInBytes);
 	m_largePageList.push_back(oneOff);
 
 	DynAlloc ret{
-		.resource		= oneOff->GetResource(),
-		.offset			= 0,
-		.size			= sizeInBytes,
-		.dataPtr		= oneOff->m_cpuVirtualAddress,
-		.gpuAddress		= oneOff->m_gpuVirtualAddress
+		.resource	= oneOff->GetBuffer(),
+		.offset		= 0,
+		.size		= sizeInBytes,
+		.dataPtr	= oneOff->m_cpuVirtualAddress
 	};
 
 	return ret;
@@ -206,16 +201,15 @@ DynAlloc LinearAllocator::Allocate(size_t sizeInBytes, size_t alignment)
 
 	if (m_curPage == nullptr)
 	{
-		m_curPage = sm_pageManager[m_allocationType].RequestPage();
+		m_curPage = sm_pageManager.RequestPage();
 		m_curOffset = 0;
 	}
 
 	DynAlloc ret{
-		.resource		= m_curPage->GetResource(),
-		.offset			= m_curOffset,
-		.size			= alignedSize,
-		.dataPtr		= (uint8_t*)m_curPage->m_cpuVirtualAddress + m_curOffset,
-		.gpuAddress		= m_curPage->m_gpuVirtualAddress + m_curOffset
+		.resource	= m_curPage->GetBuffer(),
+		.offset		= m_curOffset,
+		.size		= alignedSize,
+		.dataPtr	= (uint8_t*)m_curPage->m_cpuVirtualAddress + m_curOffset
 	};
 
 	m_curOffset += alignedSize;
@@ -223,4 +217,4 @@ DynAlloc LinearAllocator::Allocate(size_t sizeInBytes, size_t alignment)
 	return ret;
 }
 
-} // namespace Luna::DX12
+} // namespace Luna::VK
