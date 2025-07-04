@@ -443,7 +443,7 @@ bool Application::Tick()
 		return false;
 	}	
 
-	m_inputSystem->Update();
+	m_inputSystem->Update((float)m_timer.GetElapsedSeconds());
 
 	// Close on Escape key
 	if (m_inputSystem->IsFirstPressed(DigitalInput::kKey_escape))

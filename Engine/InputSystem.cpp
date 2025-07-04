@@ -63,7 +63,7 @@ InputSystem::~InputSystem()
 }
 
 
-void InputSystem::Update()
+void InputSystem::Update(float deltaSeconds)
 {
 	using enum AnalogInput;
 	using enum DigitalInput;
@@ -120,6 +120,27 @@ void InputSystem::Update()
 	else if (m_mouseState.lZ < 0)
 	{
 		SetAnalog(kAnalogMouseScroll, -1.0f);
+	}
+
+	// Update time duration for buttons pressed
+	for (uint32_t i = 0; i < (uint32_t)kNumDigitalInputs; ++i)
+	{
+		if (m_buttons[0][i])
+		{
+			if (!m_buttons[1][i])
+			{
+				m_holdDuration[i] = 0.0f;
+			}
+			else
+			{
+				m_holdDuration[i] += deltaSeconds;
+			}
+		}
+	}
+
+	for (uint32_t i = 0; i < (uint32_t)kNumAnalogInputs; ++i)
+	{
+		m_analogsTC[i] = m_analogs[i] * deltaSeconds;
 	}
 }
 

@@ -179,7 +179,7 @@ public:
 	explicit InputSystem(HWND hwnd);
 	~InputSystem();
 
-	void Update();
+	void Update(float deltaSeconds);
 
 	bool IsAnyPressed() const;
 
