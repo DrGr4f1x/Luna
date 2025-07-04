@@ -97,31 +97,31 @@ bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::stri
 	}
 
 	TextureInitializer texInit{
-		.format = format,
-		.dimension = TextureDimension::Texture2D,
-		.width = (uint32_t)width,
-		.height = (uint32_t)height,
-		.arraySizeOrDepth = 1,
-		.numMips = 1,
-		.baseData = imageData,
-		.totalBytes = width * height * BitsPerPixel(format) / 8
+		.format				= format,
+		.dimension			= TextureDimension::Texture2D,
+		.width				= (uint32_t)width,
+		.height				= (uint32_t)height,
+		.arraySizeOrDepth	= 1,
+		.numMips			= 1,
+		.baseData			= imageData,
+		.totalBytes			= width * height * BitsPerPixel(format) / 8
 	};
 
 	size_t numBytes = 0;
 	size_t rowBytes = 0;
-	GetSurfaceInfo(width, height, format, &numBytes, &rowBytes, nullptr);
+	GetSurfaceInfo(width, height, format, &numBytes, &rowBytes, nullptr, nullptr, nullptr);
 
 	TextureSubresourceData subResourceData{
-		.data = imageData,
-		.rowPitch = rowBytes,
-		.slicePitch = numBytes,
-		.bufferOffset = 0,
-		.mipLevel = 0,
-		.baseArrayLayer = 0,
-		.layerCount = 1,
-		.width = (uint32_t)width,
-		.height = (uint32_t)height,
-		.depth = 1
+		.data				= imageData,
+		.rowPitch			= rowBytes,
+		.slicePitch			= numBytes,
+		.bufferOffset		= 0,
+		.mipLevel			= 0,
+		.baseArrayLayer		= 0,
+		.layerCount			= 1,
+		.width				= (uint32_t)width,
+		.height				= (uint32_t)height,
+		.depth				= 1
 	};
 	texInit.subResourceData.push_back(subResourceData);
 

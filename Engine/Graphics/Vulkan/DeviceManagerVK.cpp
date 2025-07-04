@@ -575,7 +575,7 @@ void DeviceManager::SetRequiredDeviceExtensions(vkb::PhysicalDevice& physicalDev
 	vector<string> requiredExtensions{ 
 		"VK_KHR_swapchain",
 		"VK_KHR_swapchain_mutable_format",
-		"VK_EXT_descriptor_buffer"
+		//"VK_EXT_descriptor_buffer"
 	};
 	m_extensionManager.SetRequiredDeviceExtensions(requiredExtensions);
 	if (!m_extensionManager.EnableDeviceExtensions(physicalDevice))

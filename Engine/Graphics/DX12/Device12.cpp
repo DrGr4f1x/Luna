@@ -1192,9 +1192,16 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 
 	size_t numBytes = 0;
 	size_t rowPitch = 0;
-	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr);
+	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr, nullptr, nullptr);
 
-	TextureInitializer texInit{ .format = textureDesc.format, .dimension = dimension };
+	TextureInitializer texInit{ 
+		.format				= textureDesc.format, 
+		.dimension			= dimension,
+		.width				= textureDesc.width,
+		.height				= (uint32_t)height,
+		.arraySizeOrDepth	= (uint32_t)depth,
+		.numMips			= 1
+	};
 	texInit.subResourceData.push_back(TextureSubresourceData{});
 
 	size_t skipMip = 0;

@@ -53,25 +53,6 @@ TextureDimension GetTextureDimension(ktxTexture* texture)
 }
 
 
-void FlipImageVertically(std::byte* data, size_t width, size_t height, size_t rowPitch)
-{
-	std::byte temp[16384 * 16];
-
-	for (size_t j = 0; j < height / 2; ++j)
-	{
-		std::byte* row1 = data + (j * rowPitch);
-		std::byte* row2 = data + (height - 1 - j) * rowPitch;
-		
-		if (row1 == row2)
-			break;
-
-		memcpy(temp, row1, rowPitch);
-		memcpy(row1, row2, rowPitch);
-		memcpy(row2, temp, rowPitch);
-	}
-}
-
-
 bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
 {
 	assert(device != nullptr);
@@ -190,11 +171,11 @@ bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::s
 		for (uint32_t i = 0; i < numSubresources; ++i)
 		{
 			std::byte* imageData = texInit.subResourceData[i].data;
-			size_t width = texInit.subResourceData[i].width;
 			size_t height = texInit.subResourceData[i].height;
+			size_t heightInBlocks = texInit.subResourceData[i].heightInBlocks;
 			size_t rowPitch = texInit.subResourceData[i].rowPitch;
 
-			FlipImageVertically(imageData, width, height, rowPitch);
+			size_t effectiveHeight = heightInBlocks > 0 ? heightInBlocks : height;
 		}
 
 		return device->InitializeTexture(texture, texInit);

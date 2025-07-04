@@ -274,15 +274,17 @@ bool FillTextureInitializer(
 	}
 
 	skipMip = 0;
-	outTexInit.width = 0;
-	outTexInit.height = 0;
-	outTexInit.arraySizeOrDepth = 0;
+	//outTexInit.width = 0;
+	//outTexInit.height = 0;
+	//outTexInit.arraySizeOrDepth = 0;
 	outTexInit.baseData = bitData;
 	outTexInit.totalBytes = bitSize;
 
 	size_t numBytes = 0;
 	size_t rowBytes = 0;
 	size_t offset = 0;
+	size_t widthInBlocks = 0;
+	size_t heightInBlocks = 0;
 	std::byte* pSrcBits = bitData;
 	std::byte* pEndBits = bitData + bitSize;
 
@@ -294,16 +296,16 @@ bool FillTextureInitializer(
 		size_t d = depth;
 		for (size_t i = 0; i < mipCount; i++)
 		{
-			GetSurfaceInfo(w, h, format, &numBytes, &rowBytes, nullptr);
+			GetSurfaceInfo(w, h, format, &numBytes, &rowBytes, nullptr, &widthInBlocks, &heightInBlocks);
 
 			if ((mipCount <= 1) || !maxSize || (w <= maxSize && h <= maxSize && d <= maxSize))
 			{
-				if (!outTexInit.width)
+				/*if (!outTexInit.width)
 				{
 					outTexInit.width = w;
 					outTexInit.height = (uint32_t)h;
 					outTexInit.arraySizeOrDepth = (uint32_t)d;
-				}
+				}*/
 
 				assert(index < mipCount * arraySize);
 				_Analysis_assume_(index < mipCount * arraySize);
@@ -322,6 +324,10 @@ bool FillTextureInitializer(
 				subResourceData.width = (uint32_t)w;
 				subResourceData.height = (uint32_t)h;
 				subResourceData.depth = (uint32_t)d;
+
+				// Fill in compression data
+				subResourceData.widthInBlocks = (uint32_t)widthInBlocks;
+				subResourceData.heightInBlocks = (uint32_t)heightInBlocks;
 
 				++index;
 			}

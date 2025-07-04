@@ -24,7 +24,7 @@ class TextureApp : public Luna::Application
 {
 public:
 	TextureApp(uint32_t width, uint32_t height);
-	~TextureApp();
+	~TextureApp() = default;
 
 	int ProcessCommandLine(int argc, char* argv[]) final;
 
@@ -62,7 +62,8 @@ protected:
 		Math::Matrix4 viewProjectionMatrix;
 		Math::Matrix4 modelMatrix;
 		Math::Vector3 viewPos;
-		float lodBias = 0.0f;
+		float lodBias{ 0.0f };
+		bool flipUVs{ false };
 	};
 
 	Luna::DepthBufferPtr m_depthBuffer;
@@ -81,6 +82,7 @@ protected:
 	// Assets
 	Luna::TexturePtr m_texture;
 	Luna::SamplerPtr m_sampler;
+	bool m_flipUVs{ false };
 
 	float m_zoom{ -2.5f };
 	Luna::CameraController m_controller;

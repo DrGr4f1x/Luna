@@ -36,6 +36,7 @@ cbuffer VSConstants : register(b0)
     float4x4 modelMatrix;
     float4 viewPos;
     float lodBias;
+    bool flipUVs;
 };
 
 
@@ -44,6 +45,9 @@ VSOutput main(VSInput input)
     VSOutput output = (VSOutput) 0;
 
     output.uv = input.uv;
+    if (flipUVs)
+        output.uv.y = 1.0 - output.uv.y;
+    
     output.lodBias = lodBias;
 
     float3 worldPos = mul(modelMatrix, float4(input.pos, 1.0f)).xyz;

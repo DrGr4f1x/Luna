@@ -25,7 +25,6 @@ Texture2D colorTex : register(t0);
 VK_BINDING(0, 2)
 SamplerState linearSampler : register(s0);
 
-
 float4 main(PSInput input) : SV_TARGET
 {
     float4 color = colorTex.SampleLevel(linearSampler, input.uv, input.lodBias);

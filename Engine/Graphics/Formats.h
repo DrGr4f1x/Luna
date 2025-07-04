@@ -138,6 +138,15 @@ inline Format RemoveSrgb(Format format)
 	}
 }
 
-void GetSurfaceInfo(size_t width, size_t height, Format format, size_t* outNumBytes, size_t* outRowBytes, size_t* outNumRows);
+// TODO: use a struct for the out data
+void GetSurfaceInfo(
+	size_t width, 
+	size_t height, 
+	Format format, 
+	size_t* outNumBytes, 
+	size_t* outRowBytes, 
+	size_t* outNumRows,
+	size_t* widthInBlocks,
+	size_t* heightInBlocks);
 
 } // namespace Luna

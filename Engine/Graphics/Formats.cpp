@@ -210,11 +210,21 @@ uint32_t BlockSize(Format format)
 }
 
 
-void GetSurfaceInfo(size_t width, size_t height, Format format, size_t* outNumBytes, size_t* outRowBytes, size_t* outNumRows)
+void GetSurfaceInfo(
+	size_t width, 
+	size_t height, 
+	Format format, 
+	size_t* outNumBytes, 
+	size_t* outRowBytes, 
+	size_t* outNumRows, 
+	size_t* outWidthInBlocks, 
+	size_t* outHeightInBlocks)
 {
 	size_t numBytes = 0;
 	size_t rowBytes = 0;
 	size_t numRows = 0;
+	size_t numBlocksWide = 0;
+	size_t numBlocksHigh = 0;
 
 	bool bc = false;
 	size_t bpe = 0;
@@ -246,12 +256,10 @@ void GetSurfaceInfo(size_t width, size_t height, Format format, size_t* outNumBy
 
 	if (bc)
 	{
-		size_t numBlocksWide = 0;
 		if (width > 0)
 		{
 			numBlocksWide = std::max<size_t>(1, (width + 3) / 4);
 		}
-		size_t numBlocksHigh = 0;
 		if (height > 0)
 		{
 			numBlocksHigh = std::max<size_t>(1, (height + 3) / 4);
@@ -279,6 +287,14 @@ void GetSurfaceInfo(size_t width, size_t height, Format format, size_t* outNumBy
 	if (outNumRows)
 	{
 		*outNumRows = numRows;
+	}
+	if (outWidthInBlocks)
+	{
+		*outWidthInBlocks = numBlocksWide;
+	}
+	if (outHeightInBlocks)
+	{
+		*outHeightInBlocks = numBlocksHigh;
 	}
 }
 

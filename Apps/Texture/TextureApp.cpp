@@ -25,13 +25,6 @@ TextureApp::TextureApp(uint32_t width, uint32_t height)
 {
 }
 
-static void whoa() {}
-
-TextureApp::~TextureApp()
-{
-	whoa();
-}
-
 
 int TextureApp::ProcessCommandLine(int argc, char* argv[])
 {
@@ -204,7 +197,7 @@ void TextureApp::InitDepthBuffer()
 void TextureApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
-		.name = "Root Sig",
+		.name = "Root Signature",
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters = 
 			{ 
@@ -269,7 +262,8 @@ void TextureApp::LoadAssets()
 	}
 	else
 	{
-		m_texture = LoadTexture("vulkan_cloth_rgba.ktx");
+		m_texture = LoadTexture("vulkan_cloth_rgba.ktx2");
+		m_flipUVs = true;
 	}
 	
 	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
@@ -283,6 +277,7 @@ void TextureApp::UpdateConstantBuffer()
 	m_constants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
 	m_constants.modelMatrix = Matrix4(kIdentity);
 	m_constants.viewPos = m_camera.GetPosition();
+	m_constants.flipUVs = m_flipUVs;
 
 	m_constantBuffer->Update(sizeof(Constants), &m_constants);
 }

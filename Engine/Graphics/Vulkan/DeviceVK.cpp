@@ -930,32 +930,32 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 
 	// Create image
 	ImageDesc imageDesc{
-		.name = textureVK->m_name,
-		.width = texInit.width,
-		.height = texInit.height,
-		.arraySizeOrDepth = texInit.arraySizeOrDepth,
-		.format = texInit.format,
-		.numMips = texInit.numMips,
-		.numSamples = 1,
-		.resourceType = textureVK->m_type,
-		.imageUsage = GpuImageUsage::ShaderResource | GpuImageUsage::CopyDest,
-		.memoryAccess = MemoryAccess::GpuReadWrite
+		.name				= textureVK->m_name,
+		.width				= texInit.width,
+		.height				= texInit.height,
+		.arraySizeOrDepth	= texInit.arraySizeOrDepth,
+		.format				= texInit.format,
+		.numMips			= texInit.numMips,
+		.numSamples			= 1,
+		.resourceType		= textureVK->m_type,
+		.imageUsage			= GpuImageUsage::ShaderResource | GpuImageUsage::CopyDest,
+		.memoryAccess		= MemoryAccess::GpuReadWrite
 	};
 
 	textureVK->m_image = CreateImage(imageDesc);
 
 	// Shader resource view
 	ImageViewDesc imageViewDesc{
-		.image = textureVK->m_image.get(),
-		.name = textureVK->m_name,
-		.resourceType = textureVK->GetResourceType(),
-		.imageUsage = GpuImageUsage::ShaderResource,
-		.format = textureVK->GetFormat(),
-		.imageAspect = ImageAspect::Color,
-		.baseMipLevel = 0,
-		.mipCount = textureVK->GetNumMips(),
-		.baseArraySlice = 0,
-		.arraySize = textureVK->GetArraySize()
+		.image				= textureVK->m_image.get(),
+		.name				= textureVK->m_name,
+		.resourceType		= textureVK->GetResourceType(),
+		.imageUsage			= GpuImageUsage::ShaderResource,
+		.format				= textureVK->GetFormat(),
+		.imageAspect		= ImageAspect::Color,
+		.baseMipLevel		= 0,
+		.mipCount			= textureVK->GetNumMips(),
+		.baseArraySlice		= 0,
+		.arraySize			= textureVK->GetArraySize()
 	};
 	textureVK->m_imageViewSrv = CreateImageView(imageViewDesc);
 
@@ -1042,6 +1042,8 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 
 wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 {
+	const bool isArray = HasAnyFlag(imageDesc.resourceType, ResourceType::TextureArray_Type);
+
 	VkImageCreateInfo imageCreateInfo{
 		.sType			= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.flags			= (VkImageCreateFlags)GetImageCreateFlags(imageDesc.resourceType),
@@ -1050,9 +1052,9 @@ wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 		.extent			= {
 			.width = (uint32_t)imageDesc.width,
 			.height = imageDesc.height,
-			.depth = imageDesc.arraySizeOrDepth },
+			.depth = isArray ? 1 : imageDesc.arraySizeOrDepth },
 		.mipLevels = imageDesc.numMips,
-		.arrayLayers	= HasAnyFlag(imageDesc.resourceType, ResourceType::TextureArray_Type) ? imageDesc.arraySizeOrDepth : 1,
+		.arrayLayers	= isArray ? imageDesc.arraySizeOrDepth : 1,
 		.samples		= GetSampleCountFlags(imageDesc.numSamples),
 		.tiling			= VK_IMAGE_TILING_OPTIMAL,
 		.usage			= GetImageUsageFlags(imageDesc.imageUsage)
@@ -1194,9 +1196,16 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 
 	size_t numBytes = 0;
 	size_t rowPitch = 0;
-	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr);
+	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr, nullptr, nullptr);
 
-	TextureInitializer texInit{ .format = textureDesc.format, .dimension = dimension };
+	TextureInitializer texInit{
+		.format				= textureDesc.format,
+		.dimension			= dimension,
+		.width				= textureDesc.width,
+		.height				= (uint32_t)height,
+		.arraySizeOrDepth	= (uint32_t)depth,
+		.numMips			= 1
+	};
 	texInit.subResourceData.push_back(TextureSubresourceData{});
 
 	size_t skipMip = 0;
