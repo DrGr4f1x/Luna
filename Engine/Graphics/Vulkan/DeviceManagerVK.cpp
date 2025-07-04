@@ -122,6 +122,9 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	m_bIsDeveloperModeEnabled = IsDeveloperModeEnabled();
 	m_bIsRenderDocAvailable = IsRenderDocAvailable();
 
+	// Can't use the validation layer if the application is launched through RenderDoc
+	m_desc.enableValidation = m_bIsRenderDocAvailable ? false : desc.enableValidation;
+
 	extern Luna::IDeviceManager* g_deviceManager;
 	assert(!g_deviceManager);
 

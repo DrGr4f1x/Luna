@@ -778,6 +778,7 @@ GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipel
 	auto pipelineState = std::make_shared<GraphicsPipelineState>();
 
 	pipelineState->m_device = this;
+	pipelineState->m_desc = pipelineDesc;
 	pipelineState->m_pipelineState = pipeline;
 
 	return pipelineState;
@@ -1042,19 +1043,24 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 
 wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 {
+	const bool isVolume = HasAnyFlag(imageDesc.resourceType, ResourceType::Texture3D);
 	const bool isArray = HasAnyFlag(imageDesc.resourceType, ResourceType::TextureArray_Type);
+	const bool isCubemap = HasAnyFlag(imageDesc.resourceType, ResourceType::TextureCube_Type);
+
+	const uint32_t depth = isVolume ? imageDesc.arraySizeOrDepth : 1;
+	const uint32_t arraySize = (isArray || isCubemap) ? imageDesc.arraySizeOrDepth : 1;
 
 	VkImageCreateInfo imageCreateInfo{
 		.sType			= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.flags			= (VkImageCreateFlags)GetImageCreateFlags(imageDesc.resourceType),
 		.imageType		= GetImageType(imageDesc.resourceType),
 		.format			= FormatToVulkan(imageDesc.format),
-		.extent			= {
+		.extent = {
 			.width = (uint32_t)imageDesc.width,
 			.height = imageDesc.height,
-			.depth = isArray ? 1 : imageDesc.arraySizeOrDepth },
+			.depth = depth },
 		.mipLevels = imageDesc.numMips,
-		.arrayLayers	= isArray ? imageDesc.arraySizeOrDepth : 1,
+		.arrayLayers	= arraySize,
 		.samples		= GetSampleCountFlags(imageDesc.numSamples),
 		.tiling			= VK_IMAGE_TILING_OPTIMAL,
 		.usage			= GetImageUsageFlags(imageDesc.imageUsage)

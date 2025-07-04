@@ -260,6 +260,11 @@
     <ClCompile Include="..\External\imgui\imgui_widgets.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
+    <ClCompile Include="Graphics\Vulkan\LinearAllocatorVK.cpp" />
+    <ClCompile Include="Graphics\Model.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -624,6 +629,11 @@
     <ClInclude Include="..\External\imgui\imstb_truetype.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
+    <ClInclude Include="Graphics\Vulkan\LinearAllocatorVK.h" />
+    <ClInclude Include="Graphics\Model.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -677,6 +687,7 @@
     <None Include="Graphics\Shaders\Common\Common.hlsli">
       <Filter>Graphics\Shaders</Filter>
     </None>
+    <None Include="Graphics\Shaders\shaders.cfg" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

@@ -16,6 +16,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\Model.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\Sampler.h"
@@ -123,6 +124,7 @@ protected:
 
 	// Wrappers for resource loading
 	TexturePtr LoadTexture(const std::string& filename, bool forceSrgb = false);
+	ModelPtr LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f);
 
 protected:
 	ApplicationInfo m_appInfo;

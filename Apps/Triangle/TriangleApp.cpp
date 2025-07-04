@@ -43,6 +43,8 @@ void TriangleApp::Configure()
 
 void TriangleApp::Startup()
 {
+	// TODO: Split this between CreateDeviceDependentResources() and CreateWindowSizeDependentResources
+
 	// Setup vertices
 	vector<Vertex> vertexData =
 	{

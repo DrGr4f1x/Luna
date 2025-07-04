@@ -33,7 +33,7 @@ TextureDimension GetTextureDimension(ktxTexture* texture)
 	const uint32_t numCubemapFaces = texture->numFaces;
 	const bool isArray = texture->isArray;
 	const bool isCubemap = texture->isCubemap;
-	
+
 	if (depth > 1)
 	{
 		return TextureDimension::Texture3D;
@@ -43,13 +43,88 @@ TextureDimension GetTextureDimension(ktxTexture* texture)
 		return isArray ? TextureDimension::TextureCube_Array : TextureDimension::TextureCube;
 	}
 	else if (height > 1)
-	{ 
+	{
 		return isArray ? TextureDimension::Texture2D_Array : TextureDimension::Texture2D;
 	}
 	else
 	{
 		return isArray ? TextureDimension::Texture1D_Array : TextureDimension::Texture1D;
 	}
+}
+
+bool FillTextureInitializerKTX(ktxTexture* texture, TextureInitializer& outTexInit)
+{
+	const uint64_t width = texture->baseWidth;
+	const uint32_t height = texture->baseHeight;
+	const uint32_t depth = texture->baseDepth;
+	const uint32_t mipCount = texture->numLevels;
+	const uint32_t arraySize = texture->numLayers;
+	const uint32_t numCubemapFaces = texture->numFaces;
+	const bool isArray = texture->isArray;
+	const bool isCubemap = texture->isCubemap;
+	const bool isCubemapArray = isArray && isCubemap;
+
+	ktx_uint8_t* ktxTextureData = ktxTexture_GetData(texture);
+	ktx_size_t ktxTextureSize = ktxTexture_GetDataSize(texture);
+
+	outTexInit.width = std::max<uint64_t>(width, 1);
+	outTexInit.height = std::max<uint32_t>(height, 1);
+	outTexInit.arraySizeOrDepth = std::max<uint32_t>(depth, 1);
+	if (isCubemap || isArray)
+	{
+		outTexInit.arraySizeOrDepth = arraySize;
+		if (isCubemap)
+			outTexInit.arraySizeOrDepth *= 6;
+	}
+	outTexInit.numMips = mipCount;
+	outTexInit.baseData = (std::byte*)ktxTextureData;
+	outTexInit.totalBytes = ktxTextureSize;
+
+	const uint32_t numSubresources = outTexInit.arraySizeOrDepth * outTexInit.numMips;
+	outTexInit.subResourceData.reserve(numSubresources);
+	for (uint32_t i = 0; i < numSubresources; ++i)
+	{
+		outTexInit.subResourceData.push_back(TextureSubresourceData{});
+	}
+
+	const uint32_t numFaces = isCubemap ? 6 : 1;
+
+	uint32_t index = 0;
+	for (uint32_t face = 0; face < numFaces; ++face)
+	{
+		for (uint32_t slice = 0; slice < arraySize; ++slice)
+		{
+			for (uint32_t mipLevel = 0; mipLevel < mipCount; ++mipLevel)
+			{
+				ktx_size_t offset = 0;
+				KTX_error_code ret = ktxTexture_GetImageOffset(texture, mipLevel, slice, face, &offset);
+				assert(ret == KTX_SUCCESS);
+
+				size_t w = std::max<size_t>(texture->baseWidth >> mipLevel, 1);
+				size_t h = std::max<size_t>(texture->baseHeight >> mipLevel, 1);
+				size_t numBytes = 0;
+				size_t rowBytes = 0;
+				GetSurfaceInfo(w, h, outTexInit.format, &numBytes, &rowBytes, nullptr, nullptr, nullptr);
+
+				auto& subresource = outTexInit.subResourceData[index];
+				subresource.data = (std::byte*)ktxTextureData + offset;
+				subresource.rowPitch = rowBytes;
+				subresource.slicePitch = numBytes;
+
+				subresource.bufferOffset = offset;
+				subresource.mipLevel = mipLevel;
+				subresource.baseArrayLayer = isCubemap ? (6 * slice + face) : slice;
+				subresource.layerCount = 1;
+				subresource.width = (uint32_t)w;
+				subresource.height = (uint32_t)h;
+				subresource.depth = 1;
+
+				++index;
+			}
+		}
+	}
+	
+	return true;
 }
 
 
@@ -144,40 +219,22 @@ bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::s
 	std::byte* bitData = (std::byte*)ktxTexture_GetData(kTexture);
 	const size_t bitDataSize = ktxTexture_GetDataSize(kTexture);
 
-	TextureInitializer texInit{
-		.format = format,
-		.dimension = dimension,
-		.width = width,
-		.height = height,
-		.arraySizeOrDepth = isArray ? arraySize : depth,
-		.numMips = static_cast<uint32_t>(mipCount),
-		.baseData = bitData,
-		.totalBytes = bitDataSize
-	};
+	size_t effectiveArraySize = depth;
 
-	const uint32_t numSubresources = arraySize * mipCount;
-	texInit.subResourceData.reserve(numSubresources);
-	for (uint32_t i = 0; i < numSubresources; ++i)
+	if (isCubemap || isArray)
 	{
-		texInit.subResourceData.push_back(TextureSubresourceData{});
+		effectiveArraySize = arraySize;
+		if (isCubemap)
+			effectiveArraySize *= 6;
 	}
 
+	TextureInitializer texInit{ .format = format, .dimension = dimension, };
 	const size_t maxSize = 0;
 	size_t skipMip = 0;
-	bool dataOk = FillTextureInitializer(width, height, depth, mipCount, arraySize, format, maxSize, bitDataSize, bitData, skipMip, texInit);
+	bool dataOk = FillTextureInitializerKTX(kTexture, texInit);
 
 	if (dataOk)
 	{
-		for (uint32_t i = 0; i < numSubresources; ++i)
-		{
-			std::byte* imageData = texInit.subResourceData[i].data;
-			size_t height = texInit.subResourceData[i].height;
-			size_t heightInBlocks = texInit.subResourceData[i].heightInBlocks;
-			size_t rowPitch = texInit.subResourceData[i].rowPitch;
-
-			size_t effectiveHeight = heightInBlocks > 0 ? heightInBlocks : height;
-		}
-
 		return device->InitializeTexture(texture, texInit);
 	}
 

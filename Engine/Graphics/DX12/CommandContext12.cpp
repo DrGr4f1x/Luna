@@ -545,13 +545,7 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipe
 		m_graphicsPipelineState = graphicsPSO;
 	}
 
-	// TODO: Add getter for primitive topology to PipelineStateManager
-	auto topology = PrimitiveTopologyToDX12(graphicsPipeline->GetPrimitiveTopology());
-	if (m_primitiveTopology != topology)
-	{
-		m_commandList->IASetPrimitiveTopology(topology);
-		m_primitiveTopology = topology;
-	}
+	SetPrimitiveTopology(graphicsPipeline->GetPrimitiveTopology());
 }
 
 

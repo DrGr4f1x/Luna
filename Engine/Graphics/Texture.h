@@ -37,10 +37,6 @@ struct TextureSubresourceData
 	uint32_t width{ 0 };
 	uint32_t height{ 0 };
 	uint32_t depth{ 0 };
-
-	// For compressed formats, dimensions of the subresource in blocks
-	uint32_t widthInBlocks{ 0 };
-	uint32_t heightInBlocks{ 0 };
 };
 
 

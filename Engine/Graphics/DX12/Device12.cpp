@@ -913,6 +913,7 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 	auto pipelineState = std::make_shared<GraphicsPipelineState>();
 
 	pipelineState->m_device = this;
+	pipelineState->m_desc = pipelineDesc;
 	pipelineState->m_pipelineState = pPipelineState;
 
 	return pipelineState;

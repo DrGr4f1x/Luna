@@ -195,6 +195,7 @@ private:
 	VkPipeline m_graphicsPipeline{ VK_NULL_HANDLE };
 	VkPipeline m_computePipeline{ VK_NULL_HANDLE };
 	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
+	VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_MAX_ENUM };
 
 	LinearAllocator m_cpuLinearAllocator;
 };

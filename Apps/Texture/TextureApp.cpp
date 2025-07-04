@@ -42,6 +42,8 @@ void TextureApp::Configure()
 
 void TextureApp::Startup()
 {
+	// TODO: Split this between CreateDeviceDependentResources() and CreateWindowSizeDependentResources
+
 	// Setup vertices for a single uv-mapped quad made from two triangles
 	vector<Vertex> vertexData =
 	{

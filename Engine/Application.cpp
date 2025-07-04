@@ -383,6 +383,12 @@ TexturePtr Application::LoadTexture(const std::string& filename, bool forceSrgb)
 }
 
 
+ModelPtr Application::LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale)
+{
+	return Model::Load(m_deviceManager->GetDevice(), filename, layout, scale);
+}
+
+
 bool Application::Initialize()
 {
 	// Create core engine systems

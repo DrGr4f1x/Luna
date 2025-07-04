@@ -173,6 +173,7 @@ void CommandContextVK::Reset()
 	m_computePipelineLayout = VK_NULL_HANDLE;
 	m_graphicsPipeline = VK_NULL_HANDLE;
 	m_computePipeline = VK_NULL_HANDLE;
+	m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
 
 	m_renderingArea.offset.x = -1;
 	m_renderingArea.offset.y = -1;
@@ -705,6 +706,8 @@ void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipe
 		m_graphicsPipeline = vkPipeline;
 		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
 	}
+
+	SetPrimitiveTopology(graphicsPipeline->GetPrimitiveTopology());
 }
 
 
@@ -748,7 +751,12 @@ void CommandContextVK::SetBlendFactor(Color blendFactor)
 
 void CommandContextVK::SetPrimitiveTopology(PrimitiveTopology topology)
 {
-	vkCmdSetPrimitiveTopology(m_commandBuffer, PrimitiveTopologyToVulkan(topology));
+	const auto vkTopology = PrimitiveTopologyToVulkan(topology);
+	if (m_primitiveTopology != vkTopology)
+	{
+		vkCmdSetPrimitiveTopology(m_commandBuffer, vkTopology);
+		m_primitiveTopology = vkTopology;
+	}
 }
 
 
