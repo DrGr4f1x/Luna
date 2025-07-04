@@ -13,7 +13,7 @@ To update the KTX library in Luna, follow these steps.
 - Download and install the latest KTX packaged release for Win64 from here: [KTX Releases](https://github.com/KhronosGroup/KTX-Software/releases)
 - KTX should now be installed in a folder such as C:\Program Files\KTX-Software
 - From the installation folder, copy the following to Luna\External\ktx
-	- ktx.dll from the \bin folder
+	- ktx.dll from the \bin folder to Luna\External\ktx\lib (to get around .gitignore excluding everything in bin folders)
 	- The entire \include folder
 	- The entire \lib folder
 
