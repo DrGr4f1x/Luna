@@ -73,29 +73,34 @@ void InputSystem::Update(float deltaSeconds)
 	memset(m_analogs, 0, sizeof(m_analogs));
 
 	XINPUT_STATE newInputState{};
-	if (ERROR_SUCCESS == XInputGetState(0, &newInputState))
+	for (uint32_t i = 0; i < 4; ++i)
 	{
-		if (newInputState.Gamepad.wButtons & (1 << 0)) m_buttons[0][(int)kDPadUp] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 1)) m_buttons[0][(int)kDPadDown] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 2)) m_buttons[0][(int)kDPadLeft] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 3)) m_buttons[0][(int)kDPadRight] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 4)) m_buttons[0][(int)kStartButton] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 5)) m_buttons[0][(int)kBackButton] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 6)) m_buttons[0][(int)kLThumbClick] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 7)) m_buttons[0][(int)kRThumbClick] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 8)) m_buttons[0][(int)kLShoulder] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 9)) m_buttons[0][(int)kRShoulder] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 12)) m_buttons[0][(int)kAButton] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 13)) m_buttons[0][(int)kBButton] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 14)) m_buttons[0][(int)kXButton] = true;
-		if (newInputState.Gamepad.wButtons & (1 << 15)) m_buttons[0][(int)kYButton] = true;
+		if (ERROR_SUCCESS == XInputGetState(i, &newInputState))
+		{
+			if (newInputState.Gamepad.wButtons & (1 << 0)) m_buttons[0][(int)kDPadUp] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 1)) m_buttons[0][(int)kDPadDown] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 2)) m_buttons[0][(int)kDPadLeft] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 3)) m_buttons[0][(int)kDPadRight] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 4)) m_buttons[0][(int)kStartButton] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 5)) m_buttons[0][(int)kBackButton] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 6)) m_buttons[0][(int)kLThumbClick] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 7)) m_buttons[0][(int)kRThumbClick] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 8)) m_buttons[0][(int)kLShoulder] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 9)) m_buttons[0][(int)kRShoulder] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 12)) m_buttons[0][(int)kAButton] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 13)) m_buttons[0][(int)kBButton] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 14)) m_buttons[0][(int)kXButton] = true;
+			if (newInputState.Gamepad.wButtons & (1 << 15)) m_buttons[0][(int)kYButton] = true;
 
-		SetAnalog(kAnalogLeftTrigger, newInputState.Gamepad.bLeftTrigger / 255.0f);
-		SetAnalog(kAnalogRightTrigger, newInputState.Gamepad.bRightTrigger / 255.0f);
-		SetAnalog(kAnalogLeftStickX, FilterAnalogInput(newInputState.Gamepad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE));
-		SetAnalog(kAnalogLeftStickY, FilterAnalogInput(newInputState.Gamepad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE));
-		SetAnalog(kAnalogRightStickX, FilterAnalogInput(newInputState.Gamepad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE));
-		SetAnalog(kAnalogRightStickY, FilterAnalogInput(newInputState.Gamepad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE));
+			SetAnalog(kAnalogLeftTrigger, newInputState.Gamepad.bLeftTrigger / 255.0f);
+			SetAnalog(kAnalogRightTrigger, newInputState.Gamepad.bRightTrigger / 255.0f);
+			SetAnalog(kAnalogLeftStickX, FilterAnalogInput(newInputState.Gamepad.sThumbLX, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE));
+			SetAnalog(kAnalogLeftStickY, FilterAnalogInput(newInputState.Gamepad.sThumbLY, XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE));
+			SetAnalog(kAnalogRightStickX, FilterAnalogInput(newInputState.Gamepad.sThumbRX, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE));
+			SetAnalog(kAnalogRightStickY, FilterAnalogInput(newInputState.Gamepad.sThumbRY, XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE));
+
+			break;
+		}
 	}
 
 	KbmUpdate();
