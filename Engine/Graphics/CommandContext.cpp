@@ -26,6 +26,7 @@ CommandContext& CommandContext::Begin(const string id)
 	CommandContext* newContext = GetDeviceManager()->AllocateContext(CommandListType::Direct);
 	newContext->SetId(id);
 	newContext->BeginFrame();
+	newContext->BeginEvent(id);
 
 	// TODO
 #if 0
@@ -41,6 +42,7 @@ CommandContext& CommandContext::Begin(const string id)
 
 uint64_t CommandContext::Finish(bool bWaitForCompletion)
 {
+	m_contextImpl->EndEvent();
 	uint64_t fenceValue = m_contextImpl->Finish(bWaitForCompletion);
 
 	GetDeviceManager()->FreeContext(this);
