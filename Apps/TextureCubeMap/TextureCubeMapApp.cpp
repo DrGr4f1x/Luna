@@ -326,24 +326,24 @@ void TextureCubeMapApp::LoadAssets()
 
 	auto layout = VertexLayout<VertexComponent::PositionNormalTexcoord>();
 
-	m_skyboxModel = LoadModel("cube.obj", layout, 0.05f);
+	m_skyboxModel = LoadModel("cube.gltf", layout);
 
-	auto model = LoadModel("sphere.obj", layout, 0.05f);
+	auto model = LoadModel("sphere.gltf", layout);
 	m_models.push_back(model);
 
-	model = LoadModel("teapot.dae", layout, 0.05f);
+	model = LoadModel("teapot.gltf", layout, 0.6f);
 	m_models.push_back(model);
 
-	model = LoadModel("torusknot.obj", layout, 0.05f);
+	model = LoadModel("torusknot.gltf", layout, 1.2f);
 	m_models.push_back(model);
 
-	//model = LoadModel("venus.fbx", layout, 0.15f);
-	//m_models.push_back(model);
+	model = LoadModel("venus.gltf", layout, 1.8f);
+	m_models.push_back(model);
 
 	m_modelNames.push_back("Sphere");
 	m_modelNames.push_back("Teapot");
 	m_modelNames.push_back("Torus knot");
-	//m_modelNames.push_back("Venus");
+	m_modelNames.push_back("Venus");
 
 	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }

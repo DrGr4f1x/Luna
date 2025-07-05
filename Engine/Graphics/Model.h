@@ -12,7 +12,7 @@
 
 #include "Graphics\GpuBuffer.h"
 
-// TODO: Going to need a ModelManager (like TextureManager) so we don't load the same model twice.
+// TODO: Going to need a ModelManager (like TextureManager) to cache models loaded from file.
 
 namespace Luna
 {
@@ -99,90 +99,48 @@ struct MeshPart
 };
 
 
-class Mesh
+struct Mesh
 {
-	friend class Model;
+	void Render(GraphicsContext& context, bool positionOnly = false);
 
-public:
-	// Accessors
-	void SetName(const std::string& name);
-	const std::string& GetName() const { return m_name; }
+	std::string name;
 
-	void AddMeshPart(MeshPart meshPart);
-	size_t GetNumMeshParts() const { return m_meshParts.size(); }
-	MeshPart& GetMeshPart(size_t index) { return m_meshParts[index]; }
-	const MeshPart& GetMeshPart(size_t index) const { return m_meshParts[index]; }
+	GpuBufferPtr vertexBuffer;
+	GpuBufferPtr vertexBufferPositionOnly;
+	GpuBufferPtr indexBuffer;
 
-	GpuBufferPtr GetVertexBuffer() { return m_vertexBuffer; }
-	const GpuBufferPtr GetVertexBuffer() const { return m_vertexBuffer; }
-	GpuBufferPtr GetIndexBuffer() { return m_indexBuffer; }
-	const GpuBufferPtr GetIndexBuffer() const { return m_indexBuffer; }
+	Math::Matrix4 meshToModelMatrix{ Math::kIdentity };
+	Math::BoundingBox boundingBox;
 
-	GpuBufferPtr GetPositionOnlyVertexBuffer() { return m_vertexBufferPositionOnly; }
-	const GpuBufferPtr GetPositionOnlyVertexBuffer() const { return m_vertexBufferPositionOnly; }
+	std::vector<MeshPart> meshParts;
 
-	void SetMatrix(const Math::Matrix4& matrix);
-	const Math::Matrix4 GetMatrix() const { return m_matrix; }
-
-	void Render(GraphicsContext& context);
-	void RenderPositionOnly(GraphicsContext& context);
-
-private:
-	std::string m_name;
-
-	GpuBufferPtr m_vertexBuffer;
-	GpuBufferPtr m_vertexBufferPositionOnly;
-	GpuBufferPtr m_indexBuffer;
-
-	Math::Matrix4 m_matrix{ Math::kIdentity };
-	Math::BoundingBox m_boundingBox;
-
-	std::vector<MeshPart> m_meshParts;
-
-	class Model* m_model{ nullptr };
+	struct Model* model{ nullptr };
 };
 
 using MeshPtr = std::shared_ptr<Mesh>;
 
 
-class Model
+struct Model
 {
-public:
-	// Accessors
-	void SetName(const std::string& name);
-	const std::string& GetName() const { return m_name; }
+	void Render(GraphicsContext& context, bool positionOnly = false);
 
-	void AddMesh(MeshPtr mesh);
-	size_t GetNumMeshes() const { return m_meshes.size(); }
-	MeshPtr GetMesh(size_t index) const { return m_meshes[index]; }
+	std::string name;
 
-	void SetMatrix(const Math::Matrix4& matrix);
-	const Math::Matrix4 GetMatrix() const { return m_matrix; }
-	void StorePrevMatrix();
-	const Math::Matrix4 GetPrevMatrix() const { return m_prevMatrix; }
+	Math::Matrix4 matrix{ Math::kIdentity };
+	Math::Matrix4 prevMatrix{ Math::kIdentity };
+	Math::BoundingBox boundingBox;
 
-	const Math::BoundingBox& GetBoundingBox() const { return m_boundingBox; }
-
-	void Render(GraphicsContext& context);
-	void RenderPositionOnly(GraphicsContext& context);
-
-	static std::shared_ptr<Model> Load(IDevice* device, const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault);
-
-	static std::shared_ptr<Model> MakePlane(IDevice* device, const VertexLayoutBase& layout, float width, float height);
-	static std::shared_ptr<Model> MakeCylinder(IDevice* device, const VertexLayoutBase& layout, float height, float radius, uint32_t numVerts);
-	static std::shared_ptr<Model> MakeSphere(IDevice* device, const VertexLayoutBase& layout, float radius, uint32_t numVerts, uint32_t numRings);
-	static std::shared_ptr<Model> MakeBox(IDevice* device, const VertexLayoutBase& layout, float width, float height, float depth);
-
-protected:
-	std::string m_name;
-
-	Math::Matrix4 m_matrix{ Math::kIdentity };
-	Math::Matrix4 m_prevMatrix{ Math::kIdentity };
-	Math::BoundingBox m_boundingBox;
-
-	std::vector<MeshPtr> m_meshes;
+	std::vector<MeshPtr> meshes;
 };
 
 using ModelPtr = std::shared_ptr<Model>;
+
+
+ModelPtr LoadModel(IDevice* device, const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault);
+
+ModelPtr MakePlane(IDevice* device, const VertexLayoutBase& layout, float width, float height);
+ModelPtr MakeCylinder(IDevice* device, const VertexLayoutBase& layout, float height, float radius, uint32_t numVerts);
+ModelPtr MakeSphere(IDevice* device, const VertexLayoutBase& layout, float radius, uint32_t numVerts, uint32_t numRings);
+ModelPtr MakeBox(IDevice* device, const VertexLayoutBase& layout, float width, float height, float depth);
 
 } // namespace Luna

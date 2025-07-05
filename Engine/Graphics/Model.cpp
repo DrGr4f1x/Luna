@@ -76,94 +76,28 @@ uint32_t GetPreprocessFlags(Luna::ModelLoad modelLoadFlags)
 namespace Luna
 {
 
-void Mesh::SetName(const string& name)
+void Mesh::Render(GraphicsContext& context, bool positionOnly)
 {
-	m_name = name;
-}
+	context.SetIndexBuffer(indexBuffer);
+	context.SetVertexBuffer(0, positionOnly ? vertexBufferPositionOnly : vertexBuffer);
 
-
-void Mesh::AddMeshPart(MeshPart meshPart)
-{
-	m_meshParts.push_back(meshPart);
-}
-
-
-void Mesh::SetMatrix(const Matrix4& matrix)
-{
-	m_matrix = matrix;
-	m_boundingBox = m_matrix * m_boundingBox;
-}
-
-
-void Mesh::Render(GraphicsContext& context)
-{
-	context.SetIndexBuffer(m_indexBuffer);
-	context.SetVertexBuffer(0, m_vertexBuffer);
-
-	for (const auto& meshPart : m_meshParts)
+	for (const auto& meshPart : meshParts)
 	{
 		context.DrawIndexed(meshPart.indexCount, meshPart.indexBase, meshPart.vertexBase);
 	}
 }
 
 
-void Mesh::RenderPositionOnly(GraphicsContext& context)
+void Model::Render(GraphicsContext& context, bool positionOnly)
 {
-	context.SetIndexBuffer(m_indexBuffer);
-	context.SetVertexBuffer(0, m_vertexBufferPositionOnly);
-
-	for (const auto& meshPart : m_meshParts)
+	for (auto mesh : meshes)
 	{
-		context.DrawIndexed(meshPart.indexCount, meshPart.indexBase, meshPart.vertexBase);
+		mesh->Render(context, positionOnly);
 	}
 }
 
 
-void Model::SetName(const string& name)
-{
-	m_name = name;
-}
-
-
-void Model::AddMesh(MeshPtr mesh)
-{
-	mesh->m_model = this;
-	m_meshes.push_back(mesh);
-}
-
-
-void Model::SetMatrix(const Matrix4& matrix)
-{
-	m_matrix = matrix;
-	m_boundingBox = m_matrix * m_boundingBox;
-}
-
-
-void Model::StorePrevMatrix()
-{
-	m_prevMatrix = m_matrix;
-}
-
-
-void Model::Render(GraphicsContext& context)
-{
-	for (auto mesh : m_meshes)
-	{
-		mesh->Render(context);
-	}
-}
-
-
-void Model::RenderPositionOnly(GraphicsContext& context)
-{
-	for (auto mesh : m_meshes)
-	{
-		mesh->RenderPositionOnly(context);
-	}
-}
-
-
-ModelPtr Model::Load(IDevice* device, const string& filename, const VertexLayoutBase& layout, float scale, ModelLoad modelLoadFlags)
+ModelPtr LoadModel(IDevice* device, const string& filename, const VertexLayoutBase& layout, float scale, ModelLoad modelLoadFlags)
 {
 	const string fullpath = GetFileSystem()->GetFullPath(filename);
 	assert(!fullpath.empty());
@@ -181,8 +115,7 @@ ModelPtr Model::Load(IDevice* device, const string& filename, const VertexLayout
 
 	ModelPtr model = make_shared<Model>();
 
-	model->m_meshes.clear();
-	model->m_meshes.reserve(aiScene->mNumMeshes);
+	model->meshes.reserve(aiScene->mNumMeshes);
 
 	uint32_t vertexCount = 0;
 	uint32_t indexCount = 0;
@@ -196,16 +129,16 @@ ModelPtr Model::Load(IDevice* device, const string& filename, const VertexLayout
 	const VertexComponent components = layout.GetComponents();
 
 	// Min/max for bounding box computation
-	float maxF = std::numeric_limits<float>::max();
-	Math::Vector3 minExtents(maxF, maxF, maxF);
-	Math::Vector3 maxExtents(-maxF, -maxF, -maxF);
+	constexpr float maxF = std::numeric_limits<float>::max();
+	Vector3 minExtents{ maxF, maxF, maxF };
+	Vector3 maxExtents{ -maxF, -maxF, -maxF };
 
 	for (uint32_t i = 0; i < aiScene->mNumMeshes; ++i)
 	{
 		const auto aiMesh = aiScene->mMeshes[i];
 
 		MeshPtr mesh = make_shared<Mesh>();
-		MeshPart meshPart = {};
+		MeshPart meshPart{};
 
 		meshPart.vertexBase = vertexCount;
 
@@ -301,7 +234,7 @@ ModelPtr Model::Load(IDevice* device, const string& filename, const VertexLayout
 			.elementSize	= stride,
 			.initialData	= vertexData.data()
 		};
-		mesh->m_vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
+		mesh->vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
 
 		// Create position-only vertex buffer
 		stride = 3 * sizeof(float);
@@ -314,7 +247,7 @@ ModelPtr Model::Load(IDevice* device, const string& filename, const VertexLayout
 			.elementSize	= stride,
 			.initialData	= vertexDataPositionOnly.data()
 		};
-		mesh->m_vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
+		mesh->vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 		
 		// TODO: Support uint16 indices
 
@@ -327,20 +260,20 @@ ModelPtr Model::Load(IDevice* device, const string& filename, const VertexLayout
 			.elementSize	= sizeof(uint32_t),
 			.initialData	= indexData.data()
 		};
-		mesh->m_indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
+		mesh->indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
 		
 		// Set bounding box
-		mesh->m_boundingBox = Math::BoundingBoxFromMinMax(minExtents, maxExtents);
+		mesh->boundingBox = Math::BoundingBoxFromMinMax(minExtents, maxExtents);
 
-		mesh->AddMeshPart(meshPart);
-		model->AddMesh(mesh);
+		mesh->meshParts.push_back(meshPart);
+		model->meshes.push_back(mesh);
 	}
 
 	return model;
 }
 
 
-shared_ptr<Model> Model::MakePlane(IDevice* device, const VertexLayoutBase& layout, float width, float height)
+ModelPtr MakePlane(IDevice* device, const VertexLayoutBase& layout, float width, float height)
 {
 	bool bHasNormals = HasFlag(layout.GetComponents(), VertexComponent::Normal);
 	bool bHasUVs = HasFlag(layout.GetComponents(), VertexComponent::Texcoord);
@@ -445,7 +378,7 @@ shared_ptr<Model> Model::MakePlane(IDevice* device, const VertexLayoutBase& layo
 		.elementSize	= stride,
 		.initialData	= vertices.data()
 	};
-	mesh->m_vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
+	mesh->vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
 
 	// Create position-only vertex buffer
 	stride = 3 * sizeof(float);
@@ -457,7 +390,7 @@ shared_ptr<Model> Model::MakePlane(IDevice* device, const VertexLayoutBase& layo
 		.elementSize	= stride,
 		.initialData	= verticesPositionOnly.data()
 	};
-	mesh->m_vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
+	mesh->vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 	
 	// Create index buffer
 	vector<uint16_t> indices{ 0, 2, 1, 3, 1, 2 };
@@ -469,22 +402,22 @@ shared_ptr<Model> Model::MakePlane(IDevice* device, const VertexLayoutBase& layo
 		.elementSize	= sizeof(uint16_t),
 		.initialData	= indices.data()
 	};
-	mesh->m_indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
+	mesh->indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
 
 	// Set bounding box
-	mesh->m_boundingBox = Math::BoundingBox(Math::Vector3(Math::kZero), Math::Vector3(width / 2.0f, 0.0, height / 2.0f));
-	model->m_boundingBox = mesh->m_boundingBox;
+	mesh->boundingBox = BoundingBox(Vector3(Math::kZero), Vector3(width / 2.0f, 0.0, height / 2.0f));
+	model->boundingBox = mesh->boundingBox;
 
 	MeshPart meshPart{ .indexCount = (uint32_t)indices.size() };
 
-	mesh->AddMeshPart(meshPart);
-	model->AddMesh(mesh);
+	mesh->meshParts.push_back(meshPart);
+	model->meshes.push_back(mesh);
 
 	return model;
 }
 
 
-shared_ptr<Model> Model::MakeCylinder(IDevice* device, const VertexLayoutBase& layout, float height, float radius, uint32_t numVerts)
+ModelPtr MakeCylinder(IDevice* device, const VertexLayoutBase& layout, float height, float radius, uint32_t numVerts)
 {
 	bool bHasNormals = HasFlag(layout.GetComponents(), VertexComponent::Normal);
 	bool bHasUVs = HasFlag(layout.GetComponents(), VertexComponent::Texcoord);
@@ -705,7 +638,7 @@ shared_ptr<Model> Model::MakeCylinder(IDevice* device, const VertexLayoutBase& l
 		.elementSize	= stride,
 		.initialData	= vertices.data()
 	};
-	mesh->m_vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
+	mesh->vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
 
 	// Create position-only vertex buffer
 	stride = 3 * sizeof(float);
@@ -717,7 +650,7 @@ shared_ptr<Model> Model::MakeCylinder(IDevice* device, const VertexLayoutBase& l
 		.elementSize	= stride,
 		.initialData	= verticesPositionOnly.data()
 	};
-	mesh->m_vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
+	mesh->vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 
 	// Create index buffer
 	GpuBufferDesc indexBufferDesc{
@@ -728,21 +661,21 @@ shared_ptr<Model> Model::MakeCylinder(IDevice* device, const VertexLayoutBase& l
 		.elementSize	= sizeof(uint16_t),
 		.initialData	= indices.data()
 	};
-	mesh->m_indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
+	mesh->indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
 
-	mesh->m_boundingBox = Math::BoundingBoxFromMinMax(Math::Vector3(-radius, 0.0f, -radius), Math::Vector3(radius, height, radius));
-	model->m_boundingBox = mesh->m_boundingBox;
+	mesh->boundingBox = BoundingBoxFromMinMax(Vector3(-radius, 0.0f, -radius), Vector3(radius, height, radius));
+	model->boundingBox = mesh->boundingBox;
 
 	MeshPart meshPart{ .indexCount = (uint32_t)indices.size() };
 
-	mesh->AddMeshPart(meshPart);
-	model->AddMesh(mesh);
+	mesh->meshParts.push_back(meshPart);
+	model->meshes.push_back(mesh);
 
 	return model;
 }
 
 
-shared_ptr<Model> Model::MakeSphere(IDevice* device, const VertexLayoutBase& layout, float radius, uint32_t numVerts, uint32_t numRings)
+ModelPtr MakeSphere(IDevice* device, const VertexLayoutBase& layout, float radius, uint32_t numVerts, uint32_t numRings)
 {
 	bool bHasNormals = HasFlag(layout.GetComponents(), VertexComponent::Normal);
 	bool bHasUVs = HasFlag(layout.GetComponents(), VertexComponent::Texcoord);
@@ -825,7 +758,7 @@ shared_ptr<Model> Model::MakeSphere(IDevice* device, const VertexLayoutBase& lay
 		.elementSize	= stride,
 		.initialData	= vertices.data()
 	};
-	mesh->m_vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
+	mesh->vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
 
 	// Create position-only vertex buffer
 	stride = 3 * sizeof(float);
@@ -837,7 +770,7 @@ shared_ptr<Model> Model::MakeSphere(IDevice* device, const VertexLayoutBase& lay
 		.elementSize	= stride,
 		.initialData	= verticesPositionOnly.data()
 	};
-	mesh->m_vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
+	mesh->vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 
 	// Create index buffer
 	GpuBufferDesc indexBufferDesc{
@@ -848,22 +781,22 @@ shared_ptr<Model> Model::MakeSphere(IDevice* device, const VertexLayoutBase& lay
 		.elementSize	= sizeof(uint16_t),
 		.initialData	= indices.data()
 	};
-	mesh->m_indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
+	mesh->indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
 
 	// Set bounding box
-	mesh->m_boundingBox = Math::BoundingBoxFromMinMax(Math::Vector3(-radius, -radius, -radius), Math::Vector3(radius, radius, radius));
-	model->m_boundingBox = mesh->m_boundingBox;
+	mesh->boundingBox = BoundingBoxFromMinMax(Vector3(-radius, -radius, -radius), Vector3(radius, radius, radius));
+	model->boundingBox = mesh->boundingBox;
 
 	MeshPart meshPart{ .indexCount = (uint32_t)indices.size() };
 
-	mesh->AddMeshPart(meshPart);
-	model->AddMesh(mesh);
+	mesh->meshParts.push_back(meshPart);
+	model->meshes.push_back(mesh);
 
 	return model;
 }
 
 
-shared_ptr<Model> Model::MakeBox(IDevice* device, const VertexLayoutBase& layout, float width, float height, float depth)
+ModelPtr MakeBox(IDevice* device, const VertexLayoutBase& layout, float width, float height, float depth)
 {
 	bool bHasNormals = HasFlag(layout.GetComponents(), VertexComponent::Normal);
 	bool bHasUVs = HasFlag(layout.GetComponents(), VertexComponent::Texcoord);
@@ -968,7 +901,7 @@ shared_ptr<Model> Model::MakeBox(IDevice* device, const VertexLayoutBase& layout
 		.elementSize	= stride,
 		.initialData	= vertices.data()
 	};
-	mesh->m_vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
+	mesh->vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
 
 	// Create position-only vertex buffer
 	stride = 3 * sizeof(float);
@@ -980,7 +913,7 @@ shared_ptr<Model> Model::MakeBox(IDevice* device, const VertexLayoutBase& layout
 		.elementSize	= stride,
 		.initialData	= verticesPositionOnly.data()
 	};
-	mesh->m_vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
+	mesh->vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 
 	// Create index buffer
 	GpuBufferDesc indexBufferDesc{
@@ -991,16 +924,16 @@ shared_ptr<Model> Model::MakeBox(IDevice* device, const VertexLayoutBase& layout
 		.elementSize	= sizeof(uint16_t),
 		.initialData	= indices.data()
 	};
-	mesh->m_indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
+	mesh->indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
 
 	// Set bounding box
-	mesh->m_boundingBox = Math::BoundingBoxFromMinMax(Math::Vector3(-hwidth, -hheight, -hdepth), Math::Vector3(hwidth, hheight, hdepth));
-	model->m_boundingBox = mesh->m_boundingBox;
+	mesh->boundingBox = BoundingBoxFromMinMax(Vector3(-hwidth, -hheight, -hdepth), Vector3(hwidth, hheight, hdepth));
+	model->boundingBox = mesh->boundingBox;
 
 	MeshPart meshPart{ .indexCount = (uint32_t)indices.size() };
 
-	mesh->AddMeshPart(meshPart);
-	model->AddMesh(mesh);
+	mesh->meshParts.push_back(meshPart);
+	model->meshes.push_back(mesh);
 
 	return model;
 }
