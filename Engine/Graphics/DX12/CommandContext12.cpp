@@ -177,7 +177,7 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContext12::TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
@@ -200,7 +200,7 @@ void CommandContext12::TransitionResource(ColorBufferPtr colorBuffer, ResourceSt
 }
 
 
-void CommandContext12::TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
@@ -223,7 +223,7 @@ void CommandContext12::TransitionResource(DepthBufferPtr depthBuffer, ResourceSt
 }
 
 
-void CommandContext12::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
@@ -245,7 +245,7 @@ void CommandContext12::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState 
 }
 
 
-void CommandContext12::TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
@@ -283,13 +283,13 @@ DynAlloc CommandContext12::ReserveUploadMemory(size_t sizeInBytes)
 }
 
 
-void CommandContext12::ClearUAV(GpuBufferPtr gpuBuffer)
+void CommandContext12::ClearUAV(GpuBufferPtr& gpuBuffer)
 {
 	// TODO: We need to allocate a GPU descriptor, so need to implement dynamic descriptor heaps to do this.
 }
 
 
-void CommandContext12::ClearColor(ColorBufferPtr colorBuffer)
+void CommandContext12::ClearColor(ColorBufferPtr& colorBuffer)
 {
 	FlushResourceBarriers();
 
@@ -302,7 +302,7 @@ void CommandContext12::ClearColor(ColorBufferPtr colorBuffer)
 }
 
 
-void CommandContext12::ClearColor(ColorBufferPtr colorBuffer, Color clearColor)
+void CommandContext12::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
@@ -315,7 +315,7 @@ void CommandContext12::ClearColor(ColorBufferPtr colorBuffer, Color clearColor)
 }
 
 
-void CommandContext12::ClearDepth(DepthBufferPtr depthBuffer)
+void CommandContext12::ClearDepth(DepthBufferPtr& depthBuffer)
 {
 	FlushResourceBarriers();
 
@@ -328,7 +328,7 @@ void CommandContext12::ClearDepth(DepthBufferPtr depthBuffer)
 }
 
 
-void CommandContext12::ClearStencil(DepthBufferPtr depthBuffer)
+void CommandContext12::ClearStencil(DepthBufferPtr& depthBuffer)
 {
 	FlushResourceBarriers();
 
@@ -341,7 +341,7 @@ void CommandContext12::ClearStencil(DepthBufferPtr depthBuffer)
 }
 
 
-void CommandContext12::ClearDepthAndStencil(DepthBufferPtr depthBuffer)
+void CommandContext12::ClearDepthAndStencil(DepthBufferPtr& depthBuffer)
 {
 	FlushResourceBarriers();
 
@@ -354,7 +354,7 @@ void CommandContext12::ClearDepthAndStencil(DepthBufferPtr depthBuffer)
 }
 
 
-void CommandContext12::BeginRendering(ColorBufferPtr colorBuffer)
+void CommandContext12::BeginRendering(ColorBufferPtr& colorBuffer)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
@@ -374,7 +374,7 @@ void CommandContext12::BeginRendering(ColorBufferPtr colorBuffer)
 }
 
 
-void CommandContext12::BeginRendering(ColorBufferPtr colorBuffer, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
@@ -401,7 +401,7 @@ void CommandContext12::BeginRendering(ColorBufferPtr colorBuffer, DepthBufferPtr
 }
 
 
-void CommandContext12::BeginRendering(DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
@@ -421,7 +421,7 @@ void CommandContext12::BeginRendering(DepthBufferPtr depthBuffer, DepthStencilAs
 }
 
 
-void CommandContext12::BeginRendering(std::span<ColorBufferPtr> colorBuffers)
+void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
 {
 	assert(!m_isRendering);
 	assert(colorBuffers.size() <= 8);
@@ -448,7 +448,7 @@ void CommandContext12::BeginRendering(std::span<ColorBufferPtr> colorBuffers)
 }
 
 
-void CommandContext12::BeginRendering(std::span<ColorBufferPtr> colorBuffers, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	assert(colorBuffers.size() <= 8);
@@ -489,7 +489,7 @@ void CommandContext12::EndRendering()
 }
 
 
-void CommandContext12::SetRootSignature(RootSignaturePtr rootSignature)
+void CommandContext12::SetRootSignature(RootSignaturePtr& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
@@ -528,7 +528,7 @@ void CommandContext12::SetRootSignature(RootSignaturePtr rootSignature)
 }
 
 
-void CommandContext12::SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipeline)
+void CommandContext12::SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline)
 {
 	// TODO: Try this with GetPlatformObject()
 	GraphicsPipelineState* graphicsPipeline12 = (GraphicsPipelineState*)graphicsPipeline.get();
@@ -693,7 +693,7 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr gpuBuffer)
+void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
@@ -714,7 +714,7 @@ void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr gpuBuf
 }
 
 
-void CommandContext12::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
+void CommandContext12::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
 {
 	SetDescriptors_Internal(rootIndex, descriptorSet);
 }
@@ -738,7 +738,7 @@ void CommandContext12::SetResources(ResourceSet& resourceSet)
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
@@ -750,7 +750,7 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPt
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
@@ -762,7 +762,7 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPt
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -774,7 +774,7 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture)
+void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture)
 {
 	// TODO: Try this with GetPlatformObject()
 	Texture* texture12 = (Texture*)texture.Get();
@@ -786,7 +786,7 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr te
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
@@ -799,14 +799,14 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPt
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer)
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer)
 {
 	// TODO: support this
 	assert(false);
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
+void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -818,7 +818,7 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 }
 
 
-void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
+void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -830,7 +830,7 @@ void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 }
 
 
-void CommandContext12::SetIndexBuffer(GpuBufferPtr gpuBuffer)
+void CommandContext12::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -846,7 +846,7 @@ void CommandContext12::SetIndexBuffer(GpuBufferPtr gpuBuffer)
 }
 
 
-void CommandContext12::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
+void CommandContext12::SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -1017,7 +1017,7 @@ void CommandContext12::InsertUAVBarrier_Internal(ID3D12Resource* resource, bool 
 }
 
 
-void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer.get();
@@ -1035,7 +1035,7 @@ void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 }
 
 
-void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit)
+void CommandContext12::InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit)
 {
 	Texture* texture12 = (Texture*)destTexture.Get();
 	assert(texture12 != nullptr);
@@ -1058,7 +1058,7 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr destTexture, const 
 }
 
 
-void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
+void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 

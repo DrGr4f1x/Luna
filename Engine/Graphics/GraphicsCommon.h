@@ -104,6 +104,7 @@ struct DynAlloc
 wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
 IDeviceManager* GetDeviceManager();
+uint64_t GetFrameNumber();
 
 // Graphics related log categories
 inline LogCategory LogGraphics{ "LogGraphics" };

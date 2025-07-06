@@ -12,6 +12,7 @@
 
 #include "VulkanUtil.h"
 
+#include "SemaphoreVK.h"
 #include "VulkanCommon.h"
 
 using namespace std;
@@ -147,7 +148,7 @@ wil::com_ptr<CVkFence> CreateFence(CVkDevice* device, bool bSignaled)
 }
 
 
-wil::com_ptr<CVkSemaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, uint64_t initialValue)
+SemaphorePtr CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, uint64_t initialValue)
 {
 	VkSemaphoreTypeCreateInfo typeCreateInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO };
 	typeCreateInfo.semaphoreType = semaphoreType;
@@ -156,10 +157,17 @@ wil::com_ptr<CVkSemaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType se
 	VkSemaphoreCreateInfo createInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
 	createInfo.pNext = &typeCreateInfo;
 
-	VkSemaphore semaphore{ VK_NULL_HANDLE };
-	if (VK_SUCCEEDED(vkCreateSemaphore(*device, &createInfo, nullptr, &semaphore)))
+	VkSemaphore vkSemaphore{ VK_NULL_HANDLE };
+	if (VK_SUCCEEDED(vkCreateSemaphore(*device, &createInfo, nullptr, &vkSemaphore)))
 	{
-		return Create<CVkSemaphore>(device, semaphore);
+		auto semaphoreRef = Create<CVkSemaphore>(device, vkSemaphore);
+
+		auto pSemaphore = std::make_shared<Semaphore>();
+		pSemaphore->semaphore = semaphoreRef;
+		pSemaphore->isBinary = semaphoreType == VK_SEMAPHORE_TYPE_BINARY;
+		pSemaphore->value = initialValue;
+
+		return pSemaphore;
 	}
 
 	return nullptr;

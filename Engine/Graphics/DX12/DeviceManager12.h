@@ -100,6 +100,7 @@ public:
 	Format GetDepthFormat() final;
 
 	const std::string& GetDeviceName() const override;
+	uint64_t GetFrameNumber() const override { return m_frameNumber; }
 
 	IDevice* GetDevice() override;
 
@@ -178,6 +179,7 @@ private:
 	wil::com_ptr<ID3D12Fence> m_fence;
 	uint64_t m_fenceValues[3];
 	Wrappers::Event m_fenceEvent;
+	uint64_t m_frameNumber{ 0 };
 
 	// HDR Support
 	DXGI_COLOR_SPACE_TYPE m_colorSpace;

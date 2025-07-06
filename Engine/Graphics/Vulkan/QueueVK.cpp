@@ -32,8 +32,9 @@ Queue::Queue(CVkDevice* device, VkQueue queue, QueueType queueType, uint32_t que
 	, m_lastCompletedFenceValue{ (uint64_t)queueType << 56 }
 	, m_lastSubmittedFenceValue{ (uint64_t)queueType << 56 }
 {
-	m_vkTimelineSemaphore = CreateSemaphore(device, VK_SEMAPHORE_TYPE_TIMELINE, m_lastCompletedFenceValue);
-	assert(m_vkTimelineSemaphore);
+	m_timelineSemaphore = CreateSemaphore(device, VK_SEMAPHORE_TYPE_TIMELINE, m_lastCompletedFenceValue);
+	assert(m_timelineSemaphore);
+	m_timelineSemaphore->name = std::format("{} Queue Timeline Semaphore", EngineTypeToString(queueType));
 
 	const auto commandListType = QueueTypeToCommandListType(queueType);
 
@@ -44,7 +45,7 @@ Queue::Queue(CVkDevice* device, VkQueue queue, QueueType queueType, uint32_t que
 }
 
 
-void Queue::AddWaitSemaphore(VkSemaphore semaphore, uint64_t value)
+void Queue::AddWaitSemaphore(SemaphorePtr semaphore, uint64_t value)
 {
 	if (!semaphore)
 	{
@@ -57,7 +58,7 @@ void Queue::AddWaitSemaphore(VkSemaphore semaphore, uint64_t value)
 }
 
 
-void Queue::AddSignalSemaphore(VkSemaphore semaphore, uint64_t value)
+void Queue::AddSignalSemaphore(SemaphorePtr semaphore, uint64_t value)
 {
 	if (!semaphore)
 	{
@@ -78,7 +79,7 @@ uint64_t Queue::IncrementFence()
 	timelineInfo.signalSemaphoreValueCount = 1;
 	timelineInfo.pSignalSemaphoreValues = &m_nextFenceValue;
 
-	VkSemaphore timelineSemaphore = *m_vkTimelineSemaphore;
+	VkSemaphore timelineSemaphore = m_timelineSemaphore->semaphore->Get();
 
 	VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.pNext = &timelineInfo;
@@ -99,7 +100,7 @@ bool Queue::IsFenceComplete(uint64_t fenceValue)
 	if (fenceValue > m_lastCompletedFenceValue)
 	{
 		uint64_t semaphoreCounterValue{ 0 };
-		auto res = vkGetSemaphoreCounterValue(m_vkTimelineSemaphore->GetDevice(), m_vkTimelineSemaphore->Get(), &semaphoreCounterValue);
+		auto res = vkGetSemaphoreCounterValue(m_timelineSemaphore->semaphore->GetDevice(), m_timelineSemaphore->semaphore->Get(), &semaphoreCounterValue);
 		assert(res == VK_SUCCESS);
 		m_lastCompletedFenceValue = std::max(m_lastCompletedFenceValue, semaphoreCounterValue);
 	}
@@ -117,14 +118,14 @@ void Queue::WaitForFence(uint64_t fenceValue)
 
 	lock_guard<mutex> guard{ m_fenceMutex };
 
-	VkSemaphore timelineSemaphore = *m_vkTimelineSemaphore;
+	VkSemaphore timelineSemaphore = m_timelineSemaphore->semaphore->Get();
 
 	VkSemaphoreWaitInfo waitInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO };
 	waitInfo.semaphoreCount = 1;
 	waitInfo.pSemaphores = &timelineSemaphore;
 	waitInfo.pValues = &fenceValue;
 
-	auto res = vkWaitSemaphores(m_vkTimelineSemaphore->GetDevice(), &waitInfo, UINT64_MAX);
+	auto res = vkWaitSemaphores(m_timelineSemaphore->semaphore->GetDevice(), &waitInfo, UINT64_MAX);
 	assert(res == VK_SUCCESS);
 
 	m_lastCompletedFenceValue = fenceValue;
@@ -135,7 +136,27 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence)
 {
 	lock_guard<mutex> guard{ m_fenceMutex };
 
-	AddSignalSemaphore(*m_vkTimelineSemaphore, m_nextFenceValue);
+	const bool incrementFenceAndSignal = (cmdList != VK_NULL_HANDLE);
+
+	if (incrementFenceAndSignal)
+	{
+		AddSignalSemaphore(m_timelineSemaphore, m_nextFenceValue);
+	}
+
+	std::vector<VkSemaphore> waitSemaphores;
+	uint32_t index = 0;
+	for (auto semaphore : m_waitSemaphores)
+	{
+		waitSemaphores.push_back(semaphore->semaphore->Get());
+		++index;
+	}
+
+	std::vector<VkSemaphore> signalSemaphores;
+	index = 0;
+	for (auto semaphore : m_signalSemaphores)
+	{
+		signalSemaphores.push_back(semaphore->semaphore->Get());
+	}
 
 	auto timelineInfo = VkTimelineSemaphoreSubmitInfo{
 		.sType						= VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO,
@@ -147,11 +168,11 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence)
 
 	VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
 	submitInfo.pNext = &timelineInfo;
-	submitInfo.waitSemaphoreCount = (uint32_t)m_waitSemaphores.size();
-	submitInfo.pWaitSemaphores = m_waitSemaphores.data();
+	submitInfo.waitSemaphoreCount = (uint32_t)waitSemaphores.size();
+	submitInfo.pWaitSemaphores = waitSemaphores.data();
 	submitInfo.pWaitDstStageMask = m_waitDstStageMask.data();
-	submitInfo.signalSemaphoreCount = (uint32_t)m_signalSemaphores.size();
-	submitInfo.pSignalSemaphores = m_signalSemaphores.data();
+	submitInfo.signalSemaphoreCount = (uint32_t)signalSemaphores.size();
+	submitInfo.pSignalSemaphores = signalSemaphores.data();
 	submitInfo.commandBufferCount = cmdList ? 1 : 0;
 	submitInfo.pCommandBuffers = cmdList ? &cmdList : nullptr;
 
@@ -161,15 +182,20 @@ uint64_t Queue::ExecuteCommandList(VkCommandBuffer cmdList, VkFence fence)
 	ClearSemaphores();
 
 	// Increment the fence value.
-	m_lastSubmittedFenceValue = m_nextFenceValue;
-	return m_nextFenceValue++;
+	if (incrementFenceAndSignal)
+	{
+		m_lastSubmittedFenceValue = m_nextFenceValue;
+		return m_nextFenceValue++;
+	}
+	
+	return m_nextFenceValue;
 }
 
 
 VkCommandBuffer Queue::RequestCommandBuffer()
 {
 	uint64_t completedFence{ 0 };
-	vkGetSemaphoreCounterValue(m_vkTimelineSemaphore->GetDevice(), m_vkTimelineSemaphore->Get(), &completedFence);
+	vkGetSemaphoreCounterValue(m_timelineSemaphore->semaphore->GetDevice(), m_timelineSemaphore->semaphore->Get(), &completedFence);
 
 	return m_commandBufferPool.RequestCommandBuffer(completedFence);
 }

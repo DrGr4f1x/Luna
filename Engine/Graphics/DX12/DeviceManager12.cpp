@@ -238,6 +238,8 @@ void DeviceManager::Present()
 
 	ReleaseDeferredResources();
 
+	++m_frameNumber;
+
 	// TODO Handle device removed
 }
 

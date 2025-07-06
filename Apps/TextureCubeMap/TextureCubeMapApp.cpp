@@ -101,20 +101,24 @@ void TextureCubeMapApp::UpdateUI()
 
 void TextureCubeMapApp::Render()
 {
+	ScopedEvent event("Render");
+
 	auto& context = GraphicsContext::Begin("Scene");
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	auto colorBuffer = GetColorBuffer();
+	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearColor(GetColorBuffer());
+	context.ClearColor(colorBuffer);
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(colorBuffer, m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
 	// Skybox
 	if (m_displaySkybox)
 	{
+		ScopedDrawEvent skyBoxEvent(context, "Skybox");
 		context.SetRootSignature(m_skyboxRootSignature);
 		context.SetGraphicsPipeline(m_skyboxPipeline);
 
@@ -125,6 +129,7 @@ void TextureCubeMapApp::Render()
 
 	// Model
 	{
+		ScopedDrawEvent modelEvent(context, "Model");
 		auto model = m_models[m_curModel];
 
 		context.SetRootSignature(m_modelRootSignature);
@@ -138,7 +143,7 @@ void TextureCubeMapApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.TransitionResource(colorBuffer, ResourceState::Present);
 
 	context.Finish();
 }

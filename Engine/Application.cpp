@@ -148,12 +148,13 @@ void Application::Render()
 
 	auto& context = GraphicsContext::Begin("Frame");
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.ClearColor(GetColorBuffer(), DirectX::Colors::CornflowerBlue);
+	auto colorBuffer = GetColorBuffer();
+	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.ClearColor(colorBuffer, DirectX::Colors::CornflowerBlue);
 
 	// Rendering code goes here
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.TransitionResource(colorBuffer, ResourceState::Present);
 	context.Finish();
 }
 
@@ -299,6 +300,8 @@ void Application::PrepareUI()
 {
 	if (!m_showUI)
 		return;
+
+	ScopedEvent event("PrepareUI");
 
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -463,10 +466,16 @@ bool Application::Tick()
 
 	// Tick the timer and update
 	uint32_t frameCount = m_timer.GetFrameCount();
-	m_timer.Tick([&]() { Update(); });
+	m_timer.Tick([&]() 
+		{ 
+			ScopedEvent event("Update");
+			Update(); 
+		});
 
 	// Render Frame
 	{
+		ScopedEvent event("Frame");
+
 		m_deviceManager->BeginFrame();
 		Render();
 		m_deviceManager->Present();

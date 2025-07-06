@@ -51,7 +51,7 @@ uint64_t CommandContext::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContext::InitializeBuffer(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContext::InitializeBuffer(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	CommandContext& initContext = CommandContext::Begin();
 
@@ -61,7 +61,7 @@ void CommandContext::InitializeBuffer(GpuBufferPtr destBuffer, const void* buffe
 }
 
 
-void CommandContext::InitializeTexture(TexturePtr destTexture, const TextureInitializer& texInit)
+void CommandContext::InitializeTexture(TexturePtr& destTexture, const TextureInitializer& texInit)
 {
 	CommandContext& initContext = CommandContext::Begin();
 

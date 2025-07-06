@@ -215,6 +215,8 @@ DescriptorPoolCache::~DescriptorPoolCache()
 
 VkDescriptorSet DescriptorPoolCache::AllocateDescriptorSet()
 {
+	ScopedEvent event("AllocateDescriptorSet");
+
 	if (!m_activePool)
 	{
 		m_activePool = RequestDescriptorPool();

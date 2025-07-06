@@ -516,7 +516,9 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 	if (gpuBufferDescIn.initialData)
 	{
-		CommandContext::InitializeBuffer(gpuBuffer, gpuBufferDescIn.initialData, gpuBuffer->GetBufferSize());
+		// TODO: Not this.
+		GpuBufferPtr temp = gpuBuffer;
+		CommandContext::InitializeBuffer(temp, gpuBufferDescIn.initialData, gpuBuffer->GetBufferSize());
 	}
 
 	return gpuBuffer;
@@ -1056,7 +1058,8 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	SetDebugName(texture12->GetResource(), texture12->m_name);
 
 	// Copy initial data
-	CommandContext::InitializeTexture(texture, texInit);
+	TexturePtr temp = texture;
+	CommandContext::InitializeTexture(temp, texInit);
 
 	// Create SRV
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

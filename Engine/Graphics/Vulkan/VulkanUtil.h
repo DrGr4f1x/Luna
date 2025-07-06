@@ -98,6 +98,7 @@ bool QueryBufferFeature(VkFormatProperties properties, VkFormatFeatureFlagBits f
 wil::com_ptr<CVkImageView> CreateImageView(CVkDevice* device, const ImageViewDesc& desc);
 
 wil::com_ptr<CVkFence> CreateFence(CVkDevice* device, bool bSignalled);
-wil::com_ptr<CVkSemaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, uint64_t initialValue);
+
+std::shared_ptr<struct Semaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, uint64_t initialValue);
 
 }

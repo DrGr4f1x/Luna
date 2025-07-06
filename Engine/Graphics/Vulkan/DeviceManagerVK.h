@@ -27,6 +27,7 @@ namespace Luna::VK
 // Forward declarations
 class Device;
 class Queue;
+struct Semaphore;
 
 
 class Limits : public ILimits
@@ -79,6 +80,7 @@ public:
 	Format GetDepthFormat() final;
 
 	const std::string& GetDeviceName() const override;
+	uint64_t GetFrameNumber() const override { return m_frameNumber; }
 
 	IDevice* GetDevice() override;
 
@@ -104,8 +106,8 @@ private:
 
 	Queue& GetQueue(QueueType queueType);
 	Queue& GetQueue(CommandListType commandListType);
-	void QueueWaitForSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value);
-	void QueueSignalSemaphore(QueueType queueType, VkSemaphore, uint64_t value);
+	void QueueWaitForSemaphore(QueueType queueType, std::shared_ptr<Semaphore> semaphore, uint64_t value);
+	void QueueSignalSemaphore(QueueType queueType, std::shared_ptr<Semaphore>, uint64_t value);
 
 	void ReleaseDeferredResources();
 
@@ -158,12 +160,10 @@ private:
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
 
 	// Present synchronization
-	std::vector<wil::com_ptr<CVkSemaphore>> m_presentCompleteSemaphores;
-	std::vector<wil::com_ptr<CVkSemaphore>> m_renderCompleteSemaphores;
-	std::vector<wil::com_ptr<CVkFence>> m_presentFences;
-	uint32_t m_activeFrame{ 0 };
+	std::vector<std::shared_ptr<Semaphore>> m_presentCompleteSemaphores;
+	std::vector<std::shared_ptr<Semaphore>> m_renderCompleteSemaphores;
 	uint32_t m_presentCompleteSemaphoreIndex{ 0 };
-	uint32_t m_renderCompleteSemaphoreIndex{ 0 };
+	uint64_t m_frameNumber{ 0 };
 
 	// Command context handling
 	std::mutex m_contextAllocationMutex;

@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+VK_BINDING(0, 0)
 cbuffer VSConstants : register(b0)
 {
     float4x4 viewProjectionMatrix;

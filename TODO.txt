@@ -3,16 +3,9 @@ TODO:
 -- Proper Vulkan extension support
 -- Clean up ShaderCompiler code organization
 -- Proper DX12 feature support
--- Command context linear allocator for dynamic buffers
--- Handles and pools for:
-    -- ComputePipelineState
-    -- MeshletPipelineState
-    -- RayTracing (??)
 -- ComputeContext
 -- Mesh shaders
 -- Ray tracing
--- Texture loading
--- Mesh loading
 -- Bindless support
 -- Handle authoritative window size in Application better
 -- EngineProfiling from MiniEngine
@@ -36,6 +29,9 @@ TODO:
 -- Support dynamic buffers in Vulkan DynamicDescriptorHeap
 -- Rework Vulkan Queues to handle case where the device doesn't support separate compute/copy queues
 -- Run static analysis pass on solution
+-- External library rework
+    -- Move everything possible to git submodules (Nuget stuff isn't up to date, unless from Microsoft)
+    -- Maybe make a script to auto-update and auto-build
 
 
 DONE:
@@ -58,6 +54,10 @@ DONE:
 -- Do a const pass on the Handle* parameters passed into the various Pool member functions
 -- Texture loading
     -- DDS
+    -- KTX
+    -- STB
+-- Command context linear allocator for dynamic buffers
+-- Mesh loading
 
 
 WON'T DO:
@@ -67,3 +67,7 @@ WON'T DO:
     -- GpuBuffer
     -- RootSignature
     -- GraphicsPipeline
+-- Handles and pools for:
+    -- ComputePipelineState
+    -- MeshletPipelineState
+    -- RayTracing (??)

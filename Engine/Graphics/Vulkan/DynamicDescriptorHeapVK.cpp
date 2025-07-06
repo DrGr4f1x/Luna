@@ -74,6 +74,8 @@ void DefaultDynamicDescriptorHeap::CleanupUsedPools(uint64_t fenceValue)
 
 void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe)
 {
+	ScopedEvent event("ParseRootSignature");
+
 	Reset();
 
 	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
@@ -98,6 +100,8 @@ void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootS
 		descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
 
 		// Process descriptor bindings
+		ScopedEvent event("Process descriptor bindings");
+
 		const auto& bindings = rootSignature.GetLayoutBindings(rootParamIndex);
 		for (const auto& binding : bindings)
 		{
@@ -142,6 +146,8 @@ void DefaultDynamicDescriptorHeap::UpdateAndBindDescriptorSets(VkCommandBuffer c
 
 DescriptorPoolCache* DefaultDynamicDescriptorHeap::FindOrCreateDescriptorPoolCache(CVkDescriptorSetLayout* layout, const RootParameter& rootParameter)
 {
+	ScopedEvent event("FindOrCreateDescriptorPoolCache");
+
 	auto it = m_layoutToPoolMap.find(layout->Get());
 	if (it != m_layoutToPoolMap.end())
 	{

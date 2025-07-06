@@ -340,6 +340,8 @@ void DynamicDescriptorHeap::DescriptorHandleCache::StageDescriptorHandles(uint32
 
 void DynamicDescriptorHeap::DescriptorHandleCache::ParseRootSignature(D3D12_DESCRIPTOR_HEAP_TYPE type, const RootSignature& rootSig)
 {
+	ScopedEvent event("ParseRootSignature");
+
 	uint32_t currentOffset = 0;
 
 	assert_msg(rootSig.GetNumRootParameters() <= 16, "Maybe we need to support something greater");

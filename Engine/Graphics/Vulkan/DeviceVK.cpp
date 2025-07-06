@@ -360,7 +360,8 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 
 	if (gpuBufferDesc.initialData)
 	{
-		CommandContext::InitializeBuffer(gpuBuffer, gpuBufferDesc.initialData, gpuBuffer->GetBufferSize());
+		GpuBufferPtr temp = gpuBuffer;
+		CommandContext::InitializeBuffer(temp, gpuBufferDesc.initialData, gpuBuffer->GetBufferSize());
 	}
 
 	return gpuBuffer;
@@ -968,7 +969,8 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	textureVK->m_imageInfoSrv = imageInfoSrv;
 
 	// Copy initial data
-	CommandContext::InitializeTexture(texture, texInit);
+	TexturePtr temp = texture;
+	CommandContext::InitializeTexture(temp, texInit);
 
 	return true;
 }

@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\Vulkan\CommandBufferPoolVK.h"
+#include "Graphics\Vulkan\SemaphoreVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
@@ -26,11 +27,11 @@ class Queue
 public:
 	Queue(CVkDevice* device, VkQueue queue, QueueType queueType, uint32_t queueFamilyIndex);
 
-	void AddWaitSemaphore(VkSemaphore semaphore, uint64_t value);
-	void AddSignalSemaphore(VkSemaphore semaphore, uint64_t value);
+	void AddWaitSemaphore(SemaphorePtr semaphore, uint64_t value);
+	void AddSignalSemaphore(SemaphorePtr semaphore, uint64_t value);
 
 	VkQueue GetVkQueue() const noexcept { return m_vkQueue; }
-	VkSemaphore GetTimelineSemaphore() const noexcept { return m_vkTimelineSemaphore->Get(); }
+	SemaphorePtr GetTimelineSemaphore() const noexcept { return m_timelineSemaphore; }
 
 	uint64_t IncrementFence();
 	bool IsFenceComplete(uint64_t fenceValue);
@@ -62,15 +63,15 @@ private:
 	CommandBufferPool m_commandBufferPool;
 	std::mutex m_fenceMutex;
 
-	wil::com_ptr<CVkSemaphore> m_vkTimelineSemaphore;
+	SemaphorePtr m_timelineSemaphore;
 	uint64_t m_nextFenceValue{ 0 };
 	uint64_t m_lastCompletedFenceValue{ 0 };
 	uint64_t m_lastSubmittedFenceValue{ 0 };
 
-	std::vector<VkSemaphore> m_waitSemaphores;
+	std::vector<SemaphorePtr> m_waitSemaphores;
 	std::vector<uint64_t> m_waitSemaphoreValues;
 	std::vector<VkPipelineStageFlags> m_waitDstStageMask;
-	std::vector<VkSemaphore> m_signalSemaphores;
+	std::vector<SemaphorePtr> m_signalSemaphores;
 	std::vector<uint64_t> m_signalSemaphoreValues;
 };
 

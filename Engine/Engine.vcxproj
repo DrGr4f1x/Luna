@@ -286,6 +286,7 @@
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\SamplerVK.h" />
+    <ClInclude Include="Graphics\Vulkan\SemaphoreVK.h" />
     <ClInclude Include="Graphics\Vulkan\StringsVK.h" />
     <ClInclude Include="Graphics\Vulkan\TextureVK.h" />
     <ClInclude Include="Graphics\Vulkan\VersionVK.h" />

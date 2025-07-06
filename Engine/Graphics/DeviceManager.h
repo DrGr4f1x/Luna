@@ -49,7 +49,6 @@ struct DeviceManagerDesc
 	Format depthBufferFormat{ Format::D32S8 };
 	uint32_t swapChainSampleCount{ 1 };
 	uint32_t swapChainSampleQuality{ 0 };
-	uint32_t maxFramesInFlight{ 2 };
 	bool enablePerMonitorDPI{ false };
 	bool allowHDROutput{ false };
 
@@ -78,7 +77,6 @@ struct DeviceManagerDesc
 	constexpr DeviceManagerDesc& SetDepthBufferFormat(Format value) noexcept { depthBufferFormat = value; return *this; }
 	constexpr DeviceManagerDesc& SetSwapChainSampleCount(uint32_t value) noexcept { swapChainSampleCount = value; return *this; }
 	constexpr DeviceManagerDesc& SetSwapChainSampleQuality(uint32_t value) noexcept { swapChainSampleQuality = value; return *this; }
-	constexpr DeviceManagerDesc& SetMaxFramesInFlight(uint32_t value) noexcept { maxFramesInFlight = value; return *this; }
 	constexpr DeviceManagerDesc& SetEnablePerMonitorDPI(bool value) noexcept { enablePerMonitorDPI = value; return *this; }
 	constexpr DeviceManagerDesc& SetAllowHDROutput(bool value) noexcept { allowHDROutput = value; return *this; }
 	constexpr DeviceManagerDesc& SetHwnd(HWND value) noexcept { hwnd = value; return *this; }
@@ -109,6 +107,8 @@ public:
 	virtual Format GetDepthFormat() = 0;
 
 	virtual const std::string& GetDeviceName() const = 0;
+
+	virtual uint64_t GetFrameNumber() const = 0;
 
 	virtual IDevice* GetDevice() = 0;
 };

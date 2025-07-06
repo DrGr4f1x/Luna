@@ -26,6 +26,10 @@
 #include "TextureVK.h"
 #include "VulkanUtil.h"
 
+#if ENABLE_VULKAN_DEBUG_MARKERS
+#include <pix3.h>
+#endif
+
 using namespace std;
 
 
@@ -137,6 +141,8 @@ void CommandContextVK::BeginEvent(const string& label)
 	labelInfo.color[3] = 0.0f;
 	labelInfo.pLabelName = label.c_str();
 	vkCmdBeginDebugUtilsLabelEXT(m_commandBuffer, &labelInfo);
+
+	PIXBeginEvent(0, label.c_str());
 #endif
 }
 
@@ -145,6 +151,8 @@ void CommandContextVK::EndEvent()
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
 	vkCmdEndDebugUtilsLabelEXT(m_commandBuffer);
+
+	PIXEndEvent();
 #endif
 }
 
@@ -159,6 +167,8 @@ void CommandContextVK::SetMarker(const string& label)
 	labelInfo.color[3] = 0.0f;
 	labelInfo.pLabelName = label.c_str();
 	vkCmdInsertDebugUtilsLabelEXT(m_commandBuffer, &labelInfo);
+
+	PIXSetMarker(0, label.c_str());
 #endif
 }
 
@@ -174,6 +184,13 @@ void CommandContextVK::Reset()
 	m_graphicsPipeline = VK_NULL_HANDLE;
 	m_computePipeline = VK_NULL_HANDLE;
 	m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+
+	m_graphicsRootSignature.reset();
+	m_computeRootSignature.reset();
+	m_isGraphicsRootSignatureParsed = false;
+	m_isComputeRootSignatureParsed = false;
+	m_hasDirtyGraphicsDescriptors = false;
+	m_hasDirtyComputeDescriptors = false;
 
 	m_renderingArea.offset.x = -1;
 	m_renderingArea.offset.y = -1;
@@ -245,8 +262,10 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContextVK::TransitionResource(ColorBufferPtr colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
+	BeginEvent("TransitionResource");
+
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
@@ -272,11 +291,15 @@ void CommandContextVK::TransitionResource(ColorBufferPtr colorBuffer, ResourceSt
 	{
 		FlushResourceBarriers();
 	}
+
+	EndEvent();
 }
 
 
-void CommandContextVK::TransitionResource(DepthBufferPtr depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
+	BeginEvent("TransitionResource");
+
 	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
@@ -302,11 +325,15 @@ void CommandContextVK::TransitionResource(DepthBufferPtr depthBuffer, ResourceSt
 	{
 		FlushResourceBarriers();
 	}
+
+	EndEvent();
 }
 
 
-void CommandContextVK::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
+	BeginEvent("TransitionResource");
+
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
@@ -326,11 +353,15 @@ void CommandContextVK::TransitionResource(GpuBufferPtr gpuBuffer, ResourceState 
 	{
 		FlushResourceBarriers();
 	}
+
+	EndEvent();
 }
 
 
-void CommandContextVK::TransitionResource(TexturePtr texture, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
 {
+	BeginEvent("TransitionResource");
+
 	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)texture.Get();
 	assert(textureVK != nullptr);
@@ -356,11 +387,15 @@ void CommandContextVK::TransitionResource(TexturePtr texture, ResourceState newS
 	{
 		FlushResourceBarriers();
 	}
+
+	EndEvent();
 }
 
 
 void CommandContextVK::FlushResourceBarriers()
 {
+	BeginEvent("FlushResourceBarriers");
+
 	for (const auto& barrier : m_textureBarriers)
 	{
 		VkImageSubresourceRange subresourceRange{};
@@ -417,6 +452,8 @@ void CommandContextVK::FlushResourceBarriers()
 
 	m_textureBarriers.clear();
 	m_bufferBarriers.clear();
+
+	EndEvent();
 }
 
 
@@ -426,7 +463,7 @@ DynAlloc CommandContextVK::ReserveUploadMemory(size_t sizeInBytes)
 }
 
 
-void CommandContextVK::ClearUAV(GpuBufferPtr gpuBuffer)
+void CommandContextVK::ClearUAV(GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
@@ -437,13 +474,13 @@ void CommandContextVK::ClearUAV(GpuBufferPtr gpuBuffer)
 }
 
 
-void CommandContextVK::ClearColor(ColorBufferPtr colorBuffer)
+void CommandContextVK::ClearColor(ColorBufferPtr& colorBuffer)
 {
 	ClearColor(colorBuffer, colorBuffer->GetClearColor());
 }
 
 
-void CommandContextVK::ClearColor(ColorBufferPtr colorBuffer, Color clearColor)
+void CommandContextVK::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
 {
 	ResourceState oldState = colorBuffer->GetUsageState();
 
@@ -475,25 +512,25 @@ void CommandContextVK::ClearColor(ColorBufferPtr colorBuffer, Color clearColor)
 }
 
 
-void CommandContextVK::ClearDepth(DepthBufferPtr depthBuffer)
+void CommandContextVK::ClearDepth(DepthBufferPtr& depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
-void CommandContextVK::ClearStencil(DepthBufferPtr depthBuffer)
+void CommandContextVK::ClearStencil(DepthBufferPtr& depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil(DepthBufferPtr depthBuffer)
+void CommandContextVK::ClearDepthAndStencil(DepthBufferPtr& depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr depthBuffer, VkImageAspectFlags flags)
+void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr& depthBuffer, VkImageAspectFlags flags)
 {
 	ResourceState oldState = depthBuffer->GetUsageState();
 
@@ -524,7 +561,7 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr depthBuffer,
 }
 
 
-void CommandContextVK::BeginRendering(ColorBufferPtr colorBuffer)
+void CommandContextVK::BeginRendering(ColorBufferPtr& colorBuffer)
 {
 	ResetRenderTargets();
 
@@ -542,7 +579,7 @@ void CommandContextVK::BeginRendering(ColorBufferPtr colorBuffer)
 }
 
 
-void CommandContextVK::BeginRendering(ColorBufferPtr colorBuffer, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
@@ -568,7 +605,7 @@ void CommandContextVK::BeginRendering(ColorBufferPtr colorBuffer, DepthBufferPtr
 }
 
 
-void CommandContextVK::BeginRendering(DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
@@ -586,7 +623,7 @@ void CommandContextVK::BeginRendering(DepthBufferPtr depthBuffer, DepthStencilAs
 }
 
 
-void CommandContextVK::BeginRendering(std::span<ColorBufferPtr> colorBuffers)
+void CommandContextVK::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
 {
 	ResetRenderTargets();
 	assert(colorBuffers.size() <= 8);
@@ -611,7 +648,7 @@ void CommandContextVK::BeginRendering(std::span<ColorBufferPtr> colorBuffers)
 }
 
 
-void CommandContextVK::BeginRendering(std::span<ColorBufferPtr> colorBuffers, DepthBufferPtr depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 	assert(colorBuffers.size() <= 8);
@@ -656,7 +693,7 @@ void CommandContextVK::EndRendering()
 }
 
 
-void CommandContextVK::SetRootSignature(RootSignaturePtr rootSignature)
+void CommandContextVK::SetRootSignature(RootSignaturePtr& rootSignature)
 {
 	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
 
@@ -669,16 +706,34 @@ void CommandContextVK::SetRootSignature(RootSignaturePtr rootSignature)
 	if (m_type == CommandListType::Direct)
 	{
 		m_computePipelineLayout = VK_NULL_HANDLE;
+		m_computeRootSignature.reset();
+		m_isComputeRootSignatureParsed = false;
+		m_hasDirtyComputeDescriptors = false;
+
 		m_graphicsPipelineLayout = pipelineLayout;
 
-		m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, true);
+		if (m_graphicsRootSignature != rootSignature)
+		{
+			m_graphicsRootSignature = rootSignature;
+			m_isGraphicsRootSignatureParsed = false;
+			m_hasDirtyGraphicsDescriptors = false;
+		}
 	}
 	else
 	{
 		m_graphicsPipelineLayout = VK_NULL_HANDLE;
+		m_graphicsRootSignature.reset();
+		m_isGraphicsRootSignatureParsed = false;
+		m_hasDirtyGraphicsDescriptors = false;
+
 		m_computePipelineLayout = pipelineLayout;
 
-		m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, false);
+		if (m_computeRootSignature != rootSignature)
+		{
+			m_computeRootSignature = rootSignature;
+			m_isComputeRootSignatureParsed = false;
+			m_hasDirtyComputeDescriptors = false;
+		}
 	}
 
 	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
@@ -691,7 +746,7 @@ void CommandContextVK::SetRootSignature(RootSignaturePtr rootSignature)
 }
 
 
-void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineStatePtr graphicsPipeline)
+void CommandContextVK::SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline)
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
@@ -837,17 +892,21 @@ void CommandContextVK::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr gpuBuffer)
+void CommandContextVK::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
+	ParseRootSignature();
+
 	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, gpuBufferVK->GetBufferInfo(), true);
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr descriptorSet)
+void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
 {
 	SetDescriptors_Internal(rootIndex, descriptorSet);
 }
@@ -855,29 +914,39 @@ void CommandContextVK::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr descr
 
 void CommandContextVK::SetResources(ResourceSet& resourceSet)
 {
+	BeginEvent("SetResources");
+
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
 		SetDescriptors_Internal(i, resourceSet[i]);
 	}
+
+	EndEvent();
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
+	ParseRootSignature();
+
 	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoSrv(), true);
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer, bool depthSrv)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
+
+	ParseRootSignature();
 
 	if (depthSrv)
 	{
@@ -887,14 +956,18 @@ void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPt
 	{
 		m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, depthBufferVK->GetImageInfoStencil(), true);
 	}
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
+
+	ParseRootSignature();
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
@@ -904,40 +977,52 @@ void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 	{
 		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
 	}
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr texture)
+void CommandContextVK::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture)
 {
 	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)texture.Get();
 	assert(textureVK != nullptr);
 
+	ParseRootSignature();
+
 	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, textureVK->GetImageInfoSrv(), true);
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr colorBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
+	ParseRootSignature();
+
 	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoUav(), true);
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr depthBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer)
 {
 	assert(false);
 }
 
 
-void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
+void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
+
+	ParseRootSignature();
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
@@ -947,20 +1032,26 @@ void CommandContextVK::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr 
 	{
 		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
 	}
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr gpuBuffer)
+void CommandContextVK::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBufferVK != nullptr);
 
+	ParseRootSignature();
+
 	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), true);
+
+	MarkDescriptorsDirty();
 }
 
 
-void CommandContextVK::SetIndexBuffer(GpuBufferPtr gpuBuffer)
+void CommandContextVK::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
@@ -972,7 +1063,7 @@ void CommandContextVK::SetIndexBuffer(GpuBufferPtr gpuBuffer)
 }
 
 
-void CommandContextVK::SetVertexBuffer(uint32_t slot, GpuBufferPtr gpuBuffer)
+void CommandContextVK::SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
@@ -1033,7 +1124,13 @@ void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t i
 	uint32_t startVertexLocation, uint32_t startInstanceLocation)
 {
 	FlushResourceBarriers();
-	m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, m_type == CommandListType::Direct);
+	
+	if (HasDirtyDescriptors())
+	{
+		m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, m_type == CommandListType::Direct);
+		ClearDirtyDescriptors();
+	}
+
 	vkCmdDraw(m_commandBuffer, vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
 }
 
@@ -1042,12 +1139,18 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 	int32_t baseVertexLocation, uint32_t startInstanceLocation)
 {
 	FlushResourceBarriers();
-	m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, m_type == CommandListType::Direct);
+
+	if (HasDirtyDescriptors())
+	{
+		m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, m_type == CommandListType::Direct);
+		ClearDirtyDescriptors();
+	}
+
 	vkCmdDrawIndexed(m_commandBuffer, indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
 
-void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	DynAlloc dynAlloc = ReserveUploadMemory(numBytes);
 
@@ -1067,7 +1170,7 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr destBuffer, const 
 }
 
 
-void CommandContextVK::InitializeTexture_Internal(TexturePtr destTexture, const TextureInitializer& texInit)
+void CommandContextVK::InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit)
 {
 	const bool isTexture3D = texInit.dimension == TextureDimension::Texture3D;
 	const uint32_t effectiveArraySize = isTexture3D ? 1 : texInit.arraySizeOrDepth;
@@ -1210,6 +1313,72 @@ void CommandContextVK::ResetRenderTargets()
 	m_renderingArea.offset.y = -1;
 	m_renderingArea.extent.width = 0;
 	m_renderingArea.extent.height = 0;
+}
+
+
+void CommandContextVK::ParseRootSignature()
+{
+	if (m_type == CommandListType::Direct)
+	{
+		if (!m_isGraphicsRootSignatureParsed && (m_graphicsRootSignature != nullptr))
+		{
+			RootSignature* rootSignatureVK = (RootSignature*)m_graphicsRootSignature.get();
+
+			m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, true);
+
+			m_isGraphicsRootSignatureParsed = true;
+		}
+	}
+	else
+	{
+		if (!m_isComputeRootSignatureParsed && (m_computeRootSignature != nullptr))
+		{
+			RootSignature* rootSignatureVK = (RootSignature*)m_computeRootSignature.get();
+
+			m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, false);
+
+			m_isComputeRootSignatureParsed = true;
+		}
+	}
+}
+
+
+void CommandContextVK::MarkDescriptorsDirty()
+{
+	if (m_type == CommandListType::Direct)
+	{
+		m_hasDirtyGraphicsDescriptors = true;
+	}
+	else
+	{
+		m_hasDirtyComputeDescriptors = true;
+	}
+}
+
+
+bool CommandContextVK::HasDirtyDescriptors()
+{
+	if (m_type == CommandListType::Direct)
+	{
+		return m_hasDirtyGraphicsDescriptors;
+	}
+	else
+	{
+		return m_hasDirtyComputeDescriptors;
+	}
+}
+
+
+void CommandContextVK::ClearDirtyDescriptors()
+{
+	if (m_type == CommandListType::Direct)
+	{
+		m_hasDirtyGraphicsDescriptors = false;
+	}
+	else
+	{
+		m_hasDirtyComputeDescriptors = false;
+	}
 }
 
 } // namespace Luna::VK

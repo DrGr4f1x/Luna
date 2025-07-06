@@ -16,6 +16,7 @@
 #include "DescriptorAllocatorVK.h"
 #include "DeviceVK.h"
 #include "LinearAllocatorVK.h"
+#include "SemaphoreVK.h"
 #include "QueueVK.h"
 #include "VulkanUtil.h"
 
@@ -59,6 +60,8 @@ VkBool32 DebugMessageCallback(
 	void* pUserData)
 {
 	string prefix;
+
+	prefix += format("[Frame {}] ", GetFrameNumber());
 
 	if (messageTypes & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT)
 	{
@@ -154,18 +157,17 @@ void DeviceManager::BeginFrame()
 { 
 	ScopedEvent event{ "DeviceManager::BeginFrame" };
 
-	VkFence waitFence = *m_presentFences[m_activeFrame];
-	vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	vkResetFences(*m_vkDevice, 1, &waitFence);
+	auto presentCompleteSemaphore = m_presentCompleteSemaphores[m_presentCompleteSemaphoreIndex];
 
-	VkSemaphore semaphore = *m_presentCompleteSemaphores[m_presentCompleteSemaphoreIndex];
+	VkSemaphore semaphore = presentCompleteSemaphore->semaphore->Get();
 	if (VK_FAILED(vkAcquireNextImageKHR(*m_vkDevice, *m_vkSwapChain, numeric_limits<uint64_t>::max(), semaphore, VK_NULL_HANDLE, &m_swapChainIndex)))
 	{
 		LogFatal(LogVulkan) << "Failed to acquire next swapchain image in BeginFrame.  Error code: " << res << endl;
 		return;
 	}
 
-	QueueWaitForSemaphore(QueueType::Graphics, semaphore, 0);
+
+	QueueWaitForSemaphore(QueueType::Graphics, presentCompleteSemaphore, 0);
 
 	m_presentCompleteSemaphoreIndex = (m_presentCompleteSemaphoreIndex + 1) % m_presentCompleteSemaphores.size();
 }
@@ -175,29 +177,30 @@ void DeviceManager::Present()
 { 
 	ScopedEvent event{ "DeviceManager::Present" };
 
-	VkSemaphore renderCompleteSemaphore = *m_renderCompleteSemaphores[m_renderCompleteSemaphoreIndex];
+	auto renderCompleteSemaphore = m_renderCompleteSemaphores[m_swapChainIndex];
 
 	// Kick the render complete semaphore
 	Queue& graphicsQueue = GetQueue(QueueType::Graphics);
 	graphicsQueue.AddSignalSemaphore(renderCompleteSemaphore, 0);
 	graphicsQueue.AddWaitSemaphore(graphicsQueue.GetTimelineSemaphore(), graphicsQueue.GetLastSubmittedFenceValue());
-	graphicsQueue.ExecuteCommandList(VK_NULL_HANDLE, *m_presentFences[m_activeFrame]);
+	graphicsQueue.ExecuteCommandList(VK_NULL_HANDLE, VK_NULL_HANDLE);
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
+
+	VkSemaphore vkRenderCompleteSemaphore = renderCompleteSemaphore->semaphore->Get();
 
 	VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &swapchain;
 	presentInfo.pImageIndices = &m_swapChainIndex;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &renderCompleteSemaphore;
+	presentInfo.pWaitSemaphores = &vkRenderCompleteSemaphore;
 
 	vkQueuePresentKHR(graphicsQueue.GetVkQueue(), &presentInfo);
 
-	m_activeFrame = (m_activeFrame + 1) % m_presentFences.size();
-	m_renderCompleteSemaphoreIndex = (m_renderCompleteSemaphoreIndex + 1) % m_renderCompleteSemaphores.size();
-
 	ReleaseDeferredResources();
+
+	++m_frameNumber;
 }
 
 
@@ -256,6 +259,7 @@ void DeviceManager::CreateDeviceResources()
 	instanceBuilder.set_engine_name(s_engineVersionStr.c_str());
 	instanceBuilder.require_api_version(VK_API_VERSION_1_3);
 	instanceBuilder.request_validation_layers(m_desc.enableValidation);
+	instanceBuilder.add_validation_feature_enable(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT);
 	if (m_desc.enableValidation)
 	{
 		InstallDebugMessenger(instanceBuilder);
@@ -331,17 +335,19 @@ void DeviceManager::CreateDeviceResources()
 	CreateQueue(QueueType::Copy);
 
 	// Create the semaphores and fences for present
-	m_presentCompleteSemaphores.reserve(m_desc.maxFramesInFlight + 1);
-	m_renderCompleteSemaphores.reserve(m_desc.maxFramesInFlight + 1);
-	m_presentFences.reserve(m_desc.maxFramesInFlight + 1);
-	for (uint32_t i = 0; i < m_desc.maxFramesInFlight + 1; ++i)
+	const uint32_t numSynchronizationPrimitives = m_desc.numSwapChainBuffers + 1;
+	m_presentCompleteSemaphores.reserve(numSynchronizationPrimitives);
+	m_renderCompleteSemaphores.reserve(numSynchronizationPrimitives);
+	for (uint32_t i = 0; i < numSynchronizationPrimitives; ++i)
 	{
 		// Create present-complete semaphore
 		{
 			auto semaphore = CreateSemaphore(m_vkDevice.get(), VK_SEMAPHORE_TYPE_BINARY, 0);
 			assert(semaphore);
 			m_presentCompleteSemaphores.push_back(semaphore);
-			SetDebugName(*m_vkDevice, semaphore->Get(), format("Present Complete Semaphore {}", i));
+			string semaphoreName = format("Present Complete Semaphore {}", i);
+			semaphore->name = semaphoreName;
+			SetDebugName(*m_vkDevice, semaphore->semaphore->Get(), semaphoreName);
 		}
 
 		// Create render-complete semaphore
@@ -349,14 +355,10 @@ void DeviceManager::CreateDeviceResources()
 			auto semaphore = CreateSemaphore(m_vkDevice.get(), VK_SEMAPHORE_TYPE_BINARY, 0);
 			assert(semaphore);
 			m_renderCompleteSemaphores.push_back(semaphore);
-			SetDebugName(*m_vkDevice, semaphore->Get(), format("Render Complete Semaphore {}", i));
+			string semaphoreName = format("Render Complete Semaphore {}", i);
+			semaphore->name = semaphoreName;
+			SetDebugName(*m_vkDevice, semaphore->semaphore->Get(), semaphoreName);
 		}
-
-		// Create fence
-		auto fence = CreateFence(m_vkDevice.get(), true);
-		assert(fence);
-		m_presentFences.push_back(fence);
-		SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
 	}
 }
 
@@ -443,6 +445,8 @@ void DeviceManager::CreateWindowSizeDependentResources()
 CommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 {
 	lock_guard<mutex> lockGuard(m_contextAllocationMutex);
+
+	ScopedEvent event("AllocateContext");
 
 	auto& availableContexts = m_availableContexts[(uint32_t)commandListType];
 
@@ -747,13 +751,13 @@ Queue& DeviceManager::GetQueue(CommandListType commandListType)
 }
 
 
-void DeviceManager::QueueWaitForSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value)
+void DeviceManager::QueueWaitForSemaphore(QueueType queueType, SemaphorePtr semaphore, uint64_t value)
 {
 	m_queues[(uint32_t)queueType]->AddWaitSemaphore(semaphore, value);
 }
 
 
-void DeviceManager::QueueSignalSemaphore(QueueType queueType, VkSemaphore semaphore, uint64_t value)
+void DeviceManager::QueueSignalSemaphore(QueueType queueType, SemaphorePtr semaphore, uint64_t value)
 {
 	m_queues[(uint32_t)queueType]->AddSignalSemaphore(semaphore, value);
 }

@@ -121,12 +121,13 @@ void TextureArrayApp::Render()
 {
 	auto& context = GraphicsContext::Begin("Scene");
 
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	auto colorBuffer = GetColorBuffer();
+	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearColor(GetColorBuffer());
+	context.ClearColor(colorBuffer);
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(colorBuffer, m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -144,7 +145,7 @@ void TextureArrayApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+	context.TransitionResource(colorBuffer, ResourceState::Present);
 
 	context.Finish();
 }
