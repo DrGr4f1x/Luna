@@ -14,12 +14,11 @@ TODO:
 -- Get rid of UserDescriptorHeap in DX12 - should ideally only bind one Heap of each type (CbvSrvUav and Sampler) per frame, for perf
 -- Refactor commandline parameters at Application level
 -- Look into DX12 Present one more time
--- Look into Vulkan Present one more time - Timeline semaphore?
 -- Handle WindowSize better in the DeviceManagers
 -- DX12 device removed (look for TODO in DeviceManager12.cpp)
 -- OnDeviceLost/OnDeviceRestored in DeviceManagers - do I actually need this?
 -- Try out std::span for IGpuBuffer::Update
--- Move Reset logic into CommandManager::AllocateContext (?)
+-- Move CommandContext::Reset logic into CommandManager::AllocateContext (?)
 -- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
 -- Take another look at Shaders.  Not super happy with how things are.
@@ -32,6 +31,9 @@ TODO:
 -- External library rework
     -- Move everything possible to git submodules (Nuget stuff isn't up to date, unless from Microsoft)
     -- Maybe make a script to auto-update and auto-build
+    -- ktx too
+-- Integrate FramePro
+-- Integrate Superluminal
 
 
 DONE:
@@ -58,6 +60,8 @@ DONE:
     -- STB
 -- Command context linear allocator for dynamic buffers
 -- Mesh loading
+-- Look into Vulkan Present one more time
+-- Fix .gitignore to allow bin directories under External
 
 
 WON'T DO:

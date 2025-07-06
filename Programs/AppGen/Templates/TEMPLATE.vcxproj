@@ -137,8 +137,8 @@
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)..\..\External\ktx\lib\ktx.dll $(OutDir)
-copy $(ProjectDir)..\..\External\assimp\lib\Debug\assimp-vc143-mtd.dll $(OutDir)</Command>
+      <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)
+copy $(ProjectDir)..\..\External\assimp\bin\Debug\assimp-vc143-mtd.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,8 +152,8 @@ copy $(ProjectDir)..\..\External\assimp\lib\Debug\assimp-vc143-mtd.dll $(OutDir)
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)..\..\External\ktx\lib\ktx.dll $(OutDir)
-copy $(ProjectDir)..\..\External\assimp\lib\Release\assimp-vc143-mt.dll $(OutDir)</Command>
+      <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)
+copy $(ProjectDir)..\..\External\assimp\bin\Release\assimp-vc143-mt.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
@@ -167,8 +167,8 @@ copy $(ProjectDir)..\..\External\assimp\lib\Release\assimp-vc143-mt.dll $(OutDir
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)..\..\External\ktx\lib\ktx.dll $(OutDir)
-copy $(ProjectDir)..\..\External\assimp\lib\RelWithDebInfo\assimp-vc143-mt.dll $(OutDir)</Command>
+      <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)
+copy $(ProjectDir)..\..\External\assimp\bin\RelWithDebInfo\assimp-vc143-mt.dll $(OutDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
