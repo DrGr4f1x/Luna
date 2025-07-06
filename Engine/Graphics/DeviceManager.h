@@ -101,6 +101,8 @@ public:
 	virtual CommandContext* AllocateContext(CommandListType commandListType) = 0;
 	virtual void FreeContext(CommandContext* usedContext) = 0;
 
+	virtual GraphicsApi GetGraphicsApi() const = 0;
+
 	virtual ColorBufferPtr GetColorBuffer() = 0;
 
 	virtual Format GetColorFormat() = 0;

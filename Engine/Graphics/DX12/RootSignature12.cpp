@@ -32,9 +32,10 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
 		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
+	const uint32_t numDescriptors = rootParam.GetNumDescriptors();
 	DescriptorSetDesc descriptorSetDesc{
-		.descriptorHandle = isRootBuffer ? DescriptorHandle{} : AllocateUserDescriptor(heapType),
-		.numDescriptors = rootParam.GetNumDescriptors(),
+		.descriptorHandle = isRootBuffer ? DescriptorHandle{} : AllocateUserDescriptor(heapType, numDescriptors),
+		.numDescriptors = numDescriptors,
 		.isSamplerTable = isSamplerTable,
 		.isRootBuffer = isRootBuffer
 	};

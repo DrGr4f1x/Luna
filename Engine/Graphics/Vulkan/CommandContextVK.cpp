@@ -374,7 +374,7 @@ void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState new
 		.afterState			= newState,
 		.numMips			= texture->GetNumMips(),
 		.mipLevel			= 0,
-		.arraySizeOrDepth	= texture->GetArraySize(),
+		.arraySizeOrDepth	= texture->GetArraySize() * texture->GetNumFaces(),
 		.arraySlice			= 0,
 		.bWholeTexture		= true
 	};
@@ -402,8 +402,8 @@ void CommandContextVK::FlushResourceBarriers()
 		subresourceRange.aspectMask = barrier.imageAspect;
 		subresourceRange.baseArrayLayer = barrier.arraySlice;
 		subresourceRange.baseMipLevel = barrier.mipLevel;
-		subresourceRange.layerCount = barrier.arraySizeOrDepth;
-		subresourceRange.levelCount = barrier.numMips;
+		subresourceRange.layerCount = barrier.bWholeTexture ? VK_REMAINING_ARRAY_LAYERS : barrier.arraySizeOrDepth;
+		subresourceRange.levelCount = barrier.bWholeTexture ? VK_REMAINING_MIP_LEVELS : barrier.numMips;
 
 		VkImageMemoryBarrier2 vkBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
 		vkBarrier.srcAccessMask = GetAccessMask(barrier.beforeState);

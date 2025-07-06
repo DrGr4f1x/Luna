@@ -162,6 +162,7 @@ D3D12_COMPARISON_FUNC ComparisonFuncToDX12(ComparisonFunc comparisonFunc)
 
 	switch (comparisonFunc)
 	{
+	case None:			return D3D12_COMPARISON_FUNC_NONE; break;
 	case Never:			return D3D12_COMPARISON_FUNC_NEVER; break;
 	case Less:			return D3D12_COMPARISON_FUNC_LESS; break;
 	case LessEqual:		return D3D12_COMPARISON_FUNC_LESS_EQUAL; break;

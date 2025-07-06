@@ -919,16 +919,29 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	Texture* textureVK = (Texture*)texture;
 	assert(textureVK != nullptr);
 
+	const ResourceType type = TextureDimensionToResourceType(texInit.dimension);
+	const bool isCubemap = HasAnyFlag(type, ResourceType::TextureCube_Type);
+	uint32_t effectiveArraySize = texInit.arraySizeOrDepth;
+	if (type == ResourceType::Texture3D || type == ResourceType::TextureCube)
+	{
+		effectiveArraySize = 1;
+	}
+	else if (type == ResourceType::TextureCube_Array)
+	{
+		effectiveArraySize /= 6;
+	}
+	
 	textureVK->m_device = this;
-	textureVK->m_type = TextureDimensionToResourceType(texInit.dimension);
+	textureVK->m_type = type;
 	textureVK->m_usageState = ResourceState::Undefined;
 	textureVK->m_width = texInit.width;
 	textureVK->m_height = texInit.height;
-	textureVK->m_arraySizeOrDepth = texInit.arraySizeOrDepth;
+	textureVK->m_arraySizeOrDepth = effectiveArraySize;
 	textureVK->m_numMips = texInit.numMips;
 	textureVK->m_numSamples = 1;
 	textureVK->m_planeCount = 1;
 	textureVK->m_format = texInit.format;
+	textureVK->m_dimension = texInit.dimension;
 
 	// Create image
 	ImageDesc imageDesc{
@@ -957,7 +970,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		.baseMipLevel		= 0,
 		.mipCount			= textureVK->GetNumMips(),
 		.baseArraySlice		= 0,
-		.arraySize			= textureVK->GetArraySize()
+		.arraySize			= texInit.arraySizeOrDepth
 	};
 	textureVK->m_imageViewSrv = CreateImageView(imageViewDesc);
 
@@ -1114,7 +1127,7 @@ wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageVie
 	createInfo.subresourceRange.baseMipLevel = 0;
 	createInfo.subresourceRange.levelCount = imageViewDesc.mipCount;
 	createInfo.subresourceRange.baseArrayLayer = 0;
-	createInfo.subresourceRange.layerCount = imageViewDesc.resourceType == ResourceType::Texture3D ? 1 : imageViewDesc.arraySize;
+	createInfo.subresourceRange.layerCount = imageViewDesc.arraySize;
 	createInfo.image = imageViewDesc.image->Get();
 
 	VkImageView vkImageView{ VK_NULL_HANDLE };

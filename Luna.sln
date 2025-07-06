@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureArray", "Apps\Textur
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureCubeMap", "Apps\TextureCubeMap\TextureCubeMap.vcxproj", "{E8842702-889D-453B-8CEB-5AA3E27BFFA9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureCubeMapArray", "Apps\TextureCubeMapArray\TextureCubeMapArray.vcxproj", "{5A449FEA-8FEA-4106-B267-1509ECB89213}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +109,18 @@ Global
 		{E8842702-889D-453B-8CEB-5AA3E27BFFA9}.Release|Any CPU.Build.0 = Release|x64
 		{E8842702-889D-453B-8CEB-5AA3E27BFFA9}.Release|x64.ActiveCfg = Release|x64
 		{E8842702-889D-453B-8CEB-5AA3E27BFFA9}.Release|x64.Build.0 = Release|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Debug|Any CPU.Build.0 = Debug|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Debug|x64.ActiveCfg = Debug|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Debug|x64.Build.0 = Debug|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Profile|Any CPU.ActiveCfg = Profile|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Profile|Any CPU.Build.0 = Profile|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Profile|x64.ActiveCfg = Profile|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Profile|x64.Build.0 = Profile|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Release|Any CPU.ActiveCfg = Release|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Release|Any CPU.Build.0 = Release|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Release|x64.ActiveCfg = Release|x64
+		{5A449FEA-8FEA-4106-B267-1509ECB89213}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -117,6 +131,7 @@ Global
 		{37958CA0-DD7D-43E8-8D99-C055677155E9} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{426538E6-9B9E-4169-A263-6BFD59E26786} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{E8842702-889D-453B-8CEB-5AA3E27BFFA9} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
+		{5A449FEA-8FEA-4106-B267-1509ECB89213} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CDA0266F-9938-4577-9717-5AEE6F9785A1}

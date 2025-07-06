@@ -94,6 +94,8 @@ public:
 	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
 	void FreeContext(CommandContext* usedContext) final;
 
+	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::D3D12; }
+
 	Luna::ColorBufferPtr GetColorBuffer() final;
 
 	Format GetColorFormat() final;

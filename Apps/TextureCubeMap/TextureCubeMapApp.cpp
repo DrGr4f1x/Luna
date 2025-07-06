@@ -285,7 +285,7 @@ void TextureCubeMapApp::InitConstantBuffers()
 		.resourceType	= ResourceType::ConstantBuffer,
 		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
 		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
+		.elementSize	= sizeof(PSConstants)
 	};
 	m_psModelConstantBuffer = CreateGpuBuffer(psModelDesc);
 }

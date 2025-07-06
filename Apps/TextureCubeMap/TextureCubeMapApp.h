@@ -61,6 +61,7 @@ protected:
 	struct PSConstants
 	{
 		float lodBias{ 0.0f };
+		int arraySlice{ 1 };
 	};
 
 	Luna::DepthBufferPtr m_depthBuffer;

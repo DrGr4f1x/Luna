@@ -27,6 +27,27 @@ namespace Luna
 static TextureManager* g_textureManager{ nullptr };
 
 
+uint32_t TextureInitializer::GetSubresourceIndex(GraphicsApi api, uint32_t face, uint32_t arraySlice, uint32_t mipLevel)
+{
+	const bool isCubemap = dimension == TextureDimension::TextureCube || dimension == TextureDimension::TextureCube_Array;
+	const uint32_t numFaces = isCubemap ? 6 : 1;
+	const uint32_t effectiveArraySize = isCubemap ? arraySizeOrDepth / 6 : arraySizeOrDepth;
+
+	assert(arraySlice < arraySizeOrDepth);
+	assert(face < numFaces);
+	assert(mipLevel < numMips);
+
+	if (api == GraphicsApi::Vulkan)
+	{
+		return (face * effectiveArraySize * numMips) + (arraySlice * numMips) + mipLevel;
+	}
+	else
+	{
+		return (arraySlice * numFaces * numMips) + (face * numMips) + mipLevel;
+	}
+}
+
+
 void ITexture::WaitForLoad() const
 {
 	while (m_isLoading)

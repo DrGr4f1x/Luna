@@ -152,6 +152,7 @@ VkCompareOp ComparisonFuncToVulkan(ComparisonFunc comparisonFunc)
 
 	switch (comparisonFunc)
 	{
+	case None:
 	case Never:			return VK_COMPARE_OP_NEVER; break;
 	case Less:			return VK_COMPARE_OP_LESS; break;
 	case LessEqual:		return VK_COMPARE_OP_LESS_OR_EQUAL; break;

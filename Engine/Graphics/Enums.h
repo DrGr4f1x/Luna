@@ -104,6 +104,7 @@ enum class FillMode : uint8_t
 
 enum class ComparisonFunc : uint8_t
 {
+	None,
 	Never,
 	Less,
 	Equal,

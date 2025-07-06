@@ -527,7 +527,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
-	std::vector<D3D12_ROOT_PARAMETER1> d3d12RootParameters;
+	std::vector<D3D12_ROOT_PARAMETER> d3d12RootParameters;
 
 	auto exitGuard = wil::scope_exit([&]()
 		{
@@ -552,7 +552,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 	{
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
-			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
+			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
 			param.Constants.Num32BitValues = rootParameter.num32BitConstants;
@@ -563,46 +563,51 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 			rootParameter.parameterType == RootParameterType::RootSRV ||
 			rootParameter.parameterType == RootParameterType::RootUAV)
 		{
-			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
+			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = RootParameterTypeToDX12(rootParameter.parameterType);
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
-			param.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC;
+			//param.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC;
 			param.Descriptor.RegisterSpace = rootParameter.registerSpace;
 			param.Descriptor.ShaderRegister = rootParameter.startRegister;
 		}
 		else if (rootParameter.parameterType == RootParameterType::Table)
 		{
-			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
+			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
 
 			const uint32_t numRanges = (uint32_t)rootParameter.table.size();
 			param.DescriptorTable.NumDescriptorRanges = numRanges;
-			D3D12_DESCRIPTOR_RANGE1* pRanges = new D3D12_DESCRIPTOR_RANGE1[numRanges];
+			D3D12_DESCRIPTOR_RANGE* pRanges = new D3D12_DESCRIPTOR_RANGE[numRanges];
 			for (uint32_t i = 0; i < numRanges; ++i)
 			{
-				D3D12_DESCRIPTOR_RANGE1& d3d12Range = pRanges[i];
+				D3D12_DESCRIPTOR_RANGE& d3d12Range = pRanges[i];
 				const DescriptorRange& range = rootParameter.table[i];
 				d3d12Range.RangeType = DescriptorTypeToDX12(range.descriptorType);
 				d3d12Range.NumDescriptors = range.numDescriptors;
 				d3d12Range.BaseShaderRegister = range.startRegister;
 				d3d12Range.RegisterSpace = range.registerSpace;
 				d3d12Range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-				d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+				// TODO: Revisit this flag
+				/*if (d3d12Range.RangeType != D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+				{
+					d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE | D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
+				}
+				else
+				{
+					d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+				}*/
 			}
 			param.DescriptorTable.pDescriptorRanges = pRanges;
 		}
 	}
 
-	D3D12_VERSIONED_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
-		.Version = D3D_ROOT_SIGNATURE_VERSION_1_1,
-		.Desc_1_1 = {
-			.NumParameters = (uint32_t)d3d12RootParameters.size(),
-			.pParameters = d3d12RootParameters.data(),
-			.NumStaticSamplers = 0,
-			.pStaticSamplers = nullptr,
-			.Flags = RootSignatureFlagsToDX12(rootSignatureDesc.flags)
-		}
+	D3D12_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
+		.NumParameters = (uint32_t)d3d12RootParameters.size(),
+		.pParameters = d3d12RootParameters.data(),
+		.NumStaticSamplers = 0,
+		.pStaticSamplers = nullptr,
+		.Flags = RootSignatureFlagsToDX12(rootSignatureDesc.flags)
 	};
 
 	uint32_t descriptorTableBitmap{ 0 };
@@ -611,12 +616,10 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 	descriptorTableSize.reserve(16);
 
 	// Calculate hash
-	size_t hashCode = Utility::HashState(&d3d12RootSignatureDesc.Version);
-	hashCode = Utility::HashState(&d3d12RootSignatureDesc.Desc_1_1.Flags, 1, hashCode);
-
-	for (uint32_t param = 0; param < d3d12RootSignatureDesc.Desc_1_1.NumParameters; ++param)
+	size_t hashCode = 0;
+	for (uint32_t param = 0; param < d3d12RootSignatureDesc.NumParameters; ++param)
 	{
-		const D3D12_ROOT_PARAMETER1& rootParam = d3d12RootSignatureDesc.Desc_1_1.pParameters[param];
+		const D3D12_ROOT_PARAMETER& rootParam = d3d12RootSignatureDesc.pParameters[param];
 		descriptorTableSize.push_back(0);
 
 		if (rootParam.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
@@ -673,7 +676,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		wil::com_ptr<ID3DBlob> pOutBlob, pErrorBlob;
 
 		HRESULT hr = S_OK;
-		hr = D3DX12SerializeVersionedRootSignature(&d3d12RootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &pOutBlob, &pErrorBlob);
+		hr = D3D12SerializeRootSignature(&d3d12RootSignatureDesc,D3D_ROOT_SIGNATURE_VERSION_1, &pOutBlob, &pErrorBlob);
 		if (hr != S_OK)
 		{
 			LogError(LogDirectX) << "Error compiling root signature, HRESULT  0x" << std::hex << std::setw(8) << hr << endl;
@@ -1016,16 +1019,21 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	Texture* texture12 = (Texture*)texture;
 	assert(texture12 != nullptr);
 
+	const ResourceType type = TextureDimensionToResourceType(texInit.dimension);
+	const bool isCubemap = HasAnyFlag(type, ResourceType::TextureCube_Type);
+	uint32_t effectiveArraySize = isCubemap ? texInit.arraySizeOrDepth / 6 : texInit.arraySizeOrDepth;
+
 	texture12->m_device = this;
-	texture12->m_type = TextureDimensionToResourceType(texInit.dimension);
+	texture12->m_type = type;
 	texture12->m_usageState = ResourceState::CopyDest;
 	texture12->m_width = texInit.width;
 	texture12->m_height = texInit.height;
-	texture12->m_arraySizeOrDepth = texInit.arraySizeOrDepth;
+	texture12->m_arraySizeOrDepth = effectiveArraySize;
 	texture12->m_numMips = texInit.numMips;
 	texture12->m_numSamples = 1;
 	texture12->m_planeCount = GetFormatPlaneCount(FormatToDxgi(texInit.format).resourceFormat);
 	texture12->m_format = texInit.format;
+	texture12->m_dimension = texInit.dimension;
 
 	// TODO: Allocate this with D3D12MA
 
@@ -1033,7 +1041,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		.Dimension			= GetResourceDimension(texture12->m_type),
 		.Width				= texture12->m_width,
 		.Height				= texture12->m_height,
-		.DepthOrArraySize	= static_cast<UINT16>(texture12->m_arraySizeOrDepth),
+		.DepthOrArraySize	= static_cast<UINT16>(texInit.arraySizeOrDepth),
 		.MipLevels			= (UINT16)texture12->m_numMips,
 		.Format				= FormatToDxgi(texture12->m_format).resourceFormat,
 		.SampleDesc			= { .Count = 1, .Quality = 0 },

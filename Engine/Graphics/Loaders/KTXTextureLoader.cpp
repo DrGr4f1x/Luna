@@ -52,7 +52,7 @@ TextureDimension GetTextureDimension(ktxTexture* texture)
 	}
 }
 
-bool FillTextureInitializerKTX(ktxTexture* texture, TextureInitializer& outTexInit)
+bool FillTextureInitializerKTX(GraphicsApi api, ktxTexture* texture, TextureInitializer& outTexInit)
 {
 	const uint64_t width = texture->baseWidth;
 	const uint32_t height = texture->baseHeight;
@@ -89,7 +89,6 @@ bool FillTextureInitializerKTX(ktxTexture* texture, TextureInitializer& outTexIn
 
 	const uint32_t numFaces = isCubemap ? 6 : 1;
 
-	uint32_t index = 0;
 	for (uint32_t face = 0; face < numFaces; ++face)
 	{
 		for (uint32_t slice = 0; slice < arraySize; ++slice)
@@ -106,7 +105,8 @@ bool FillTextureInitializerKTX(ktxTexture* texture, TextureInitializer& outTexIn
 				size_t rowBytes = 0;
 				GetSurfaceInfo(w, h, outTexInit.format, &numBytes, &rowBytes, nullptr, nullptr, nullptr);
 
-				auto& subresource = outTexInit.subResourceData[index];
+				const uint32_t subIndex = outTexInit.GetSubresourceIndex(api, face, slice, mipLevel);
+				auto& subresource = outTexInit.subResourceData[subIndex];
 				subresource.data = (std::byte*)ktxTextureData + offset;
 				subresource.rowPitch = rowBytes;
 				subresource.slicePitch = numBytes;
@@ -118,8 +118,6 @@ bool FillTextureInitializerKTX(ktxTexture* texture, TextureInitializer& outTexIn
 				subresource.width = (uint32_t)w;
 				subresource.height = (uint32_t)h;
 				subresource.depth = 1;
-
-				++index;
 			}
 		}
 	}
@@ -231,7 +229,8 @@ bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::s
 	TextureInitializer texInit{ .format = format, .dimension = dimension, };
 	const size_t maxSize = 0;
 	size_t skipMip = 0;
-	bool dataOk = FillTextureInitializerKTX(kTexture, texInit);
+
+	bool dataOk = FillTextureInitializerKTX(device->GetGraphicsApi(), kTexture, texInit);
 
 	if (dataOk)
 	{

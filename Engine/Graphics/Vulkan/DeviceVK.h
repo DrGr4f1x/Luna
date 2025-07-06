@@ -41,6 +41,8 @@ class Device : public IDevice
 public:
 	Device(CVkDevice* device, CVmaAllocator* allocator);
 
+	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::Vulkan; }
+
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;

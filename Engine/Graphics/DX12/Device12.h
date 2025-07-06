@@ -32,6 +32,8 @@ class Device : public IDevice
 public:
 	Device(ID3D12Device* device, D3D12MA::Allocator* allocator);
 
+	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::D3D12; }
+
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;

@@ -23,7 +23,7 @@ struct SamplerDesc
 	TextureAddress addressW{ TextureAddress::Wrap };
 	float mipLODBias{ 0.0f };
 	uint32_t maxAnisotropy{ 16 };
-	ComparisonFunc comparisonFunc{ ComparisonFunc::LessEqual };
+	ComparisonFunc comparisonFunc{ ComparisonFunc::None };
 	Color borderColor{ DirectX::Colors::Black };
 	float minLOD{ 0.0f };
 	float maxLOD{ FLT_MAX };

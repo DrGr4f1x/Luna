@@ -52,6 +52,8 @@ struct TextureInitializer
 
 	std::byte* baseData{ nullptr };
 	size_t totalBytes{ 0 };
+
+	uint32_t GetSubresourceIndex(GraphicsApi api, uint32_t arraySlice, uint32_t face, uint32_t mipLevel);
 };
 
 
@@ -76,8 +78,6 @@ public:
 	bool IsLoading() const { return m_isLoading; }
 	void WaitForLoad() const;
 
-	TextureDimension GetDimension() const { return m_dimension; }
-
 protected:
 	virtual unsigned long AddRef();
 	virtual unsigned long Release();
@@ -87,8 +87,6 @@ protected:
 	std::atomic_ulong m_refCount{ 0 };
 	std::atomic<bool> m_isLoading{ true };
 	bool m_isManaged{ false };
-
-	TextureDimension m_dimension{ TextureDimension::Unknown };
 };
 
 

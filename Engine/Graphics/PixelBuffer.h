@@ -33,6 +33,7 @@ public:
 	uint32_t GetPlaneCount() const { return m_planeCount; }
 	Format GetFormat() const { return m_format; }
 	TextureDimension GetDimension() const { return m_dimension; }
+	uint32_t GetNumFaces() const { return HasAnyFlag(m_type, ResourceType::TextureCube_Type) ? 6 : 1; }
 
 protected:
 	uint64_t m_width{ 0 };

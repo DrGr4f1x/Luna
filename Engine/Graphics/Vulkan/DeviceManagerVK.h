@@ -74,6 +74,8 @@ public:
 	CommandContext* AllocateContext(CommandListType commandListType) final;
 	void FreeContext(CommandContext* usedContext) final;
 
+	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::Vulkan; }
+
 	Luna::ColorBufferPtr GetColorBuffer() final;
 
 	Format GetColorFormat() final;
