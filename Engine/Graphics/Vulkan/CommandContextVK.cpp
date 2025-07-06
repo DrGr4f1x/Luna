@@ -366,6 +366,9 @@ void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState new
 	Texture* textureVK = (Texture*)texture.Get();
 	assert(textureVK != nullptr);
 
+	const bool isVolume = texture->GetDimension() == TextureDimension::Texture3D;
+	const uint32_t arraySizeOrDepth = isVolume ? 1 : (texture->GetArraySize() * texture->GetNumFaces());
+
 	TextureBarrier barrier{
 		.image				= textureVK->GetImage(),
 		.format				= FormatToVulkan(texture->GetFormat()),
@@ -374,7 +377,7 @@ void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState new
 		.afterState			= newState,
 		.numMips			= texture->GetNumMips(),
 		.mipLevel			= 0,
-		.arraySizeOrDepth	= texture->GetArraySize() * texture->GetNumFaces(),
+		.arraySizeOrDepth	= arraySizeOrDepth,
 		.arraySlice			= 0,
 		.bWholeTexture		= true
 	};
@@ -1184,7 +1187,6 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr& destTexture, const
 
 	DynAlloc dynAlloc = ReserveUploadMemory(texInit.totalBytes);
 
-	SIMDMemCopy(dynAlloc.dataPtr, texInit.baseData, Math::DivideByMultiple(texInit.totalBytes, 16));
 
 	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)destTexture.Get();

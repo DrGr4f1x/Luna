@@ -1206,6 +1206,8 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 	size_t rowPitch = 0;
 	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr, nullptr, nullptr);
 
+	numBytes *= depth;
+
 	TextureInitializer texInit{ 
 		.format				= textureDesc.format, 
 		.dimension			= dimension,

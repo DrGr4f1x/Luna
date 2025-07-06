@@ -921,8 +921,9 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 
 	const ResourceType type = TextureDimensionToResourceType(texInit.dimension);
 	const bool isCubemap = HasAnyFlag(type, ResourceType::TextureCube_Type);
+	const bool isVolume = HasFlag(type, ResourceType::Texture3D);
 	uint32_t effectiveArraySize = texInit.arraySizeOrDepth;
-	if (type == ResourceType::Texture3D || type == ResourceType::TextureCube)
+	if (type == ResourceType::TextureCube)
 	{
 		effectiveArraySize = 1;
 	}
@@ -970,7 +971,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		.baseMipLevel		= 0,
 		.mipCount			= textureVK->GetNumMips(),
 		.baseArraySlice		= 0,
-		.arraySize			= texInit.arraySizeOrDepth
+		.arraySize			= isVolume ? 1 : texInit.arraySizeOrDepth
 	};
 	textureVK->m_imageViewSrv = CreateImageView(imageViewDesc);
 
@@ -1117,10 +1118,10 @@ wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageVie
 	createInfo.format = FormatToVulkan(imageViewDesc.format);
 	if (IsColorFormat(imageViewDesc.format))
 	{
-		createInfo.components.r = VK_COMPONENT_SWIZZLE_R;
-		createInfo.components.g = VK_COMPONENT_SWIZZLE_G;
-		createInfo.components.b = VK_COMPONENT_SWIZZLE_B;
-		createInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+		createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
 	}
 	createInfo.subresourceRange = {};
 	createInfo.subresourceRange.aspectMask = GetImageAspect(imageViewDesc.imageAspect);
@@ -1218,6 +1219,8 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 	size_t numBytes = 0;
 	size_t rowPitch = 0;
 	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr, nullptr, nullptr);
+
+	numBytes *= depth;
 
 	TextureInitializer texInit{
 		.format				= textureDesc.format,

@@ -191,32 +191,6 @@ void TextureCubeMapArrayApp::InitRootSignatures()
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
-
-	/*auto skyBoxRootSignatureDesc = RootSignatureDesc{
-		.name			= "Skybox Root Signature",
-		.flags			= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootParameter::RootCBV(0, ShaderStage::Vertex),
-				RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::TextureSRV(1) }, ShaderStage::Pixel),
-				RootParameter::Table({ DescriptorRange::Sampler(0) }, ShaderStage::Pixel)
-			}
-	};
-
-	m_skyboxRootSignature = CreateRootSignature(skyBoxRootSignatureDesc);
-
-	auto modelRootSignatureDesc = RootSignatureDesc{
-		.name			= "Model Root Signature",
-		.flags			= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootParameter::RootCBV(0, ShaderStage::Vertex),
-				RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::TextureSRV(1) }, ShaderStage::Pixel),
-				RootParameter::Table({ DescriptorRange::Sampler(0) }, ShaderStage::Pixel)
-			}
-	};
-
-	m_modelRootSignature = CreateRootSignature(modelRootSignatureDesc);*/
 }
 
 
