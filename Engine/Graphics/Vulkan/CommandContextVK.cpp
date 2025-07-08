@@ -1186,7 +1186,7 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr& destTexture, const
 	}
 
 	DynAlloc dynAlloc = ReserveUploadMemory(texInit.totalBytes);
-
+	SIMDMemCopy(dynAlloc.dataPtr, texInit.baseData, Math::DivideByMultiple(texInit.totalBytes, 16));
 
 	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)destTexture.Get();

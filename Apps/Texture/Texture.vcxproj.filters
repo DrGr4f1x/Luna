@@ -11,21 +11,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Shaders\shaders.cfg">
+    <LunaShaderCfg Include="Shaders\shaders.cfg">
       <Filter>Shaders</Filter>
-    </None>
+    </LunaShaderCfg>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\TexturePS.hlsl">
+    <None Include="Shaders\TexturePS.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\TextureVS.hlsl">
+    </None>
+    <None Include="Shaders\TextureVS.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

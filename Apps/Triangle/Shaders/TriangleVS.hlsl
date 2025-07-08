@@ -10,6 +10,8 @@
 
 #include "Common.hlsli"
 
+// Touch
+
 VK_BINDING(0, 0)
 cbuffer VSConstants : register(b0)
 {

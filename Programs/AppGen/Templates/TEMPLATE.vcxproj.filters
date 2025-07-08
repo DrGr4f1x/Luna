@@ -11,5 +11,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <LunaShaderCfg Include="Shaders\shaders.cfg">
+      <Filter>Shaders</Filter>
+    </LunaShaderCfg>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b02a4703-6c91-41d6-b1b3-f9dd4c86077b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\SampleVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\SamplePS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

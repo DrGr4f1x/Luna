@@ -41,9 +41,14 @@ def copy_app_template(project, guid):
     copy_template_file('TEMPLATEApp.h', project, guid)
     copy_template_file('TEMPLATEApp.cpp', project, guid)
     copy_template_file('Main.cpp', project, guid)
+    copy_template_file('LunaShaderCfg.targets', project, guid)
+    copy_template_file('LunaShaderCfg.xml', project, guid)
     copy_template_file('TEMPLATE.vcxproj', project, guid)
     copy_template_file('TEMPLATE.vcxproj.filters', project, guid)
     copy_template_file('packages.config', project, guid)
+    copy_template_file('Shaders\\shaders.cfg', project, guid)
+    copy_template_file('Shaders\\SamplePS.hlsl', project, guid)
+    copy_template_file('Shaders\\SampleVS.hlsl', project, guid)
 
 def create_project():
     if len(sys.argv) != 2:
@@ -61,6 +66,8 @@ def create_project():
     else:
         new_app_dir = os.path.join(APPS_FOLDER, project_name)
         os.mkdir(new_app_dir)
+        new_app_shaders_dir = os.path.join(APPS_FOLDER, project_name + '\\Shaders')
+        os.mkdir(new_app_shaders_dir)
         copy_app_template(project_name, str(uuid4()).upper())
         
 

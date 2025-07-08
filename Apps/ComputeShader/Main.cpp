@@ -8,15 +8,16 @@
 // Author:  David Elder
 //
 
-// Comment
+#include "Stdafx.h"
 
-struct VSOutput
-{
-	float4 position : SV_POSITION;
-	float3 color : COLOR;
-};
+#include "ComputeShaderApp.h"
 
-float4 main(VSOutput input) : SV_TARGET
+
+int main(int argc, char* argv[])
 {
-	return float4(input.color, 1.0f);
+	ComputeShaderApp app{ 1920, 1080 };
+	
+	app.ProcessCommandLine(argc, argv);
+
+	return Luna::Run(&app);
 }

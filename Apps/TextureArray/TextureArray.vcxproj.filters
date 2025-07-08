@@ -11,9 +11,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Shaders\shaders.cfg">
+    <LunaShaderCfg Include="Shaders\shaders.cfg">
       <Filter>Shaders</Filter>
-    </None>
+    </LunaShaderCfg>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -21,12 +21,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shaders\InstancingVS.hlsl">
+    <None Include="Shaders\InstancingVS.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\InstancingPS.hlsl">
+    </None>
+    <None Include="Shaders\InstancingPS.hlsl">
       <Filter>Shaders</Filter>
-    </FxCompile>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

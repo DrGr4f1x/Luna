@@ -3,11 +3,11 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Stdafx.cpp" />
-    <ClCompile Include="TextureCubeMapArrayApp.cpp" />
+    <ClCompile Include="ComputeShaderApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Stdafx.h" />
-    <ClInclude Include="TextureCubeMapArrayApp.h" />
+    <ClInclude Include="ComputeShaderApp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -16,24 +16,15 @@
     </LunaShaderCfg>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="Shaders">
-      <UniqueIdentifier>{29c62d48-4cba-4ee3-b446-43ad0fbd23ef}</UniqueIdentifier>
+      <UniqueIdentifier>{b02a4703-6c91-41d6-b1b3-f9dd4c86077b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\ReflectPS.hlsl">
+    <None Include="Shaders\SampleVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\ReflectVS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\SkyboxPS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\SkyboxVS.hlsl">
+    <None Include="Shaders\SamplePS.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
