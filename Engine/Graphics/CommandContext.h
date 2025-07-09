@@ -24,12 +24,14 @@ class IDepthBuffer;
 class IDescriptorSet;
 class IGpuBuffer;
 class GraphicsContext;
+class IComputePipelineState;
 class IGraphicsPipelineState;
 class ResourceSet;
 class IRootSignature;
 
 
 using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
+using ComputePipelineStatePtr = std::shared_ptr<IComputePipelineState>;
 using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 using DescriptorSetPtr = std::shared_ptr<IDescriptorSet>;
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
@@ -85,8 +87,9 @@ public:
 	virtual void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
-	virtual void SetRootSignature(RootSignaturePtr& rootSignature) = 0;
+	virtual void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) = 0;
 	virtual void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline) = 0;
+	virtual void SetComputePipeline(ComputePipelineStatePtr& computePipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -95,26 +98,26 @@ public:
 	virtual void SetBlendFactor(Color blendFactor) = 0;
 	virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
 
-	virtual void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
-	virtual void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val) = 0;
-	virtual void SetConstants(uint32_t rootIndex, DWParam x) = 0;
-	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) = 0;
-	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
-	virtual void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
-	virtual void SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer) = 0;
-	virtual void SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet) = 0;
-	virtual void SetResources(ResourceSet& resourceSet) = 0;
+	virtual void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
+	virtual void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) = 0;
+	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x) = 0;
+	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) = 0;
+	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
+	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
+	virtual void SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet) = 0;
+	virtual void SetResources(CommandListType type, ResourceSet& resourceSet) = 0;
 
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) = 0;
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
-	virtual void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) = 0;
 
-	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
-	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) = 0;
-	virtual void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) = 0;
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
 
-	virtual void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
 
 	virtual void SetIndexBuffer(GpuBufferPtr& gpuBuffer) = 0;
 	virtual void SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer) = 0;
@@ -129,6 +132,10 @@ public:
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
 
 	// Compute context
+	virtual void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
+	virtual void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) = 0;
+	virtual void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8) = 0;
+	virtual void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) = 0;
 	
 protected:
 	virtual void InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
@@ -264,6 +271,36 @@ class ComputeContext : public CommandContext
 {
 public:
 	static ComputeContext& Begin(const std::string id = "", bool bAsync = false);
+
+	void SetRootSignature(RootSignaturePtr& rootSignature);
+	void SetComputePipeline(ComputePipelineStatePtr& computePipeline);
+
+	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
+	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
+	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val);
+	void SetConstants(uint32_t rootIndex, DWParam x);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
+	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
+	void SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer);
+	void SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet);
+	void SetResources(ResourceSet& resourceSet);
+
+	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv = true);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture);
+
+	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+
+	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+
+	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
+	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64);
+	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8);
+	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ);
 };
 
 
@@ -450,7 +487,7 @@ inline void GraphicsContext::EndRendering()
 
 inline void GraphicsContext::SetRootSignature(RootSignaturePtr& rootSignature)
 {
-	m_contextImpl->SetRootSignature(rootSignature);
+	m_contextImpl->SetRootSignature(CommandListType::Direct, rootSignature);
 }
 
 
@@ -499,109 +536,109 @@ inline void GraphicsContext::SetPrimitiveTopology(PrimitiveTopology topology)
 
 inline void GraphicsContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants)
 {
-	m_contextImpl->SetConstantArray(rootIndex, numConstants, constants, 0);
+	m_contextImpl->SetConstantArray(CommandListType::Direct, rootIndex, numConstants, constants, 0);
 }
 
 
 inline void GraphicsContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
-	m_contextImpl->SetConstantArray(rootIndex, numConstants, constants, offset);
+	m_contextImpl->SetConstantArray(CommandListType::Direct, rootIndex, numConstants, constants, offset);
 }
 
 
 inline void GraphicsContext::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
 {
-	m_contextImpl->SetConstant(rootIndex, offset, val);
+	m_contextImpl->SetConstant(CommandListType::Direct, rootIndex, offset, val);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x)
 {
-	m_contextImpl->SetConstants(rootIndex, x);
+	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
 {
-	m_contextImpl->SetConstants(rootIndex, x, y);
+	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x, y);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
 {
-	m_contextImpl->SetConstants(rootIndex, x, y, z);
+	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x, y, z);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
-	m_contextImpl->SetConstants(rootIndex, x, y, z, w);
+	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x, y, z, w);
 }
 
 
 inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetConstantBuffer(rootIndex, gpuBuffer);
+	m_contextImpl->SetConstantBuffer(CommandListType::Direct, rootIndex, gpuBuffer);
 }
 
 
 inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
 {
-	m_contextImpl->SetDescriptors(rootIndex, descriptorSet);
+	m_contextImpl->SetDescriptors(CommandListType::Direct, rootIndex, descriptorSet);
 }
 
 
 inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 {
-	m_contextImpl->SetResources(resourceSet);
+	m_contextImpl->SetResources(CommandListType::Direct, resourceSet);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetSRV(rootParam, offset, colorBuffer);
+	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, colorBuffer);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
-	m_contextImpl->SetSRV(rootParam, offset, depthBuffer, depthSrv);
+	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, depthBuffer, depthSrv);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetSRV(rootParam, offset, gpuBuffer);
+	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, gpuBuffer);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, TexturePtr& texture)
 {
-	m_contextImpl->SetSRV(rootParam, offset, texture);
+	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, texture);
 }
 
 
 inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetUAV(rootParam, offset, colorBuffer);
+	m_contextImpl->SetUAV(CommandListType::Direct, rootParam, offset, colorBuffer);
 }
 
 
 inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->SetUAV(rootParam, offset, depthBuffer);
+	m_contextImpl->SetUAV(CommandListType::Direct, rootParam, offset, depthBuffer);
 }
 
 
 inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetUAV(rootParam, offset, gpuBuffer);
+	m_contextImpl->SetUAV(CommandListType::Direct, rootParam, offset, gpuBuffer);
 }
 
 
 inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetCBV(rootParam, offset, gpuBuffer);
+	m_contextImpl->SetCBV(CommandListType::Direct, rootParam, offset, gpuBuffer);
 }
 
 
@@ -664,6 +701,150 @@ inline void GraphicsContext::DrawIndexedInstanced(uint32_t indexCountPerInstance
 	int32_t baseVertexLocation, uint32_t startInstanceLocation)
 {
 	m_contextImpl->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+
+inline void ComputeContext::SetRootSignature(RootSignaturePtr& rootSignature)
+{
+	m_contextImpl->SetRootSignature(CommandListType::Compute, rootSignature);
+}
+
+
+inline void ComputeContext::SetComputePipeline(ComputePipelineStatePtr& computePipeline)
+{
+	m_contextImpl->SetComputePipeline(computePipeline);
+}
+
+
+inline void ComputeContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants)
+{
+	m_contextImpl->SetConstantArray(CommandListType::Compute, rootIndex, numConstants, constants, 0);
+}
+
+
+inline void ComputeContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
+{
+	m_contextImpl->SetConstantArray(CommandListType::Compute, rootIndex, numConstants, constants, offset);
+}
+
+
+inline void ComputeContext::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
+{
+	m_contextImpl->SetConstant(CommandListType::Compute, rootIndex, offset, val);
+}
+
+
+inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x)
+{
+	m_contextImpl->SetConstants(CommandListType::Compute, rootIndex, x);
+}
+
+
+inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
+{
+	m_contextImpl->SetConstants(CommandListType::Compute, rootIndex, x, y);
+}
+
+
+inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
+{
+	m_contextImpl->SetConstants(CommandListType::Compute, rootIndex, x, y, z);
+}
+
+
+inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
+{
+	m_contextImpl->SetConstants(CommandListType::Compute, rootIndex, x, y, z, w);
+}
+
+
+inline void ComputeContext::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetConstantBuffer(CommandListType::Compute, rootIndex, gpuBuffer);
+}
+
+
+inline void ComputeContext::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+{
+	m_contextImpl->SetDescriptors(CommandListType::Compute, rootIndex, descriptorSet);
+}
+
+
+inline void ComputeContext::SetResources(ResourceSet& resourceSet)
+{
+	m_contextImpl->SetResources(CommandListType::Compute, resourceSet);
+}
+
+
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
+{
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, colorBuffer);
+}
+
+
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
+{
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, depthBuffer, depthSrv);
+}
+
+
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, gpuBuffer);
+}
+
+
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, TexturePtr& texture)
+{
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, texture);
+}
+
+
+inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
+{
+	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, offset, colorBuffer);
+}
+
+
+inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer)
+{
+	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, offset, depthBuffer);
+}
+
+
+inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, offset, gpuBuffer);
+}
+
+
+inline void ComputeContext::SetCBV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetCBV(CommandListType::Compute, rootParam, offset, gpuBuffer);
+}
+
+
+inline void ComputeContext::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	m_contextImpl->Dispatch(groupCountX, groupCountY, groupCountZ);
+}
+
+
+inline void ComputeContext::Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX)
+{
+	m_contextImpl->Dispatch1D(threadCountX, groupSizeX);
+}
+
+
+inline void ComputeContext::Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX, uint32_t groupSizeY)
+{
+	m_contextImpl->Dispatch2D(threadCountX, threadCountY, groupSizeX, groupSizeY);
+}
+
+
+inline void ComputeContext::Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ)
+{
+	m_contextImpl->Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
 }
 
 } // namespace Luna

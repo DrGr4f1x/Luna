@@ -65,7 +65,7 @@ inline D3D12_SUBRESOURCE_DATA TextureSubResourceDataToDX12(const TextureSubresou
 
 
 CommandContext12::CommandContext12(CommandListType type)
-	: m_type{ type }
+	: m_commandListType{ type }
 	, m_dynamicViewDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV }
 	, m_dynamicSamplerDescriptorHeap{ *this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER }
 	, m_cpuLinearAllocator{ kCpuWritable }
@@ -113,7 +113,7 @@ void CommandContext12::Reset()
 	// We only call Reset() on previously freed contexts.  The command list persists, but we must
 	// request a new allocator.
 	assert(m_commandList != nullptr && m_currentAllocator == nullptr);
-	m_currentAllocator = GetD3D12DeviceManager()->GetQueue(m_type).RequestAllocator();
+	m_currentAllocator = GetD3D12DeviceManager()->GetQueue(m_commandListType).RequestAllocator();
 	m_commandList->Reset(m_currentAllocator, nullptr);
 
 	m_graphicsRootSignature = nullptr;
@@ -130,13 +130,13 @@ void CommandContext12::Reset()
 
 void CommandContext12::Initialize()
 {
-	GetD3D12DeviceManager()->CreateNewCommandList(m_type, &m_commandList, &m_currentAllocator);
+	GetD3D12DeviceManager()->CreateNewCommandList(m_commandListType, &m_commandList, &m_currentAllocator);
 }
 
 
 uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	assert(m_commandListType == CommandListType::Direct || m_commandListType == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -158,7 +158,7 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 
 	auto deviceManager = GetD3D12DeviceManager();
 
-	Queue& cmdQueue = deviceManager->GetQueue(m_type);
+	Queue& cmdQueue = deviceManager->GetQueue(m_commandListType);
 
 	uint64_t fenceValue = cmdQueue.ExecuteCommandList(m_commandList);
 	cmdQueue.DiscardAllocator(fenceValue, m_currentAllocator);
@@ -186,7 +186,7 @@ void CommandContext12::TransitionResource(ColorBufferPtr& colorBuffer, ResourceS
 
 	ResourceState oldState = colorBuffer->GetUsageState();
 
-	if (m_type == CommandListType::Compute)
+	if (m_commandListType == CommandListType::Compute)
 	{
 		assert(IsValidComputeResourceState(oldState));
 		assert(IsValidComputeResourceState(newState));
@@ -209,7 +209,8 @@ void CommandContext12::TransitionResource(DepthBufferPtr& depthBuffer, ResourceS
 
 	ResourceState oldState = depthBuffer->GetUsageState();
 
-	if (m_type == CommandListType::Compute)
+	// TODO: Separate TransitionResource functions for graphics and compute?
+	if (m_commandListType == CommandListType::Compute)
 	{
 		assert(IsValidComputeResourceState(oldState));
 		assert(IsValidComputeResourceState(newState));
@@ -231,7 +232,8 @@ void CommandContext12::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState
 
 	ResourceState oldState = gpuBuffer->GetUsageState();
 
-	if (m_type == CommandListType::Compute)
+	// TODO: Separate TransitionResource functions for graphics and compute?
+	if (m_commandListType == CommandListType::Compute)
 	{
 		assert(IsValidComputeResourceState(oldState));
 		assert(IsValidComputeResourceState(newState));
@@ -253,7 +255,8 @@ void CommandContext12::TransitionResource(TexturePtr& texture, ResourceState new
 
 	ResourceState oldState = texture->GetUsageState();
 
-	if (m_type == CommandListType::Compute)
+	// TODO: Separate TransitionResource functions for graphics and compute?
+	if (m_commandListType == CommandListType::Compute)
 	{
 		assert(IsValidComputeResourceState(oldState));
 		assert(IsValidComputeResourceState(newState));
@@ -489,9 +492,9 @@ void CommandContext12::EndRendering()
 }
 
 
-void CommandContext12::SetRootSignature(RootSignaturePtr& rootSignature)
+void CommandContext12::SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	RootSignature* rootSignature12 = (RootSignature*)rootSignature.get();
@@ -499,7 +502,7 @@ void CommandContext12::SetRootSignature(RootSignaturePtr& rootSignature)
 
 	ID3D12RootSignature* d3d12RootSignature = rootSignature12->GetRootSignature();
 
-	if (m_type == CommandListType::Direct)
+	if (type == CommandListType::Direct)
 	{
 		m_computeRootSignature = nullptr;
 		if (m_graphicsRootSignature == d3d12RootSignature)
@@ -536,7 +539,6 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPip
 
 	m_computePipelineState = nullptr;
 
-	// TODO: Pass handle in as function parameter
 	ID3D12PipelineState* graphicsPSO = graphicsPipeline12->GetPipelineState();
 
 	if (m_graphicsPipelineState != graphicsPSO)
@@ -546,6 +548,24 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPip
 	}
 
 	SetPrimitiveTopology(graphicsPipeline->GetPrimitiveTopology());
+}
+
+
+void CommandContext12::SetComputePipeline(ComputePipelineStatePtr& computePipeline)
+{
+	// TODO: Try this with GetPlatformObject()
+	ComputePipelineState* computePipeline12 = (ComputePipelineState*)computePipeline.get();
+	assert(computePipeline12 != nullptr);
+
+	m_graphicsPipelineState = nullptr;
+
+	ID3D12PipelineState* computePSO = computePipeline12->GetPipelineState();
+
+	if (m_computePipelineState != computePSO)
+	{
+		m_commandList->SetPipelineState(computePSO);
+		m_computePipelineState = computePSO;
+	}
 }
 
 
@@ -597,10 +617,10 @@ void CommandContext12::SetPrimitiveTopology(PrimitiveTopology topology)
 }
 
 
-void CommandContext12::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
+void CommandContext12::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
-	if (m_type == CommandListType::Direct)
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, constants, offset);
 	}
@@ -611,10 +631,10 @@ void CommandContext12::SetConstantArray(uint32_t rootIndex, uint32_t numConstant
 }
 
 
-void CommandContext12::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
+void CommandContext12::SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
-	if (m_type == CommandListType::Direct)
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(val.value), offset);
 	}
@@ -625,10 +645,10 @@ void CommandContext12::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam 
 }
 
 
-void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x)
+void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
-	if (m_type == CommandListType::Direct)
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 	}
@@ -639,10 +659,10 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x)
 }
 
 
-void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
+void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
-	if (m_type == CommandListType::Direct)
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
@@ -655,10 +675,10 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
 }
 
 
-void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
+void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
-	if (m_type == CommandListType::Direct)
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
@@ -673,10 +693,10 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
+void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
-	if (m_type == CommandListType::Direct)
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
@@ -693,9 +713,9 @@ void CommandContext12::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DW
 }
 
 
-void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -703,7 +723,7 @@ void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBu
 
 	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
 
-	if (m_type == CommandListType::Direct)
+	if (type == CommandListType::Direct)
 	{
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuAddress);
 	}
@@ -714,13 +734,13 @@ void CommandContext12::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBu
 }
 
 
-void CommandContext12::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+void CommandContext12::SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
 {
-	SetDescriptors_Internal(rootIndex, descriptorSet);
+	SetDescriptors_Internal(type, rootIndex, descriptorSet);
 }
 
 
-void CommandContext12::SetResources(ResourceSet& resourceSet)
+void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceSet)
 {
 	// TODO: Need to rework this.  Should use a single shader-visible heap (of each type) for all descriptors.
 	// See the MSDN docs on SetDescriptorHeaps.  Should only set descriptor heaps once per frame.
@@ -733,12 +753,12 @@ void CommandContext12::SetResources(ResourceSet& resourceSet)
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		SetDescriptors_Internal(i, resourceSet[i]);
+		SetDescriptors_Internal(type, i, resourceSet[i]);
 	}
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
@@ -746,11 +766,11 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPt
 
 	auto descriptor = colorBuffer12->GetSrvHandle();
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
 	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
@@ -758,11 +778,11 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPt
 
 	auto descriptor = depthBuffer12->GetSrvHandle(depthSrv);
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -770,11 +790,11 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr&
 
 	auto descriptor = gpuBuffer12->GetSrvHandle();
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
-void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture)
 {
 	// TODO: Try this with GetPlatformObject()
 	Texture* texture12 = (Texture*)texture.Get();
@@ -782,11 +802,11 @@ void CommandContext12::SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& t
 
 	auto descriptor = texture12->GetSrvHandle();
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
@@ -795,18 +815,18 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPt
 	// TODO: Need a UAV index parameter
 	auto descriptor = colorBuffer12->GetUavHandle(0);
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer)
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer)
 {
 	// TODO: support this
 	assert(false);
 }
 
 
-void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -814,11 +834,11 @@ void CommandContext12::SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr&
 
 	auto descriptor = gpuBuffer12->GetUavHandle();
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
-void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
@@ -826,7 +846,7 @@ void CommandContext12::SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr&
 
 	auto descriptor = gpuBuffer12->GetCbvHandle();
 
-	SetDynamicDescriptors_Internal(rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
@@ -946,6 +966,38 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
+void CommandContext12::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	FlushResourceBarriers();
+	m_dynamicViewDescriptorHeap.CommitComputeRootDescriptorTables(m_commandList);
+	m_dynamicSamplerDescriptorHeap.CommitComputeRootDescriptorTables(m_commandList);
+	m_commandList->Dispatch(groupCountX, groupCountY, groupCountZ);
+}
+
+
+void CommandContext12::Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX)
+{ 
+	Dispatch(Math::DivideByMultiple(threadCountX, groupSizeX), 1, 1);
+}
+
+
+void CommandContext12::Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX, uint32_t groupSizeY)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY), 1);
+}
+
+
+void CommandContext12::Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ)
+{
+	Dispatch(
+		Math::DivideByMultiple(threadCountX, groupSizeX),
+		Math::DivideByMultiple(threadCountY, groupSizeY),
+		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
+
+
 void CommandContext12::SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, ID3D12DescriptorHeap* heapPtr)
 {
 	if (m_currentDescriptorHeaps[type] != heapPtr)
@@ -1058,9 +1110,9 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr& destTexture, const
 }
 
 
-void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
 {
-	assert(m_type == CommandListType::Direct || m_type == CommandListType::Compute);
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet.get();
@@ -1077,7 +1129,7 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 	auto gpuDescriptor = descriptorSet12->GetGpuDescriptorHandle();
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		if (m_type == CommandListType::Direct)
+		if (type == CommandListType::Direct)
 		{
 			m_commandList->SetGraphicsRootDescriptorTable(rootIndex, gpuDescriptor);
 		}
@@ -1089,7 +1141,7 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 	else if (descriptorSet12->GetGpuAddress() != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
 		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = descriptorSet12->GetGpuAddressWithOffset();
-		if (m_type == CommandListType::Direct)
+		if (type == CommandListType::Direct)
 		{
 			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);
 		}
@@ -1101,9 +1153,9 @@ void CommandContext12::SetDescriptors_Internal(uint32_t rootIndex, DescriptorSet
 }
 
 
-void CommandContext12::SetDynamicDescriptors_Internal(uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[])
+void CommandContext12::SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[])
 {
-	if (m_type == CommandListType::Direct)
+	if (type == CommandListType::Direct)
 	{
 		m_dynamicViewDescriptorHeap.SetGraphicsDescriptorHandles(rootIndex, offset, numDescriptors, handles);
 	}

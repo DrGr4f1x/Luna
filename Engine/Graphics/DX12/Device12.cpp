@@ -134,9 +134,10 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 
 	DXGI_FORMAT dxgiFormat = FormatToDxgi(colorBufferDesc.format).resourceFormat;
-	rtvDesc.Format = dxgiFormat;
-	uavDesc.Format = GetUAVFormat(dxgiFormat);
-	srvDesc.Format = dxgiFormat;
+	rtvDesc.Format = FormatToDxgi(colorBufferDesc.format).rtvFormat;
+	srvDesc.Format = FormatToDxgi(colorBufferDesc.format).srvFormat;
+	uavDesc.Format = srvDesc.Format;
+	
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 	if (colorBufferDesc.arraySizeOrDepth > 1)
@@ -916,6 +917,78 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 	}
 
 	auto pipelineState = std::make_shared<GraphicsPipelineState>();
+
+	pipelineState->m_device = this;
+	pipelineState->m_desc = pipelineDesc;
+	pipelineState->m_pipelineState = pPipelineState;
+
+	return pipelineState;
+}
+
+
+Luna::ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc)
+{
+	D3D12_COMPUTE_PIPELINE_STATE_DESC d3d12PipelineDesc{};
+	d3d12PipelineDesc.NodeMask = 1;
+	
+	Shader* computeShader = LoadShader(ShaderType::Compute, pipelineDesc.computeShader);
+	assert(computeShader);
+	d3d12PipelineDesc.CS = CD3DX12_SHADER_BYTECODE(computeShader->GetByteCode(), computeShader->GetByteCodeSize());
+
+	// Get the root signature from the desc
+	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
+	if (rootSignature)
+	{
+		d3d12PipelineDesc.pRootSignature = rootSignature->GetRootSignature();
+	}
+	assert(d3d12PipelineDesc.pRootSignature != nullptr);
+
+	size_t hashCode = Utility::HashState(&d3d12PipelineDesc);
+
+	// Find or create compute pipeline state object
+	ID3D12PipelineState** pipelineStateRef = nullptr;
+	bool firstCompile = false;
+	{
+		lock_guard<mutex> lock(m_computePipelineStateMutex);
+
+		auto iter = m_computePipelineStateHashMap.find(hashCode);
+
+		// Reserve space so the next inquiry will find that someone got here first.
+		if (iter == m_computePipelineStateHashMap.end())
+		{
+			pipelineStateRef = m_computePipelineStateHashMap[hashCode].addressof();
+			firstCompile = true;
+		}
+		else
+		{
+			pipelineStateRef = iter->second.addressof();
+		}
+	}
+
+	ID3D12PipelineState* pPipelineState = nullptr;
+
+	if (firstCompile)
+	{
+		wil::com_ptr<ID3DBlob> pOutBlob, pErrorBlob;
+
+		HRESULT res = m_device->CreateComputePipelineState(&d3d12PipelineDesc, IID_PPV_ARGS(&pPipelineState));
+		ThrowIfFailed(res);
+
+		SetDebugName(pPipelineState, pipelineDesc.name);
+
+		m_computePipelineStateHashMap[hashCode].attach(pPipelineState);
+		assert(*pipelineStateRef == pPipelineState);
+	}
+	else
+	{
+		while (pipelineStateRef == nullptr)
+		{
+			this_thread::yield();
+		}
+		pPipelineState = *pipelineStateRef;
+	}
+
+	auto pipelineState = std::make_shared<ComputePipelineState>();
 
 	pipelineState->m_device = this;
 	pipelineState->m_desc = pipelineDesc;

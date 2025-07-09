@@ -187,6 +187,20 @@ struct GraphicsPipelineDesc
 };
 
 
+struct ComputePipelineDesc
+{
+	std::string name;
+
+	ShaderNameAndEntry computeShader;
+
+	RootSignaturePtr rootSignature;
+
+	ComputePipelineDesc& SetName(const std::string& value) { name = value; return *this; }
+	ComputePipelineDesc& SetVertexShader(const std::string& value, const std::string& entry = "main") { computeShader.shaderFile = value; computeShader.entry = entry; return *this; }
+	ComputePipelineDesc& SetRootSignature(RootSignaturePtr value) { rootSignature = value; return *this; }
+};
+
+
 class IGraphicsPipelineState
 {
 public:
@@ -202,5 +216,20 @@ protected:
 };
 
 using GraphicsPipelineStatePtr = std::shared_ptr<IGraphicsPipelineState>;
+
+
+class IComputePipelineState
+{
+public:
+	virtual ~IComputePipelineState() = default;
+
+	IRootSignature* GetRootSignature() const { return m_rootSignature.get(); }
+
+protected:
+	RootSignaturePtr m_rootSignature;
+	ComputePipelineDesc m_desc{};
+};
+
+using ComputePipelineStatePtr = std::shared_ptr<IComputePipelineState>;
 
 } // namespace

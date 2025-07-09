@@ -21,11 +21,25 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\SampleVS.hlsl">
+    <None Include="Shaders\TextureVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\SamplePS.hlsl">
+    <None Include="Shaders\TexturePS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Shaders\EdgeDetectCS.hlsl">
+      <Filter>Shaders</Filter>
+    </Text>
+    <Text Include="Shaders\EmbossCS.hlsl">
+      <Filter>Shaders</Filter>
+    </Text>
+    <Text Include="Shaders\SharpenCS.hlsl">
+      <Filter>Shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>

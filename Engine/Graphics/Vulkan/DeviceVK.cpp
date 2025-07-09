@@ -786,6 +786,50 @@ GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipel
 }
 
 
+ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc)
+{
+	// Shaders
+	VkPipelineShaderStageCreateInfo shaderStage{};
+
+	Shader* shader = LoadShader(ShaderType::Compute, pipelineDesc.computeShader);
+	assert(shader);
+	auto shaderModule = CreateShaderModule(shader);
+
+	FillShaderStageCreateInfo(shaderStage, *shaderModule, shader);
+
+	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
+
+	VkComputePipelineCreateInfo pipelineCreateInfo{
+		.sType					= VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
+		.pNext					= nullptr,
+		.flags					= 0,
+		.stage					= shaderStage,
+		.layout					= rootSignature->GetPipelineLayout(),
+		.basePipelineHandle		= VK_NULL_HANDLE,
+		.basePipelineIndex		= 0
+	};
+
+	VkPipeline vkPipeline{ VK_NULL_HANDLE };
+	wil::com_ptr<CVkPipeline> pipeline;
+	if (VK_SUCCEEDED(vkCreateComputePipelines(*m_device, *m_pipelineCache, 1, &pipelineCreateInfo, nullptr, &vkPipeline)))
+	{
+		pipeline = Create<CVkPipeline>(m_device.get(), vkPipeline);
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to create VkPipeline (compute).  Error code: " << res << endl;
+	}
+
+	auto pipelineState = std::make_shared<ComputePipelineState>();
+
+	pipelineState->m_device = this;
+	pipelineState->m_desc = pipelineDesc;
+	pipelineState->m_pipelineState = pipeline;
+
+	return pipelineState;
+}
+
+
 DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
 	std::lock_guard guard(m_descriptorSetMutex);

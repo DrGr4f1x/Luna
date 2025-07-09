@@ -120,6 +120,7 @@ protected:
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
 	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
+	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc);
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc);
 
 	// Wrappers for resource loading

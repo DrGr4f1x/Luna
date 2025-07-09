@@ -47,13 +47,24 @@
       <Project>{ffe87dcb-69b8-4549-8d06-a681a29ef1d8}</Project>
     </ProjectReference>
   </ItemGroup>
-    <ItemGroup>
-    <None Include="Shaders\SamplePS.hlsl">
+  <ItemGroup>
+    <None Include="Shaders\TexturePS.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="Shaders\SampleVS.hlsl">
+    <None Include="Shaders\TextureVS.hlsl">
       <FileType>Document</FileType>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Shaders\EdgeDetectCS.hlsl">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="Shaders\EmbossCS.hlsl">
+      <FileType>Document</FileType>
+    </Text>
+    <Text Include="Shaders\SharpenCS.hlsl">
+      <FileType>Document</FileType>
+    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

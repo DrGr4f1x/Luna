@@ -60,12 +60,12 @@ class __declspec(uuid("63C5358D-F31C-43DA-90DA-8676E272BE4A")) CommandContextVK 
 public:
 	explicit CommandContextVK(CVkDevice* device, CommandListType type)
 		: m_device{ device }
-		, m_type{ type }
+		, m_commandListType{ type }
 	{}
 	~CommandContextVK() = default;
 
 	void SetId(const std::string& id) override { m_id = id; }
-	CommandListType GetType() const override { return m_type; }
+	CommandListType GetType() const override { return m_commandListType; }
 
 	// Debug events and markers
 	void BeginEvent(const std::string& label) override;
@@ -101,8 +101,9 @@ public:
 	void BeginRendering(std::span<ColorBufferPtr>& colorBuffers, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
-	void SetRootSignature(RootSignaturePtr& rootSignature) override;
+	void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline) override;
+	void SetComputePipeline(ComputePipelineStatePtr& computePipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -110,26 +111,26 @@ public:
 	void SetBlendFactor(Color blendFactor) override;
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
 
-	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
-	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val) override;
-	void SetConstants(uint32_t rootIndex, DWParam x) override;
-	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y) override;
-	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
-	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
-	void SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer) override;
-	void SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet) override;
-	void SetResources(ResourceSet& resourceSet) override;
+	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
+	void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) override;
+	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x) override;
+	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) override;
+	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
+	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
+	void SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer) override;
+	void SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet) override;
+	void SetResources(CommandListType type, ResourceSet& resourceSet) override;
 
-	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
-	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) override;
-	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
-	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) override;
 
-	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
-	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) override;
-	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
 
-	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
 
 	void SetIndexBuffer(GpuBufferPtr& gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer) override;
@@ -143,11 +144,16 @@ public:
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 
+	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) override;
+	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) override;
+	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8) override;
+	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) override;
+
 private:
 	void ClearDepthAndStencil_Internal(DepthBufferPtr& depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void InitializeTexture_Internal(TexturePtr& texture, const TextureInitializer& texInit) override;
-	void SetDescriptors_Internal(uint32_t rootIndex, DescriptorSetPtr descriptorSet);
+	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, DescriptorSetPtr descriptorSet);
 
 	void BindDescriptorHeaps() {}
 	void SetRenderingArea(const ColorBuffer& colorBuffer);
@@ -155,19 +161,19 @@ private:
 	void BeginRenderingBlock();
 	void ResetRenderTargets();
 
-	void ParseRootSignature();
-	void MarkDescriptorsDirty();
-	bool HasDirtyDescriptors();
-	void ClearDirtyDescriptors();
+	void ParseRootSignature(CommandListType type);
+	void MarkDescriptorsDirty(CommandListType type);
+	bool HasDirtyDescriptors(CommandListType type);
+	void ClearDirtyDescriptors(CommandListType type);
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
 
-	VkPipelineLayout GetPipelineLayout() const noexcept { return (m_type == CommandListType::Compute) ? m_computePipelineLayout : m_graphicsPipelineLayout; }
+	VkPipelineLayout GetPipelineLayout(CommandListType type) const noexcept { return (type == CommandListType::Compute) ? m_computePipelineLayout : m_graphicsPipelineLayout; }
 
 private:
 	std::string m_id;
 	wil::com_ptr<CVkDevice> m_device;
-	CommandListType m_type;
+	CommandListType m_commandListType;
 
 	// Dynamic descriptor heap
 	std::unique_ptr<IDynamicDescriptorHeap> m_dynamicDescriptorHeap;

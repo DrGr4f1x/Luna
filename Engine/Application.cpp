@@ -374,6 +374,12 @@ GraphicsPipelineStatePtr Application::CreateGraphicsPipelineState(const Graphics
 }
 
 
+ComputePipelineStatePtr Application::CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc)
+{
+	return m_deviceManager->GetDevice()->CreateComputePipelineState(pipelineDesc);
+}
+
+
 SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
 {
 	return m_deviceManager->GetDevice()->CreateSampler(samplerDesc);

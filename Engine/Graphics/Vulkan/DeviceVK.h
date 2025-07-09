@@ -50,6 +50,7 @@ public:
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
 	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) override;
+	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) override;
 
 	DescriptorSetPtr CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
 

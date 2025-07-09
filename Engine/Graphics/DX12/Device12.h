@@ -41,6 +41,7 @@ public:
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
 	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) override;
+	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) override;
 
 	DescriptorSetPtr CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
 
@@ -72,6 +73,10 @@ protected:
 	// Graphics pipeline state cache
 	std::mutex m_graphicsPipelineStateMutex;
 	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_graphicsPipelineStateHashMap;
+
+	// Compute pipeline state cache
+	std::mutex m_computePipelineStateMutex;
+	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_computePipelineStateHashMap;
 
 	// Sampler state cache
 	std::mutex m_samplerMutex;

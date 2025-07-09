@@ -12,7 +12,6 @@
 
 #include "Application.h"
 
-
 class ComputeShaderApp : public Luna::Application
 {
 public:
@@ -25,9 +24,60 @@ public:
 	void Shutdown() final;
 
 	void Update() final;
+	void UpdateUI() final;
 	void Render() final;
 
 protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
+
+	void InitDepthBuffer();
+	void InitRootSignatures();
+	void InitPipelines();
+	void InitConstantBuffer();
+	void InitResourceSets();
+
+	void LoadAssets();
+
+protected:
+	// Vertex layout for this example
+	struct Vertex
+	{
+		float position[3];
+		float uv[2];
+	};
+
+	struct Constants
+	{
+		Math::Matrix4 viewProjectionMatrix;
+		Math::Matrix4 modelMatrix;
+	};
+
+	Luna::DepthBufferPtr m_depthBuffer;
+
+	Luna::GpuBufferPtr m_vertexBuffer;
+	Luna::GpuBufferPtr m_indexBuffer;
+
+	Constants m_constants;
+	Luna::GpuBufferPtr m_constantBuffer;
+
+	Luna::RootSignaturePtr m_graphicsrootSignature;
+	Luna::RootSignaturePtr m_computeRootSignature;
+
+	Luna::GraphicsPipelineStatePtr m_graphicsPipeline;
+	Luna::ComputePipelineStatePtr m_edgeDetectPipeline;
+	Luna::ComputePipelineStatePtr m_embossPipeline;
+	Luna::ComputePipelineStatePtr m_sharpenPipeline;
+
+	Luna::ResourceSet m_computeResources;
+	Luna::ResourceSet m_gfxLeftResources;
+	Luna::ResourceSet m_gfxRightResources;
+
+	Luna::ColorBufferPtr m_computeScratchBuffer;
+
+	Luna::TexturePtr m_texture;
+	Luna::SamplerPtr m_sampler;
+
+	std::vector<std::string> m_shaderNames;
+	int32_t	m_curComputeTechnique{ 0 };
 };

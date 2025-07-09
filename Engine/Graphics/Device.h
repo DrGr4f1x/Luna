@@ -41,6 +41,7 @@ public:
 	virtual RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 
 	virtual GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) = 0;
+	virtual ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) = 0;
 
 	virtual SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) = 0;
 

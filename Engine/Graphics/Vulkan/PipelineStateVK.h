@@ -33,4 +33,17 @@ protected:
 	wil::com_ptr<CVkPipeline> m_pipelineState;
 };
 
+
+class ComputePipelineState : public IComputePipelineState
+{
+	friend class Device;
+
+public:
+	VkPipeline GetPipelineState() const { return m_pipelineState->Get(); }
+
+protected:
+	Device* m_device{ nullptr };
+	wil::com_ptr<CVkPipeline> m_pipelineState;
+};
+
 } // namespace Luna::VK
