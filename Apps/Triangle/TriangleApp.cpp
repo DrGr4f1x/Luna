@@ -42,70 +42,7 @@ void TriangleApp::Configure()
 
 
 void TriangleApp::Startup()
-{
-	// TODO: Split this between CreateDeviceDependentResources() and CreateWindowSizeDependentResources
-
-	// Setup vertices
-	vector<Vertex> vertexData =
-	{
-		{ { -1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-		{ {  0.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-	};
-
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= vertexData.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
-
-	// Setup indices
-	vector<uint32_t> indexData = { 0, 1, 2 };
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= indexData.size(),
-		.elementSize	= sizeof(uint32_t),
-		.initialData	= indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
-
-	// Setup constant buffer
-	GpuBufferDesc constantBufferDesc{
-		.name			= "VS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(m_vsConstants),
-		.initialData	= nullptr
-	};
-	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
-	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
-
-	// Setup camera
-	m_camera.SetPerspectiveMatrix(
-		DirectX::XMConvertToRadians(60.0f),
-		GetWindowAspectRatio(),
-		0.1f,
-		256.0f);
-	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
-	m_camera.Update();
-
-	m_controller.SetSpeedScale(0.025f);
-	m_controller.RefreshFromCamera();
-
-	UpdateConstantBuffer();
-
-	InitDepthBuffer();
-	InitRootSignature();
-	InitPipelineState();
-	InitResources();
-}
+{}
 
 
 void TriangleApp::Shutdown()
@@ -170,13 +107,75 @@ void TriangleApp::Render()
 
 void TriangleApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
+	// Setup vertices
+	vector<Vertex> vertexData =
+	{
+		{ { -1.0f, -1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		{ {  0.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+	};
+
+	GpuBufferDesc vertexBufferDesc{
+		.name = "Vertex Buffer",
+		.resourceType = ResourceType::VertexBuffer,
+		.memoryAccess = MemoryAccess::GpuReadWrite,
+		.elementCount = vertexData.size(),
+		.elementSize = sizeof(Vertex),
+		.initialData = vertexData.data()
+	};
+	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+
+	// Setup indices
+	vector<uint32_t> indexData = { 0, 1, 2 };
+	GpuBufferDesc indexBufferDesc{
+		.name = "Index Buffer",
+		.resourceType = ResourceType::IndexBuffer,
+		.memoryAccess = MemoryAccess::GpuReadWrite,
+		.elementCount = indexData.size(),
+		.elementSize = sizeof(uint32_t),
+		.initialData = indexData.data()
+	};
+	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+
+	// Setup constant buffer
+	GpuBufferDesc constantBufferDesc{
+		.name = "VS Constant Buffer",
+		.resourceType = ResourceType::ConstantBuffer,
+		.memoryAccess = MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
+		.elementCount = 1,
+		.elementSize = sizeof(m_vsConstants),
+		.initialData = nullptr
+	};
+	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
+	m_vsConstants.modelMatrix = Math::Matrix4(Math::kIdentity);
+
+	// Setup camera
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
+	m_camera.Update();
+
+	m_controller.SetSpeedScale(0.025f);
+	m_controller.RefreshFromCamera();
+
+	UpdateConstantBuffer();
+
+	InitRootSignature();
+	InitResources();
 }
 
 
 void TriangleApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (m_graphicsPipeline == nullptr)
+	{
+		InitPipelineState();
+	}
 }
 
 

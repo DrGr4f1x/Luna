@@ -1200,25 +1200,29 @@ wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageVie
 
 wil::com_ptr<CVkShaderModule> Device::CreateShaderModule(Shader* shader)
 {
-	CVkShaderModule** ppShaderModule = nullptr;
+	CVkShaderModule** shaderModuleRef = nullptr;
+
+	size_t hashCode = shader->GetHash();
+
 	bool firstCompile = false;
 	{
 		lock_guard<mutex> CS(m_shaderModuleMutex);
-
-		size_t hashCode = shader->GetHash();
 		auto iter = m_shaderModuleHashMap.find(hashCode);
 
 		// Reserve space so the next inquiry will find that someone got here first.
 		if (iter == m_shaderModuleHashMap.end())
 		{
-			ppShaderModule = m_shaderModuleHashMap[hashCode].addressof();
+			shaderModuleRef = m_shaderModuleHashMap[hashCode].addressof();
 			firstCompile = true;
 		}
 		else
 		{
-			ppShaderModule = &iter->second;
+			shaderModuleRef = iter->second.addressof();
+			assert(shaderModuleRef != nullptr);
 		}
 	}
+
+	wil::com_ptr<CVkShaderModule> pShaderModule;
 
 	if (firstCompile)
 	{
@@ -1231,14 +1235,22 @@ wil::com_ptr<CVkShaderModule> Device::CreateShaderModule(Shader* shader)
 		VkShaderModule vkShaderModule{ VK_NULL_HANDLE };
 		vkCreateShaderModule(*m_device, &createInfo, nullptr, &vkShaderModule);
 
-		wil::com_ptr<CVkShaderModule> shaderModule = Create<CVkShaderModule>(m_device.get(), vkShaderModule);
+		pShaderModule = Create<CVkShaderModule>(m_device.get(), vkShaderModule);
 
-		*ppShaderModule = shaderModule.get();
+		m_shaderModuleHashMap[hashCode] = pShaderModule.get();
 
-		(*ppShaderModule)->AddRef();
+		assert(*shaderModuleRef == pShaderModule);
+	}
+	else
+	{
+		while (*shaderModuleRef == nullptr)
+		{
+			this_thread::yield();
+		}
+		pShaderModule = *shaderModuleRef;
 	}
 
-	return *ppShaderModule;
+	return pShaderModule;
 }
 
 

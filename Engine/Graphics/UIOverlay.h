@@ -36,6 +36,8 @@ public:
 	void Update();
 	void Render(GraphicsContext& context);
 
+	void SetWindowSize(uint32_t width, uint32_t height);
+
 	float GetScale() const { return m_scale; }
 
 	bool Header(const char* caption);

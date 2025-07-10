@@ -279,6 +279,13 @@ void Application::UpdateWindowSize()
 		if (m_deviceManager)
 		{
 			m_deviceManager->SetWindowSize(m_appInfo.width, m_appInfo.height);
+
+			CreateWindowSizeDependentResources();
+		}
+
+		if (m_uiOverlay)
+		{
+			m_uiOverlay->SetWindowSize(m_appInfo.width, m_appInfo.height);
 		}
 	}
 }

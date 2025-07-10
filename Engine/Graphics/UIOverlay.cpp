@@ -124,6 +124,13 @@ void UIOverlay::Render(GraphicsContext& context)
 }
 
 
+void UIOverlay::SetWindowSize(uint32_t width, uint32_t height)
+{
+	m_width = width;
+	m_height = height;
+}
+
+
 bool UIOverlay::Header(const char* caption)
 {
 	return ImGui::CollapsingHeader(caption, ImGuiTreeNodeFlags_DefaultOpen);
