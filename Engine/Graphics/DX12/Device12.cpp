@@ -517,9 +517,16 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 	if (gpuBufferDescIn.initialData)
 	{
-		// TODO: Not this.
-		GpuBufferPtr temp = gpuBuffer;
-		CommandContext::InitializeBuffer(temp, gpuBufferDescIn.initialData, gpuBuffer->GetBufferSize());
+		if (gpuBuffer->m_type == ResourceType::ConstantBuffer)
+		{
+			const size_t initialSize = gpuBuffer->GetBufferSize();
+			gpuBuffer->Update(initialSize, gpuBufferDesc.initialData);
+		}
+		else
+		{
+			GpuBufferPtr temp = gpuBuffer;
+			CommandContext::InitializeBuffer(temp, gpuBufferDescIn.initialData, gpuBuffer->GetBufferSize());
+		}
 	}
 
 	return gpuBuffer;

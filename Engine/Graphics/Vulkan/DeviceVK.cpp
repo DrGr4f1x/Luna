@@ -360,8 +360,16 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 
 	if (gpuBufferDesc.initialData)
 	{
-		GpuBufferPtr temp = gpuBuffer;
-		CommandContext::InitializeBuffer(temp, gpuBufferDesc.initialData, gpuBuffer->GetBufferSize());
+		if (gpuBuffer->m_type == ResourceType::ConstantBuffer)
+		{
+			const size_t initialSize = gpuBuffer->GetBufferSize();
+			gpuBuffer->Update(initialSize, gpuBufferDesc.initialData);
+		}
+		else
+		{
+			GpuBufferPtr temp = gpuBuffer;
+			CommandContext::InitializeBuffer(temp, gpuBufferDesc.initialData, gpuBuffer->GetBufferSize());
+		}
 	}
 
 	return gpuBuffer;

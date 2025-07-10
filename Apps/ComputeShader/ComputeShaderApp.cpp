@@ -347,10 +347,9 @@ void ComputeShaderApp::InitConstantBuffer()
 		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
 		.elementCount	= 1,
 		.elementSize	= sizeof(Constants),
-		.initialData	= nullptr
+		.initialData	= &m_constants
 	};
 	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
-	m_constantBuffer->Update(sizeof(m_constants), &m_constants);
 }
 
 
