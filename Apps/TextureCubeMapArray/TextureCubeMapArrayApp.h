@@ -70,6 +70,7 @@ protected:
 
 	Luna::GraphicsPipelineStatePtr m_modelPipeline;
 	Luna::GraphicsPipelineStatePtr m_skyboxPipeline;
+	bool m_pipelinesCreated{ false };
 
 	VSConstants m_vsSkyboxConstants;
 	VSConstants	m_vsModelConstants;

@@ -34,6 +34,7 @@ TODO:
     -- ktx too
 -- Integrate FramePro
 -- Integrate Superluminal
+-- Sanity check resource recreation - all the logic for cached resources like pipeline states, shaders, textures etc.
 
 
 DONE:
@@ -62,6 +63,7 @@ DONE:
 -- Mesh loading
 -- Look into Vulkan Present one more time
 -- Fix .gitignore to allow bin directories under External
+-- Refactor shader compilation using CustomBuild in VS
 
 
 WON'T DO:

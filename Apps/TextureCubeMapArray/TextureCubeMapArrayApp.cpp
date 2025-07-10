@@ -44,8 +44,6 @@ void TextureCubeMapArrayApp::Startup()
 {
 	// Application initialization, after device creation
 
-	// TODO: Split this between CreateDeviceDependentResources() and CreateWindowSizeDependentResources
-
 	m_camera.SetPerspectiveMatrix(
 		XMConvertToRadians(60.0f),
 		GetWindowAspectRatio(),
@@ -59,15 +57,6 @@ void TextureCubeMapArrayApp::Startup()
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), 4.0f, 2.0f);
-
-	InitDepthBuffer();
-	InitRootSignatures();
-	InitPipelines();
-	InitConstantBuffers();
-
-	LoadAssets();
-
-	InitResourceSets();
 }
 
 
@@ -153,13 +142,21 @@ void TextureCubeMapArrayApp::Render()
 
 void TextureCubeMapArrayApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
+	InitRootSignatures();
+	InitConstantBuffers();
+	LoadAssets();
+	InitResourceSets();
 }
 
 
 void TextureCubeMapArrayApp::CreateWindowSizeDependentResources()
 {
-	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (!m_pipelinesCreated)
+	{
+		InitPipelines();
+		m_pipelinesCreated = true;
+	}
 }
 
 
