@@ -213,6 +213,7 @@ void VertexLayoutBase::Setup(VertexComponent components)
 				offset += GetVertexComponentSizeInBytes(singleComponent);
 			}
 
+			m_elements = elements.get();
 			cachedElements[components] = move(elements);
 		}
 	}

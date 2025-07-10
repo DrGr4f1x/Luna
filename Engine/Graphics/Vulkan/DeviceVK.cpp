@@ -715,6 +715,7 @@ GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipel
 	dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
 	dynamicStates.push_back(VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY);
+	dynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
 
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
