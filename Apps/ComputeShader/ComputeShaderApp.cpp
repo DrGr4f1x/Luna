@@ -44,37 +44,6 @@ void ComputeShaderApp::Startup()
 {
 	// Application initialization, after device creation
 
-	// Setup vertices for a single uv-mapped quad made from two triangles
-	vector<Vertex> vertexData =
-	{
-		{ {  1.0f,  1.0f,  0.0f }, { 1.0f, 0.0f } },
-		{ { -1.0f,  1.0f,  0.0f }, { 0.0f, 0.0f } },
-		{ { -1.0f, -1.0f,  0.0f }, { 0.0f, 1.0f } },
-		{ {  1.0f, -1.0f,  0.0f }, { 1.0f, 1.0f } }
-	};
-
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= vertexData.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
-
-	// Setup indices
-	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= indexData.size(),
-		.elementSize	= sizeof(uint32_t),
-		.initialData	= indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
-
 	// Setup camera
 	m_camera.SetPerspectiveMatrix(
 		XMConvertToRadians(60.0f),
@@ -84,23 +53,6 @@ void ComputeShaderApp::Startup()
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, 2.0f));
 
 	m_camera.Update();
-
-	InitDepthBuffer();
-	InitRootSignatures();
-	InitPipelines();
-	InitConstantBuffer();
-
-	LoadAssets();
-
-	ColorBufferDesc scratchDesc{
-		.name		= "Compute Scratch Buffer",
-		.width		= m_texture->GetWidth(),
-		.height		= m_texture->GetHeight(),
-		.format		= Format::RGBA32_Float
-	};
-	m_computeScratchBuffer = CreateColorBuffer(scratchDesc);
-
-	InitResourceSets();
 
 	m_shaderNames.push_back("Emboss");
 	m_shaderNames.push_back("Edge Detect");
@@ -224,12 +176,72 @@ void ComputeShaderApp::Render()
 void ComputeShaderApp::CreateDeviceDependentResources()
 {
 	// Create any resources that depend on the device, but not the window size
+
+	// Setup vertices for a single uv-mapped quad made from two triangles
+	vector<Vertex> vertexData =
+	{
+		{ {  1.0f,  1.0f,  0.0f }, { 1.0f, 0.0f } },
+		{ { -1.0f,  1.0f,  0.0f }, { 0.0f, 0.0f } },
+		{ { -1.0f, -1.0f,  0.0f }, { 0.0f, 1.0f } },
+		{ {  1.0f, -1.0f,  0.0f }, { 1.0f, 1.0f } }
+	};
+
+	GpuBufferDesc vertexBufferDesc{
+		.name = "Vertex Buffer",
+		.resourceType = ResourceType::VertexBuffer,
+		.memoryAccess = MemoryAccess::GpuRead,
+		.elementCount = vertexData.size(),
+		.elementSize = sizeof(Vertex),
+		.initialData = vertexData.data()
+	};
+	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+
+	// Setup indices
+	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
+	GpuBufferDesc indexBufferDesc{
+		.name = "Index Buffer",
+		.resourceType = ResourceType::IndexBuffer,
+		.memoryAccess = MemoryAccess::GpuRead,
+		.elementCount = indexData.size(),
+		.elementSize = sizeof(uint32_t),
+		.initialData = indexData.data()
+	};
+	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+
+	InitRootSignatures();
+	InitConstantBuffer();
+
+	LoadAssets();
+
+	ColorBufferDesc scratchDesc{
+		.name = "Compute Scratch Buffer",
+		.width = m_texture->GetWidth(),
+		.height = m_texture->GetHeight(),
+		.format = Format::RGBA32_Float
+	};
+	m_computeScratchBuffer = CreateColorBuffer(scratchDesc);
+
+	InitResourceSets();
 }
 
 
 void ComputeShaderApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (!m_pipelinesCreated)
+	{
+		InitPipelines();
+		m_pipelinesCreated = true;
+	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		XMConvertToRadians(60.0f),
+		2.0f * GetWindowAspectRatio(),
+		0.001f,
+		256.0f);
+	m_camera.Update();
 }
 
 

@@ -90,16 +90,6 @@ void TextureArrayApp::Startup()
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
-
-	InitDepthBuffer();
-	InitRootSignature();
-	InitGraphicsPipeline();
-
-	// We have to load the texture first, so we know how many array slices there are
-	LoadAssets();
-	InitConstantBuffer();
-
-	InitResourceSet();
 }
 
 
@@ -153,13 +143,33 @@ void TextureArrayApp::Render()
 
 void TextureArrayApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
+	InitRootSignature();
+
+	// We have to load the texture first, so we know how many array slices there are
+	LoadAssets();
+	InitConstantBuffer();
+
+	InitResourceSet();
 }
 
 
 void TextureArrayApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (!m_pipelineCreated)
+	{
+		InitGraphicsPipeline();
+		m_pipelineCreated = true;
+	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.001f,
+		256.0f);
+	m_camera.Update();
 }
 
 

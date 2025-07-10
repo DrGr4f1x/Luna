@@ -68,6 +68,7 @@ protected:
 	Luna::ComputePipelineStatePtr m_edgeDetectPipeline;
 	Luna::ComputePipelineStatePtr m_embossPipeline;
 	Luna::ComputePipelineStatePtr m_sharpenPipeline;
+	bool m_pipelinesCreated{ false };
 
 	Luna::ResourceSet m_computeResources;
 	Luna::ResourceSet m_gfxLeftResources;

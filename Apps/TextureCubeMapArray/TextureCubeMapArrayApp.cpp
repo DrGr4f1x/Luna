@@ -157,6 +157,14 @@ void TextureCubeMapArrayApp::CreateWindowSizeDependentResources()
 		InitPipelines();
 		m_pipelinesCreated = true;
 	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.001f,
+		256.0f);
+	m_camera.Update();
 }
 
 

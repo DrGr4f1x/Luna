@@ -22,8 +22,7 @@ using namespace std;
 TextureApp::TextureApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
 	, m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) }
-{
-}
+{}
 
 
 int TextureApp::ProcessCommandLine(int argc, char* argv[])
@@ -42,50 +41,6 @@ void TextureApp::Configure()
 
 void TextureApp::Startup()
 {
-	// TODO: Split this between CreateDeviceDependentResources() and CreateWindowSizeDependentResources
-
-	// Setup vertices for a single uv-mapped quad made from two triangles
-	vector<Vertex> vertexData =
-	{
-		{ {  1.0f,  1.0f,  0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -1.0f,  1.0f,  0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ { -1.0f, -1.0f,  0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-		{ {  1.0f, -1.0f,  0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-	};
-
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= vertexData.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
-
-	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= indexData.size(),
-		.elementSize	= sizeof(uint32_t),
-		.initialData	= indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
-
-	// Setup constant buffer
-	GpuBufferDesc constantBufferDesc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(m_constants),
-		.initialData	= nullptr
-	};
-	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
-	m_constants.modelMatrix = Math::Matrix4(Math::kIdentity);
-
 	// Setup camera
 	m_camera.SetPerspectiveMatrix(
 		DirectX::XMConvertToRadians(60.0f),
@@ -99,16 +54,6 @@ void TextureApp::Startup()
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
-
-	UpdateConstantBuffer();
-
-	InitDepthBuffer();
-	InitRootSignature();
-	InitPipelineState();
-
-	LoadAssets();
-
-	InitResources();
 }
 
 
@@ -174,12 +119,73 @@ void TextureApp::Render()
 void TextureApp::CreateDeviceDependentResources()
 {
 	// Create any resources that depend on the device, but not the window size
+	// 
+	// Setup vertices for a single uv-mapped quad made from two triangles
+	vector<Vertex> vertexData =
+	{
+		{ {  1.0f,  1.0f,  0.0f }, { 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -1.0f,  1.0f,  0.0f }, { 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ { -1.0f, -1.0f,  0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+		{ {  1.0f, -1.0f,  0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+	};
+
+	GpuBufferDesc vertexBufferDesc{
+		.name = "Vertex Buffer",
+		.resourceType = ResourceType::VertexBuffer,
+		.memoryAccess = MemoryAccess::GpuReadWrite,
+		.elementCount = vertexData.size(),
+		.elementSize = sizeof(Vertex),
+		.initialData = vertexData.data()
+	};
+	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+
+	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
+	GpuBufferDesc indexBufferDesc{
+		.name = "Index Buffer",
+		.resourceType = ResourceType::IndexBuffer,
+		.memoryAccess = MemoryAccess::GpuReadWrite,
+		.elementCount = indexData.size(),
+		.elementSize = sizeof(uint32_t),
+		.initialData = indexData.data()
+	};
+	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+
+	// Setup constant buffer
+	GpuBufferDesc constantBufferDesc{
+		.name = "Constant Buffer",
+		.resourceType = ResourceType::ConstantBuffer,
+		.memoryAccess = MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
+		.elementCount = 1,
+		.elementSize = sizeof(m_constants),
+		.initialData = nullptr
+	};
+	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
+	m_constants.modelMatrix = Math::Matrix4(Math::kIdentity);
+
+	UpdateConstantBuffer();
+	InitRootSignature();
+	LoadAssets();
+	InitResources();
 }
 
 
 void TextureApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (!m_pipelineCreated)
+	{
+		InitPipelineState();
+		m_pipelineCreated = true;
+	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.Update();
 }
 
 

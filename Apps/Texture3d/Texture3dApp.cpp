@@ -158,38 +158,6 @@ void Texture3dApp::Startup()
 {
 	// Application initialization, after device creation
 
-	// TODO: Split this between CreateDeviceDependentResources() and CreateWindowSizeDependentResources
-
-	vector<Vertex> vertexData =
-	{
-		{ {  1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },
-		{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
-		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },
-		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }
-	};
-
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= vertexData.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
-
-	// Setup indices
-	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= indexData.size(),
-		.elementSize	= sizeof(uint32_t),
-		.initialData	= indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
-
 	m_camera.SetPerspectiveMatrix(
 		DirectX::XMConvertToRadians(60.0f),
 		GetWindowAspectRatio(),
@@ -202,13 +170,6 @@ void Texture3dApp::Startup()
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
-
-	InitDepthBuffer();
-	InitRootSignature();
-	InitPipeline();
-	InitConstantBuffer();
-	InitTexture();
-	InitResourceSet();
 }
 
 
@@ -266,12 +227,61 @@ void Texture3dApp::Render()
 void Texture3dApp::CreateDeviceDependentResources()
 {
 	// Create any resources that depend on the device, but not the window size
+
+	vector<Vertex> vertexData =
+	{
+		{ {  1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },
+		{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },
+		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }
+	};
+
+	GpuBufferDesc vertexBufferDesc{
+		.name = "Vertex Buffer",
+		.resourceType = ResourceType::VertexBuffer,
+		.memoryAccess = MemoryAccess::GpuReadWrite,
+		.elementCount = vertexData.size(),
+		.elementSize = sizeof(Vertex),
+		.initialData = vertexData.data()
+	};
+	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+
+	// Setup indices
+	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
+	GpuBufferDesc indexBufferDesc{
+		.name = "Index Buffer",
+		.resourceType = ResourceType::IndexBuffer,
+		.memoryAccess = MemoryAccess::GpuReadWrite,
+		.elementCount = indexData.size(),
+		.elementSize = sizeof(uint32_t),
+		.initialData = indexData.data()
+	};
+	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+
+	InitRootSignature();
+	InitConstantBuffer();
+	InitTexture();
+	InitResourceSet();
 }
 
 
 void Texture3dApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (!m_pipelineCreated)
+	{
+		InitPipeline();
+		m_pipelineCreated = true;
+	}
+
+	// Update the camera since the aspect ration might have changed
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.Update();
 }
 
 

@@ -176,6 +176,14 @@ void TriangleApp::CreateWindowSizeDependentResources()
 	{
 		InitPipelineState();
 	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.Update();
 }
 
 

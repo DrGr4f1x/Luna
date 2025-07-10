@@ -49,21 +49,6 @@ void StencilBufferApp::Startup()
 		512.0f);
 	m_camera.SetPosition(Vector3(-4.838f, 3.23f, -7.05f));
 	m_camera.Update();
-
-	InitDepthBuffer();
-	InitRootSignature();
-	InitPipelines();
-	InitConstantBuffer();
-
-	LoadAssets();
-
-	InitResourceSet();
-
-	BoundingBox box = m_model->boundingBox;
-
-	m_controller.SetSpeedScale(0.01f);
-	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(box.GetCenter(), 4.0f, 0.25f);
 }
 
 
@@ -135,12 +120,38 @@ void StencilBufferApp::Render()
 void StencilBufferApp::CreateDeviceDependentResources()
 {
 	// Create any resources that depend on the device, but not the window size
+	InitRootSignature();
+	InitConstantBuffer();
+
+	LoadAssets();
+
+	InitResourceSet();
+
+	BoundingBox box = m_model->boundingBox;
+
+	m_controller.SetSpeedScale(0.01f);
+	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.SetOrbitTarget(box.GetCenter(), 4.0f, 0.25f);
 }
 
 
 void StencilBufferApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitDepthBuffer();
+	if (!m_pipelinesCreated)
+	{
+		InitPipelines();
+		m_pipelinesCreated = true;
+	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
+	m_camera.Update();
 }
 
 

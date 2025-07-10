@@ -63,6 +63,7 @@ protected:
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelineStatePtr m_toonPipeline;
 	Luna::GraphicsPipelineStatePtr m_outlinePipeline;
+	bool m_pipelinesCreated{ false };
 
 	Luna::GpuBufferPtr m_constantBuffer;
 	Constants m_constants;
