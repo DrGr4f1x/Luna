@@ -12,7 +12,12 @@
 
 #include "TEMPLATEApp.h"
 
+#include "Graphics\CommandContext.h"
+#include "Graphics\CommonStates.h"
+
 using namespace Luna;
+using namespace Math;
+using namespace std;
 
 
 TEMPLATEApp::TEMPLATEApp(uint32_t width, uint32_t height)
