@@ -122,10 +122,6 @@ ModelPtr LoadModel(IDevice* device, const string& filename, const VertexLayoutBa
 
 	const aiVector3D zero(0.0f, 0.0f, 0.0f);
 
-	vector<float> vertexData;
-	vector<float> vertexDataPositionOnly;
-	vector<uint32_t> indexData;
-
 	const VertexComponent components = layout.GetComponents();
 
 	// Min/max for bounding box computation
@@ -137,21 +133,26 @@ ModelPtr LoadModel(IDevice* device, const string& filename, const VertexLayoutBa
 	{
 		const auto aiMesh = aiScene->mMeshes[i];
 
+		vector<float> vertexData;
+		vector<float> vertexDataPositionOnly;
+		vector<uint32_t> indexData;
+
 		MeshPtr mesh = make_shared<Mesh>();
 		MeshPart meshPart{};
 
-		meshPart.vertexBase = vertexCount;
+		//meshPart.vertexBase = vertexCount;
 
 		vertexCount += aiMesh->mNumVertices;
 
-		aiColor3D color(0.0f, 0.0f, 0.0f);
-		aiScene->mMaterials[aiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		aiColor4D defaultColor(0.0f, 0.0f, 0.0f, 1.0f);
+		aiScene->mMaterials[aiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, defaultColor);
 
 		for (uint32_t j = 0; j < aiMesh->mNumVertices; ++j)
 		{
 			const aiVector3D* pos = &(aiMesh->mVertices[j]);
 			const aiVector3D* normal = &(aiMesh->mNormals[j]);
 			const aiVector3D* texCoord = (aiMesh->HasTextureCoords(0)) ? &(aiMesh->mTextureCoords[0][j]) : &zero;
+			const aiColor4D* color = (aiMesh->HasVertexColors(0)) ? &(aiMesh->mColors[0][j]) : &defaultColor;
 			const aiVector3D* tangent = (aiMesh->HasTangentsAndBitangents()) ? &(aiMesh->mTangents[j]) : &zero;
 			const aiVector3D* bitangent = (aiMesh->HasTangentsAndBitangents()) ? &(aiMesh->mBitangents[j]) : &zero;
 
@@ -191,10 +192,10 @@ ModelPtr LoadModel(IDevice* device, const string& filename, const VertexLayoutBa
 
 			if (HasFlag(components, VertexComponent::Color))
 			{
-				vertexData.push_back(color.r);
-				vertexData.push_back(color.g);
-				vertexData.push_back(color.b);
-				vertexData.push_back(1.0f);
+				vertexData.push_back(color->r);
+				vertexData.push_back(color->g);
+				vertexData.push_back(color->b);
+				vertexData.push_back(color->a);
 			}
 
 			// TODO Color1

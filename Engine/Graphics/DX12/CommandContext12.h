@@ -43,7 +43,7 @@ public:
 	CommandListType GetType() const override { return m_commandListType; }
 
 	// Debug events and markers
-	void BeginEvent(const std::string & label) override;
+	void BeginEvent(const std::string& label) override;
 	void EndEvent() override;
 	void SetMarker(const std::string& label) override;
 
