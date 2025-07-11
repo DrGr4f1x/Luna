@@ -173,7 +173,6 @@ void TextureCubeMapApp::InitDepthBuffer()
 {
 	DepthBufferDesc depthBufferDesc{
 		.name			= "Depth Buffer",
-		.resourceType	= ResourceType::Texture2D,
 		.width			= GetWindowWidth(),
 		.height			= GetWindowHeight(),
 		.format			= GetDepthFormat()

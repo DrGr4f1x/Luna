@@ -35,6 +35,7 @@ TODO:
 -- Integrate FramePro
 -- Integrate Superluminal
 -- Sanity check resource recreation - all the logic for cached resources like pipeline states, shaders, textures etc.
+-- Improve error handling
 
 
 DONE:
