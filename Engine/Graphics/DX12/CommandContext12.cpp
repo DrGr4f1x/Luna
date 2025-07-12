@@ -20,6 +20,7 @@
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
 #include "GpuBuffer12.h"
+#include "QueryHeap12.h"
 #include "Queue12.h"
 #include "RootSignature12.h"
 #include "PipelineState12.h"
@@ -490,6 +491,46 @@ void CommandContext12::EndRendering()
 	assert(m_isRendering);
 	m_isRendering = false;
 }
+
+
+void CommandContext12::BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+{
+	QueryHeap* queryHeap12 = (QueryHeap*)queryHeap.get();
+	assert(queryHeap12 != nullptr);
+
+	m_commandList->BeginQuery(queryHeap12->GetQueryHeap(), D3D12_QUERY_TYPE_OCCLUSION, heapIndex);
+}
+
+
+void CommandContext12::EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+{
+	QueryHeap* queryHeap12 = (QueryHeap*)queryHeap.get();
+	assert(queryHeap12 != nullptr);
+
+	m_commandList->EndQuery(queryHeap12->GetQueryHeap(), D3D12_QUERY_TYPE_OCCLUSION, heapIndex);
+}
+
+
+void CommandContext12::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+{
+	QueryHeap* queryHeap12 = (QueryHeap*)queryHeap.get();
+	assert(queryHeap12 != nullptr);
+
+	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer.get();
+	assert(destBuffer12 != nullptr);
+
+	m_commandList->ResolveQueryData(
+		queryHeap12->GetQueryHeap(),
+		D3D12_QUERY_TYPE_OCCLUSION,
+		startIndex,
+		numQueries,
+		destBuffer12->GetResource(),
+		destBufferOffset);
+}
+
+
+void CommandContext12::ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
+{}
 
 
 void CommandContext12::SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature)

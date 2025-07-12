@@ -715,4 +715,37 @@ private:
 	VkSampler m_sampler{ VK_NULL_HANDLE };
 };
 
+
+//
+// VkQueryPool
+//
+class __declspec(uuid("CD0666E5-ABC5-4C40-AF06-39C2B9F9177C")) CVkQueryPool
+	: public RefCounted<CVkQueryPool>
+	, public NonCopyable
+{
+public:
+	CVkQueryPool() noexcept = default;
+	CVkQueryPool(CVkDevice* device, VkQueryPool pool)
+		: m_device{ device }
+		, m_pool{ pool }
+	{}
+
+	~CVkQueryPool()
+	{
+		Destroy();
+	}
+
+	VkQueryPool Get() const noexcept { return m_pool; }
+	operator VkQueryPool() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkQueryPool m_pool{ VK_NULL_HANDLE };
+
+};
+
 } // namespace Luna::VK

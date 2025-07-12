@@ -78,7 +78,9 @@ VkTextureFilterMapping TextureFilterToVulkan(TextureFilter textureFilter);
 
 VkSamplerAddressMode TextureAddressToVulkan(TextureAddress textureAddress);
 
-VkQueryType QueryTypeToVulkan(QueryType queryHeapType);
+VkQueryType QueryHeapTypeToVulkan(QueryHeapType queryHeapType);
+
+VkQueryType QueryTypeToVulkan(QueryType queryType);
 
 AdapterType VkPhysicalDeviceTypeToEngine(VkPhysicalDeviceType physicalDeviceType);
 

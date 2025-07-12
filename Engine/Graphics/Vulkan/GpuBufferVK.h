@@ -29,6 +29,9 @@ public:
 	void Update(size_t sizeInBytes, const void* data) override;
 	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
 
+	void* Map() override;
+	void Unmap() override;
+
 	VkBuffer GetBuffer() const;
 	VkBufferView GetBufferView() const;
 	VkDescriptorBufferInfo GetBufferInfo() const;

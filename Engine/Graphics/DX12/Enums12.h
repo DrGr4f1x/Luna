@@ -58,7 +58,9 @@ D3D12_COMMAND_LIST_TYPE CommandListTypeToDX12(CommandListType commandListType);
 
 D3D12_RESOURCE_STATES ResourceStateToDX12(ResourceState resourceState);
 
-D3D12_QUERY_HEAP_TYPE QueryTypeToDX12(QueryType queryHeapType);
+D3D12_QUERY_HEAP_TYPE QueryHeapTypeToDX12(QueryHeapType queryHeapType);
+
+D3D12_QUERY_TYPE QueryTypeToDX12(QueryType queryType);
 
 D3D12_UAV_DIMENSION GetUAVDimension(ResourceType resourceType);
 

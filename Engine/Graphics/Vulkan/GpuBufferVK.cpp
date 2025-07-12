@@ -37,6 +37,20 @@ void GpuBuffer::Update(size_t sizeInBytes, size_t offset, const void* data)
 }
 
 
+void* GpuBuffer::Map()
+{
+	void* mem = nullptr;
+	ThrowIfFailed(vmaMapMemory(m_buffer->GetAllocator(), m_buffer->GetAllocation(), &mem));
+	return mem;
+}
+
+
+void GpuBuffer::Unmap()
+{
+	vmaUnmapMemory(m_buffer->GetAllocator(), m_buffer->GetAllocation());
+}
+
+
 VkBuffer GpuBuffer::GetBuffer() const
 {
 	return m_buffer ? m_buffer->Get() : VK_NULL_HANDLE;

@@ -387,6 +387,12 @@ ComputePipelineStatePtr Application::CreateComputePipelineState(const ComputePip
 }
 
 
+QueryHeapPtr Application::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
+{
+	return m_deviceManager->GetDevice()->CreateQueryHeap(queryHeapDesc);
+}
+
+
 SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
 {
 	return m_deviceManager->GetDevice()->CreateSampler(samplerDesc);

@@ -571,9 +571,26 @@ D3D12_RESOURCE_STATES ResourceStateToDX12(ResourceState resourceState)
 }
 
 
-D3D12_QUERY_HEAP_TYPE QueryTypeToDX12(QueryType queryHeapType)
+D3D12_QUERY_TYPE QueryTypeToDX12(QueryType queryType)
 {
 	using enum QueryType;
+
+	switch (queryType)
+	{
+	case Occlusion:			return D3D12_QUERY_TYPE_OCCLUSION; break;
+	case Timestamp:			return D3D12_QUERY_TYPE_TIMESTAMP; break;
+	case PipelineStats:		return D3D12_QUERY_TYPE_PIPELINE_STATISTICS1; break;
+	default:
+		assert(false);
+		return D3D12_QUERY_TYPE_OCCLUSION;
+		break;
+	}
+}
+
+
+D3D12_QUERY_HEAP_TYPE QueryHeapTypeToDX12(QueryHeapType queryHeapType)
+{
+	using enum QueryHeapType;
 
 	switch (queryHeapType)
 	{
@@ -715,7 +732,7 @@ D3D12_HEAP_TYPE GetHeapType(MemoryAccess memoryAccess)
 	{
 		return D3D12_HEAP_TYPE_UPLOAD;
 	}
-	else if (HasFlag(memoryAccess, MemoryAccess::CpuWrite))
+	else if (HasFlag(memoryAccess, MemoryAccess::CpuRead))
 	{
 		return D3D12_HEAP_TYPE_READBACK;
 	}

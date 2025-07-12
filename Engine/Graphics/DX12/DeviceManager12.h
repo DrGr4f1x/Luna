@@ -102,6 +102,9 @@ public:
 	Format GetDepthFormat() final;
 
 	const std::string& GetDeviceName() const override;
+
+	uint32_t GetNumSwapChainBuffers() const override { return m_desc.numSwapChainBuffers; }
+	uint32_t GetActiveFrame() const override { return m_backBufferIndex; }
 	uint64_t GetFrameNumber() const override { return m_frameNumber; }
 
 	IDevice* GetDevice() override;

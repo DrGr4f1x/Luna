@@ -22,6 +22,7 @@
 #include "DescriptorSetVK.h"
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
+#include "QueryHeapVK.h"
 #include "RootSignatureVK.h"
 #include "SamplerVK.h"
 #include "TextureVK.h"
@@ -836,6 +837,34 @@ ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePipeline
 	pipelineState->m_pipelineState = pipeline;
 
 	return pipelineState;
+}
+
+
+QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
+{
+	VkQueryPoolCreateInfo createInfo{
+		.sType			= VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
+		.queryType		= QueryHeapTypeToVulkan(queryHeapDesc.type),
+		.queryCount		= queryHeapDesc.queryCount
+	};
+
+	wil::com_ptr<CVkQueryPool> queryPool;
+
+	VkQueryPool vkQueryPool = VK_NULL_HANDLE;
+	if (VK_SUCCEEDED(vkCreateQueryPool(m_device->Get(), &createInfo, nullptr, &vkQueryPool)))
+	{
+		queryPool = Create<CVkQueryPool>(m_device.get(), vkQueryPool);
+	}
+	else
+	{
+		LogError(LogVulkan) << "Failed to create VkQueryPool.  Error code: " << res << endl;
+	}
+
+	auto queryHeap = make_shared<QueryHeap>();
+	queryHeap->m_desc = queryHeapDesc;
+	queryHeap->m_device = this;
+	queryHeap->m_pool = queryPool;
+	return queryHeap;
 }
 
 

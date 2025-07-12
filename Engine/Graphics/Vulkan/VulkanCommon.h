@@ -26,6 +26,8 @@
 #define VK_SUCCEEDED(resexpr) VkResult res = resexpr; res == VK_SUCCESS
 #define VK_FAILED(resexpr) VkResult res = resexpr; res != VK_SUCCESS
 
+#define VK_FLAGS_NONE 0
+
 
 namespace Luna::VK
 {

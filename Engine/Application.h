@@ -18,6 +18,7 @@
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\Model.h"
 #include "Graphics\PipelineState.h"
+#include "Graphics\QueryHeap.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\Sampler.h"
 #include "Graphics\Texture.h"
@@ -121,6 +122,7 @@ protected:
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
 	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
 	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc);
+	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc);
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc);
 
 	// Wrappers for resource loading

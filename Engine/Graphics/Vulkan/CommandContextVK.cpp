@@ -20,6 +20,7 @@
 #include "DescriptorSetVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
+#include "QueryHeapVK.h"
 #include "QueueVK.h"
 #include "PipelineStateVK.h"
 #include "RootSignatureVK.h"
@@ -693,6 +694,57 @@ void CommandContextVK::EndRendering()
 	vkCmdEndRendering(m_commandBuffer);
 
 	m_isRendering = false;
+}
+
+
+void CommandContextVK::BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+{
+	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	assert(queryHeapVK != nullptr);
+
+	vkCmdBeginQuery(m_commandBuffer, queryHeapVK->GetQueryPool(), heapIndex, VK_FLAGS_NONE);
+}
+
+
+void CommandContextVK::EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+{
+	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	assert(queryHeapVK != nullptr);
+
+	vkCmdEndQuery(m_commandBuffer, queryHeapVK->GetQueryPool(), heapIndex);
+}
+
+
+void CommandContextVK::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+{
+	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	assert(queryHeapVK != nullptr);
+
+	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer.get();
+	assert(destBufferVK != nullptr);
+
+	assert(!m_isRendering);
+
+	vkCmdCopyQueryPoolResults(
+		m_commandBuffer,
+		queryHeapVK->GetQueryPool(),
+		startIndex,
+		numQueries,
+		destBufferVK->GetBuffer(),
+		destBufferOffset,
+		sizeof(uint64_t), // TODO - don't hardcode this
+		VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
+}
+
+
+void CommandContextVK::ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
+{
+	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	assert(queryHeapVK != nullptr);
+
+	assert(!m_isRendering);
+
+	vkCmdResetQueryPool(m_commandBuffer, queryHeapVK->GetQueryPool(), startIndex, numQueries);
 }
 
 

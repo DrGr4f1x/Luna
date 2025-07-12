@@ -466,11 +466,28 @@ VkSamplerAddressMode TextureAddressToVulkan(TextureAddress textureAddress)
 }
 
 
-VkQueryType QueryTypeToVulkan(QueryType queryHeapType)
+VkQueryType QueryHeapTypeToVulkan(QueryHeapType queryHeapType)
+{
+	using enum QueryHeapType;
+
+	switch (queryHeapType)
+	{
+	case Occlusion:			return VK_QUERY_TYPE_OCCLUSION; break;
+	case Timestamp:			return VK_QUERY_TYPE_TIMESTAMP; break;
+	case PipelineStats:		return VK_QUERY_TYPE_PIPELINE_STATISTICS; break;
+	default:
+		assert(false);
+		return VK_QUERY_TYPE_OCCLUSION;
+		break;
+	}
+}
+
+
+VkQueryType QueryTypeToVulkan(QueryType queryType)
 {
 	using enum QueryType;
 
-	switch (queryHeapType)
+	switch (queryType)
 	{
 	case Occlusion:			return VK_QUERY_TYPE_OCCLUSION; break;
 	case Timestamp:			return VK_QUERY_TYPE_TIMESTAMP; break;

@@ -110,6 +110,8 @@ public:
 
 	virtual const std::string& GetDeviceName() const = 0;
 
+	virtual uint32_t GetNumSwapChainBuffers() const = 0;
+	virtual uint32_t GetActiveFrame() const = 0;
 	virtual uint64_t GetFrameNumber() const = 0;
 
 	virtual IDevice* GetDevice() = 0;

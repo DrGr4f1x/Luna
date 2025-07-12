@@ -21,6 +21,7 @@
 #include "DescriptorSet12.h"
 #include "GpuBuffer12.h"
 #include "PipelineState12.h"
+#include "QueryHeap12.h"
 #include "RootSignature12.h"
 #include "Sampler12.h"
 #include "Shader12.h"
@@ -1002,6 +1003,25 @@ Luna::ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePi
 	pipelineState->m_pipelineState = pPipelineState;
 
 	return pipelineState;
+}
+
+
+QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
+{
+	D3D12_QUERY_HEAP_DESC d3d12Desc{
+		.Type = QueryHeapTypeToDX12(queryHeapDesc.type),
+		.Count = queryHeapDesc.queryCount,
+		.NodeMask = 0
+	};
+
+	wil::com_ptr<ID3D12QueryHeap> pQueryHeap;
+	HRESULT res = m_device->CreateQueryHeap(&d3d12Desc, IID_PPV_ARGS(&pQueryHeap));
+	ThrowIfFailed(res);
+
+	auto queryHeap = make_shared<QueryHeap>();
+	queryHeap->m_desc = queryHeapDesc;
+	queryHeap->m_heap = pQueryHeap;
+	return queryHeap;
 }
 
 

@@ -41,6 +41,22 @@ void GpuBuffer::Update(size_t sizeInBytes, size_t offset, const void* data)
 }
 
 
+void* GpuBuffer::Map()
+{
+	void* mem = nullptr;
+	auto range = CD3DX12_RANGE(0, GetBufferSize());
+	m_allocation->GetResource()->Map(0, &range, &mem);
+	return mem;
+}
+
+
+void GpuBuffer::Unmap()
+{
+	auto range = CD3DX12_RANGE(0, 0);
+	m_allocation->GetResource()->Unmap(0, &range);
+}
+
+
 uint64_t GpuBuffer::GetGpuAddress() const
 {
 	if (m_allocation && m_allocation->GetResource())

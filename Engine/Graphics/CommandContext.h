@@ -26,6 +26,7 @@ class IGpuBuffer;
 class GraphicsContext;
 class IComputePipelineState;
 class IGraphicsPipelineState;
+class IQueryHeap;
 class ResourceSet;
 class IRootSignature;
 
@@ -36,6 +37,7 @@ using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 using DescriptorSetPtr = std::shared_ptr<IDescriptorSet>;
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 using GraphicsPipelineStatePtr = std::shared_ptr<IGraphicsPipelineState>;
+using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 
 
@@ -86,6 +88,11 @@ public:
 	virtual void BeginRendering(std::span<ColorBufferPtr>& renderTargets) = 0;
 	virtual void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
+
+	virtual void BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex) = 0;
+	virtual void EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex) = 0;
+	virtual void ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset) = 0;
+	virtual void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
 
 	virtual void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) = 0;
 	virtual void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline) = 0;
@@ -218,6 +225,11 @@ public:
 	void BeginRendering(std::span<ColorBufferPtr>& renderTargets);
 	void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
+
+	void BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex);
+	void EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex);
+	void ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset);
+	void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
 
 	void SetRootSignature(RootSignaturePtr& rootSignature);
 	void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline);
@@ -482,6 +494,30 @@ inline void GraphicsContext::BeginRendering(std::span<ColorBufferPtr>& renderTar
 inline void GraphicsContext::EndRendering()
 {
 	m_contextImpl->EndRendering();
+}
+
+
+inline void GraphicsContext::BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+{
+	m_contextImpl->BeginOcclusionQuery(queryHeap, heapIndex);
+}
+
+
+inline void GraphicsContext::EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+{
+	m_contextImpl->EndOcclusionQuery(queryHeap, heapIndex);
+}
+
+
+inline void GraphicsContext::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+{
+	m_contextImpl->ResolveOcclusionQueries(queryHeap, startIndex, numQueries, destBuffer, destBufferOffset);
+}
+
+
+inline void GraphicsContext::ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
+{
+	m_contextImpl->ResetOcclusionQueries(queryHeap, startIndex, numQueries);
 }
 
 

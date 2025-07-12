@@ -28,6 +28,9 @@ public:
 	void Update(size_t sizeInBytes, const void* data) override;
 	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
 
+	void* Map() override;
+	void Unmap() override;
+
 	ID3D12Resource* GetResource() const { return m_allocation->GetResource(); }
 	D3D12MA::Allocation* GetAllocation() const { return m_allocation.get(); }
 

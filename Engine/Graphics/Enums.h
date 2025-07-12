@@ -415,6 +415,14 @@ enum class ResourceState : uint32_t
 template <> struct EnableBitmaskOperators<ResourceState> { static const bool enable = true; };
 
 
+enum class QueryHeapType : uint8_t
+{
+	Occlusion,
+	Timestamp,
+	PipelineStats
+};
+
+
 enum class QueryType : uint8_t
 {
 	Occlusion,

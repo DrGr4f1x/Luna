@@ -52,6 +52,8 @@ public:
 	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) override;
 	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) override;
 
+	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
+
 	DescriptorSetPtr CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;

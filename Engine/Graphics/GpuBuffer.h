@@ -50,6 +50,9 @@ public:
 	virtual void Update(size_t sizeInBytes, const void* data) = 0;
 	virtual void Update(size_t sizeInBytes, size_t offset, const void* data) = 0;
 
+	virtual void* Map() = 0;
+	virtual void Unmap() = 0;
+
 protected:
 	Format m_format{ Format::Unknown };
 	size_t m_bufferSize{ 0 };

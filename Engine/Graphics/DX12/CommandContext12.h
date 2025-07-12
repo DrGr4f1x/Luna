@@ -77,6 +77,11 @@ public:
 	void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
+	void BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex) override;
+	void EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex) override;
+	void ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset) override;
+	void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries) override;
+
 	void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline) override;
 	void SetComputePipeline(ComputePipelineStatePtr& computePipeline) override;

@@ -236,6 +236,7 @@
     <ClInclude Include="Graphics\DX12\GpuBuffer12.h" />
     <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
     <ClInclude Include="Graphics\DX12\PipelineState12.h" />
+    <ClInclude Include="Graphics\DX12\QueryHeap12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\Sampler12.h" />
@@ -256,6 +257,7 @@
     <ClInclude Include="Graphics\Model.h" />
     <ClInclude Include="Graphics\PipelineState.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
+    <ClInclude Include="Graphics\QueryHeap.h" />
     <ClInclude Include="Graphics\Resource.h" />
     <ClInclude Include="Graphics\ResourceSet.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
@@ -282,6 +284,7 @@
     <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
+    <ClInclude Include="Graphics\Vulkan\QueryHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />

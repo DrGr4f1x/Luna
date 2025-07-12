@@ -17,6 +17,7 @@
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
+#include "Graphics\QueryHeap.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\Sampler.h"
 #include "Graphics\Texture.h"
@@ -42,6 +43,8 @@ public:
 
 	virtual GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) = 0;
 	virtual ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) = 0;
+
+	virtual QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) = 0;
 
 	virtual SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) = 0;
 
