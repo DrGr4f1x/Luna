@@ -184,7 +184,7 @@ void GeometryShaderApp::InitRootSignatures()
 	RootSignatureDesc geomRootSignatureDesc{
 		.name				= "Geom Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters		= {	RootParameter::RootCBV(0, ShaderStage::Geometry),	}
+		.rootParameters		= {	RootParameter::RootCBV(0, ShaderStage::Geometry) }
 	};
 
 	m_geomRootSignature = CreateRootSignature(geomRootSignatureDesc);
