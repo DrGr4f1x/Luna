@@ -100,7 +100,7 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	else
 	{
 		writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo();
+		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo(m_isDynamicBuffer);
 		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
 	}
 
@@ -194,7 +194,7 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	else
 	{
 		writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo();
+		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo(m_isDynamicBuffer);
 		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
 	}
 
@@ -222,7 +222,7 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	writeSet.dstSet = m_descriptorSet;
 	writeSet.dstBinding = slot;
 	writeSet.dstArrayElement = 0;
-	m_descriptorData[slot] = gpuBufferVK->GetBufferInfo();
+	m_descriptorData[slot] = gpuBufferVK->GetBufferInfo(m_isDynamicBuffer);
 	writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
 
 	m_dirtyBits |= (1 << slot);

@@ -34,7 +34,7 @@ public:
 
 	VkBuffer GetBuffer() const;
 	VkBufferView GetBufferView() const;
-	VkDescriptorBufferInfo GetBufferInfo() const;
+	VkDescriptorBufferInfo GetBufferInfo(bool dynamicRange = false) const;
 
 protected:
 	Device* m_device{ nullptr };

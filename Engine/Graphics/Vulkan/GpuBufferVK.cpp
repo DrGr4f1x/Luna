@@ -63,8 +63,14 @@ VkBufferView GpuBuffer::GetBufferView() const
 }
 
 
-VkDescriptorBufferInfo GpuBuffer::GetBufferInfo() const
+VkDescriptorBufferInfo GpuBuffer::GetBufferInfo(bool dynamicRange) const
 {
+	if (dynamicRange)
+	{
+		auto bufferInfoDynamic = m_bufferInfo;
+		bufferInfoDynamic.range = GetElementSize();
+		return bufferInfoDynamic;
+	}
 	return m_bufferInfo;
 }
 

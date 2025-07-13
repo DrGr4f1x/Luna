@@ -247,7 +247,7 @@ struct RootParameter
 		{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::RootConstants,
-			.startRegister		= startRegister = startRegister,
+			.startRegister		= startRegister,
 			.registerSpace		= registerSpace,
 			.num32BitConstants	= num32BitConstants
 		};
@@ -260,7 +260,7 @@ struct RootParameter
 		{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::RootCBV,
-			.startRegister		= startRegister = startRegister,
+			.startRegister		= startRegister,
 			.registerSpace		= registerSpace
 		};
 		return ret;
@@ -272,7 +272,7 @@ struct RootParameter
 		{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::RootSRV,
-			.startRegister		= startRegister = startRegister,
+			.startRegister		= startRegister,
 			.registerSpace		= registerSpace
 		};
 		return ret;
@@ -284,7 +284,7 @@ struct RootParameter
 		{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::RootUAV,
-			.startRegister		= startRegister = startRegister,
+			.startRegister		= startRegister,
 			.registerSpace		= registerSpace
 		};
 		return ret;
@@ -296,7 +296,7 @@ struct RootParameter
 		{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::Table,
-			.startRegister		= startRegister = startRegister,
+			.startRegister		= startRegister,
 			.registerSpace		= registerSpace,
 			.table = { { descriptorType, startRegister, numDescriptors } }
 		};

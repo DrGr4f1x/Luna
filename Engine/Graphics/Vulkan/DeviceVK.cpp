@@ -425,7 +425,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
 			vkBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);
 
-			vkBinding.binding = rootParameter.startRegister;
+			vkBinding.binding = 0;
 			vkBinding.descriptorCount = 1;
 			vkBinding.stageFlags = shaderStageFlags;
 			vkBinding.pImmutableSamplers = nullptr;
