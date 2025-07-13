@@ -28,9 +28,16 @@ void ResourceSet::Initialize(RootSignaturePtr rootSignature)
 
 	for (uint32_t i = 0; i < numRootParameters; ++i)
 	{
-		DescriptorSetPtr descriptorSet = rootSignature->CreateDescriptorSet(i);
-		
-		m_descriptorSets.push_back(descriptorSet);
+		const auto& rootParameter = rootSignature->GetRootParameter(i);
+		if (rootParameter.parameterType == RootParameterType::RootConstants)
+		{
+			m_descriptorSets.push_back(nullptr);
+		}
+		else
+		{
+			DescriptorSetPtr descriptorSet = rootSignature->CreateDescriptorSet(i);
+			m_descriptorSets.push_back(descriptorSet);
+		}
 	}
 }
 

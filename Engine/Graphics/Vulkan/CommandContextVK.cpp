@@ -993,6 +993,12 @@ void CommandContextVK::SetResources(CommandListType type, ResourceSet& resourceS
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
+		// Skip null entries, which are for root constants
+		if (resourceSet[i] == nullptr)
+		{
+			continue;
+		}
+
 		SetDescriptors_Internal(type, i, resourceSet[i]);
 	}
 

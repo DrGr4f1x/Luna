@@ -794,6 +794,11 @@ void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceS
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
+		// Skip null entries, which are for root constants
+		if (resourceSet[i] == nullptr)
+		{
+			continue;
+		}
 		SetDescriptors_Internal(type, i, resourceSet[i]);
 	}
 }
@@ -1171,7 +1176,6 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 
 	// TODO: Try this with GetPlatformObject()
 	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet.get();
-	assert(descriptorSet12 != nullptr);
 
 	if (!descriptorSet12->HasBindableDescriptors())
 	{

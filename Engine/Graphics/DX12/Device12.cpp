@@ -557,7 +557,8 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		{
 			for (auto& param : d3d12RootParameters)
 			{
-				if (param.DescriptorTable.NumDescriptorRanges > 0)
+				if (param.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE && 
+					param.DescriptorTable.NumDescriptorRanges > 0)
 				{
 					delete[] param.DescriptorTable.pDescriptorRanges;
 				}
