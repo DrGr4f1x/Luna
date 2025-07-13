@@ -108,7 +108,7 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 		.DepthOrArraySize	= (UINT16)colorBufferDesc.arraySizeOrDepth,
 		.MipLevels			= (UINT16)numMips,
 		.Format				= FormatToDxgi(colorBufferDesc.format).resourceFormat,
-		.SampleDesc		= { .Count = colorBufferDesc.numSamples, .Quality = 0 },
+		.SampleDesc			= { .Count = colorBufferDesc.numSamples, .Quality = 0 },
 		.Layout				= D3D12_TEXTURE_LAYOUT_UNKNOWN,
 		.Flags				= (D3D12_RESOURCE_FLAGS)flags
 	};
@@ -161,37 +161,52 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 		}
 		else
 		{
-			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+			if (colorBufferDesc.numSamples > 1)
+			{
+				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DMSARRAY;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+			}
+			else
+			{
+				rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+			}
+			
 			rtvDesc.Texture2DArray.MipSlice = 0;
 			rtvDesc.Texture2DArray.FirstArraySlice = 0;
 			rtvDesc.Texture2DArray.ArraySize = (UINT)colorBufferDesc.arraySizeOrDepth;
 
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
 			uavDesc.Texture2DArray.MipSlice = 0;
 			uavDesc.Texture2DArray.FirstArraySlice = 0;
 			uavDesc.Texture2DArray.ArraySize = (UINT)colorBufferDesc.arraySizeOrDepth;
 
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
 			srvDesc.Texture2DArray.MipLevels = numMips;
 			srvDesc.Texture2DArray.MostDetailedMip = 0;
 			srvDesc.Texture2DArray.FirstArraySlice = 0;
 			srvDesc.Texture2DArray.ArraySize = (UINT)colorBufferDesc.arraySizeOrDepth;
 		}
 	}
-	else if (colorBufferDesc.numFragments > 1)
-	{
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
-	}
 	else
 	{
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		if (colorBufferDesc.numSamples > 1)
+		{
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DMS;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+		}
+		else
+		{
+			rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		}
+
 		rtvDesc.Texture2D.MipSlice = 0;
 
-		uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 		uavDesc.Texture2D.MipSlice = 0;
 
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = numMips;
 		srvDesc.Texture2D.MostDetailedMip = 0;
 	}
@@ -207,13 +222,13 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 
 	// Create the UAVs for each mip level (RWTexture2D)
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> uavHandles;
-	if (colorBufferDesc.numFragments == 1)
+	for (uint32_t i = 0; i < (uint32_t)uavHandles.size(); ++i)
 	{
-		for (uint32_t i = 0; i < (uint32_t)uavHandles.size(); ++i)
-		{
-			uavHandles[i].ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
-		}
+		uavHandles[i].ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+	}
 
+	if (colorBufferDesc.numSamples == 1)
+	{
 		for (uint32_t i = 0; i < numMips; ++i)
 		{
 			uavHandles[i] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

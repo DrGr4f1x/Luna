@@ -318,7 +318,7 @@ void UIOverlay::InitPSO()
 	{
 		.name				= "UIOverlay PSO",
 		.blendState			= blendStateDesc,
-		.depthStencilState	= CommonStates::DepthStateReadOnlyReversed(),
+		.depthStencilState	= CommonStates::DepthStateDisabled(),
 		.rasterizerState	= CommonStates::RasterizerTwoSided(),
 		.rtvFormats			= { m_format },
 		.dsvFormat			= m_depthFormat,

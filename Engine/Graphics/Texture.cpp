@@ -247,18 +247,7 @@ bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filen
 		std::unique_ptr<std::byte[]> data;
 		BinaryReader::ReadEntireFile(fileSystem->GetFullPath(filename), data, &dataSize);
 
-		if (extension == ".dds")
-		{
-			CreateDDSTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
-		}
-		else if (extension == ".ktx" || extension == ".ktx2")
-		{
-			CreateKTXTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
-		}
-		else
-		{
-			CreateTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
-		}
+		CreateTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
 
 		loadSucceeded = tex->IsValid();
 	}
@@ -266,6 +255,27 @@ bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filen
 	tex->m_isManaged = true;
 	tex->m_isLoading = false;
 	return loadSucceeded;
+}
+
+
+bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
+{
+	auto fileSystem = GetFileSystem();
+
+	std::string extension = fileSystem->GetFileExtension(textureName);
+
+	if (extension == ".dds")
+	{
+		return CreateDDSTextureFromMemory(device, texture, textureName, data, dataSize, Format::Unknown, forceSrgb);
+	}
+	else if (extension == ".ktx" || extension == ".ktx2")
+	{
+		return CreateKTXTextureFromMemory(device, texture, textureName, data, dataSize, Format::Unknown, forceSrgb);
+	}
+	else
+	{
+		return CreateSTBTextureFromMemory(device, texture, textureName, data, dataSize, Format::Unknown, forceSrgb);
+	}
 }
 
 

@@ -1007,6 +1007,20 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
+void CommandContext12::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format)
+{
+	ColorBuffer* srcBuffer12 = (ColorBuffer*)srcBuffer.get();
+	assert(srcBuffer12 != nullptr);
+
+	ColorBuffer* destBuffer12 = (ColorBuffer*)destBuffer.get();
+	assert(destBuffer12 != nullptr);
+
+	FlushResourceBarriers();
+	DXGI_FORMAT dxgiFormat = FormatToDxgi(format).rtvFormat;
+	m_commandList->ResolveSubresource(destBuffer12->GetResource(), 0, srcBuffer12->GetResource(), 0, dxgiFormat);
+}
+
+
 void CommandContext12::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
 	FlushResourceBarriers();

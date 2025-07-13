@@ -41,11 +41,11 @@ void SetDebugName(ID3D12Object* object, const string& name) {}
 #endif
 
 
-D3D12_RESOURCE_FLAGS CombineResourceFlags(uint32_t fragmentCount)
+D3D12_RESOURCE_FLAGS CombineResourceFlags(uint32_t sampleCount)
 {
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
 
-	if (flags == D3D12_RESOURCE_FLAG_NONE && fragmentCount == 1)
+	if (flags == D3D12_RESOURCE_FLAG_NONE && sampleCount == 1)
 	{
 		flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	}

@@ -1235,6 +1235,45 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
+void CommandContextVK::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format)
+{
+	ColorBuffer* srcBufferVK = (ColorBuffer*)srcBuffer.get();
+	assert(srcBufferVK != nullptr);
+
+	ColorBuffer* destBufferVK = (ColorBuffer*)destBuffer.get();
+	assert(destBufferVK != nullptr);
+
+	FlushResourceBarriers();
+
+	VkImageResolve resolve{
+		.srcSubresource = {
+			.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
+			.mipLevel			= 0,
+			.baseArrayLayer		= 0,
+			.layerCount			= srcBuffer->GetArraySize()
+			},
+		.srcOffset		= { .x = 0, .y = 0, .z = 0 },
+		.dstSubresource = {
+			.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
+			.mipLevel			= 0,
+			.baseArrayLayer		= 0,
+			.layerCount			= destBuffer->GetArraySize()
+			},
+		.dstOffset		= { .x = 0, .y = 0, .z = 0 },
+		.extent			= { .width = (uint32_t)destBuffer->GetWidth(), .height = destBuffer->GetHeight(), .depth = 1 }
+	};
+
+	vkCmdResolveImage(
+		m_commandBuffer,
+		srcBufferVK->GetImage(),
+		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		destBufferVK->GetImage(),
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1,
+		&resolve);
+}
+
+
 void CommandContextVK::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
 	FlushResourceBarriers();

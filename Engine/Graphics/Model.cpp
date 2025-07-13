@@ -16,6 +16,9 @@
 #include "Graphics\CommandContext.h"
 #include "Graphics\Device.h"
 #include "Graphics\InputLayout.h"
+#include "Graphics\Loaders\DDSTextureLoader.h"
+#include "Graphics\Loaders\KTXTextureLoader.h"
+#include "Graphics\Loaders\STBTextureLoader.h"
 
 #include <assimp/Importer.hpp> 
 #include <assimp/scene.h>     
@@ -35,6 +38,7 @@ void UpdateExtents(Math::Vector3& minExtents, Math::Vector3& maxExtents, const M
 	minExtents = Math::Min(minExtents, pos);
 	maxExtents = Math::Max(maxExtents, pos);
 }
+
 
 uint32_t GetPreprocessFlags(Luna::ModelLoad modelLoadFlags)
 {
@@ -76,6 +80,486 @@ uint32_t GetPreprocessFlags(Luna::ModelLoad modelLoadFlags)
 namespace Luna
 {
 
+struct MeshMaterialData
+{
+	// Basic colors
+	std::optional<Color> diffuse;
+	std::optional<Color> specular;
+	std::optional<Color> ambient;
+	std::optional<Color> emissive;
+	std::optional<Color> transparent;
+	std::optional<Color> reflective;
+	// Basic parameters
+	std::optional<float> opacity;
+	std::optional<float> shininess;
+	std::optional<float> specularStrength;
+	std::optional<float> transparencyFactor;
+	std::optional<float> bumpScaling;
+	std::optional<float> reflectivity;
+	// Rendering options
+	std::optional<int> twoSided;
+	std::optional<int> shadingModel;
+	std::optional<int> wireframe;
+	std::optional<int> blendFunc;
+	// Textures
+	std::optional<std::string> diffuseTex;
+	std::optional<std::string> specularTex;
+	std::optional<std::string> ambientTex;
+	std::optional<std::string> emissiveTex;
+	std::optional<std::string> normalTex;
+	std::optional<std::string> heightTex;
+	std::optional<std::string> shininessTex;
+	std::optional<std::string> opacityTex;
+	std::optional<std::string> displacementTex;
+	std::optional<std::string> lightmapTex;
+	std::optional<std::string> reflectionTex;
+};
+
+
+void LogMaterialData(const MeshMaterialData& materialData)
+{
+	LogInfo(LogModel) << "Material parameters" << endl;
+
+	auto LogColor = [](const optional<Color>& colorOpt, const string& name)
+		{
+			if (colorOpt.has_value())
+			{
+				Color c = colorOpt.value();
+				LogInfo(LogModel) << format("  {}: ({}, {}, {}, {})", name, c.R(), c.G(), c.B(), c.A()) << endl;
+			}
+		};
+
+	auto LogFloat = [](const optional<float>& floatOpt, const string& name)
+		{
+			if (floatOpt.has_value())
+			{
+				float f = floatOpt.value();
+				LogInfo(LogModel) << format("  {}: {}", name, f) << endl;
+			}
+		};
+
+	auto LogInt = [](const optional<int>& intOpt, const string& name)
+		{
+			if (intOpt.has_value())
+			{
+				int i = intOpt.value();
+				LogInfo(LogModel) << format("  {}: {}", name, i) << endl;
+			}
+		};
+
+	auto LogTexture = [](const optional<string>& strOpt, const string& name)
+		{
+			if (strOpt.has_value())
+			{
+				string str = strOpt.value();
+				LogInfo(LogModel) << format("  {}: {}", name, str) << endl;
+			}
+		};
+
+	LogColor(materialData.diffuse, "Diffuse");
+	LogColor(materialData.specular, "Specular");
+	LogColor(materialData.ambient, "Ambient");
+	LogColor(materialData.emissive, "Emissive");
+	LogColor(materialData.transparent, "Transparent");
+	LogColor(materialData.reflective, "Reflective");
+	LogFloat(materialData.opacity, "Opacity");
+	LogFloat(materialData.shininess, "Shininess");
+	LogFloat(materialData.specularStrength, "Specular strength");
+	LogFloat(materialData.transparencyFactor, "Transparency factor");
+	LogFloat(materialData.bumpScaling, "Bump scaling");
+	LogFloat(materialData.reflectivity, "Reflectivity");
+	LogInt(materialData.twoSided, "Two-sided");
+	LogInt(materialData.shadingModel, "Shading model");
+	LogInt(materialData.wireframe, "Wireframe");
+	LogInt(materialData.blendFunc, "Blend func");
+	LogTexture(materialData.diffuseTex, "Diffuse tex");
+	LogTexture(materialData.specularTex, "Specular tex");
+	LogTexture(materialData.ambientTex, "Ambient tex");
+	LogTexture(materialData.emissiveTex, "Emissive tex");
+	LogTexture(materialData.normalTex, "Normal tex");
+	LogTexture(materialData.heightTex, "Height tex");
+	LogTexture(materialData.shininessTex, "Shininess tex");
+	LogTexture(materialData.opacityTex, "Opacity tex");
+	LogTexture(materialData.displacementTex, "Displacement tex");
+	LogTexture(materialData.lightmapTex, "Light-map tex");
+	LogTexture(materialData.reflectionTex, "Reflection tex");
+}
+
+
+class ModelLoader
+{
+public:
+	ModelLoader(IDevice* device, const string& filename, const VertexLayoutBase* layout, float scale, ModelLoad loadFlags, bool loadMaterials);
+
+	ModelPtr Load();
+
+protected:
+	void ProcessNode(ModelPtr model, const aiNode* node, const aiScene* scene);
+	void ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScene* scene);
+	int ProcessMaterial(ModelPtr model, const aiMaterial* aiMaterial, const aiScene* scene);
+	TexturePtr FindOrCreateTexture(const aiScene* scene, const string& textureName);
+	TexturePtr CreateTexture(const aiScene* scene, const string& textureName);
+
+protected:
+	IDevice* m_device{ nullptr };
+	string m_filename;
+	const VertexLayoutBase* m_vertexLayout{ nullptr };
+	float m_scale{ 1.0f };
+	ModelLoad m_loadFlags;
+	bool m_loadMaterials{ false };
+
+	std::map<std::string, TexturePtr> m_textureCache;
+};
+
+
+ModelLoader::ModelLoader(IDevice* device, const string& filename, const VertexLayoutBase* layout, float scale, ModelLoad loadFlags, bool loadMaterials)
+	: m_device{ device }
+	, m_filename{ filename }
+	, m_vertexLayout{ layout }
+	, m_scale{ scale }
+	, m_loadFlags{ loadFlags }
+	, m_loadMaterials{ loadMaterials }
+{}
+
+
+ModelPtr ModelLoader::Load()
+{
+	const string fullpath = GetFileSystem()->GetFullPath(m_filename);
+	assert(!fullpath.empty());
+
+	Assimp::Importer aiImporter;
+
+	const auto aiScene = aiImporter.ReadFile(fullpath.c_str(), GetPreprocessFlags(m_loadFlags));
+	if (!aiScene)
+	{
+		LogFatal << "Failed to load model file " << m_filename << endl;
+		string errorStr = aiImporter.GetErrorString();
+		LogFatal << errorStr << endl;
+		return nullptr;
+	}
+
+	ModelPtr model = make_shared<Model>();
+
+	model->meshes.reserve(aiScene->mNumMeshes);
+
+	ProcessNode(model, aiScene->mRootNode, aiScene);
+
+	return model;
+}
+
+
+void ModelLoader::ProcessNode(ModelPtr model, const aiNode* node, const aiScene* scene)
+{
+	for (uint32_t i = 0; i < node->mNumMeshes; i++)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		ProcessMesh(model, mesh, scene);
+	}
+
+	for (uint32_t i = 0; i < node->mNumChildren; i++)
+	{
+		ProcessNode(model, node->mChildren[i], scene);
+	}
+}
+
+
+void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScene* aiScene)
+{
+	uint32_t vertexCount = 0;
+	uint32_t indexCount = 0;
+
+	const aiVector3D zero(0.0f, 0.0f, 0.0f);
+
+	const VertexComponent components = m_vertexLayout->GetComponents();
+
+	// Min/max for bounding box computation
+	constexpr float maxF = numeric_limits<float>::max();
+	Vector3 minExtents{ maxF, maxF, maxF };
+	Vector3 maxExtents{ -maxF, -maxF, -maxF };
+
+	vector<float> vertexData;
+	vector<float> vertexDataPositionOnly;
+	vector<uint32_t> indexData;
+
+	MeshPtr mesh = make_shared<Mesh>();
+	MeshPart meshPart{};
+
+	vertexCount += aiMesh->mNumVertices;
+
+	aiColor4D defaultColor(0.0f, 0.0f, 0.0f, 1.0f);
+	aiScene->mMaterials[aiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, defaultColor);
+
+	for (uint32_t j = 0; j < aiMesh->mNumVertices; ++j)
+	{
+		const aiVector3D* pos = &(aiMesh->mVertices[j]);
+		const aiVector3D* normal = &(aiMesh->mNormals[j]);
+		const aiVector3D* texCoord = (aiMesh->HasTextureCoords(0)) ? &(aiMesh->mTextureCoords[0][j]) : &zero;
+		const aiColor4D* color = (aiMesh->HasVertexColors(0)) ? &(aiMesh->mColors[0][j]) : &defaultColor;
+		const aiVector3D* tangent = (aiMesh->HasTangentsAndBitangents()) ? &(aiMesh->mTangents[j]) : &zero;
+		const aiVector3D* bitangent = (aiMesh->HasTangentsAndBitangents()) ? &(aiMesh->mBitangents[j]) : &zero;
+
+		if (HasFlag(components, VertexComponent::Position))
+		{
+			vertexData.push_back(pos->x * m_scale);
+			vertexData.push_back(pos->y * m_scale);  // TODO: Is this a hack?
+			vertexData.push_back(pos->z * m_scale);
+
+			vertexDataPositionOnly.push_back(pos->x * m_scale);
+			vertexDataPositionOnly.push_back(pos->y * m_scale);  // TODO: Is this a hack?
+			vertexDataPositionOnly.push_back(pos->z * m_scale);
+
+			UpdateExtents(minExtents, maxExtents, m_scale * Math::Vector3(pos->x, pos->y, pos->z));
+		}
+
+		if (HasFlag(components, VertexComponent::Normal))
+		{
+			vertexData.push_back(normal->x);
+			vertexData.push_back(normal->y); // TODO: Is this a hack?
+			vertexData.push_back(normal->z);
+		}
+
+		if (HasFlag(components, VertexComponent::Tangent))
+		{
+			vertexData.push_back(tangent->x);
+			vertexData.push_back(tangent->y);
+			vertexData.push_back(tangent->z);
+		}
+
+		if (HasFlag(components, VertexComponent::Bitangent))
+		{
+			vertexData.push_back(bitangent->x);
+			vertexData.push_back(bitangent->y);
+			vertexData.push_back(bitangent->z);
+		}
+
+		if (HasFlag(components, VertexComponent::Color))
+		{
+			vertexData.push_back(color->r);
+			vertexData.push_back(color->g);
+			vertexData.push_back(color->b);
+			vertexData.push_back(color->a);
+		}
+
+		// TODO Color1
+
+		if (HasFlag(components, VertexComponent::Texcoord))
+		{
+			vertexData.push_back(texCoord->x);
+			vertexData.push_back(texCoord->y);
+		}
+
+		// TODO Texcoord1-3, BlendIndices, BlendWeight
+	}
+
+	meshPart.vertexCount = aiMesh->mNumVertices;
+
+	uint32_t indexBase = static_cast<uint32_t>(indexData.size());
+	for (unsigned int j = 0; j < aiMesh->mNumFaces; j++)
+	{
+		const aiFace& Face = aiMesh->mFaces[j];
+		if (Face.mNumIndices != 3)
+			continue;
+		indexData.push_back(indexBase + Face.mIndices[0]);
+		indexData.push_back(indexBase + Face.mIndices[1]);
+		indexData.push_back(indexBase + Face.mIndices[2]);
+		meshPart.indexCount += 3;
+		indexCount += 3;
+	}
+
+	// Create vertex buffer
+	uint32_t stride = m_vertexLayout->GetSizeInBytes();
+
+	GpuBufferDesc vertexBufferDesc{
+		.name = "Model|VertexBuffer",
+		.resourceType = ResourceType::VertexBuffer,
+		.memoryAccess = MemoryAccess::GpuRead,
+		.elementCount = sizeof(float) * vertexData.size() / stride,
+		.elementSize = stride,
+		.initialData = vertexData.data()
+	};
+	mesh->vertexBuffer = m_device->CreateGpuBuffer(vertexBufferDesc);
+
+	// Create position-only vertex buffer
+	stride = 3 * sizeof(float);
+	GpuBufferDesc positionOnlyVertexBufferDesc
+	{
+		.name = "Model|VertexBuffer (Position Only)",
+		.resourceType = ResourceType::VertexBuffer,
+		.memoryAccess = MemoryAccess::GpuRead,
+		.elementCount = sizeof(float) * vertexDataPositionOnly.size() / stride,
+		.elementSize = stride,
+		.initialData = vertexDataPositionOnly.data()
+	};
+	mesh->vertexBufferPositionOnly = m_device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
+
+	// TODO: Support uint16 indices
+
+	// Create index buffer
+	GpuBufferDesc indexBufferDesc{
+		.name = "Model|IndexBuffer",
+		.resourceType = ResourceType::IndexBuffer,
+		.memoryAccess = MemoryAccess::GpuRead,
+		.elementCount = indexData.size(),
+		.elementSize = sizeof(uint32_t),
+		.initialData = indexData.data()
+	};
+	mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
+
+	// Set bounding box
+	mesh->boundingBox = Math::BoundingBoxFromMinMax(minExtents, maxExtents);
+
+	mesh->meshParts.push_back(meshPart);
+
+	model->meshes.push_back(mesh);
+
+	// Process materials
+	if (m_loadMaterials && aiMesh->mMaterialIndex >= 0)
+	{
+		::aiMaterial* aiMaterial = aiScene->mMaterials[aiMesh->mMaterialIndex];
+		int materialIndex = ProcessMaterial(model, aiMaterial, aiScene);
+		mesh->materialIndex = materialIndex;
+	}
+}
+
+
+int ModelLoader::ProcessMaterial(ModelPtr model, const aiMaterial* aiMaterial, const aiScene* scene)
+{
+	MeshMaterialData materialData{};
+
+	aiColor4D aiColor{};
+	float aiFloat = 0.0f;
+	int aiInt = 0;
+	aiString aiString;
+
+	auto GetColor = [aiMaterial](optional<Color>& colorOpt, const char* str, int i0, int i1)
+		{
+			aiColor4D aiColor{};
+			if (AI_SUCCESS == aiGetMaterialColor(aiMaterial, str, i0, i1, &aiColor))
+			{
+				Color color{ aiColor.r, aiColor.g, aiColor.b, aiColor.a };
+				colorOpt = color;
+			}
+		};
+
+	auto GetFloat = [aiMaterial](optional<float>& floatOpt, const char* str, int i0, int i1)
+		{
+			float aiFloat = 0.0f;
+			if (AI_SUCCESS == aiGetMaterialFloat(aiMaterial, str, i0, i1, &aiFloat))
+			{
+				floatOpt = aiFloat;
+			}
+		};
+
+	auto GetInt = [aiMaterial](optional<int>& intOpt, const char* str, int i0, int i1)
+		{
+			int aiInt = 0;
+			if (AI_SUCCESS == aiGetMaterialInteger(aiMaterial, str, i0, i1, &aiInt))
+			{
+				intOpt = aiInt;
+			}
+		};
+
+	auto GetString = [aiMaterial](optional<string>& strOpt, const char* str, int i0, int i1)
+		{
+			::aiString aiString;
+			if (AI_SUCCESS == aiGetMaterialString(aiMaterial, str, i0, i1, &aiString))
+			{
+				strOpt = string{ aiString.C_Str() };
+			}
+		};
+
+	GetColor(materialData.diffuse, AI_MATKEY_COLOR_DIFFUSE);
+	GetColor(materialData.specular, AI_MATKEY_COLOR_SPECULAR);
+	GetColor(materialData.ambient, AI_MATKEY_COLOR_AMBIENT);
+	GetColor(materialData.emissive, AI_MATKEY_COLOR_EMISSIVE);
+	GetColor(materialData.transparent, AI_MATKEY_COLOR_TRANSPARENT);
+	GetColor(materialData.reflective, AI_MATKEY_COLOR_REFLECTIVE);
+	GetFloat(materialData.opacity, AI_MATKEY_OPACITY);
+	GetFloat(materialData.shininess, AI_MATKEY_SHININESS);
+	GetFloat(materialData.specularStrength, AI_MATKEY_SHININESS_STRENGTH);
+	GetFloat(materialData.transparencyFactor, AI_MATKEY_TRANSPARENCYFACTOR);
+	GetFloat(materialData.bumpScaling, AI_MATKEY_BUMPSCALING);
+	GetFloat(materialData.reflectivity, AI_MATKEY_REFLECTIVITY);
+	GetInt(materialData.twoSided, AI_MATKEY_TWOSIDED);
+	GetInt(materialData.shadingModel, AI_MATKEY_SHADING_MODEL);
+	GetInt(materialData.wireframe, AI_MATKEY_ENABLE_WIREFRAME);
+	GetInt(materialData.blendFunc, AI_MATKEY_BLEND_FUNC);
+	GetString(materialData.diffuseTex, AI_MATKEY_TEXTURE_DIFFUSE(0));
+	GetString(materialData.specularTex, AI_MATKEY_TEXTURE_SPECULAR(0));
+	GetString(materialData.ambientTex, AI_MATKEY_TEXTURE_AMBIENT(0));
+	GetString(materialData.emissiveTex, AI_MATKEY_TEXTURE_EMISSIVE(0));
+	GetString(materialData.normalTex, AI_MATKEY_TEXTURE_NORMALS(0));
+	GetString(materialData.heightTex, AI_MATKEY_TEXTURE_HEIGHT(0));
+	GetString(materialData.shininessTex, AI_MATKEY_TEXTURE_SHININESS(0));
+	GetString(materialData.opacityTex, AI_MATKEY_TEXTURE_OPACITY(0));
+	GetString(materialData.displacementTex, AI_MATKEY_TEXTURE_DISPLACEMENT(0));
+	GetString(materialData.lightmapTex, AI_MATKEY_TEXTURE_LIGHTMAP(0));
+	GetString(materialData.reflectionTex, AI_MATKEY_TEXTURE_REFLECTION(0));
+
+	//LogMaterialData(materialData);
+
+	TexturePtr diffuseTex;
+	if (materialData.diffuseTex.has_value())
+	{
+		diffuseTex = FindOrCreateTexture(scene, materialData.diffuseTex.value());
+	}
+
+	MeshMaterial material{};
+	if (materialData.diffuse)
+	{
+		material.diffuseColor = materialData.diffuse.value();
+	}
+	material.diffuseTexture = diffuseTex;
+
+	int index = (int)model->materials.size();
+	model->materials.push_back(material);
+
+	return index;
+}
+
+
+TexturePtr ModelLoader::FindOrCreateTexture(const aiScene* scene, const string& textureName)
+{
+	// Check the texture cache to see if we've already created this texture
+	auto iter = m_textureCache.find(textureName);
+	if (iter != m_textureCache.end())
+	{
+		return iter->second;
+	}
+
+	TexturePtr texture = CreateTexture(scene, textureName);
+	m_textureCache[textureName] = texture;
+
+	return texture;
+}
+
+
+TexturePtr ModelLoader::CreateTexture(const aiScene* scene, const string& textureName)
+{
+	const aiTexture* aiTexture = scene->GetEmbeddedTexture(textureName.c_str());
+
+	if (aiTexture != nullptr)
+	{
+		string filename = aiTexture->mFilename.C_Str();
+
+		TexturePtr texture = m_device->CreateUninitializedTexture(filename, filename);
+
+		std::byte* data = (std::byte*)aiTexture->pcData;
+		size_t dataSize = aiTexture->mWidth;
+
+		CreateTextureFromMemory(m_device, texture.Get(), filename, data, dataSize, Format::Unknown, false);
+
+		return texture;
+	}
+	else
+	{
+		LogError(LogModel) << "Can't load external texture " << textureName << endl;
+	}
+
+	return nullptr;
+}
+
+
 void Mesh::Render(GraphicsContext& context, bool positionOnly)
 {
 	context.SetIndexBuffer(indexBuffer);
@@ -97,180 +581,11 @@ void Model::Render(GraphicsContext& context, bool positionOnly)
 }
 
 
-ModelPtr LoadModel(IDevice* device, const string& filename, const VertexLayoutBase& layout, float scale, ModelLoad modelLoadFlags)
+ModelPtr LoadModel(IDevice* device, const string& filename, const VertexLayoutBase& layout, float scale, ModelLoad modelLoadFlags, bool loadMaterials)
 {
-	const string fullpath = GetFileSystem()->GetFullPath(filename);
-	assert(!fullpath.empty());
+	ModelLoader loader{ device, filename, &layout, scale, modelLoadFlags, loadMaterials };
 
-	Assimp::Importer aiImporter;
-
-	const auto aiScene = aiImporter.ReadFile(fullpath.c_str(), GetPreprocessFlags(modelLoadFlags));
-	if (!aiScene)
-	{
-		LogFatal << "Failed to load model file " << filename << endl;
-		string errorStr = aiImporter.GetErrorString();
-		LogFatal << errorStr << endl;
-		return nullptr;
-	}
-
-	ModelPtr model = make_shared<Model>();
-
-	model->meshes.reserve(aiScene->mNumMeshes);
-
-	uint32_t vertexCount = 0;
-	uint32_t indexCount = 0;
-
-	const aiVector3D zero(0.0f, 0.0f, 0.0f);
-
-	const VertexComponent components = layout.GetComponents();
-
-	// Min/max for bounding box computation
-	constexpr float maxF = std::numeric_limits<float>::max();
-	Vector3 minExtents{ maxF, maxF, maxF };
-	Vector3 maxExtents{ -maxF, -maxF, -maxF };
-
-	for (uint32_t i = 0; i < aiScene->mNumMeshes; ++i)
-	{
-		const auto aiMesh = aiScene->mMeshes[i];
-
-		vector<float> vertexData;
-		vector<float> vertexDataPositionOnly;
-		vector<uint32_t> indexData;
-
-		MeshPtr mesh = make_shared<Mesh>();
-		MeshPart meshPart{};
-
-		//meshPart.vertexBase = vertexCount;
-
-		vertexCount += aiMesh->mNumVertices;
-
-		aiColor4D defaultColor(0.0f, 0.0f, 0.0f, 1.0f);
-		aiScene->mMaterials[aiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, defaultColor);
-
-		for (uint32_t j = 0; j < aiMesh->mNumVertices; ++j)
-		{
-			const aiVector3D* pos = &(aiMesh->mVertices[j]);
-			const aiVector3D* normal = &(aiMesh->mNormals[j]);
-			const aiVector3D* texCoord = (aiMesh->HasTextureCoords(0)) ? &(aiMesh->mTextureCoords[0][j]) : &zero;
-			const aiColor4D* color = (aiMesh->HasVertexColors(0)) ? &(aiMesh->mColors[0][j]) : &defaultColor;
-			const aiVector3D* tangent = (aiMesh->HasTangentsAndBitangents()) ? &(aiMesh->mTangents[j]) : &zero;
-			const aiVector3D* bitangent = (aiMesh->HasTangentsAndBitangents()) ? &(aiMesh->mBitangents[j]) : &zero;
-
-			if (HasFlag(components, VertexComponent::Position))
-			{
-				vertexData.push_back(pos->x * scale);
-				vertexData.push_back(pos->y * scale);  // TODO: Is this a hack?
-				vertexData.push_back(pos->z * scale);
-
-				vertexDataPositionOnly.push_back(pos->x * scale);
-				vertexDataPositionOnly.push_back(pos->y * scale);  // TODO: Is this a hack?
-				vertexDataPositionOnly.push_back(pos->z * scale);
-
-				UpdateExtents(minExtents, maxExtents, scale * Math::Vector3(pos->x, pos->y, pos->z));
-			}
-
-			if (HasFlag(components, VertexComponent::Normal))
-			{
-				vertexData.push_back(normal->x);
-				vertexData.push_back(normal->y); // TODO: Is this a hack?
-				vertexData.push_back(normal->z);
-			}
-
-			if (HasFlag(components, VertexComponent::Tangent))
-			{
-				vertexData.push_back(tangent->x);
-				vertexData.push_back(tangent->y);
-				vertexData.push_back(tangent->z);
-			}
-
-			if (HasFlag(components, VertexComponent::Bitangent))
-			{
-				vertexData.push_back(bitangent->x);
-				vertexData.push_back(bitangent->y);
-				vertexData.push_back(bitangent->z);
-			}
-
-			if (HasFlag(components, VertexComponent::Color))
-			{
-				vertexData.push_back(color->r);
-				vertexData.push_back(color->g);
-				vertexData.push_back(color->b);
-				vertexData.push_back(color->a);
-			}
-
-			// TODO Color1
-
-			if (HasFlag(components, VertexComponent::Texcoord))
-			{
-				vertexData.push_back(texCoord->x);
-				vertexData.push_back(texCoord->y);
-			}
-
-			// TODO Texcoord1-3, BlendIndices, BlendWeight
-		}
-
-		meshPart.vertexCount = aiMesh->mNumVertices;
-
-		uint32_t indexBase = static_cast<uint32_t>(indexData.size());
-		for (unsigned int j = 0; j < aiMesh->mNumFaces; j++)
-		{
-			const aiFace& Face = aiMesh->mFaces[j];
-			if (Face.mNumIndices != 3)
-				continue;
-			indexData.push_back(indexBase + Face.mIndices[0]);
-			indexData.push_back(indexBase + Face.mIndices[1]);
-			indexData.push_back(indexBase + Face.mIndices[2]);
-			meshPart.indexCount += 3;
-			indexCount += 3;
-		}
-
-		// Create vertex buffer
-		uint32_t stride = layout.GetSizeInBytes();
-
-		GpuBufferDesc vertexBufferDesc{
-			.name			= "Model|VertexBuffer",
-			.resourceType	= ResourceType::VertexBuffer,
-			.memoryAccess	= MemoryAccess::GpuRead,
-			.elementCount	= sizeof(float) * vertexData.size() / stride,
-			.elementSize	= stride,
-			.initialData	= vertexData.data()
-		};
-		mesh->vertexBuffer = device->CreateGpuBuffer(vertexBufferDesc);
-
-		// Create position-only vertex buffer
-		stride = 3 * sizeof(float);
-		GpuBufferDesc positionOnlyVertexBufferDesc
-		{
-			.name			= "Model|VertexBuffer (Position Only)",
-			.resourceType	= ResourceType::VertexBuffer,
-			.memoryAccess	= MemoryAccess::GpuRead,
-			.elementCount	= sizeof(float) * vertexDataPositionOnly.size() / stride,
-			.elementSize	= stride,
-			.initialData	= vertexDataPositionOnly.data()
-		};
-		mesh->vertexBufferPositionOnly = device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
-		
-		// TODO: Support uint16 indices
-
-		// Create index buffer
-		GpuBufferDesc indexBufferDesc{
-			.name			= "Model|IndexBuffer",
-			.resourceType	= ResourceType::IndexBuffer,
-			.memoryAccess	= MemoryAccess::GpuRead,
-			.elementCount	= indexData.size(),
-			.elementSize	= sizeof(uint32_t),
-			.initialData	= indexData.data()
-		};
-		mesh->indexBuffer = device->CreateGpuBuffer(indexBufferDesc);
-		
-		// Set bounding box
-		mesh->boundingBox = Math::BoundingBoxFromMinMax(minExtents, maxExtents);
-
-		mesh->meshParts.push_back(meshPart);
-		model->meshes.push_back(mesh);
-	}
-
-	return model;
+	return loader.Load();
 }
 
 

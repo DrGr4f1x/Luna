@@ -363,7 +363,6 @@ void DeviceManager::CreateDeviceResources()
 
 	m_caps = make_unique<DeviceCaps>();
 	ReadCaps();
-	m_caps->LogCaps();
 }
 
 

@@ -405,9 +405,9 @@ TexturePtr Application::LoadTexture(const std::string& filename, bool forceSrgb)
 }
 
 
-ModelPtr Application::LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale)
+ModelPtr Application::LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale, ModelLoad loadFlags, bool loadMaterials)
 {
-	return Luna::LoadModel(m_deviceManager->GetDevice(), filename, layout, scale);
+	return Luna::LoadModel(m_deviceManager->GetDevice(), filename, layout, scale, loadFlags, loadMaterials);
 }
 
 

@@ -138,6 +138,8 @@ public:
 	virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
 
+	virtual void Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format) = 0;
+
 	// Compute context
 	virtual void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
 	virtual void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) = 0;
@@ -276,6 +278,8 @@ public:
 		uint32_t startVertexLocation = 0, uint32_t startInstanceLocation = 0);
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation);
+
+	void Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format);
 };
 
 
@@ -737,6 +741,12 @@ inline void GraphicsContext::DrawIndexedInstanced(uint32_t indexCountPerInstance
 	int32_t baseVertexLocation, uint32_t startInstanceLocation)
 {
 	m_contextImpl->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+
+inline void GraphicsContext::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format)
+{
+	m_contextImpl->Resolve(srcBuffer, destBuffer, format);
 }
 
 

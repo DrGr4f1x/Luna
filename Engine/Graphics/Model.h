@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\Texture.h"
 
 // TODO: Going to need a ModelManager (like TextureManager) to cache models loaded from file.
 
@@ -89,6 +90,12 @@ enum class ModelLoad
 
 template <> struct EnableBitmaskOperators<ModelLoad> { static const bool enable = true; };
 
+struct MeshMaterial
+{ 
+	Color diffuseColor{ DirectX::Colors::Black };
+	TexturePtr diffuseTexture;
+};
+
 
 struct MeshPart
 {
@@ -104,6 +111,8 @@ struct Mesh
 	void Render(GraphicsContext& context, bool positionOnly = false);
 
 	std::string name;
+
+	int materialIndex{ -1 };
 
 	GpuBufferPtr vertexBuffer;
 	GpuBufferPtr vertexBufferPositionOnly;
@@ -131,16 +140,19 @@ struct Model
 	Math::BoundingBox boundingBox;
 
 	std::vector<MeshPtr> meshes;
+	std::vector<MeshMaterial> materials;
 };
 
 using ModelPtr = std::shared_ptr<Model>;
 
 
-ModelPtr LoadModel(IDevice* device, const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault);
+ModelPtr LoadModel(IDevice* device, const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault, bool loadMaterials = false);
 
 ModelPtr MakePlane(IDevice* device, const VertexLayoutBase& layout, float width, float height);
 ModelPtr MakeCylinder(IDevice* device, const VertexLayoutBase& layout, float height, float radius, uint32_t numVerts);
 ModelPtr MakeSphere(IDevice* device, const VertexLayoutBase& layout, float radius, uint32_t numVerts, uint32_t numRings);
 ModelPtr MakeBox(IDevice* device, const VertexLayoutBase& layout, float width, float height, float depth);
+
+inline LogCategory LogModel{ "LogModel" };
 
 } // namespace Luna

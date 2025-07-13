@@ -315,7 +315,7 @@ void DeviceManager::CreateDeviceResources()
 	// TODO
 	m_caps.ReadCaps(*m_vkPhysicalDevice);
 	//if (g_graphicsDeviceOptions.logDeviceFeatures)
-	if (true)
+	if (false)
 	{
 		m_caps.LogCaps();
 	}

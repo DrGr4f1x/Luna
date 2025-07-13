@@ -127,7 +127,7 @@ protected:
 
 	// Wrappers for resource loading
 	TexturePtr LoadTexture(const std::string& filename, bool forceSrgb = false);
-	ModelPtr LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f);
+	ModelPtr LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault, bool loadMaterials = false);
 
 protected:
 	ApplicationInfo m_appInfo;

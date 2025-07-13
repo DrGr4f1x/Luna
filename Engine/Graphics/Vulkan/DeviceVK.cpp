@@ -632,7 +632,7 @@ GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipel
 	};
 
 	// Rasterizer state
-	const auto rasterizerState = pipelineDesc.rasterizerState;
+	const auto& rasterizerState = pipelineDesc.rasterizerState;
 	VkPipelineRasterizationStateCreateInfo rasterizerInfo
 	{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -652,8 +652,8 @@ GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipel
 	VkPipelineMultisampleStateCreateInfo multisampleInfo{
 		.sType					= VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
 		.rasterizationSamples	= GetSampleCountFlags(pipelineDesc.msaaCount),
-		.sampleShadingEnable	= VK_FALSE,
-		.minSampleShading		= 0.0f,
+		.sampleShadingEnable	= pipelineDesc.sampleRateShading ? VK_TRUE : VK_FALSE,
+		.minSampleShading		= pipelineDesc.sampleRateShading ? 0.25f : 0.0f,
 		.pSampleMask			= nullptr,
 		.alphaToCoverageEnable	= pipelineDesc.blendState.alphaToCoverageEnable ? VK_TRUE : VK_FALSE,
 		.alphaToOneEnable		= VK_FALSE

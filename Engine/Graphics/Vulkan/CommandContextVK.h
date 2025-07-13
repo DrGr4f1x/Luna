@@ -149,6 +149,8 @@ public:
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 
+	void Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format) override;
+
 	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) override;
 	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) override;
 	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8) override;
