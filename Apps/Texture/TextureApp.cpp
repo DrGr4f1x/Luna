@@ -250,7 +250,7 @@ void TextureApp::InitPipelineState()
 		.rootSignature		= m_rootSignature
 	};
 
-	m_graphicsPipeline = CreateGraphicsPipelineState(desc);
+	m_graphicsPipeline = CreateGraphicsPipeline(desc);
 }
 
 

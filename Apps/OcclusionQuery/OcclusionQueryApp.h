@@ -69,9 +69,9 @@ protected:
 
 	Luna::RootSignaturePtr m_rootSignature;
 
-	Luna::GraphicsPipelineStatePtr m_solidPipeline;
-	Luna::GraphicsPipelineStatePtr m_simplePipeline;
-	Luna::GraphicsPipelineStatePtr m_occluderPipeline;
+	Luna::GraphicsPipelinePtr m_solidPipeline;
+	Luna::GraphicsPipelinePtr m_simplePipeline;
+	Luna::GraphicsPipelinePtr m_occluderPipeline;
 	bool m_pipelinesCreated{ false };
 
 	Luna::ModelPtr m_occluderModel;

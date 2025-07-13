@@ -244,7 +244,7 @@ void OcclusionQueryApp::InitPipelines()
 		.rootSignature		= m_rootSignature
 	};
 
-	m_solidPipeline = CreateGraphicsPipelineState(solidDesc);
+	m_solidPipeline = CreateGraphicsPipeline(solidDesc);
 
 	// Simple pipeline
 	GraphicsPipelineDesc simpleDesc = solidDesc;
@@ -253,7 +253,7 @@ void OcclusionQueryApp::InitPipelines()
 	simpleDesc.SetVertexShader("SimpleVS");
 	simpleDesc.SetPixelShader("SimplePS");
 
-	m_simplePipeline = CreateGraphicsPipelineState(simpleDesc);
+	m_simplePipeline = CreateGraphicsPipeline(simpleDesc);
 
 	// Occluder pipeline
 	GraphicsPipelineDesc occluderDesc = solidDesc;
@@ -268,7 +268,7 @@ void OcclusionQueryApp::InitPipelines()
 	occluderDesc.SetVertexShader("OccluderVS");
 	occluderDesc.SetPixelShader("OccluderPS");
 
-	m_occluderPipeline = CreateGraphicsPipelineState(occluderDesc);
+	m_occluderPipeline = CreateGraphicsPipeline(occluderDesc);
 }
 
 

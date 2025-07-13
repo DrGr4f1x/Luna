@@ -217,7 +217,7 @@ void GeometryShaderApp::InitPipelines()
 		.rootSignature		= m_meshRootSignature
 	};
 
-	m_meshPipeline = CreateGraphicsPipelineState(meshPipelineDesc);
+	m_meshPipeline = CreateGraphicsPipeline(meshPipelineDesc);
 
 	// Geometry shader pipeline
 	GraphicsPipelineDesc geomPipelineDesc{
@@ -236,7 +236,7 @@ void GeometryShaderApp::InitPipelines()
 		.rootSignature		= m_geomRootSignature
 	};
 
-	m_geomPipeline = CreateGraphicsPipelineState(geomPipelineDesc);
+	m_geomPipeline = CreateGraphicsPipeline(geomPipelineDesc);
 }
 
 

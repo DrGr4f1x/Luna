@@ -40,8 +40,8 @@ public:
 
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
 
-	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) override;
-	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) override;
+	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
+	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) override;
 
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
 

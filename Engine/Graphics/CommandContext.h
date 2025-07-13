@@ -24,19 +24,19 @@ class IDepthBuffer;
 class IDescriptorSet;
 class IGpuBuffer;
 class GraphicsContext;
-class IComputePipelineState;
-class IGraphicsPipelineState;
+class IComputePipeline;
+class IGraphicsPipeline;
 class IQueryHeap;
 class ResourceSet;
 class IRootSignature;
 
 
 using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
-using ComputePipelineStatePtr = std::shared_ptr<IComputePipelineState>;
+using ComputePipelinePtr = std::shared_ptr<IComputePipeline>;
 using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 using DescriptorSetPtr = std::shared_ptr<IDescriptorSet>;
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
-using GraphicsPipelineStatePtr = std::shared_ptr<IGraphicsPipelineState>;
+using GraphicsPipelinePtr = std::shared_ptr<IGraphicsPipeline>;
 using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 
@@ -95,8 +95,8 @@ public:
 	virtual void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
 
 	virtual void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) = 0;
-	virtual void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline) = 0;
-	virtual void SetComputePipeline(ComputePipelineStatePtr& computePipeline) = 0;
+	virtual void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) = 0;
+	virtual void SetComputePipeline(ComputePipelinePtr& computePipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -234,7 +234,7 @@ public:
 	void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
 
 	void SetRootSignature(RootSignaturePtr& rootSignature);
-	void SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline);
+	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
@@ -289,7 +289,7 @@ public:
 	static ComputeContext& Begin(const std::string id = "", bool bAsync = false);
 
 	void SetRootSignature(RootSignaturePtr& rootSignature);
-	void SetComputePipeline(ComputePipelineStatePtr& computePipeline);
+	void SetComputePipeline(ComputePipelinePtr& computePipeline);
 
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
@@ -531,7 +531,7 @@ inline void GraphicsContext::SetRootSignature(RootSignaturePtr& rootSignature)
 }
 
 
-inline void GraphicsContext::SetGraphicsPipeline(GraphicsPipelineStatePtr& graphicsPipeline)
+inline void GraphicsContext::SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline)
 {
 	m_contextImpl->SetGraphicsPipeline(graphicsPipeline);
 }
@@ -756,7 +756,7 @@ inline void ComputeContext::SetRootSignature(RootSignaturePtr& rootSignature)
 }
 
 
-inline void ComputeContext::SetComputePipeline(ComputePipelineStatePtr& computePipeline)
+inline void ComputeContext::SetComputePipeline(ComputePipelinePtr& computePipeline)
 {
 	m_contextImpl->SetComputePipeline(computePipeline);
 }

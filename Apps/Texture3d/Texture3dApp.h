@@ -60,7 +60,7 @@ protected:
 	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_rootSignature;
-	Luna::GraphicsPipelineStatePtr m_graphicsPipeline;
+	Luna::GraphicsPipelinePtr m_graphicsPipeline;
 	bool m_pipelineCreated{ false };
 
 	Constants m_constants;

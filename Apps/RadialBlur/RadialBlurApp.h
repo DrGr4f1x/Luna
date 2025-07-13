@@ -78,10 +78,10 @@ protected:
 	Luna::RootSignaturePtr m_radialBlurRootSignature;
 	Luna::RootSignaturePtr m_sceneRootSignature;
 
-	Luna::GraphicsPipelineStatePtr m_radialBlurPipeline;
-	Luna::GraphicsPipelineStatePtr m_colorPassPipeline;
-	Luna::GraphicsPipelineStatePtr m_phongPassPipeline;
-	Luna::GraphicsPipelineStatePtr m_displayTexturePipeline;
+	Luna::GraphicsPipelinePtr m_radialBlurPipeline;
+	Luna::GraphicsPipelinePtr m_colorPassPipeline;
+	Luna::GraphicsPipelinePtr m_phongPassPipeline;
+	Luna::GraphicsPipelinePtr m_displayTexturePipeline;
 	bool m_pipelinesCreated{ false };
 
 	// Constant buffers

@@ -61,8 +61,8 @@ protected:
 	Luna::RootSignaturePtr m_meshRootSignature;
 	Luna::RootSignaturePtr m_geomRootSignature;
 
-	Luna::GraphicsPipelineStatePtr m_meshPipeline;
-	Luna::GraphicsPipelineStatePtr m_geomPipeline;
+	Luna::GraphicsPipelinePtr m_meshPipeline;
+	Luna::GraphicsPipelinePtr m_geomPipeline;
 	bool m_pipelinesCreated{ false };
 
 	Luna::GpuBufferPtr m_constantBuffer;

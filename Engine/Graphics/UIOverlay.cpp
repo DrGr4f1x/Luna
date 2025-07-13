@@ -331,7 +331,7 @@ void UIOverlay::InitPSO()
 	};
 
 	auto device = GetDeviceManager()->GetDevice();
-	m_graphicsPipeline = device->CreateGraphicsPipelineState(desc);
+	m_graphicsPipeline = device->CreateGraphicsPipeline(desc);
 }
 
 

@@ -41,8 +41,8 @@ public:
 
 	virtual RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
 
-	virtual GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc) = 0;
-	virtual ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc) = 0;
+	virtual GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
+	virtual ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) = 0;
 
 	virtual QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) = 0;
 

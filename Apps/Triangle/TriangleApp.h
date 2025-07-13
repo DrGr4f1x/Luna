@@ -79,7 +79,7 @@ private:
 	Luna::RootSignaturePtr m_rootSignature;
 
 	// Pipeline state
-	Luna::GraphicsPipelineStatePtr m_graphicsPipeline;
+	Luna::GraphicsPipelinePtr m_graphicsPipeline;
 
 	// Resources
 	Luna::ResourceSet m_resources;

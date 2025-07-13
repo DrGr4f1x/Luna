@@ -346,7 +346,7 @@ void Texture3dApp::InitPipeline()
 		.rootSignature		= m_rootSignature
 	};
 
-	m_graphicsPipeline = CreateGraphicsPipelineState(skyBoxDesc);
+	m_graphicsPipeline = CreateGraphicsPipeline(skyBoxDesc);
 }
 
 

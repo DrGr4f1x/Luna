@@ -242,7 +242,7 @@ void TextureCubeMapApp::InitPipelines()
 		.rootSignature		= m_skyboxRootSignature
 	};
 
-	m_skyboxPipeline = CreateGraphicsPipelineState(skyBoxDesc);
+	m_skyboxPipeline = CreateGraphicsPipeline(skyBoxDesc);
 
 	GraphicsPipelineDesc modelDesc
 	{
@@ -260,7 +260,7 @@ void TextureCubeMapApp::InitPipelines()
 		.rootSignature		= m_modelRootSignature
 	};
 
-	m_modelPipeline = CreateGraphicsPipelineState(modelDesc);
+	m_modelPipeline = CreateGraphicsPipeline(modelDesc);
 }
 
 

@@ -74,7 +74,7 @@ protected:
 	};
 
 	RootSignaturePtr m_rootSignature;
-	GraphicsPipelineStatePtr m_graphicsPipeline;
+	GraphicsPipelinePtr m_graphicsPipeline;
 
 	TexturePtr m_fontTex;
 	SamplerPtr m_fontSampler;

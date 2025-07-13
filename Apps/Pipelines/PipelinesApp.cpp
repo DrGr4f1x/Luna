@@ -219,7 +219,7 @@ void PipelinesApp::InitPipelines()
 		.rootSignature		= m_rootSignature
 	};
 
-	m_phongPipeline = CreateGraphicsPipelineState(phongPipelineDesc);
+	m_phongPipeline = CreateGraphicsPipeline(phongPipelineDesc);
 
 	// Toon pipeline
 	GraphicsPipelineDesc toonPipelineDesc = phongPipelineDesc;
@@ -227,7 +227,7 @@ void PipelinesApp::InitPipelines()
 	toonPipelineDesc.SetVertexShader("ToonVS");
 	toonPipelineDesc.SetPixelShader("ToonPS");
 
-	m_toonPipeline = CreateGraphicsPipelineState(toonPipelineDesc);
+	m_toonPipeline = CreateGraphicsPipeline(toonPipelineDesc);
 
 	// Wireframe pipeline
 	GraphicsPipelineDesc wireframePipelineDesc = phongPipelineDesc;
@@ -236,7 +236,7 @@ void PipelinesApp::InitPipelines()
 	wireframePipelineDesc.SetVertexShader("WireframeVS");
 	wireframePipelineDesc.SetPixelShader("WireframePS");
 
-	m_wireframePipeline = CreateGraphicsPipelineState(wireframePipelineDesc);
+	m_wireframePipeline = CreateGraphicsPipeline(wireframePipelineDesc);
 }
 
 

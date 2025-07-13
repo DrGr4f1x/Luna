@@ -20,7 +20,7 @@ namespace Luna::DX12
 class Device;
 
 
-class GraphicsPipelineState : public IGraphicsPipelineState
+class GraphicsPipeline : public IGraphicsPipeline
 { 
 	friend class Device;
 
@@ -33,7 +33,7 @@ protected:
 };
 
 
-class ComputePipelineState : public IComputePipelineState
+class ComputePipeline : public IComputePipeline
 {
 	friend class Device;
 

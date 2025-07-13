@@ -226,7 +226,7 @@ void InstancingApp::InitPipelines()
 		.pixelShader		= {.shaderFile = "StarfieldPS" },
 		.rootSignature		= m_starfieldRootSignature
 	};
-	m_starfieldPipeline = CreateGraphicsPipelineState(starfieldPipelineDesc);
+	m_starfieldPipeline = CreateGraphicsPipeline(starfieldPipelineDesc);
 
 	// Instanced rock
 	vector<VertexStreamDesc> instancedVertexStreams = {
@@ -261,7 +261,7 @@ void InstancingApp::InitPipelines()
 		.vertexElements		= instancedVertexElements,
 		.rootSignature		= m_modelRootSignature
 	};
-	m_rockPipeline = CreateGraphicsPipelineState(rockPipelineDesc);
+	m_rockPipeline = CreateGraphicsPipeline(rockPipelineDesc);
 
 	// Planet
 	auto vertexLayout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
@@ -287,7 +287,7 @@ void InstancingApp::InitPipelines()
 		.vertexElements		= vertexLayout.GetElements(),
 		.rootSignature		= m_modelRootSignature
 	};
-	m_planetPipeline = CreateGraphicsPipelineState(planetPipelineDesc);
+	m_planetPipeline = CreateGraphicsPipeline(planetPipelineDesc);
 }
 
 
@@ -384,12 +384,6 @@ void InstancingApp::UpdateConstantBuffer()
 	using namespace Math;
 
 	m_planetConstants.projectionMatrix = m_camera.GetProjMatrix();
-
-	//Matrix4 viewMatrix{ AffineTransform(Vector3(5.5f, -1.85f, 0.0f) + Vector3(0.0f, 0.0f, m_zoom)) };
-
-	//viewMatrix = viewMatrix * Matrix4(AffineTransform::MakeXRotation(XMConvertToRadians(-17.2f)));
-	//viewMatrix = viewMatrix * Matrix4(AffineTransform::MakeYRotation(XMConvertToRadians(-4.7f)));
-	//viewMatrix = viewMatrix * Matrix4(AffineTransform::MakeZRotation(XMConvertToRadians(0.0f)));
 
 	Quaternion rotX{ Vector3(kXUnitVector), XMConvertToRadians(17.2f) };
 	Quaternion rotY{ Vector3(kYUnitVector), XMConvertToRadians(4.7f) };

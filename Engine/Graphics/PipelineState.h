@@ -201,10 +201,10 @@ struct ComputePipelineDesc
 };
 
 
-class IGraphicsPipelineState
+class IGraphicsPipeline
 {
 public:
-	virtual ~IGraphicsPipelineState() = default;
+	virtual ~IGraphicsPipeline() = default;
 
 	IRootSignature* GetRootSignature() const { return m_rootSignature.get(); }
 
@@ -215,13 +215,13 @@ protected:
 	GraphicsPipelineDesc m_desc{};
 };
 
-using GraphicsPipelineStatePtr = std::shared_ptr<IGraphicsPipelineState>;
+using GraphicsPipelinePtr = std::shared_ptr<IGraphicsPipeline>;
 
 
-class IComputePipelineState
+class IComputePipeline
 {
 public:
-	virtual ~IComputePipelineState() = default;
+	virtual ~IComputePipeline() = default;
 
 	IRootSignature* GetRootSignature() const { return m_rootSignature.get(); }
 
@@ -230,6 +230,6 @@ protected:
 	ComputePipelineDesc m_desc{};
 };
 
-using ComputePipelineStatePtr = std::shared_ptr<IComputePipelineState>;
+using ComputePipelinePtr = std::shared_ptr<IComputePipeline>;
 
 } // namespace

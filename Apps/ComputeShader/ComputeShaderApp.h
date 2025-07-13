@@ -64,10 +64,10 @@ protected:
 	Luna::RootSignaturePtr m_graphicsrootSignature;
 	Luna::RootSignaturePtr m_computeRootSignature;
 
-	Luna::GraphicsPipelineStatePtr m_graphicsPipeline;
-	Luna::ComputePipelineStatePtr m_edgeDetectPipeline;
-	Luna::ComputePipelineStatePtr m_embossPipeline;
-	Luna::ComputePipelineStatePtr m_sharpenPipeline;
+	Luna::GraphicsPipelinePtr m_graphicsPipeline;
+	Luna::ComputePipelinePtr m_edgeDetectPipeline;
+	Luna::ComputePipelinePtr m_embossPipeline;
+	Luna::ComputePipelinePtr m_sharpenPipeline;
 	bool m_pipelinesCreated{ false };
 
 	Luna::ResourceSet m_computeResources;

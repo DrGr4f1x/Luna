@@ -69,8 +69,8 @@ protected:
 	Luna::RootSignaturePtr m_modelRootSignature;
 	Luna::RootSignaturePtr m_skyboxRootSignature;
 
-	Luna::GraphicsPipelineStatePtr m_modelPipeline;
-	Luna::GraphicsPipelineStatePtr m_skyboxPipeline;
+	Luna::GraphicsPipelinePtr m_modelPipeline;
+	Luna::GraphicsPipelinePtr m_skyboxPipeline;
 	bool m_pipelinesCreated{ false };
 
 	VSConstants m_vsSkyboxConstants;

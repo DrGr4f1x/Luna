@@ -375,15 +375,15 @@ RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootS
 }
 
 
-GraphicsPipelineStatePtr Application::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+GraphicsPipelinePtr Application::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
-	return m_deviceManager->GetDevice()->CreateGraphicsPipelineState(pipelineDesc);
+	return m_deviceManager->GetDevice()->CreateGraphicsPipeline(pipelineDesc);
 }
 
 
-ComputePipelineStatePtr Application::CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc)
+ComputePipelinePtr Application::CreateComputePipeline(const ComputePipelineDesc& pipelineDesc)
 {
-	return m_deviceManager->GetDevice()->CreateComputePipelineState(pipelineDesc);
+	return m_deviceManager->GetDevice()->CreateComputePipeline(pipelineDesc);
 }
 
 

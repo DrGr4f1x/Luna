@@ -245,7 +245,7 @@ void RadialBlurApp::InitPipelines()
 		.rootSignature		= m_radialBlurRootSignature
 	};
 
-	m_radialBlurPipeline = CreateGraphicsPipelineState(radialBlurPipelineDesc);
+	m_radialBlurPipeline = CreateGraphicsPipeline(radialBlurPipelineDesc);
 
 	// Phong pass
 	GraphicsPipelineDesc phongPassPipelineDesc{
@@ -263,7 +263,7 @@ void RadialBlurApp::InitPipelines()
 		.rootSignature		= m_sceneRootSignature
 	};
 
-	m_phongPassPipeline = CreateGraphicsPipelineState(phongPassPipelineDesc);
+	m_phongPassPipeline = CreateGraphicsPipeline(phongPassPipelineDesc);
 
 	// Color pass
 	GraphicsPipelineDesc colorPassPipelineDesc = phongPassPipelineDesc;
@@ -272,14 +272,14 @@ void RadialBlurApp::InitPipelines()
 	colorPassPipelineDesc.SetVertexShader("ColorPassVS");
 	colorPassPipelineDesc.SetPixelShader("ColorPassPS");
 
-	m_colorPassPipeline = CreateGraphicsPipelineState(colorPassPipelineDesc);
+	m_colorPassPipeline = CreateGraphicsPipeline(colorPassPipelineDesc);
 
 	// Display texture pass
 	GraphicsPipelineDesc displayTexturePipelineDesc = radialBlurPipelineDesc;
 	displayTexturePipelineDesc.SetName("Display Texture Graphics PSO");
 	displayTexturePipelineDesc.SetBlendState(CommonStates::BlendDisable());
 
-	m_displayTexturePipeline = CreateGraphicsPipelineState(displayTexturePipelineDesc);
+	m_displayTexturePipeline = CreateGraphicsPipeline(displayTexturePipelineDesc);
 }
 
 

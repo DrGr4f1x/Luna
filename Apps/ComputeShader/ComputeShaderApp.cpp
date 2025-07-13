@@ -316,7 +316,7 @@ void ComputeShaderApp::InitPipelines()
 		.rootSignature		= m_graphicsrootSignature
 	};
 
-	m_graphicsPipeline = CreateGraphicsPipelineState(graphicsDesc);
+	m_graphicsPipeline = CreateGraphicsPipeline(graphicsDesc);
 
 	// Edge detect pipeline
 	ComputePipelineDesc edgeDetectDesc{
@@ -325,7 +325,7 @@ void ComputeShaderApp::InitPipelines()
 		.rootSignature	= m_computeRootSignature
 	};
 
-	m_edgeDetectPipeline = CreateComputePipelineState(edgeDetectDesc);
+	m_edgeDetectPipeline = CreateComputePipeline(edgeDetectDesc);
 
 	// Emboss pipeline
 	ComputePipelineDesc embossDesc{
@@ -334,7 +334,7 @@ void ComputeShaderApp::InitPipelines()
 		.rootSignature	= m_computeRootSignature
 	};
 
-	m_embossPipeline = CreateComputePipelineState(embossDesc);
+	m_embossPipeline = CreateComputePipeline(embossDesc);
 
 	// Sharpen pipeline
 	ComputePipelineDesc sharpenDesc{
@@ -343,7 +343,7 @@ void ComputeShaderApp::InitPipelines()
 		.rootSignature	= m_computeRootSignature
 	};
 
-	m_sharpenPipeline = CreateComputePipelineState(sharpenDesc);
+	m_sharpenPipeline = CreateComputePipeline(sharpenDesc);
 }
 
 

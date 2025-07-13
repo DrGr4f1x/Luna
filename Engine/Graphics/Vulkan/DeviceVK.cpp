@@ -544,7 +544,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 }
 
 
-GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -786,17 +786,17 @@ GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipel
 		LogError(LogVulkan) << "Failed to create VkPipeline (graphics).  Error code: " << res << endl;
 	}
 
-	auto pipelineState = std::make_shared<GraphicsPipelineState>();
+	auto graphicsPipeline = std::make_shared<GraphicsPipeline>();
 
-	pipelineState->m_device = this;
-	pipelineState->m_desc = pipelineDesc;
-	pipelineState->m_pipelineState = pipeline;
+	graphicsPipeline->m_device = this;
+	graphicsPipeline->m_desc = pipelineDesc;
+	graphicsPipeline->m_pipelineState = pipeline;
 
-	return pipelineState;
+	return graphicsPipeline;
 }
 
 
-ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc)
+ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipelineDesc)
 {
 	// Shaders
 	VkPipelineShaderStageCreateInfo shaderStage{};
@@ -830,13 +830,13 @@ ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePipeline
 		LogError(LogVulkan) << "Failed to create VkPipeline (compute).  Error code: " << res << endl;
 	}
 
-	auto pipelineState = std::make_shared<ComputePipelineState>();
+	auto computePipeline = std::make_shared<ComputePipeline>();
 
-	pipelineState->m_device = this;
-	pipelineState->m_desc = pipelineDesc;
-	pipelineState->m_pipelineState = pipeline;
+	computePipeline->m_device = this;
+	computePipeline->m_desc = pipelineDesc;
+	computePipeline->m_pipelineState = pipeline;
 
-	return pipelineState;
+	return computePipeline;
 }
 
 

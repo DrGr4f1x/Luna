@@ -741,7 +741,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 }
 
 
-Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc)
+Luna::GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
@@ -939,17 +939,17 @@ Luna::GraphicsPipelineStatePtr Device::CreateGraphicsPipelineState(const Graphic
 		pPipelineState = *pipelineStateRef;
 	}
 
-	auto pipelineState = std::make_shared<GraphicsPipelineState>();
+	auto graphicsPipeline = std::make_shared<GraphicsPipeline>();
 
-	pipelineState->m_device = this;
-	pipelineState->m_desc = pipelineDesc;
-	pipelineState->m_pipelineState = pPipelineState;
+	graphicsPipeline->m_device = this;
+	graphicsPipeline->m_desc = pipelineDesc;
+	graphicsPipeline->m_pipelineState = pPipelineState;
 
-	return pipelineState;
+	return graphicsPipeline;
 }
 
 
-Luna::ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc)
+Luna::ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipelineDesc)
 {
 	D3D12_COMPUTE_PIPELINE_STATE_DESC d3d12PipelineDesc{};
 	d3d12PipelineDesc.NodeMask = 1;
@@ -1011,13 +1011,13 @@ Luna::ComputePipelineStatePtr Device::CreateComputePipelineState(const ComputePi
 		pPipelineState = *pipelineStateRef;
 	}
 
-	auto pipelineState = std::make_shared<ComputePipelineState>();
+	auto computePipeline = std::make_shared<ComputePipeline>();
 
-	pipelineState->m_device = this;
-	pipelineState->m_desc = pipelineDesc;
-	pipelineState->m_pipelineState = pPipelineState;
+	computePipeline->m_device = this;
+	computePipeline->m_desc = pipelineDesc;
+	computePipeline->m_pipelineState = pPipelineState;
 
-	return pipelineState;
+	return computePipeline;
 }
 
 

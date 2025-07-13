@@ -248,12 +248,12 @@ void MultisamplingApp::InitPipelines()
 		.vertexElements		= layout.GetElements(),
 		.rootSignature		= m_rootSignature
 	};
-	m_msaaPipeline = CreateGraphicsPipelineState(msaaPipelineDesc);
+	m_msaaPipeline = CreateGraphicsPipeline(msaaPipelineDesc);
 
 	GraphicsPipelineDesc msaaSampleRatePipelineDesc = msaaPipelineDesc;
 	msaaSampleRatePipelineDesc.SetName("MSAA Sample Rate Graphics PSO");
 	msaaSampleRatePipelineDesc.sampleRateShading = true;
-	m_msaaSampleRatePipeline = CreateGraphicsPipelineState(msaaSampleRatePipelineDesc);
+	m_msaaSampleRatePipeline = CreateGraphicsPipeline(msaaSampleRatePipelineDesc);
 }
 
 

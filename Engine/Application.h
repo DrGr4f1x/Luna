@@ -120,8 +120,8 @@ protected:
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
-	GraphicsPipelineStatePtr CreateGraphicsPipelineState(const GraphicsPipelineDesc& pipelineDesc);
-	ComputePipelineStatePtr CreateComputePipelineState(const ComputePipelineDesc& pipelineDesc);
+	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
+	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc);
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc);
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc);
 

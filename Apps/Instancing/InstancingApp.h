@@ -65,9 +65,9 @@ protected:
 	Luna::RootSignaturePtr m_starfieldRootSignature;
 	Luna::RootSignaturePtr m_modelRootSignature;
 
-	Luna::GraphicsPipelineStatePtr m_starfieldPipeline;
-	Luna::GraphicsPipelineStatePtr m_rockPipeline;
-	Luna::GraphicsPipelineStatePtr m_planetPipeline;
+	Luna::GraphicsPipelinePtr m_starfieldPipeline;
+	Luna::GraphicsPipelinePtr m_rockPipeline;
+	Luna::GraphicsPipelinePtr m_planetPipeline;
 	bool m_pipelinesCreated{ false };
 
 	Luna::TexturePtr m_rockTexture;

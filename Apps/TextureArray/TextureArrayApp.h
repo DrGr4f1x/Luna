@@ -78,7 +78,7 @@ protected:
 	Luna::ResourceSet m_resources;
 
 	Luna::RootSignaturePtr m_rootSignature;
-	Luna::GraphicsPipelineStatePtr m_graphicsPipeline;
+	Luna::GraphicsPipelinePtr m_graphicsPipeline;
 	bool m_pipelineCreated{ false };
 
 	// Assets

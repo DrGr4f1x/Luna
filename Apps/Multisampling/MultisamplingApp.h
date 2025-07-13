@@ -71,8 +71,8 @@ protected:
 	std::vector<Luna::ResourceSet> m_resources;
 
 	Luna::RootSignaturePtr m_rootSignature;
-	Luna::GraphicsPipelineStatePtr m_msaaPipeline;
-	Luna::GraphicsPipelineStatePtr m_msaaSampleRatePipeline;
+	Luna::GraphicsPipelinePtr m_msaaPipeline;
+	Luna::GraphicsPipelinePtr m_msaaSampleRatePipeline;
 	bool m_pipelinesCreated{ false };
 
 	Luna::ModelPtr m_model;

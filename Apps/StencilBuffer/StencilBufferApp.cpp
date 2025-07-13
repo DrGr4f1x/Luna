@@ -217,7 +217,7 @@ void StencilBufferApp::InitPipelines()
 			.rootSignature		= m_rootSignature
 		};
 
-		m_toonPipeline = CreateGraphicsPipelineState(toonPipelineDesc);
+		m_toonPipeline = CreateGraphicsPipeline(toonPipelineDesc);
 	}
 
 	// Outline pipeline
@@ -247,7 +247,7 @@ void StencilBufferApp::InitPipelines()
 			.rootSignature		= m_rootSignature
 		};
 
-		m_outlinePipeline = CreateGraphicsPipelineState(outlinePipelineDesc);
+		m_outlinePipeline = CreateGraphicsPipeline(outlinePipelineDesc);
 	}
 }
 
