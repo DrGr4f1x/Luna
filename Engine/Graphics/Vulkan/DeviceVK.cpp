@@ -309,11 +309,14 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	VkBufferUsageFlags extraFlags{};
+	if (gpuBufferDesc.bAllowShaderResource || gpuBufferDesc.bAllowUnorderedAccess)
+		extraFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 
 	VkBufferCreateInfo bufferCreateInfo{
 		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 		.size	= gpuBufferDesc.elementCount * gpuBufferDesc.elementSize,
-		.usage	= GetBufferUsageFlags(gpuBufferDesc.resourceType) | transferFlags
+		.usage	= GetBufferUsageFlags(gpuBufferDesc.resourceType) | transferFlags | extraFlags
 	};
 
 	VmaAllocationCreateInfo allocCreateInfo{};

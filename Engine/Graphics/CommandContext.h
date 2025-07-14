@@ -68,6 +68,8 @@ public:
 	virtual void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate = false) = 0;
+	virtual void InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate = false) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	virtual DynAlloc ReserveUploadMemory(size_t sizeInBytes) = 0;
@@ -194,6 +196,8 @@ public:
 	void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false);
+	void InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate = false);
+	void InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate = false);
 	void FlushResourceBarriers();
 
 	DynAlloc ReserveUploadMemory(size_t sizeInBytes);
@@ -402,6 +406,18 @@ inline void CommandContext::TransitionResource(GpuBufferPtr& gpuBuffer, Resource
 inline void CommandContext::TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
 {
 	m_contextImpl->TransitionResource(texture, newState, bFlushImmediate);
+}
+
+
+inline void CommandContext::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate)
+{ 
+	m_contextImpl->InsertUAVBarrier(colorBuffer, bFlushImmediate);
+}
+
+
+inline void CommandContext::InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
+{
+	m_contextImpl->InsertUAVBarrier(gpuBuffer, bFlushImmediate);
 }
 
 

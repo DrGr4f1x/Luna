@@ -36,7 +36,7 @@ public:
 	explicit Limits(VkPhysicalDeviceLimits limits);
 	~Limits();
 
-	uint32_t ConstantBufferAlignment() const override { return 256; }
+	uint32_t ConstantBufferAlignment() const override { return (uint32_t)m_limits.minUniformBufferOffsetAlignment; }
 	uint32_t MaxTextureDimension1D() const override { return m_limits.maxImageDimension1D; }
 	uint32_t MaxTextureDimension2D() const override { return m_limits.maxImageDimension2D; }
 	uint32_t MaxTextureDimension3D() const override { return m_limits.maxImageDimension3D; }

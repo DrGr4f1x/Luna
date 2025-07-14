@@ -271,6 +271,26 @@ void CommandContext12::TransitionResource(TexturePtr& texture, ResourceState new
 }
 
 
+void CommandContext12::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate)
+{
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	assert(colorBuffer12 != nullptr);
+
+	InsertUAVBarrier_Internal(colorBuffer12->GetResource(), bFlushImmediate);
+}
+
+
+void CommandContext12::InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
+{
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	assert(gpuBuffer12 != nullptr);
+
+	InsertUAVBarrier_Internal(gpuBuffer12->GetResource(), bFlushImmediate);
+}
+
+
 void CommandContext12::FlushResourceBarriers()
 {
 	if (m_numBarriersToFlush > 0)

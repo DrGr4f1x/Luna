@@ -396,12 +396,65 @@ void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState new
 }
 
 
+void CommandContextVK::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate)
+{
+	// TODO: Try this with GetPlatformObject()
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	assert(colorBufferVK != nullptr);
+
+	TextureBarrier barrier{
+		.image				= colorBufferVK->GetImage(),
+		.format				= FormatToVulkan(colorBuffer->GetFormat()),
+		.imageAspect		= GetImageAspect(colorBuffer->GetFormat()),
+		.beforeState		= colorBuffer->GetUsageState(),
+		.afterState			= colorBuffer->GetUsageState(),
+		.numMips			= colorBuffer->GetNumMips(),
+		.mipLevel			= 0,
+		.arraySizeOrDepth	= colorBuffer->GetArraySize(),
+		.arraySlice			= 0,
+		.bWholeTexture		= true,
+		.bUAVBarrier		= true
+	};
+
+	m_textureBarriers.push_back(barrier);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
+void CommandContextVK::InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
+{
+	// TODO: Try this with GetPlatformObject()
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	assert(gpuBufferVK != nullptr);
+
+	BufferBarrier barrier{
+		.buffer			= gpuBufferVK->GetBuffer(),
+		.beforeState	= gpuBuffer->GetUsageState(),
+		.afterState		= gpuBuffer->GetUsageState(),
+		.size			= gpuBuffer->GetBufferSize(),
+		.bUAVBarrier	= true
+	};
+
+	m_bufferBarriers.push_back(barrier);
+
+	if (bFlushImmediate || GetPendingBarrierCount() >= 16)
+	{
+		FlushResourceBarriers();
+	}
+}
+
+
 void CommandContextVK::FlushResourceBarriers()
 {
 	BeginEvent("FlushResourceBarriers");
 
 	for (const auto& barrier : m_textureBarriers)
 	{
+		// TODO: use named initializers
 		VkImageSubresourceRange subresourceRange{};
 		subresourceRange.aspectMask = barrier.imageAspect;
 		subresourceRange.baseArrayLayer = barrier.arraySlice;
@@ -409,9 +462,10 @@ void CommandContextVK::FlushResourceBarriers()
 		subresourceRange.layerCount = barrier.bWholeTexture ? VK_REMAINING_ARRAY_LAYERS : barrier.arraySizeOrDepth;
 		subresourceRange.levelCount = barrier.bWholeTexture ? VK_REMAINING_MIP_LEVELS : barrier.numMips;
 
+		// TODO: use named initializers
 		VkImageMemoryBarrier2 vkBarrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
-		vkBarrier.srcAccessMask = GetAccessMask(barrier.beforeState);
-		vkBarrier.dstAccessMask = GetAccessMask(barrier.afterState);
+		vkBarrier.srcAccessMask = barrier.bUAVBarrier ? VK_ACCESS_2_SHADER_WRITE_BIT : GetAccessMask(barrier.beforeState);
+		vkBarrier.dstAccessMask = barrier.bUAVBarrier ? VK_ACCESS_2_SHADER_READ_BIT : GetAccessMask(barrier.afterState);
 		vkBarrier.srcStageMask = GetPipelineStage(barrier.beforeState);
 		vkBarrier.dstStageMask = GetPipelineStage(barrier.afterState);
 		vkBarrier.oldLayout = GetImageLayout(barrier.beforeState);
@@ -426,9 +480,10 @@ void CommandContextVK::FlushResourceBarriers()
 
 	for (const auto& barrier : m_bufferBarriers)
 	{
+		// TODO: use named initializers
 		VkBufferMemoryBarrier2 vkBarrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER_2 };
-		vkBarrier.srcAccessMask = GetAccessMask(barrier.beforeState);
-		vkBarrier.dstAccessMask = GetAccessMask(barrier.afterState);
+		vkBarrier.srcAccessMask = barrier.bUAVBarrier ? VK_ACCESS_2_SHADER_WRITE_BIT : GetAccessMask(barrier.beforeState);
+		vkBarrier.dstAccessMask = barrier.bUAVBarrier ? VK_ACCESS_2_SHADER_READ_BIT : GetAccessMask(barrier.afterState);
 		vkBarrier.srcStageMask = GetPipelineStage(barrier.beforeState);
 		vkBarrier.dstStageMask = GetPipelineStage(barrier.afterState);
 		vkBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;

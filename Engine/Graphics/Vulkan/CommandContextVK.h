@@ -42,6 +42,7 @@ struct TextureBarrier
 	uint32_t arraySizeOrDepth{ 1 };
 	uint32_t arraySlice{ 0 };
 	bool bWholeTexture{ false };
+	bool bUAVBarrier{ false };
 };
 
 
@@ -51,6 +52,7 @@ struct BufferBarrier
 	ResourceState beforeState{ ResourceState::Undefined };
 	ResourceState afterState{ ResourceState::Undefined };
 	size_t size{ 0 };
+	bool bUAVBarrier{ false };
 };
 
 
@@ -82,6 +84,8 @@ public:
 	void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newSTate, bool bFlushImmediate) override;
 	void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate) override;
+	void InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate) override;
+	void InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	DynAlloc ReserveUploadMemory(size_t sizeInBytes) override;

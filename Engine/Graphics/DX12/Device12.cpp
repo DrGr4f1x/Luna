@@ -508,12 +508,49 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 	if (gpuBufferDesc.resourceType == ResourceType::ConstantBuffer)
 	{
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{
-			.BufferLocation	= pResource->GetGPUVirtualAddress(),
+			.BufferLocation		= pResource->GetGPUVirtualAddress(),
 			.SizeInBytes		= (uint32_t)(gpuBufferDesc.elementCount * gpuBufferDesc.elementSize)
 		};
 
 		cbvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		m_device->CreateConstantBufferView(&cbvDesc, cbvHandle);
+	}
+
+	if (gpuBufferDesc.resourceType == ResourceType::VertexBuffer || gpuBufferDesc.resourceType == ResourceType::IndexBuffer)
+	{
+		if (gpuBufferDesc.bAllowShaderResource)
+		{
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
+				.Format						= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+				.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
+				.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+				.Buffer = {
+					.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
+					.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+					.Flags					= D3D12_BUFFER_SRV_FLAG_NONE
+				}
+			};
+
+			srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+		}
+
+		if (gpuBufferDesc.bAllowUnorderedAccess)
+		{
+			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
+				.Format			= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+				.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
+				.Buffer = {
+					.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
+					.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+					.CounterOffsetInBytes	= 0,
+					.Flags					= D3D12_BUFFER_UAV_FLAG_NONE
+				}
+			};
+
+			uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+		}
 	}
 
 	auto gpuBuffer = std::make_shared<GpuBuffer>();

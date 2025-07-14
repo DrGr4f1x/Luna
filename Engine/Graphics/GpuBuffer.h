@@ -26,6 +26,7 @@ struct GpuBufferDesc
 	size_t elementCount{ 0 };
 	size_t elementSize{ 0 };
 	const void* initialData{ nullptr };
+	bool bAllowShaderResource{ false };
 	bool bAllowUnorderedAccess{ false };
 
 	GpuBufferDesc& SetName(const std::string& value) { name = value; return *this; }
