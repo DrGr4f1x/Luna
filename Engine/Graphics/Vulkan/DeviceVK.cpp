@@ -445,21 +445,25 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		{
 			for (const auto& range : rootParameter.table)
 			{
-				VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
-				vkBinding.descriptorCount = range.numDescriptors;
-				vkBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
+				for (uint32_t descriptorIndex = 0; descriptorIndex < range.numDescriptors; ++descriptorIndex)
+				{
+					VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
+					vkBinding.descriptorCount = 1;
+					vkBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
 
-				vkBinding.binding = range.startRegister;
-				vkBinding.stageFlags = shaderStageFlags;
-				vkBinding.pImmutableSamplers = nullptr;
+					vkBinding.binding = range.startRegister + descriptorIndex;
+					vkBinding.stageFlags = shaderStageFlags;
+					vkBinding.pImmutableSamplers = nullptr;
 
-				hashCode = Utility::HashState(&vkBinding, 1, hashCode);
+					hashCode = Utility::HashState(&vkBinding, 1, hashCode);
 
-				DescriptorBindingDesc& bindingDesc = layoutBindingDescs.emplace_back();
-				bindingDesc.descriptorType = vkBinding.descriptorType;
-				bindingDesc.startSlot = rootParameter.startRegister;
-				bindingDesc.numDescriptors = vkBinding.descriptorCount;
-				bindingDesc.offset = offset;
+					// TODO: Look into this, it might be wrong
+					DescriptorBindingDesc& bindingDesc = layoutBindingDescs.emplace_back();
+					bindingDesc.descriptorType = vkBinding.descriptorType;
+					bindingDesc.startSlot = rootParameter.startRegister;
+					bindingDesc.numDescriptors = vkBinding.descriptorCount;
+					bindingDesc.offset = offset;
+				}
 			}
 		}
 
