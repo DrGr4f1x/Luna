@@ -246,7 +246,8 @@ bool CreateTextureFromDDS(
 	size_t bitDataSize,
 	size_t maxSize,
 	Format format, 
-	bool forceSrgb)
+	bool forceSrgb,
+	bool retainData)
 {
 	uint32_t width = header->width;
 	uint32_t height = header->height;
@@ -463,6 +464,11 @@ bool CreateTextureFromDDS(
 
 	if (dataOk)
 	{
+		if (retainData)
+		{
+			texture->SetData(texInit.baseData, texInit.totalBytes);
+		}
+
 		return device->InitializeTexture(texture, texInit);
 	}
 
@@ -470,7 +476,7 @@ bool CreateTextureFromDDS(
 }
 
 
-bool CreateDDSTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
+bool CreateDDSTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb, bool retainData)
 {
 	assert(device != nullptr);
 	assert(texture != nullptr);
@@ -519,7 +525,7 @@ bool CreateDDSTextureFromMemory(IDevice* device, ITexture* texture, const std::s
 	}
 
 	const size_t maxSize = 0;
-	return CreateTextureFromDDS(device, texture, textureName, header, data + offset, dataSize - offset, maxSize, format, forceSrgb);
+	return CreateTextureFromDDS(device, texture, textureName, header, data + offset, dataSize - offset, maxSize, format, forceSrgb, retainData);
 }
 
 } // namespace Luna

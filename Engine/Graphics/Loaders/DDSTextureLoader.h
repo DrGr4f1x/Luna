@@ -27,7 +27,8 @@ bool CreateDDSTextureFromMemory(
 	std::byte* data, 
 	size_t dataSize, 
 	Format format, 
-	bool forceSrgb);
+	bool forceSrgb,
+	bool retainData);
 
 // DDS texture log category
 inline LogCategory LogDDS{ "LogDDS" };

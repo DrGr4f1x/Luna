@@ -78,6 +78,14 @@ public:
 	bool IsLoading() const { return m_isLoading; }
 	void WaitForLoad() const;
 
+	void SetData(std::byte* data, size_t dataSize);
+	std::byte* GetData() { return m_data.get(); }
+	void ClearRetainedData() 
+	{ 
+		m_data.reset(); 
+		m_dataSize = 0;
+	}
+
 protected:
 	virtual unsigned long AddRef();
 	virtual unsigned long Release();
@@ -87,6 +95,10 @@ protected:
 	std::atomic_ulong m_refCount{ 0 };
 	std::atomic<bool> m_isLoading{ true };
 	bool m_isManaged{ false };
+
+	// Retained data
+	std::unique_ptr<std::byte[]> m_data;
+	size_t m_dataSize{ 0 };
 };
 
 
@@ -121,12 +133,12 @@ public:
 	explicit TextureManager(IDevice* device);
 	~TextureManager();
 
-	TexturePtr Load(const std::string& filename, bool forceSrgb = false);
+	TexturePtr Load(const std::string& filename, Format format, bool forceSrgb, bool retainData);
 	void DestroyTexture(const std::string& key);
 
 protected:
-	TexturePtr FindOrLoadTexture(const std::string& filename, bool forceSrgb);
-	bool LoadTextureFromFile(ITexture* tex, const std::string& filename, bool forceSrgb);
+	TexturePtr FindOrLoadTexture(const std::string& filename, Format format, bool forceSrgb, bool retainData);
+	bool LoadTextureFromFile(ITexture* tex, const std::string& filename, Format format, bool forceSrgb, bool retainData);
 
 protected:
 	IDevice* m_device{ nullptr };
@@ -136,7 +148,7 @@ protected:
 };
 
 
-bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb);
+bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb, bool retainData);
 
 
 TextureManager* GetTextureManager();

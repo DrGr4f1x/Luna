@@ -399,9 +399,9 @@ SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
 }
 
 
-TexturePtr Application::LoadTexture(const std::string& filename, bool forceSrgb)
+TexturePtr Application::LoadTexture(const std::string& filename, Format format, bool forceSrgb, bool retainData)
 {
-	return GetTextureManager()->Load(filename, forceSrgb);
+	return GetTextureManager()->Load(filename, format, forceSrgb, retainData);
 }
 
 

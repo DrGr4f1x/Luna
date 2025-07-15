@@ -22,7 +22,7 @@
 namespace Luna
 {
 
-bool CreateSTBTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
+bool CreateSTBTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb, bool retainData)
 {
 	bool is16Bit = stbi_is_16_bit_from_memory((const stbi_uc*)data, (int)dataSize);
 	bool isHDR = stbi_is_hdr_from_memory((const stbi_uc*)data, (int)dataSize);
@@ -124,6 +124,11 @@ bool CreateSTBTextureFromMemory(IDevice* device, ITexture* texture, const std::s
 		.depth				= 1
 	};
 	texInit.subResourceData.push_back(subResourceData);
+
+	if (retainData)
+	{
+		texture->SetData(texInit.baseData, texInit.totalBytes);
+	}
 
 	return device->InitializeTexture(texture, texInit);
 }

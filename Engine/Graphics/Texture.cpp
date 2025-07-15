@@ -81,6 +81,14 @@ unsigned long ITexture::Release()
 }
 
 
+void ITexture::SetData(std::byte* data, size_t dataSize)
+{
+	m_dataSize = dataSize;
+	m_data.reset(new std::byte[dataSize]);
+	memcpy(m_data.get(), data, dataSize);
+}
+
+
 TexturePtr::TexturePtr(const TexturePtr& ptr) 
 	: m_tex{ ptr.m_tex }
 {
@@ -182,9 +190,9 @@ TextureManager::~TextureManager()
 }
 
 
-TexturePtr TextureManager::Load(const std::string& filename, bool forceSrgb)
+TexturePtr TextureManager::Load(const std::string& filename, Format format, bool forceSrgb, bool retainData)
 {
-	return FindOrLoadTexture(filename, forceSrgb);
+	return FindOrLoadTexture(filename, format, forceSrgb, retainData);
 }
 
 
@@ -200,7 +208,7 @@ void TextureManager::DestroyTexture(const std::string& key)
 }
 
 
-TexturePtr TextureManager::FindOrLoadTexture(const std::string& filename, bool forceSrgb)
+TexturePtr TextureManager::FindOrLoadTexture(const std::string& filename, Format format, bool forceSrgb, bool retainData)
 {
 	TexturePtr tex;
 
@@ -228,12 +236,12 @@ TexturePtr TextureManager::FindOrLoadTexture(const std::string& filename, bool f
 		}
 	}
 
-	LoadTextureFromFile(tex.Get(), filename, forceSrgb);
+	LoadTextureFromFile(tex.Get(), filename, format, forceSrgb, retainData);
 	return tex;
 }
 
 
-bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filename, bool forceSrgb)
+bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filename, Format format, bool forceSrgb, bool retainData)
 {
 	auto fileSystem = GetFileSystem();
 
@@ -247,7 +255,7 @@ bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filen
 		std::unique_ptr<std::byte[]> data;
 		BinaryReader::ReadEntireFile(fileSystem->GetFullPath(filename), data, &dataSize);
 
-		CreateTextureFromMemory(m_device, tex, filename, data.get(), dataSize, Format::Unknown, forceSrgb);
+		CreateTextureFromMemory(m_device, tex, filename, data.get(), dataSize, format, forceSrgb, retainData);
 
 		loadSucceeded = tex->IsValid();
 	}
@@ -258,7 +266,7 @@ bool TextureManager::LoadTextureFromFile(ITexture* tex, const std::string& filen
 }
 
 
-bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
+bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb, bool retainData)
 {
 	auto fileSystem = GetFileSystem();
 
@@ -266,15 +274,15 @@ bool CreateTextureFromMemory(IDevice* device, ITexture* texture, const std::stri
 
 	if (extension == ".dds")
 	{
-		return CreateDDSTextureFromMemory(device, texture, textureName, data, dataSize, Format::Unknown, forceSrgb);
+		return CreateDDSTextureFromMemory(device, texture, textureName, data, dataSize, format, forceSrgb, retainData);
 	}
 	else if (extension == ".ktx" || extension == ".ktx2")
 	{
-		return CreateKTXTextureFromMemory(device, texture, textureName, data, dataSize, Format::Unknown, forceSrgb);
+		return CreateKTXTextureFromMemory(device, texture, textureName, data, dataSize, format, forceSrgb, retainData);
 	}
 	else
 	{
-		return CreateSTBTextureFromMemory(device, texture, textureName, data, dataSize, Format::Unknown, forceSrgb);
+		return CreateSTBTextureFromMemory(device, texture, textureName, data, dataSize, format, forceSrgb, retainData);
 	}
 }
 

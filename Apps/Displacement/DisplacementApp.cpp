@@ -146,6 +146,12 @@ void DisplacementApp::CreateWindowSizeDependentResources()
 		InitPipelines();
 		m_pipelinesCreated = true;
 	}
+
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(45.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
 }
 
 
@@ -188,7 +194,6 @@ void DisplacementApp::InitPipelines()
 		.stride					= vertexLayout.GetSizeInBytes(),
 		.inputClassification	= InputClassification::PerVertexData
 	};
-
 
 	GraphicsPipelineDesc pipelineDesc{
 		.name				= "Graphics PSO",

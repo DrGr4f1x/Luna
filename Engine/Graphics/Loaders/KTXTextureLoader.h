@@ -20,7 +20,7 @@ namespace Luna
 class IDevice;
 class ITexture;
 
-bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb);
+bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb, bool retainData);
 
 // KTX texture log category
 inline LogCategory LogKTX{ "LogKTX" };

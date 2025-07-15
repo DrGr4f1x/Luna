@@ -547,7 +547,7 @@ TexturePtr ModelLoader::CreateTexture(const aiScene* scene, const string& textur
 		std::byte* data = (std::byte*)aiTexture->pcData;
 		size_t dataSize = aiTexture->mWidth;
 
-		CreateTextureFromMemory(m_device, texture.Get(), filename, data, dataSize, Format::Unknown, false);
+		CreateTextureFromMemory(m_device, texture.Get(), filename, data, dataSize, Format::Unknown, false, false);
 
 		return texture;
 	}

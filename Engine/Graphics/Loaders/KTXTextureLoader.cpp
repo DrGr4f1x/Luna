@@ -126,7 +126,7 @@ bool FillTextureInitializerKTX(GraphicsApi api, ktxTexture* texture, TextureInit
 }
 
 
-bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb)
+bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::string& textureName, std::byte* data, size_t dataSize, Format format, bool forceSrgb, bool retainData)
 {
 	assert(device != nullptr);
 	assert(texture != nullptr);
@@ -234,6 +234,11 @@ bool CreateKTXTextureFromMemory(IDevice* device, ITexture* texture, const std::s
 
 	if (dataOk)
 	{
+		if (retainData)
+		{
+			texture->SetData(texInit.baseData, texInit.totalBytes);
+		}
+
 		return device->InitializeTexture(texture, texInit);
 	}
 
