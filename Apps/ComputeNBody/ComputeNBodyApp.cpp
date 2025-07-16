@@ -88,13 +88,12 @@ void ComputeNBodyApp::Render()
 		computeContext.TransitionResource(m_particleBuffer, ResourceState::ShaderResource);
 	}
 
-	auto colorBuffer = GetColorBuffer();
-	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearColor(colorBuffer);
+	context.ClearColor(GetColorBuffer());
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -109,7 +108,7 @@ void ComputeNBodyApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(colorBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }
@@ -359,8 +358,8 @@ void ComputeNBodyApp::UpdateConstantBuffers()
 
 	m_graphicsConstantBuffer->Update(sizeof(GraphicsConstants), &m_graphicsConstants);
 
-	m_computeConstants.deltaT = m_timer.GetElapsedSeconds() * 0.05f;
-	m_computeConstants.destX = sinf(XMConvertToRadians(m_timer.GetElapsedSeconds() * 360.0f)) * 0.75f;
+	m_computeConstants.deltaT = (float)m_timer.GetElapsedSeconds() * 0.05f;
+	m_computeConstants.destX = sinf(XMConvertToRadians((float)m_timer.GetElapsedSeconds() * 360.0f)) * 0.75f;
 	m_computeConstants.destY = 0.0f;
 	m_computeConstants.particleCount = 6 * PARTICLES_PER_ATTRACTOR;
 

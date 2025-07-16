@@ -101,15 +101,14 @@ void ComputeClothApp::Render()
 		}
 	}
 
-	auto colorBuffer = GetColorBuffer();
-	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
 	context.TransitionResource(m_clothBuffer[0], ResourceState::VertexBuffer);
 	Color clearColor{ DirectX::Colors::LightGray };
-	context.ClearColor(colorBuffer, clearColor);
+	context.ClearColor(GetColorBuffer(), clearColor);
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -135,7 +134,7 @@ void ComputeClothApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(colorBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }
@@ -247,7 +246,7 @@ void ComputeClothApp::InitPipelines()
 			.name				= "Sphere Graphics PSO",
 			.blendState			= CommonStates::BlendDisable(),
 			.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
-			.rasterizerState	= CommonStates::RasterizerDefault(),
+			.rasterizerState	= CommonStates::RasterizerTwoSided(),
 			.rtvFormats			= { GetColorFormat() },
 			.dsvFormat			= GetDepthFormat(),
 			.topology			= PrimitiveTopology::TriangleList,

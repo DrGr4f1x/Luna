@@ -76,13 +76,12 @@ void PipelinesApp::Render()
 {
 	auto& context = GraphicsContext::Begin("Scene");
 
-	auto colorBuffer = GetColorBuffer();
-	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearColor(colorBuffer);
+	context.ClearColor(GetColorBuffer());
 	context.ClearDepthAndStencil(m_depthBuffer);
 
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	const uint32_t width = GetWindowWidth();
 	const uint32_t height = GetWindowHeight();
@@ -120,7 +119,7 @@ void PipelinesApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(colorBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }

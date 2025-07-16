@@ -75,10 +75,9 @@ void OcclusionQueryApp::Render()
 {
 	auto& context = GraphicsContext::Begin("Scene");
 
-	auto colorBuffer = GetColorBuffer();
-	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearColor(colorBuffer);
+	context.ClearColor(GetColorBuffer());
 	context.ClearDepthAndStencil(m_depthBuffer);
 
 	const auto activeFrame = m_deviceManager->GetActiveFrame();
@@ -86,7 +85,7 @@ void OcclusionQueryApp::Render()
 	// Occlusion pass
 
 	context.ResetOcclusionQueries(m_queryHeap, 2 * activeFrame, 2);
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 	context.SetRootSignature(m_rootSignature);
@@ -119,12 +118,12 @@ void OcclusionQueryApp::Render()
 	// Copy query results to buffer
 	context.ResolveOcclusionQueries(m_queryHeap, 2 * activeFrame, 2, m_readbackBuffer, 2 * activeFrame * sizeof(uint64_t));
 
-	context.ClearColor(colorBuffer);
+	context.ClearColor(GetColorBuffer());
 	context.ClearDepthAndStencil(m_depthBuffer);
 
 	// Visible pass
 
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 	context.SetRootSignature(m_rootSignature);
@@ -147,7 +146,7 @@ void OcclusionQueryApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(colorBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }

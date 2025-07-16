@@ -107,22 +107,20 @@ void MultisamplingApp::Render()
 	context.EndRendering();
 
 	// Resolve the MSAA buffer to the back buffer, before rendering UI
-	auto backBuffer = GetColorBuffer();
-
 	context.TransitionResource(m_msaaColorBuffer, ResourceState::ResolveSource);
-	context.TransitionResource(backBuffer, ResourceState::ResolveDest);
+	context.TransitionResource(GetColorBuffer(), ResourceState::ResolveDest);
 
-	context.Resolve(m_msaaColorBuffer, backBuffer, GetColorFormat());
+	context.Resolve(m_msaaColorBuffer, GetColorBuffer(), GetColorFormat());
 
 	// Render UI after MSAA resolve
-	context.TransitionResource(backBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
 
-	context.BeginRendering(backBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 	RenderUI(context);
 	context.EndRendering();
 
-	context.TransitionResource(backBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }

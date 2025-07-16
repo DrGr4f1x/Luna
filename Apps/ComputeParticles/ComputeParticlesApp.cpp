@@ -57,11 +57,11 @@ void ComputeParticlesApp::Update()
 	{
 		if (m_animStart > 0.0f)
 		{
-			m_animStart -= m_timer.GetElapsedSeconds() * 5.0f;
+			m_animStart -= (float)m_timer.GetElapsedSeconds() * 5.0f;
 		}
 		else if (m_animStart <= 0.0f)
 		{
-			m_localTimer += m_timer.GetElapsedSeconds() * 0.04f;
+			m_localTimer += (float)m_timer.GetElapsedSeconds() * 0.04f;
 			if (m_localTimer > 1.0f)
 			{
 				m_localTimer = 0.f;
@@ -103,14 +103,13 @@ void ComputeParticlesApp::Render()
 	}
 
 	// Render particles
-	auto colorBuffer = GetColorBuffer();
 	context.TransitionResource(m_particleBuffer, ResourceState::UnorderedAccess);
-	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
-	context.ClearColor(colorBuffer);
+	context.ClearColor(GetColorBuffer());
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetRootSignature(m_graphicsRootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
@@ -124,7 +123,7 @@ void ComputeParticlesApp::Render()
 	RenderUI(context);
 
 	context.EndRendering();
-	context.TransitionResource(colorBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }
@@ -297,7 +296,7 @@ void ComputeParticlesApp::InitResourceSets()
 
 void ComputeParticlesApp::UpdateConstantBuffers()
 {
-	m_csConstants.deltaT = m_timer.GetElapsedSeconds() * 2.5f;
+	m_csConstants.deltaT = (float)m_timer.GetElapsedSeconds() * 2.5f;
 	m_csConstants.destX = sinf(DirectX::XMConvertToRadians(m_localTimer * 360.0f)) * 0.75f;;
 	m_csConstants.destY = 0.0f;
 	m_csConstants.particleCount = m_particleCount;
