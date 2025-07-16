@@ -31,14 +31,14 @@ public:
 	void* Map() override;
 	void Unmap() override;
 
-	ID3D12Resource* GetResource() const { return m_allocation->GetResource(); }
-	D3D12MA::Allocation* GetAllocation() const { return m_allocation.get(); }
+	ID3D12Resource* GetResource() const noexcept { return m_allocation->GetResource(); }
+	D3D12MA::Allocation* GetAllocation() const noexcept { return m_allocation.get(); }
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUavHandle() const { return m_uavHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCbvHandle() const { return m_cbvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const noexcept { return m_srvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUavHandle() const noexcept { return m_uavHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetCbvHandle() const noexcept { return m_cbvHandle; }
 
-	uint64_t GetGpuAddress() const;
+	uint64_t GetGpuAddress() const noexcept;
 
 protected:
 	Device* m_device{ nullptr };

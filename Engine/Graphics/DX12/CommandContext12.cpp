@@ -271,20 +271,20 @@ void CommandContext12::TransitionResource(TexturePtr& texture, ResourceState new
 }
 
 
-void CommandContext12::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate)
+void CommandContext12::InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	InsertUAVBarrier_Internal(colorBuffer12->GetResource(), bFlushImmediate);
 }
 
 
-void CommandContext12::InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
+void CommandContext12::InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	InsertUAVBarrier_Internal(gpuBuffer12->GetResource(), bFlushImmediate);
@@ -513,30 +513,30 @@ void CommandContext12::EndRendering()
 }
 
 
-void CommandContext12::BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+void CommandContext12::BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
-	QueryHeap* queryHeap12 = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeap12 = (const QueryHeap*)queryHeap;
 	assert(queryHeap12 != nullptr);
 
 	m_commandList->BeginQuery(queryHeap12->GetQueryHeap(), D3D12_QUERY_TYPE_OCCLUSION, heapIndex);
 }
 
 
-void CommandContext12::EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+void CommandContext12::EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
-	QueryHeap* queryHeap12 = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeap12 = (const QueryHeap*)queryHeap;
 	assert(queryHeap12 != nullptr);
 
 	m_commandList->EndQuery(queryHeap12->GetQueryHeap(), D3D12_QUERY_TYPE_OCCLUSION, heapIndex);
 }
 
 
-void CommandContext12::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+void CommandContext12::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset)
 {
-	QueryHeap* queryHeap12 = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeap12 = (const QueryHeap*)queryHeap;
 	assert(queryHeap12 != nullptr);
 
-	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer.get();
+	const GpuBuffer* destBuffer12 = (const GpuBuffer*)destBuffer;
 	assert(destBuffer12 != nullptr);
 
 	m_commandList->ResolveQueryData(
@@ -547,10 +547,6 @@ void CommandContext12::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t
 		destBuffer12->GetResource(),
 		destBufferOffset);
 }
-
-
-void CommandContext12::ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
-{}
 
 
 void CommandContext12::SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature)

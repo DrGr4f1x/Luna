@@ -115,7 +115,7 @@ void TerrainTessellationApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Vector3(18.0f, -22.5f, 57.5f));
+	m_camera.SetPosition(Vector3(18.0f, 22.5f, 57.5f));
 	//m_camera.SetRotation(Quaternion(XMConvertToRadians(7.5f), XMConvertToRadians(-343.0f), 0.0f));
 	m_camera.Update();
 

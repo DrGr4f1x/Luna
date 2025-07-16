@@ -101,7 +101,7 @@ public:
 	}
 
 	VkDevice Get() const noexcept { return m_device; }
-	operator VkDevice() const { return Get(); }
+	operator VkDevice() const noexcept { return Get(); }
 
 	VkPhysicalDevice GetPhysicalDevice() const noexcept { return m_physicalDevice->Get(); }
 
@@ -745,7 +745,6 @@ public:
 private:
 	wil::com_ptr<CVkDevice> m_device;
 	VkQueryPool m_pool{ VK_NULL_HANDLE };
-
 };
 
 } // namespace Luna::VK

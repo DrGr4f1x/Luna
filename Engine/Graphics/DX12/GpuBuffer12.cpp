@@ -57,7 +57,7 @@ void GpuBuffer::Unmap()
 }
 
 
-uint64_t GpuBuffer::GetGpuAddress() const
+uint64_t GpuBuffer::GetGpuAddress() const noexcept
 {
 	if (m_allocation && m_allocation->GetResource())
 	{

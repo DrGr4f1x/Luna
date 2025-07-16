@@ -68,8 +68,8 @@ public:
 	virtual void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate = false) = 0;
-	virtual void InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate = false) = 0;
+	virtual void InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate = false) = 0;
+	virtual void InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate = false) = 0;
 	virtual void FlushResourceBarriers() = 0;
 
 	virtual DynAlloc ReserveUploadMemory(size_t sizeInBytes) = 0;
@@ -91,10 +91,10 @@ public:
 	virtual void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
-	virtual void BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex) = 0;
-	virtual void EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex) = 0;
-	virtual void ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset) = 0;
-	virtual void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
+	virtual void BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
+	virtual void EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
+	virtual void ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) = 0;
+	virtual void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
 
 	virtual void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) = 0;
 	virtual void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) = 0;
@@ -196,8 +196,8 @@ public:
 	void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
 	void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false);
-	void InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate = false);
-	void InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate = false);
+	void InsertUAVBarrier(const ColorBufferPtr& colorBuffer, bool bFlushImmediate = false);
+	void InsertUAVBarrier(const GpuBufferPtr& gpuBuffer, bool bFlushImmediate = false);
 	void FlushResourceBarriers();
 
 	DynAlloc ReserveUploadMemory(size_t sizeInBytes);
@@ -232,10 +232,10 @@ public:
 	void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
-	void BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex);
-	void EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex);
-	void ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset);
-	void ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
+	void BeginOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
+	void EndOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
+	void ResolveOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset);
+	void ResetOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
 
 	void SetRootSignature(RootSignaturePtr& rootSignature);
 	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline);
@@ -409,15 +409,15 @@ inline void CommandContext::TransitionResource(TexturePtr& texture, ResourceStat
 }
 
 
-inline void CommandContext::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate)
+inline void CommandContext::InsertUAVBarrier(const ColorBufferPtr& colorBuffer, bool bFlushImmediate)
 { 
-	m_contextImpl->InsertUAVBarrier(colorBuffer, bFlushImmediate);
+	m_contextImpl->InsertUAVBarrier(colorBuffer.get(), bFlushImmediate);
 }
 
 
-inline void CommandContext::InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
+inline void CommandContext::InsertUAVBarrier(const GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
 {
-	m_contextImpl->InsertUAVBarrier(gpuBuffer, bFlushImmediate);
+	m_contextImpl->InsertUAVBarrier(gpuBuffer.get(), bFlushImmediate);
 }
 
 
@@ -517,27 +517,27 @@ inline void GraphicsContext::EndRendering()
 }
 
 
-inline void GraphicsContext::BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+inline void GraphicsContext::BeginOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex)
 {
-	m_contextImpl->BeginOcclusionQuery(queryHeap, heapIndex);
+	m_contextImpl->BeginOcclusionQuery(queryHeap.get(), heapIndex);
 }
 
 
-inline void GraphicsContext::EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+inline void GraphicsContext::EndOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex)
 {
-	m_contextImpl->EndOcclusionQuery(queryHeap, heapIndex);
+	m_contextImpl->EndOcclusionQuery(queryHeap.get(), heapIndex);
 }
 
 
-inline void GraphicsContext::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+inline void GraphicsContext::ResolveOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
 {
-	m_contextImpl->ResolveOcclusionQueries(queryHeap, startIndex, numQueries, destBuffer, destBufferOffset);
+	m_contextImpl->ResolveOcclusionQueries(queryHeap.get(), startIndex, numQueries, destBuffer.get(), destBufferOffset);
 }
 
 
-inline void GraphicsContext::ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
+inline void GraphicsContext::ResetOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
 {
-	m_contextImpl->ResetOcclusionQueries(queryHeap, startIndex, numQueries);
+	m_contextImpl->ResetOcclusionQueries(queryHeap.get(), startIndex, numQueries);
 }
 
 

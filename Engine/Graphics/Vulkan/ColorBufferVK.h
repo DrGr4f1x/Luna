@@ -26,11 +26,11 @@ class ColorBuffer : public IColorBuffer
 	friend class Device;
 
 public:
-	VkImage GetImage() const { return m_image->Get(); }
-	VkImageView GetImageViewRtv() const { return m_imageViewRtv->Get(); }
-	VkImageView GetImageViewSrv() const { return m_imageViewSrv->Get(); }
-	VkDescriptorImageInfo GetImageInfoSrv() const { return m_imageInfoSrv; }
-	VkDescriptorImageInfo GetImageInfoUav() const { return m_imageInfoUav; }
+	VkImage GetImage() const noexcept { return m_image->Get(); }
+	VkImageView GetImageViewRtv() const noexcept { return m_imageViewRtv->Get(); }
+	VkImageView GetImageViewSrv() const noexcept { return m_imageViewSrv->Get(); }
+	VkDescriptorImageInfo GetImageInfoSrv() const noexcept { return m_imageInfoSrv; }
+	VkDescriptorImageInfo GetImageInfoUav() const noexcept { return m_imageInfoUav; }
 
 protected:
 	Device* m_device{ nullptr };

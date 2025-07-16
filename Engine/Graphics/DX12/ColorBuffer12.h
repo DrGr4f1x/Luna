@@ -26,9 +26,9 @@ class ColorBuffer : public IColorBuffer
 	friend class Device;
 
 public:
-	ID3D12Resource* GetResource() const { return m_resource.get(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle() const { return m_rtvHandle; }
+	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const noexcept { return m_srvHandle; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle() const noexcept { return m_rtvHandle; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetUavHandle(uint32_t index) const;
 
 protected:

@@ -26,7 +26,7 @@ class QueryHeap : public IQueryHeap
 	friend class Device;
 
 public:
-	ID3D12QueryHeap* GetQueryHeap() const { return m_heap.get(); }
+	ID3D12QueryHeap* GetQueryHeap() const noexcept { return m_heap.get(); }
 protected:
 	Device* m_device{ nullptr };
 

@@ -16,13 +16,13 @@
 namespace Luna::DX12
 {
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthBuffer::GetSrvHandle(bool depthSrv) const
+D3D12_CPU_DESCRIPTOR_HANDLE DepthBuffer::GetSrvHandle(bool depthSrv) const noexcept
 {
 	return depthSrv ? m_depthSrvHandle : m_stencilSrvHandle;
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthBuffer::GetDsvHandle(DepthStencilAspect depthStencilAspect) const
+D3D12_CPU_DESCRIPTOR_HANDLE DepthBuffer::GetDsvHandle(DepthStencilAspect depthStencilAspect) const noexcept
 {
 	switch (depthStencilAspect)
 	{

@@ -403,8 +403,8 @@ void InstancingApp::UpdateConstantBuffer()
 
 void InstancingApp::LoadAssets()
 {
-	m_rockTexture = LoadTexture("texturearray_rocks_rgba.ktx", true);
-	m_planetTexture = LoadTexture("lavaplanet_rgba.ktx", true);
+	m_rockTexture = LoadTexture("texturearray_rocks_rgba.ktx", Format::Unknown, true);
+	m_planetTexture = LoadTexture("lavaplanet_rgba.ktx", Format::Unknown, true);
 	m_sampler = CreateSampler(CommonStates::SamplerLinearWrap());
 
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();

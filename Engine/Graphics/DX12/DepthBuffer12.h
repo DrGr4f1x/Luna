@@ -25,9 +25,9 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
-	ID3D12Resource* GetResource() const { return m_resource.get(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle(DepthStencilAspect depthStencilAspect) const;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle(bool depthSrv) const;
+	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle(DepthStencilAspect depthStencilAspect) const noexcept;
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle(bool depthSrv) const noexcept;
 
 protected:
 	Device* m_device{ nullptr };

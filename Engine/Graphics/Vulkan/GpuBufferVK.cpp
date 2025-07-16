@@ -51,19 +51,19 @@ void GpuBuffer::Unmap()
 }
 
 
-VkBuffer GpuBuffer::GetBuffer() const
+VkBuffer GpuBuffer::GetBuffer() const noexcept
 {
 	return m_buffer ? m_buffer->Get() : VK_NULL_HANDLE;
 }
 
 
-VkBufferView GpuBuffer::GetBufferView() const
+VkBufferView GpuBuffer::GetBufferView() const noexcept
 {
 	return m_bufferView ? m_bufferView->Get() : VK_NULL_HANDLE;
 }
 
 
-VkDescriptorBufferInfo GpuBuffer::GetBufferInfo(bool dynamicRange) const
+VkDescriptorBufferInfo GpuBuffer::GetBufferInfo(bool dynamicRange) const noexcept
 {
 	if (dynamicRange)
 	{

@@ -32,9 +32,9 @@ public:
 	void* Map() override;
 	void Unmap() override;
 
-	VkBuffer GetBuffer() const;
-	VkBufferView GetBufferView() const;
-	VkDescriptorBufferInfo GetBufferInfo(bool dynamicRange = false) const;
+	VkBuffer GetBuffer() const noexcept;
+	VkBufferView GetBufferView() const noexcept;
+	VkDescriptorBufferInfo GetBufferInfo(bool dynamicRange = false) const noexcept;
 
 protected:
 	Device* m_device{ nullptr };

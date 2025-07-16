@@ -396,10 +396,10 @@ void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState new
 }
 
 
-void CommandContextVK::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlushImmediate)
+void CommandContextVK::InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
 	TextureBarrier barrier{
@@ -425,10 +425,10 @@ void CommandContextVK::InsertUAVBarrier(ColorBufferPtr& colorBuffer, bool bFlush
 }
 
 
-void CommandContextVK::InsertUAVBarrier(GpuBufferPtr& gpuBuffer, bool bFlushImmediate)
+void CommandContextVK::InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
 	BufferBarrier barrier{
@@ -752,30 +752,30 @@ void CommandContextVK::EndRendering()
 }
 
 
-void CommandContextVK::BeginOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+void CommandContextVK::BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
-	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
 
 	vkCmdBeginQuery(m_commandBuffer, queryHeapVK->GetQueryPool(), heapIndex, VK_FLAGS_NONE);
 }
 
 
-void CommandContextVK::EndOcclusionQuery(QueryHeapPtr& queryHeap, uint32_t heapIndex)
+void CommandContextVK::EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
-	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
 
 	vkCmdEndQuery(m_commandBuffer, queryHeapVK->GetQueryPool(), heapIndex);
 }
 
 
-void CommandContextVK::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+void CommandContextVK::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset)
 {
-	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
 
-	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer.get();
+	const GpuBuffer* destBufferVK = (const GpuBuffer*)destBuffer;
 	assert(destBufferVK != nullptr);
 
 	assert(!m_isRendering);
@@ -792,9 +792,9 @@ void CommandContextVK::ResolveOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t
 }
 
 
-void CommandContextVK::ResetOcclusionQueries(QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
+void CommandContextVK::ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries)
 {
-	QueryHeap* queryHeapVK = (QueryHeap*)queryHeap.get();
+	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
 
 	assert(!m_isRendering);

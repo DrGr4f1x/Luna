@@ -16,7 +16,7 @@
 namespace Luna::VK
 {
 
-VkImageView DepthBuffer::GetImageView(DepthStencilAspect depthStencilAspect) const
+VkImageView DepthBuffer::GetImageView(DepthStencilAspect depthStencilAspect) const noexcept
 { 
 	switch (depthStencilAspect)
 	{

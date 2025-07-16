@@ -26,7 +26,7 @@ class QueryHeap : public IQueryHeap
 	friend class Device;
 
 public:
-	VkQueryPool GetQueryPool() const { return m_pool->Get(); }
+	VkQueryPool GetQueryPool() const noexcept { return m_pool->Get(); }
 
 protected:
 	Device* m_device{ nullptr };

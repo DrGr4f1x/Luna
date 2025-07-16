@@ -21,7 +21,7 @@ struct EnableBitmaskOperators
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E>::type
-operator|(E lhs, E rhs)
+operator|(E lhs, E rhs) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	return static_cast<E>(static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
@@ -30,7 +30,7 @@ operator|(E lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E>::type
-operator&(E lhs, E rhs)
+operator&(E lhs, E rhs) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	return static_cast<E>(static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
@@ -39,7 +39,7 @@ operator&(E lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E>::type
-operator^(E lhs, E rhs)
+operator^(E lhs, E rhs) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	return static_cast<E>(static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
@@ -48,7 +48,7 @@ operator^(E lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E&>::type
-operator|=(E& lhs, E rhs)
+operator|=(E& lhs, E rhs) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	lhs = static_cast<E>(static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
@@ -58,7 +58,7 @@ operator|=(E& lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E&>::type
-operator&=(E& lhs, E rhs)
+operator&=(E& lhs, E rhs) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	lhs = static_cast<E>(static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
@@ -68,7 +68,7 @@ operator&=(E& lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E&>::type
-operator^=(E& lhs, E rhs)
+operator^=(E& lhs, E rhs) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	lhs = static_cast<E>(static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
@@ -78,7 +78,7 @@ operator^=(E& lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-operator==(E lhs, int rhs)
+operator==(E lhs, int rhs) noexcept
 {
 	return static_cast<int>(lhs) == rhs;
 }
@@ -86,7 +86,7 @@ operator==(E lhs, int rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-operator==(int lhs, E rhs)
+operator==(int lhs, E rhs) noexcept
 {
 	return lhs == static_cast<int>(rhs);
 }
@@ -94,7 +94,7 @@ operator==(int lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-operator!=(E lhs, int rhs)
+operator!=(E lhs, int rhs) noexcept
 {
 	return static_cast<int>(lhs) != rhs;
 }
@@ -102,7 +102,7 @@ operator!=(E lhs, int rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-operator!=(int lhs, E rhs)
+operator!=(int lhs, E rhs) noexcept
 {
 	return lhs != static_cast<int>(rhs);
 }
@@ -110,7 +110,7 @@ operator!=(int lhs, E rhs)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-HasFlag(E bitmask, E flag)
+HasFlag(E bitmask, E flag) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	return (static_cast<underlying>(bitmask) & static_cast<underlying>(flag)) != underlying(0);
@@ -119,7 +119,7 @@ HasFlag(E bitmask, E flag)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-HasAnyFlag(E bitmask, E flags)
+HasAnyFlag(E bitmask, E flags) noexcept
 {
 	return HasFlag(bitmask, flags);
 }
@@ -127,7 +127,7 @@ HasAnyFlag(E bitmask, E flags)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, bool>::type
-HasAllFlags(E bitmask, E flags)
+HasAllFlags(E bitmask, E flags) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	return (static_cast<underlying>(bitmask) & static_cast<underlying>(flags)) == static_cast<underlying>(flags);
@@ -136,7 +136,7 @@ HasAllFlags(E bitmask, E flags)
 
 template <typename E>
 constexpr typename std::enable_if<EnableBitmaskOperators<E>::enable, E>::type
-RemoveFlag(E bitmask, E flag)
+RemoveFlag(E bitmask, E flag) noexcept
 {
 	using underlying = std::underlying_type_t<E>;
 	bitmask &= static_cast<E>(~static_cast<underlying>(flag));

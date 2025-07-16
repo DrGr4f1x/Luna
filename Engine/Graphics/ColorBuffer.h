@@ -49,7 +49,7 @@ struct ColorBufferDesc
 class IColorBuffer : public IPixelBuffer
 {
 public:
-	Color GetClearColor() const { return m_clearColor; }
+	Color GetClearColor() const noexcept { return m_clearColor; }
 
 protected:
 	Color m_clearColor{ DirectX::Colors::Black };

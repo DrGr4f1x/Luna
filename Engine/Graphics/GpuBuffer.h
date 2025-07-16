@@ -43,10 +43,10 @@ struct GpuBufferDesc
 class IGpuBuffer : public IGpuResource
 {
 public:
-	Format GetFormat() const { return m_format; }
-	size_t GetBufferSize() const { return m_bufferSize; }
-	size_t GetElementSize() const { return m_elementSize; }
-	size_t GetElementCount() const { return m_elementCount; }
+	Format GetFormat() const noexcept { return m_format; }
+	size_t GetBufferSize() const noexcept { return m_bufferSize; }
+	size_t GetElementSize() const noexcept { return m_elementSize; }
+	size_t GetElementCount() const noexcept { return m_elementCount; }
 
 	virtual void Update(size_t sizeInBytes, const void* data) = 0;
 	virtual void Update(size_t sizeInBytes, size_t offset, const void* data) = 0;

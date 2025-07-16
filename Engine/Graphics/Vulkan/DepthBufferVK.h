@@ -25,13 +25,13 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
-	VkImage GetImage() const { return m_image->Get(); }
-	VkImageView GetImageViewDepthStencil() const { return m_imageViewDepthStencil->Get(); }
-	VkImageView GetImageViewDepthOnly() const { return m_imageViewDepthOnly->Get(); }
-	VkImageView GetImageViewStencilOnly() const { return m_imageViewStencilOnly->Get(); }
-	VkImageView GetImageView(DepthStencilAspect depthStencilAspect) const;
-	VkDescriptorImageInfo GetImageInfoDepth() const { return m_imageInfoDepth; }
-	VkDescriptorImageInfo GetImageInfoStencil() const { return m_imageInfoStencil; }
+	VkImage GetImage() const noexcept { return m_image->Get(); }
+	VkImageView GetImageViewDepthStencil() const noexcept { return m_imageViewDepthStencil->Get(); }
+	VkImageView GetImageViewDepthOnly() const noexcept { return m_imageViewDepthOnly->Get(); }
+	VkImageView GetImageViewStencilOnly() const noexcept { return m_imageViewStencilOnly->Get(); }
+	VkImageView GetImageView(DepthStencilAspect depthStencilAspect) const noexcept;
+	VkDescriptorImageInfo GetImageInfoDepth() const noexcept { return m_imageInfoDepth; }
+	VkDescriptorImageInfo GetImageInfoStencil() const noexcept { return m_imageInfoStencil; }
 
 protected:
 	Device* m_device{ nullptr };

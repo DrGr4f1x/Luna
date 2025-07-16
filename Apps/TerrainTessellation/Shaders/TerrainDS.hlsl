@@ -75,7 +75,7 @@ DSOutput main(DSConstantInput constInput, float3 triCoords : SV_DomainLocation, 
     float4 pos = lerp(pos1, pos2, triCoords.y);
 
 	// Displace
-    pos.y += heightTex.SampleLevel(linearSamplerMirror, output.uv, 0.0).r * displacementFactor;
+    pos.y -= heightTex.SampleLevel(linearSamplerMirror, output.uv, 0.0).r * displacementFactor;
 	// Perspective projection
     output.pos = mul(projectionMatrix, mul(modelViewMatrix, pos));
 

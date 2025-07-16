@@ -24,9 +24,9 @@ enum class ResourceType : uint32_t;
 class IGpuResource : public IResource
 { 
 public:
-	ResourceType GetResourceType() const { return m_type; }
-	ResourceState GetUsageState() const { return m_usageState; }
-	void SetUsageState(ResourceState usageState) { m_usageState = usageState; }
+	ResourceType GetResourceType() const noexcept { return m_type; }
+	ResourceState GetUsageState() const noexcept { return m_usageState; }
+	void SetUsageState(ResourceState usageState) noexcept { m_usageState = usageState; }
 
 protected:
 	ResourceType m_type{ ResourceType::Unknown };
