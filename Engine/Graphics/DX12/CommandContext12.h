@@ -100,8 +100,8 @@ public:
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
-	void SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer) override;
-	void SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet) override;
+	void SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
+	void SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
 	void SetResources(CommandListType type, ResourceSet& resourceSet) override;
 
 	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
@@ -115,8 +115,8 @@ public:
 
 	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
 
-	void SetIndexBuffer(GpuBufferPtr& gpuBuffer) override;
-	void SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer) override;
+	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
+	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
 	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc) override;
 	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data) override;
 	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc) override;
@@ -127,7 +127,7 @@ public:
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 
-	void Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format) override;
+	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 
 	// Compute context
 	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) override;
@@ -144,7 +144,7 @@ protected:
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
 	void InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit) override;
-	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet);
+	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 	void SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 
 private:

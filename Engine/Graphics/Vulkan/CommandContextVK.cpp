@@ -1020,10 +1020,10 @@ void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DW
 }
 
 
-void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
+void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
 	ParseRootSignature(type);
@@ -1035,7 +1035,7 @@ void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootInde
 }
 
 
-void CommandContextVK::SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+void CommandContextVK::SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	SetDescriptors_Internal(type, rootIndex, descriptorSet);
 }
@@ -1054,7 +1054,7 @@ void CommandContextVK::SetResources(CommandListType type, ResourceSet& resourceS
 			continue;
 		}
 
-		SetDescriptors_Internal(type, i, resourceSet[i]);
+		SetDescriptors_Internal(type, i, resourceSet[i].get());
 	}
 
 	EndEvent();
@@ -1195,10 +1195,10 @@ void CommandContextVK::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 }
 
 
-void CommandContextVK::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
+void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
 	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
@@ -1207,10 +1207,10 @@ void CommandContextVK::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
 }
 
 
-void CommandContextVK::SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer)
+void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
 	VkDeviceSize offsets[1] = { 0 };
@@ -1296,12 +1296,12 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
-void CommandContextVK::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format)
+void CommandContextVK::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format)
 {
-	ColorBuffer* srcBufferVK = (ColorBuffer*)srcBuffer.get();
+	const ColorBuffer* srcBufferVK = (const ColorBuffer*)srcBuffer;
 	assert(srcBufferVK != nullptr);
 
-	ColorBuffer* destBufferVK = (ColorBuffer*)destBuffer.get();
+	const ColorBuffer* destBufferVK = (const ColorBuffer*)destBuffer;
 	assert(destBufferVK != nullptr);
 
 	FlushResourceBarriers();
@@ -1427,12 +1427,12 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr& destTexture, const
 }
 
 
-void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, DescriptorSetPtr descriptorSet)
+void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet.get();
+	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
 	assert(descriptorSetVK != nullptr);
 
 	if (!descriptorSetVK->HasDescriptors())

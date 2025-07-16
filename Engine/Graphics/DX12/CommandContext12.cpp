@@ -770,12 +770,12 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 }
 
 
-void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
@@ -791,7 +791,7 @@ void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootInde
 }
 
 
-void CommandContext12::SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+void CommandContext12::SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	SetDescriptors_Internal(type, rootIndex, descriptorSet);
 }
@@ -815,7 +815,7 @@ void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceS
 		{
 			continue;
 		}
-		SetDescriptors_Internal(type, i, resourceSet[i]);
+		SetDescriptors_Internal(type, i, resourceSet[i].get());
 	}
 }
 
@@ -912,10 +912,10 @@ void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 }
 
 
-void CommandContext12::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
@@ -928,10 +928,10 @@ void CommandContext12::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
 }
 
 
-void CommandContext12::SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	D3D12_VERTEX_BUFFER_VIEW vbv{
@@ -1028,12 +1028,12 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
-void CommandContext12::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format)
+void CommandContext12::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format)
 {
-	ColorBuffer* srcBuffer12 = (ColorBuffer*)srcBuffer.get();
+	const ColorBuffer* srcBuffer12 = (const ColorBuffer*)srcBuffer;
 	assert(srcBuffer12 != nullptr);
 
-	ColorBuffer* destBuffer12 = (ColorBuffer*)destBuffer.get();
+	const ColorBuffer* destBuffer12 = (const ColorBuffer*)destBuffer;
 	assert(destBuffer12 != nullptr);
 
 	FlushResourceBarriers();
@@ -1186,12 +1186,12 @@ void CommandContext12::InitializeTexture_Internal(TexturePtr& destTexture, const
 }
 
 
-void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet.get();
+	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet;
 
 	if (!descriptorSet12->HasBindableDescriptors())
 	{

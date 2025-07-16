@@ -113,8 +113,8 @@ public:
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
-	virtual void SetConstantBuffer(CommandListType type, uint32_t rootIndex, GpuBufferPtr& gpuBuffer) = 0;
-	virtual void SetDescriptors(CommandListType type, uint32_t rootIndex, DescriptorSetPtr& descriptorSet) = 0;
+	virtual void SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet) = 0;
 	virtual void SetResources(CommandListType type, ResourceSet& resourceSet) = 0;
 
 	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
@@ -128,8 +128,8 @@ public:
 
 	virtual void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
 
-	virtual void SetIndexBuffer(GpuBufferPtr& gpuBuffer) = 0;
-	virtual void SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
 	virtual void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc) = 0;
 	virtual void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data) = 0;
 	virtual void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc) = 0;
@@ -140,7 +140,7 @@ public:
 	virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
 
-	virtual void Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format) = 0;
+	virtual void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) = 0;
 
 	// Compute context
 	virtual void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
@@ -254,8 +254,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
-	void SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer);
-	void SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet);
+	void SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+	void SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
@@ -269,8 +269,8 @@ public:
 
 	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 
-	void SetIndexBuffer(GpuBufferPtr& gpuBuffer);
-	void SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer);
+	void SetIndexBuffer(const GpuBufferPtr& gpuBuffer);
+	void SetVertexBuffer(uint32_t slot, const GpuBufferPtr& gpuBuffer);
 	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, DynAlloc dynAlloc);
 	void SetDynamicVertexBuffer(uint32_t slot, size_t numVertices, size_t vertexStride, const void* data);
 	void SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize16Bit, DynAlloc dynAlloc);
@@ -283,7 +283,7 @@ public:
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation);
 
-	void Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format);
+	void Resolve(const ColorBufferPtr& srcBuffer, const ColorBufferPtr& destBuffer, Format format);
 };
 
 
@@ -302,8 +302,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
-	void SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer);
-	void SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet);
+	void SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+	void SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
@@ -632,15 +632,15 @@ inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam
 }
 
 
-inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetConstantBuffer(CommandListType::Direct, rootIndex, gpuBuffer);
+	m_contextImpl->SetConstantBuffer(CommandListType::Direct, rootIndex, gpuBuffer.get());
 }
 
 
-inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet)
 {
-	m_contextImpl->SetDescriptors(CommandListType::Direct, rootIndex, descriptorSet);
+	m_contextImpl->SetDescriptors(CommandListType::Direct, rootIndex, descriptorSet.get());
 }
 
 
@@ -698,15 +698,15 @@ inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, GpuBuff
 }
 
 
-inline void GraphicsContext::SetIndexBuffer(GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetIndexBuffer(const GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetIndexBuffer(gpuBuffer);
+	m_contextImpl->SetIndexBuffer(gpuBuffer.get());
 }
 
 
-inline void GraphicsContext::SetVertexBuffer(uint32_t slot, GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetVertexBuffer(uint32_t slot, const GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetVertexBuffer(slot, gpuBuffer);
+	m_contextImpl->SetVertexBuffer(slot, gpuBuffer.get());
 }
 
 
@@ -760,9 +760,9 @@ inline void GraphicsContext::DrawIndexedInstanced(uint32_t indexCountPerInstance
 }
 
 
-inline void GraphicsContext::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& destBuffer, Format format)
+inline void GraphicsContext::Resolve(const ColorBufferPtr& srcBuffer, const ColorBufferPtr& destBuffer, Format format)
 {
-	m_contextImpl->Resolve(srcBuffer, destBuffer, format);
+	m_contextImpl->Resolve(srcBuffer.get(), destBuffer.get(), format);
 }
 
 
@@ -820,15 +820,15 @@ inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam 
 }
 
 
-inline void ComputeContext::SetConstantBuffer(uint32_t rootIndex, GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetConstantBuffer(CommandListType::Compute, rootIndex, gpuBuffer);
+	m_contextImpl->SetConstantBuffer(CommandListType::Compute, rootIndex, gpuBuffer.get());
 }
 
 
-inline void ComputeContext::SetDescriptors(uint32_t rootIndex, DescriptorSetPtr& descriptorSet)
+inline void ComputeContext::SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet)
 {
-	m_contextImpl->SetDescriptors(CommandListType::Compute, rootIndex, descriptorSet);
+	m_contextImpl->SetDescriptors(CommandListType::Compute, rootIndex, descriptorSet.get());
 }
 
 
