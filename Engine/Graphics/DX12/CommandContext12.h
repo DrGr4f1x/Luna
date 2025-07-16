@@ -84,7 +84,7 @@ public:
 	void ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) override;
 	void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) override {}
 
-	void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) override;
+	void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) override;
 	void SetComputePipeline(ComputePipelinePtr& computePipeline) override;
 

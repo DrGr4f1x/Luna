@@ -110,7 +110,7 @@ public:
 	void ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) override;
 	void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) override;
 
-	void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) override;
+	void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) override;
 	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) override;
 	void SetComputePipeline(ComputePipelinePtr& computePipeline) override;
 
@@ -219,8 +219,8 @@ private:
 	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
 	VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_MAX_ENUM };
 
-	std::shared_ptr<IRootSignature> m_graphicsRootSignature;
-	std::shared_ptr<IRootSignature> m_computeRootSignature;
+	const IRootSignature* m_graphicsRootSignature{ nullptr };
+	const IRootSignature* m_computeRootSignature{ nullptr };
 	bool m_isComputeRootSignatureParsed{ false };
 	bool m_isGraphicsRootSignatureParsed{ false };
 	bool m_hasDirtyGraphicsDescriptors{ false };

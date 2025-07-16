@@ -96,7 +96,7 @@ public:
 	virtual void ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) = 0;
 	virtual void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
 
-	virtual void SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature) = 0;
+	virtual void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) = 0;
 	virtual void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) = 0;
 	virtual void SetComputePipeline(ComputePipelinePtr& computePipeline) = 0;
 
@@ -237,7 +237,7 @@ public:
 	void ResolveOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset);
 	void ResetOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
 
-	void SetRootSignature(RootSignaturePtr& rootSignature);
+	void SetRootSignature(const RootSignaturePtr& rootSignature);
 	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
@@ -292,7 +292,7 @@ class ComputeContext : public CommandContext
 public:
 	static ComputeContext& Begin(const std::string id = "", bool bAsync = false);
 
-	void SetRootSignature(RootSignaturePtr& rootSignature);
+	void SetRootSignature(const RootSignaturePtr& rootSignature);
 	void SetComputePipeline(ComputePipelinePtr& computePipeline);
 
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
@@ -541,9 +541,9 @@ inline void GraphicsContext::ResetOcclusionQueries(const QueryHeapPtr& queryHeap
 }
 
 
-inline void GraphicsContext::SetRootSignature(RootSignaturePtr& rootSignature)
+inline void GraphicsContext::SetRootSignature(const RootSignaturePtr& rootSignature)
 {
-	m_contextImpl->SetRootSignature(CommandListType::Direct, rootSignature);
+	m_contextImpl->SetRootSignature(CommandListType::Direct, rootSignature.get());
 }
 
 
@@ -766,9 +766,9 @@ inline void GraphicsContext::Resolve(ColorBufferPtr& srcBuffer, ColorBufferPtr& 
 }
 
 
-inline void ComputeContext::SetRootSignature(RootSignaturePtr& rootSignature)
+inline void ComputeContext::SetRootSignature(const RootSignaturePtr& rootSignature)
 {
-	m_contextImpl->SetRootSignature(CommandListType::Compute, rootSignature);
+	m_contextImpl->SetRootSignature(CommandListType::Compute, rootSignature.get());
 }
 
 

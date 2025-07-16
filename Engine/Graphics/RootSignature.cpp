@@ -16,13 +16,13 @@
 namespace Luna
 {
 
-uint32_t IRootSignature::GetNumRootParameters() const
+uint32_t IRootSignature::GetNumRootParameters() const noexcept
 {
 	return (uint32_t)m_desc.rootParameters.size();
 }
 
 
-const RootParameter& IRootSignature::GetRootParameter(uint32_t index) const
+const RootParameter& IRootSignature::GetRootParameter(uint32_t index) const noexcept
 {
 	assert(index < (uint32_t)m_desc.rootParameters.size());
 	return m_desc.rootParameters[index];

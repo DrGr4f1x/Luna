@@ -28,10 +28,10 @@ class RootSignature : public IRootSignature
 public:
 	Luna::DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
 
-	ID3D12RootSignature* GetRootSignature() const { return m_rootSignature.get(); }
-	uint32_t GetDescriptorTableBitmap() const { return m_descriptorTableBitmap; }
-	uint32_t GetSamplerTableBitmap() const { return m_samplerTableBitmap; }
-	const std::vector<uint32_t> GetDescriptorTableSizes() const { return m_descriptorTableSizes; }
+	ID3D12RootSignature* GetRootSignature() const noexcept { return m_rootSignature.get(); }
+	uint32_t GetDescriptorTableBitmap() const noexcept { return m_descriptorTableBitmap; }
+	uint32_t GetSamplerTableBitmap() const noexcept { return m_samplerTableBitmap; }
+	const std::vector<uint32_t> GetDescriptorTableSizes() const noexcept { return m_descriptorTableSizes; }
 
 protected:
 	Device* m_device{ nullptr };

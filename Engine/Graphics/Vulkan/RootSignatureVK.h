@@ -36,8 +36,8 @@ class RootSignature : public IRootSignature
 public:
 	Luna::DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
 
-	VkPipelineLayout GetPipelineLayout() const { return m_pipelineLayout->Get(); }
-	CVkDescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const { return m_descriptorSetLayouts[rootParamIndex].get(); }
+	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
+	CVkDescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept { return m_descriptorSetLayouts[rootParamIndex].get(); }
 	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(uint32_t rootParamIndex) const;
 
 protected:

@@ -186,8 +186,8 @@ void CommandContextVK::Reset()
 	m_computePipeline = VK_NULL_HANDLE;
 	m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
 
-	m_graphicsRootSignature.reset();
-	m_computeRootSignature.reset();
+	m_graphicsRootSignature = nullptr;
+	m_computeRootSignature = nullptr;
 	m_isGraphicsRootSignatureParsed = false;
 	m_isComputeRootSignatureParsed = false;
 	m_hasDirtyGraphicsDescriptors = false;
@@ -803,12 +803,12 @@ void CommandContextVK::ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32
 }
 
 
-void CommandContextVK::SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature)
+void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignature* rootSignature)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	RootSignature* rootSignatureVK = (RootSignature*)rootSignature.get();
+	const RootSignature* rootSignatureVK = (const RootSignature*)rootSignature;
 	assert(rootSignatureVK != nullptr);
 
 	VkPipelineLayout pipelineLayout = rootSignatureVK->GetPipelineLayout();
@@ -816,7 +816,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, RootSignaturePtr& 
 	if (type == CommandListType::Direct)
 	{
 		m_computePipelineLayout = VK_NULL_HANDLE;
-		m_computeRootSignature.reset();
+		m_computeRootSignature = nullptr;
 		m_isComputeRootSignatureParsed = false;
 		m_hasDirtyComputeDescriptors = false;
 
@@ -832,7 +832,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, RootSignaturePtr& 
 	else
 	{
 		m_graphicsPipelineLayout = VK_NULL_HANDLE;
-		m_graphicsRootSignature.reset();
+		m_graphicsRootSignature = nullptr;
 		m_isGraphicsRootSignatureParsed = false;
 		m_hasDirtyGraphicsDescriptors = false;
 
@@ -1544,7 +1544,7 @@ void CommandContextVK::ParseRootSignature(CommandListType type)
 	{
 		if (!m_isGraphicsRootSignatureParsed && (m_graphicsRootSignature != nullptr))
 		{
-			RootSignature* rootSignatureVK = (RootSignature*)m_graphicsRootSignature.get();
+			const RootSignature* rootSignatureVK = (const RootSignature*)m_graphicsRootSignature;
 
 			m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, true);
 
@@ -1555,7 +1555,7 @@ void CommandContextVK::ParseRootSignature(CommandListType type)
 	{
 		if (!m_isComputeRootSignatureParsed && (m_computeRootSignature != nullptr))
 		{
-			RootSignature* rootSignatureVK = (RootSignature*)m_computeRootSignature.get();
+			const RootSignature* rootSignatureVK = (const RootSignature*)m_computeRootSignature;
 
 			m_dynamicDescriptorHeap->ParseRootSignature(*rootSignatureVK, false);
 

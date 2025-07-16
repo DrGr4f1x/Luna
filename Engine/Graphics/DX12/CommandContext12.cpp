@@ -549,12 +549,12 @@ void CommandContext12::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint
 }
 
 
-void CommandContext12::SetRootSignature(CommandListType type, RootSignaturePtr& rootSignature)
+void CommandContext12::SetRootSignature(CommandListType type, const IRootSignature* rootSignature)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
-	RootSignature* rootSignature12 = (RootSignature*)rootSignature.get();
+	const RootSignature* rootSignature12 = (const RootSignature*)rootSignature;
 	assert(rootSignature12 != nullptr);
 
 	ID3D12RootSignature* d3d12RootSignature = rootSignature12->GetRootSignature();

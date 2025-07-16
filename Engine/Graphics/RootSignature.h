@@ -34,7 +34,7 @@ struct DescriptorRange
 	constexpr DescriptorRange& SetNumDescriptors(uint32_t value) noexcept { numDescriptors = value; return *this; }
 	constexpr DescriptorRange& SetRegisterSpace(uint32_t value) noexcept { registerSpace = value; return *this; }
 
-	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange ConstantBuffer(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::ConstantBuffer,
@@ -46,7 +46,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange TextureSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TextureSRV,
@@ -58,7 +58,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange TextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TextureUAV,
@@ -70,7 +70,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TypedBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange TypedBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TypedBufferSRV,
@@ -82,7 +82,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange TypedBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange TypedBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::TypedBufferUAV,
@@ -94,7 +94,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange StructuredBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange StructuredBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::StructuredBufferSRV,
@@ -106,7 +106,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange StructuredBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange StructuredBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::StructuredBufferUAV,
@@ -117,7 +117,7 @@ struct DescriptorRange
 		return res;
 	}
 
-	static DescriptorRange RawBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange RawBufferSRV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RawBufferSRV,
@@ -129,7 +129,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange RawBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange RawBufferUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RawBufferUAV,
@@ -141,7 +141,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange Sampler(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange Sampler(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::Sampler,
@@ -153,7 +153,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange RayTracingAccelStruct(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange RayTracingAccelStruct(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::RayTracingAccelStruct,
@@ -165,7 +165,7 @@ struct DescriptorRange
 	}
 
 
-	static DescriptorRange SamplerFeedbackTextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	static DescriptorRange SamplerFeedbackTextureUAV(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0) noexcept
 	{
 		auto res = DescriptorRange{
 			.descriptorType		= DescriptorType::SamplerFeedbackTextureUAV,
@@ -236,12 +236,12 @@ struct RootParameter
 		return numDescriptors;
 	}
 
-	bool IsSamplerTable() const
+	bool IsSamplerTable() const noexcept
 	{
 		return (parameterType == RootParameterType::Table && table[0].descriptorType == DescriptorType::Sampler);
 	}
 
-	static RootParameter RootConstants(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	static RootParameter RootConstants(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
 	{
 		auto ret = RootParameter
 		{
@@ -254,7 +254,7 @@ struct RootParameter
 		return ret;
 	}
 
-	static RootParameter RootCBV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	static RootParameter RootCBV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
 	{
 		auto ret = RootParameter
 		{
@@ -266,7 +266,7 @@ struct RootParameter
 		return ret;
 	}
 
-	static RootParameter RootSRV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	static RootParameter RootSRV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
 	{
 		auto ret = RootParameter
 		{
@@ -278,7 +278,7 @@ struct RootParameter
 		return ret;
 	}
 
-	static RootParameter RootUAV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	static RootParameter RootUAV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
 	{
 		auto ret = RootParameter
 		{
@@ -290,7 +290,7 @@ struct RootParameter
 		return ret;
 	}
 
-	static RootParameter Range(Luna::DescriptorType descriptorType, uint32_t startRegister, uint32_t numDescriptors, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	static RootParameter Range(Luna::DescriptorType descriptorType, uint32_t startRegister, uint32_t numDescriptors, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
 	{
 		auto ret = RootParameter
 		{
@@ -303,7 +303,7 @@ struct RootParameter
 		return ret;
 	}
 
-	static RootParameter Table(std::vector<DescriptorRange> ranges, ShaderStage shaderVisibility = ShaderStage::All)
+	static RootParameter Table(std::vector<DescriptorRange> ranges, ShaderStage shaderVisibility = ShaderStage::All) noexcept
 	{
 		auto ret = RootParameter
 		{
@@ -360,11 +360,11 @@ public:
 
 	virtual DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const = 0;
 
-	const RootSignatureDesc& GetDesc() const { return m_desc; }
-	uint32_t GetNumRootParameters() const;
-	const RootParameter& GetRootParameter(uint32_t index) const;
+	const RootSignatureDesc& GetDesc() const noexcept { return m_desc; }
+	uint32_t GetNumRootParameters() const noexcept;
+	const RootParameter& GetRootParameter(uint32_t index) const noexcept;
 
-	const RootParameter& operator[](uint32_t index) const { return GetRootParameter(index); }
+	const RootParameter& operator[](uint32_t index) const noexcept { return GetRootParameter(index); }
 
 protected:
 	RootSignatureDesc m_desc{};
