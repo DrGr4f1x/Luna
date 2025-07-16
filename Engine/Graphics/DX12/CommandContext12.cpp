@@ -588,10 +588,10 @@ void CommandContext12::SetRootSignature(CommandListType type, const IRootSignatu
 }
 
 
-void CommandContext12::SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline)
+void CommandContext12::SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline)
 {
 	// TODO: Try this with GetPlatformObject()
-	GraphicsPipeline* graphicsPipeline12 = (GraphicsPipeline*)graphicsPipeline.get();
+	const GraphicsPipeline* graphicsPipeline12 = (const GraphicsPipeline*)graphicsPipeline;
 	assert(graphicsPipeline12 != nullptr);
 
 	m_computePipelineState = nullptr;
@@ -608,10 +608,10 @@ void CommandContext12::SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline
 }
 
 
-void CommandContext12::SetComputePipeline(ComputePipelinePtr& computePipeline)
+void CommandContext12::SetComputePipeline(const IComputePipeline* computePipeline)
 {
 	// TODO: Try this with GetPlatformObject()
-	ComputePipeline* computePipeline12 = (ComputePipeline*)computePipeline.get();
+	const ComputePipeline* computePipeline12 = (const ComputePipeline*)computePipeline;
 	assert(computePipeline12 != nullptr);
 
 	m_graphicsPipelineState = nullptr;

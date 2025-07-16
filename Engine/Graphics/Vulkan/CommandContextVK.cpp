@@ -856,12 +856,12 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 }
 
 
-void CommandContextVK::SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline)
+void CommandContextVK::SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline)
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
 	// TODO: Try this with GetPlatformObject()
-	GraphicsPipeline* graphicsPipelineVK = (GraphicsPipeline*)graphicsPipeline.get();
+	const GraphicsPipeline* graphicsPipelineVK = (const GraphicsPipeline*)graphicsPipeline;
 	assert(graphicsPipelineVK != nullptr);
 
 	VkPipeline vkPipeline = graphicsPipelineVK->GetPipelineState();
@@ -876,12 +876,12 @@ void CommandContextVK::SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline
 }
 
 
-void CommandContextVK::SetComputePipeline(ComputePipelinePtr& computePipeline)
+void CommandContextVK::SetComputePipeline(const IComputePipeline* computePipeline)
 {
 	m_graphicsPipelineLayout = VK_NULL_HANDLE;
 
 	// TODO: Try this with GetPlatformObject()
-	ComputePipeline* computePipelineVK = (ComputePipeline*)computePipeline.get();
+	const ComputePipeline* computePipelineVK = (const ComputePipeline*)computePipeline;
 	assert(computePipelineVK != nullptr);
 
 	VkPipeline vkPipeline = computePipelineVK->GetPipelineState();

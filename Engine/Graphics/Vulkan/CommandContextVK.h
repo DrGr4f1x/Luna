@@ -111,8 +111,8 @@ public:
 	void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) override;
 
 	void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) override;
-	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) override;
-	void SetComputePipeline(ComputePipelinePtr& computePipeline) override;
+	void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) override;
+	void SetComputePipeline(const IComputePipeline* computePipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;

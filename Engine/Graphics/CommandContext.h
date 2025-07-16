@@ -97,8 +97,8 @@ public:
 	virtual void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
 
 	virtual void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) = 0;
-	virtual void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline) = 0;
-	virtual void SetComputePipeline(ComputePipelinePtr& computePipeline) = 0;
+	virtual void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) = 0;
+	virtual void SetComputePipeline(const IComputePipeline* computePipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -238,7 +238,7 @@ public:
 	void ResetOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
 
 	void SetRootSignature(const RootSignaturePtr& rootSignature);
-	void SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline);
+	void SetGraphicsPipeline(const GraphicsPipelinePtr& graphicsPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
@@ -293,7 +293,7 @@ public:
 	static ComputeContext& Begin(const std::string id = "", bool bAsync = false);
 
 	void SetRootSignature(const RootSignaturePtr& rootSignature);
-	void SetComputePipeline(ComputePipelinePtr& computePipeline);
+	void SetComputePipeline(const ComputePipelinePtr& computePipeline);
 
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
@@ -547,9 +547,9 @@ inline void GraphicsContext::SetRootSignature(const RootSignaturePtr& rootSignat
 }
 
 
-inline void GraphicsContext::SetGraphicsPipeline(GraphicsPipelinePtr& graphicsPipeline)
+inline void GraphicsContext::SetGraphicsPipeline(const GraphicsPipelinePtr& graphicsPipeline)
 {
-	m_contextImpl->SetGraphicsPipeline(graphicsPipeline);
+	m_contextImpl->SetGraphicsPipeline(graphicsPipeline.get());
 }
 
 
@@ -772,9 +772,9 @@ inline void ComputeContext::SetRootSignature(const RootSignaturePtr& rootSignatu
 }
 
 
-inline void ComputeContext::SetComputePipeline(ComputePipelinePtr& computePipeline)
+inline void ComputeContext::SetComputePipeline(const ComputePipelinePtr& computePipeline)
 {
-	m_contextImpl->SetComputePipeline(computePipeline);
+	m_contextImpl->SetComputePipeline(computePipeline.get());
 }
 
 
