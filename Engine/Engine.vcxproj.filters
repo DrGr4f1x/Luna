@@ -265,6 +265,9 @@
     <ClCompile Include="Graphics\Model.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Grid.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -646,6 +649,9 @@
     <ClInclude Include="Graphics\Vulkan\QueryHeapVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Grid.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -699,18 +705,24 @@
     <None Include="Graphics\Shaders\Common\Common.hlsli">
       <Filter>Graphics\Shaders</Filter>
     </None>
-    <None Include="Graphics\Shaders\shaders.cfg" />
+    <None Include="Graphics\Shaders\UIPS.hlsl">
+      <Filter>Graphics\Shaders</Filter>
+    </None>
+    <None Include="Graphics\Shaders\UIVS.hlsl">
+      <Filter>Graphics\Shaders</Filter>
+    </None>
+    <None Include="Graphics\Shaders\GridVS.hlsl">
+      <Filter>Graphics\Shaders</Filter>
+    </None>
+    <None Include="Graphics\Shaders\GridPS.hlsl">
+      <Filter>Graphics\Shaders</Filter>
+    </None>
+    <None Include="Graphics\Shaders\shaders.cfg">
+      <Filter>Graphics\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Graphics\Shaders\UIVS.hlsl">
-      <Filter>Graphics\Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Graphics\Shaders\UIPS.hlsl">
-      <Filter>Graphics\Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

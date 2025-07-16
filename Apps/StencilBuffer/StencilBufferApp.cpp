@@ -49,6 +49,8 @@ void StencilBufferApp::Startup()
 		512.0f);
 	m_camera.SetPosition(Vector3(-4.838f, 3.23f, -7.05f));
 	m_camera.Update();
+
+	m_showGrid = true;
 }
 
 
@@ -106,7 +108,7 @@ void StencilBufferApp::Render()
 		m_model->Render(context);
 	}
 
-	//RenderGrid(context);
+	RenderGrid(context);
 	RenderUI(context);
 
 	context.EndRendering();

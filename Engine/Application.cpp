@@ -94,7 +94,6 @@ void GlfwMousePositionCallback(GLFWwindow* pWindow, double xPos, double yPos)
 namespace Luna
 {
 
-
 Application::Application(uint32_t width, uint32_t height, const string& appTitle)
 {
 	m_appInfo.SetName(appTitle);
@@ -287,6 +286,11 @@ void Application::UpdateWindowSize()
 		{
 			m_uiOverlay->SetWindowSize(m_appInfo.width, m_appInfo.height);
 		}
+
+		if (m_grid)
+		{
+			m_grid->CreateWindowSizeDependentResources();
+		}
 	}
 }
 
@@ -348,6 +352,15 @@ void Application::RenderUI(GraphicsContext& context)
 		return;
 
 	m_uiOverlay->Render(context);
+}
+
+
+void Application::RenderGrid(GraphicsContext& context)
+{
+	if (!m_showGrid)
+		return;
+
+	m_grid->Render(context);
 }
 
 
@@ -435,10 +448,14 @@ bool Application::Initialize()
 	CreateDeviceManager();
 	CreateDeviceDependentResources();
 
+	m_grid = make_unique<Grid>();
+	m_grid->CreateDeviceDependentResources();
+
 	UpdateWindowSize();
 
 	m_deviceManager->CreateWindowSizeDependentResources();
 	CreateWindowSizeDependentResources();
+	m_grid->CreateWindowSizeDependentResources();
 
 	m_uiOverlay = make_unique<UIOverlay>();
 	m_uiOverlay->Startup(m_pWindow, m_appInfo.api, GetWindowWidth(), GetWindowHeight(), GetColorFormat(), GetDepthFormat());
@@ -488,6 +505,9 @@ bool Application::Tick()
 	m_timer.Tick([&]() 
 		{ 
 			ScopedEvent event("Update");
+			
+			m_grid->Update(m_camera);
+
 			Update(); 
 		});
 

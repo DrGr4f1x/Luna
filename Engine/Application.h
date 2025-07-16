@@ -16,6 +16,7 @@
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\Grid.h"
 #include "Graphics\Model.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\QueryHeap.h"
@@ -114,6 +115,7 @@ protected:
 
 	void PrepareUI();
 	void RenderUI(GraphicsContext& context);
+	void RenderGrid(GraphicsContext& context);
 
 	// Wrappers for graphics resource creation
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
@@ -140,6 +142,7 @@ protected:
 	bool m_isVisible{ true };
 	bool m_isWindowFocused{ false };
 	bool m_showUI{ true };
+	bool m_showGrid{ false };
 
 	// Frame timer
 	StepTimer m_timer;
@@ -159,6 +162,7 @@ protected:
 	wil::com_ptr<IDeviceManager> m_deviceManager;
 
 	std::unique_ptr<UIOverlay> m_uiOverlay;
+	std::unique_ptr<Grid> m_grid;
 
 private:
 	bool Initialize();
