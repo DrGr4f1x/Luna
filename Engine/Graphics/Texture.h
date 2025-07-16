@@ -116,11 +116,8 @@ public:
 
 	bool IsValid() const;
 
-	ITexture* Get();
-	ITexture* operator->();
-
-	const ITexture* Get() const;
-	const ITexture* operator->() const;
+	ITexture* Get() const;
+	ITexture* operator->() const;
 
 private:
 	ITexture* m_tex{ nullptr };

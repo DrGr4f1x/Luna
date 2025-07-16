@@ -53,10 +53,10 @@ public:
 	void BeginFrame() override {}
 	uint64_t Finish(bool bWaitForCompletion) override;
 
-	void TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(ITexture* texture, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate) override;
 	void InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
@@ -64,19 +64,19 @@ public:
 	DynAlloc ReserveUploadMemory(size_t sizeInBytes) override;
 
 	// Graphics context
-	void ClearUAV(GpuBufferPtr& gpuBuffer) override;
-	//void ClearUAV(ColorBufferPtr& colorBuffer) override;
-	void ClearColor(ColorBufferPtr& colorBuffer) override;
-	void ClearColor(ColorBufferPtr& colorBuffer, Color clearColor) override;
-	void ClearDepth(DepthBufferPtr& depthBuffer) override;
-	void ClearStencil(DepthBufferPtr& depthBuffer) override;
-	void ClearDepthAndStencil(DepthBufferPtr& depthBuffer) override;
+	void ClearUAV(IGpuBuffer* gpuBuffer) override;
+	//void ClearUAV(IColorBuffer* colorBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
+	void ClearDepth(IDepthBuffer* depthBuffer) override;
+	void ClearStencil(IDepthBuffer* depthBuffer) override;
+	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
-	void BeginRendering(ColorBufferPtr& renderTarget) override;
-	void BeginRendering(ColorBufferPtr& renderTarget, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(std::span<ColorBufferPtr>& renderTargets) override;
-	void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(const IColorBuffer* renderTarget) override;
+	void BeginRendering(const IColorBuffer* renderTarget, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<const IColorBuffer*> renderTargets) override;
+	void BeginRendering(std::span<const IColorBuffer*> renderTargets, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
 	void BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) override;
@@ -142,8 +142,8 @@ public:
 protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
-	void InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit) override;
+	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 	void SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 

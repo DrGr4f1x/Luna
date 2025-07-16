@@ -150,26 +150,13 @@ bool TexturePtr::IsValid() const
 	return m_tex && m_tex->IsValid();
 }
 
-
-ITexture* TexturePtr::Get()
+ITexture* TexturePtr::Get() const
 {
 	return m_tex;
 }
 
 
-ITexture* TexturePtr::operator->()
-{
-	assert(m_tex != nullptr);
-	return m_tex;
-}
-
-const ITexture* TexturePtr::Get() const
-{
-	return m_tex;
-}
-
-
-const ITexture* TexturePtr::operator->() const
+ITexture* TexturePtr::operator->() const
 {
 	assert(m_tex != nullptr);
 	return m_tex;

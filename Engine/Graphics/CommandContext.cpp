@@ -51,21 +51,21 @@ uint64_t CommandContext::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContext::InitializeBuffer(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContext::InitializeBuffer(const GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	CommandContext& initContext = CommandContext::Begin();
 
-	initContext.m_contextImpl->InitializeBuffer_Internal(destBuffer, bufferData, numBytes, offset);
+	initContext.m_contextImpl->InitializeBuffer_Internal(destBuffer.get(), bufferData, numBytes, offset);
 
 	initContext.Finish(true);
 }
 
 
-void CommandContext::InitializeTexture(TexturePtr& destTexture, const TextureInitializer& texInit)
+void CommandContext::InitializeTexture(const TexturePtr& destTexture, const TextureInitializer& texInit)
 {
 	CommandContext& initContext = CommandContext::Begin();
 
-	initContext.m_contextImpl->InitializeTexture_Internal(destTexture, texInit);
+	initContext.m_contextImpl->InitializeTexture_Internal(destTexture.Get(), texInit);
 
 	initContext.Finish(true);
 }

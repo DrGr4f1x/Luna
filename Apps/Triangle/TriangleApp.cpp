@@ -63,14 +63,13 @@ void TriangleApp::Render()
 
 	auto& context = GraphicsContext::Begin("Frame");
 
-	auto colorBuffer = GetColorBuffer();
-	context.TransitionResource(colorBuffer, ResourceState::RenderTarget);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
 	Color clearColor{ DirectX::Colors::CornflowerBlue };
-	context.ClearColor(colorBuffer, clearColor);
+	context.ClearColor(GetColorBuffer(), clearColor);
 	context.ClearDepth(m_depthBuffer);
 
-	context.BeginRendering(colorBuffer, m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -99,7 +98,7 @@ void TriangleApp::Render()
 	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
 
 	context.EndRendering();
-	context.TransitionResource(colorBuffer, ResourceState::Present);
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
 }

@@ -263,12 +263,12 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContextVK::TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	BeginEvent("TransitionResource");
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
 	TextureBarrier barrier{
@@ -297,12 +297,12 @@ void CommandContextVK::TransitionResource(ColorBufferPtr& colorBuffer, ResourceS
 }
 
 
-void CommandContextVK::TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	BeginEvent("TransitionResource");
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
 	TextureBarrier barrier{
@@ -331,12 +331,12 @@ void CommandContextVK::TransitionResource(DepthBufferPtr& depthBuffer, ResourceS
 }
 
 
-void CommandContextVK::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	BeginEvent("TransitionResource");
 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
 	BufferBarrier barrier{
@@ -359,12 +359,12 @@ void CommandContextVK::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState
 }
 
 
-void CommandContextVK::TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
+void CommandContextVK::TransitionResource(ITexture* texture, ResourceState newState, bool bFlushImmediate)
 {
 	BeginEvent("TransitionResource");
 
 	// TODO: Try this with GetPlatformObject()
-	Texture* textureVK = (Texture*)texture.Get();
+	Texture* textureVK = (Texture*)texture;
 	assert(textureVK != nullptr);
 
 	const bool isVolume = texture->GetDimension() == TextureDimension::Texture3D;
@@ -522,10 +522,10 @@ DynAlloc CommandContextVK::ReserveUploadMemory(size_t sizeInBytes)
 }
 
 
-void CommandContextVK::ClearUAV(GpuBufferPtr& gpuBuffer)
+void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
+	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
 	uint32_t data = 0;
@@ -533,13 +533,13 @@ void CommandContextVK::ClearUAV(GpuBufferPtr& gpuBuffer)
 }
 
 
-void CommandContextVK::ClearColor(ColorBufferPtr& colorBuffer)
+void CommandContextVK::ClearColor(IColorBuffer* colorBuffer)
 {
 	ClearColor(colorBuffer, colorBuffer->GetClearColor());
 }
 
 
-void CommandContextVK::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
+void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	ResourceState oldState = colorBuffer->GetUsageState();
 
@@ -562,7 +562,7 @@ void CommandContextVK::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
 	vkCmdClearColorImage(m_commandBuffer, colorBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
@@ -571,25 +571,25 @@ void CommandContextVK::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
 }
 
 
-void CommandContextVK::ClearDepth(DepthBufferPtr& depthBuffer)
+void CommandContextVK::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 
-void CommandContextVK::ClearStencil(DepthBufferPtr& depthBuffer)
+void CommandContextVK::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil(DepthBufferPtr& depthBuffer)
+void CommandContextVK::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	ClearDepthAndStencil_Internal(depthBuffer, VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 }
 
 
-void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr& depthBuffer, VkImageAspectFlags flags)
+void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags)
 {
 	ResourceState oldState = depthBuffer->GetUsageState();
 
@@ -611,7 +611,7 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr& depthBuffer
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
+	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
 	vkCmdClearDepthStencilImage(m_commandBuffer, depthBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
@@ -620,12 +620,12 @@ void CommandContextVK::ClearDepthAndStencil_Internal(DepthBufferPtr& depthBuffer
 }
 
 
-void CommandContextVK::BeginRendering(ColorBufferPtr& colorBuffer)
+void CommandContextVK::BeginRendering(const IColorBuffer* colorBuffer)
 {
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
 	m_rtvs[0] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -638,15 +638,15 @@ void CommandContextVK::BeginRendering(ColorBufferPtr& colorBuffer)
 }
 
 
-void CommandContextVK::BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(const IColorBuffer* colorBuffer, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
+	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
 	m_rtvs[0] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -664,12 +664,12 @@ void CommandContextVK::BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPt
 }
 
 
-void CommandContextVK::BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
+	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
 	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
@@ -682,16 +682,16 @@ void CommandContextVK::BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilA
 }
 
 
-void CommandContextVK::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
+void CommandContextVK::BeginRendering(std::span<const IColorBuffer*> colorBuffers)
 {
 	ResetRenderTargets();
 	assert(colorBuffers.size() <= 8);
 
 	uint32_t i = 0;
-	for (ColorBufferPtr colorBuffer : colorBuffers)
+	for (const IColorBuffer* colorBuffer : colorBuffers)
 	{
 		// TODO: Try this with GetPlatformObject()
-		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+		const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 		assert(colorBufferVK != nullptr);
 
 		m_rtvs[i] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -707,16 +707,16 @@ void CommandContextVK::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
 }
 
 
-void CommandContextVK::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContextVK::BeginRendering(std::span<const IColorBuffer*> colorBuffers, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	ResetRenderTargets();
 	assert(colorBuffers.size() <= 8);
 
 	uint32_t i = 0;
-	for (ColorBufferPtr colorBuffer : colorBuffers)
+	for (const IColorBuffer* colorBuffer : colorBuffers)
 	{
 		// TODO: Try this with GetPlatformObject()
-		ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
+		const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 		assert(colorBufferVK != nullptr);
 
 		m_rtvs[i] = GetRenderingAttachmentInfo(*colorBufferVK);
@@ -729,7 +729,7 @@ void CommandContextVK::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, D
 	m_numRtvs = (uint32_t)colorBuffers.size();
 
 	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
+	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
 	m_dsv = GetRenderingAttachmentInfo(*depthBufferVK, depthStencilAspect);
@@ -1373,7 +1373,7 @@ void CommandContextVK::Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, 
 }
 
 
-void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	DynAlloc dynAlloc = ReserveUploadMemory(numBytes);
 
@@ -1383,7 +1383,7 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer.get();
+	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer;
 	assert(destBufferVK != nullptr);
 
 	VkBufferCopy copyRegion{ .size = numBytes };
@@ -1393,7 +1393,7 @@ void CommandContextVK::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const
 }
 
 
-void CommandContextVK::InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit)
+void CommandContextVK::InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit)
 {
 	const bool isTexture3D = texInit.dimension == TextureDimension::Texture3D;
 	const uint32_t effectiveArraySize = isTexture3D ? 1 : texInit.arraySizeOrDepth;
@@ -1409,7 +1409,7 @@ void CommandContextVK::InitializeTexture_Internal(TexturePtr& destTexture, const
 	SIMDMemCopy(dynAlloc.dataPtr, texInit.baseData, Math::DivideByMultiple(texInit.totalBytes, 16));
 
 	// TODO: Try this with GetPlatformObject()
-	Texture* textureVK = (Texture*)destTexture.Get();
+	Texture* textureVK = (Texture*)destTexture;
 	assert(textureVK != nullptr);
 
 	// Copy from the upload buffer to the destination texture

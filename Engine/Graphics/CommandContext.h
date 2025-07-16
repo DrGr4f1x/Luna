@@ -64,10 +64,10 @@ public:
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
 
-	virtual void TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
-	virtual void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
+	virtual void TransitionResource(ITexture* texture, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate = false) = 0;
 	virtual void InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate = false) = 0;
 	virtual void FlushResourceBarriers() = 0;
@@ -75,20 +75,20 @@ public:
 	virtual DynAlloc ReserveUploadMemory(size_t sizeInBytes) = 0;
 
 	// Graphics context
-	virtual void ClearUAV(GpuBufferPtr& gpuBuffer) = 0;
+	virtual void ClearUAV(IGpuBuffer* gpuBuffer) = 0;
 	// TODO: Figure out how to implement this for Vulkan
 	//virtual void ClearUAV(ColorBufferPtr& colorBuffer) = 0;
-	virtual void ClearColor(ColorBufferPtr& colorBuffer) = 0;
-	virtual void ClearColor(ColorBufferPtr& colorBuffer, Color clearColor) = 0;
-	virtual void ClearDepth(DepthBufferPtr& depthBuffer) = 0;
-	virtual void ClearStencil(DepthBufferPtr& depthBuffer) = 0;
-	virtual void ClearDepthAndStencil(DepthBufferPtr& depthBuffer) = 0;
+	virtual void ClearColor(IColorBuffer* colorBuffer) = 0;
+	virtual void ClearColor(IColorBuffer* colorBuffer, Color clearColor) = 0;
+	virtual void ClearDepth(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearStencil(IDepthBuffer* depthBuffer) = 0;
+	virtual void ClearDepthAndStencil(IDepthBuffer* depthBuffer) = 0;
 
-	virtual void BeginRendering(ColorBufferPtr& renderTarget) = 0;
-	virtual void BeginRendering(ColorBufferPtr& renderTarget, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
-	virtual void BeginRendering(DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
-	virtual void BeginRendering(std::span<ColorBufferPtr>& renderTargets) = 0;
-	virtual void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(const IColorBuffer* renderTarget) = 0;
+	virtual void BeginRendering(const IColorBuffer* renderTarget, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
+	virtual void BeginRendering(std::span<const IColorBuffer*> renderTargets) = 0;
+	virtual void BeginRendering(std::span<const IColorBuffer*> renderTargets, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
 	virtual void BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
@@ -149,8 +149,8 @@ public:
 	virtual void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) = 0;
 	
 protected:
-	virtual void InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
-	virtual void InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit) = 0;
+	virtual void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
+	virtual void InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit) = 0;
 };
 
 
@@ -186,16 +186,16 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
-	static void InitializeBuffer(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
-	static void InitializeTexture(TexturePtr& destTexture, const TextureInitializer& texInit);
+	static void InitializeBuffer(const GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
+	static void InitializeTexture(const TexturePtr& destTexture, const TextureInitializer& texInit);
 
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
 
-	void TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
-	void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(const ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(const DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(const GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate = false);
+	void TransitionResource(const TexturePtr& texture, ResourceState newState, bool bFlushImmediate = false);
 	void InsertUAVBarrier(const ColorBufferPtr& colorBuffer, bool bFlushImmediate = false);
 	void InsertUAVBarrier(const GpuBufferPtr& gpuBuffer, bool bFlushImmediate = false);
 	void FlushResourceBarriers();
@@ -217,19 +217,19 @@ public:
 		return CommandContext::Begin(id).GetGraphicsContext();
 	}
 
-	void ClearUAV(GpuBufferPtr& gpuBuffer);
-	//void ClearUAV(ColorBufferPtr& colorBuffer);
-	void ClearColor(ColorBufferPtr& colorBuffer);
-	void ClearColor(ColorBufferPtr& colorBuffer, Color clearColor);
-	void ClearDepth(DepthBufferPtr& depthBuffer);
-	void ClearStencil(DepthBufferPtr& depthBuffer);
-	void ClearDepthAndStencil(DepthBufferPtr& depthBuffer);
+	void ClearUAV(const GpuBufferPtr& gpuBuffer);
+	//void ClearUAV(const ColorBufferPtr& colorBuffer);
+	void ClearColor(const ColorBufferPtr& colorBuffer);
+	void ClearColor(const ColorBufferPtr& colorBuffer, Color clearColor);
+	void ClearDepth(const DepthBufferPtr& depthBuffer);
+	void ClearStencil(const DepthBufferPtr& depthBuffer);
+	void ClearDepthAndStencil(const DepthBufferPtr& depthBuffer);
 
-	void BeginRendering(ColorBufferPtr& renderTarget);
-	void BeginRendering(ColorBufferPtr& renderTarget, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
-	void BeginRendering(DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
-	void BeginRendering(std::span<ColorBufferPtr>& renderTargets);
-	void BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(const ColorBufferPtr& renderTarget);
+	void BeginRendering(const ColorBufferPtr& renderTarget, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(std::span<const ColorBufferPtr> renderTargets);
+	void BeginRendering(std::span<const ColorBufferPtr> renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
 	void BeginOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
@@ -385,27 +385,27 @@ inline void CommandContext::Initialize()
 }
 
 
-inline void CommandContext::TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(const ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	m_contextImpl->TransitionResource(colorBuffer, newState, bFlushImmediate);
+	m_contextImpl->TransitionResource(colorBuffer.get(), newState, bFlushImmediate);
 }
 
 
-inline void CommandContext::TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(const DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	m_contextImpl->TransitionResource(depthBuffer, newState, bFlushImmediate);
+	m_contextImpl->TransitionResource(depthBuffer.get(), newState, bFlushImmediate);
 }
 
 
-inline void CommandContext::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(const GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
-	m_contextImpl->TransitionResource(gpuBuffer, newState, bFlushImmediate);
+	m_contextImpl->TransitionResource(gpuBuffer.get(), newState, bFlushImmediate);
 }
 
 
-inline void CommandContext::TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
+inline void CommandContext::TransitionResource(const TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
 {
-	m_contextImpl->TransitionResource(texture, newState, bFlushImmediate);
+	m_contextImpl->TransitionResource(texture.Get(), newState, bFlushImmediate);
 }
 
 
@@ -439,75 +439,87 @@ inline void CommandContext::BeginFrame()
 }
 
 
-inline void GraphicsContext::ClearUAV(GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::ClearUAV(const GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->ClearUAV(gpuBuffer);
+	m_contextImpl->ClearUAV(gpuBuffer.get());
 }
 
 
-//inline void GraphicsContext::ClearUAV(ColorBufferPtr& colorBuffer)
+//inline void GraphicsContext::ClearUAV(const ColorBufferPtr& colorBuffer)
 //{
-//	m_contextImpl->ClearUAV(colorBuffer);
+//	m_contextImpl->ClearUAV(colorBuffer.get());
 //}
 
 
-inline void GraphicsContext::ClearColor(ColorBufferPtr& colorBuffer)
+inline void GraphicsContext::ClearColor(const ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->ClearColor(colorBuffer);
+	m_contextImpl->ClearColor(colorBuffer.get());
 }
 
 
-inline void GraphicsContext::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
+inline void GraphicsContext::ClearColor(const ColorBufferPtr& colorBuffer, Color clearColor)
 {
-	m_contextImpl->ClearColor(colorBuffer, clearColor);
+	m_contextImpl->ClearColor(colorBuffer.get(), clearColor);
 }
 
 
-inline void GraphicsContext::ClearDepth(DepthBufferPtr& depthBuffer)
+inline void GraphicsContext::ClearDepth(const DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->ClearDepth(depthBuffer);
+	m_contextImpl->ClearDepth(depthBuffer.get());
 }
 
 
-inline void GraphicsContext::ClearStencil(DepthBufferPtr& depthBuffer)
+inline void GraphicsContext::ClearStencil(const DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->ClearStencil(depthBuffer);
+	m_contextImpl->ClearStencil(depthBuffer.get());
 }
 
 
-inline void GraphicsContext::ClearDepthAndStencil(DepthBufferPtr& depthBuffer)
+inline void GraphicsContext::ClearDepthAndStencil(const DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->ClearDepthAndStencil(depthBuffer);
+	m_contextImpl->ClearDepthAndStencil(depthBuffer.get());
 }
 
 
-inline void GraphicsContext::BeginRendering(ColorBufferPtr& renderTarget)
+inline void GraphicsContext::BeginRendering(const ColorBufferPtr& renderTarget)
 {
-	m_contextImpl->BeginRendering(renderTarget);
+	m_contextImpl->BeginRendering(renderTarget.get());
 }
 
 
-inline void GraphicsContext::BeginRendering(ColorBufferPtr& renderTarget, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(const ColorBufferPtr& renderTarget, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	m_contextImpl->BeginRendering(renderTarget, depthTarget, depthStencilAspect);
+	m_contextImpl->BeginRendering(renderTarget.get(), depthTarget.get(), depthStencilAspect);
 }
 
 
-inline void GraphicsContext::BeginRendering(DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	m_contextImpl->BeginRendering(depthTarget, depthStencilAspect);
+	m_contextImpl->BeginRendering(depthTarget.get(), depthStencilAspect);
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<ColorBufferPtr>& renderTargets)
+inline void GraphicsContext::BeginRendering(std::span<const ColorBufferPtr> renderTargets)
 {
-	m_contextImpl->BeginRendering(renderTargets);
+	std::vector<const IColorBuffer*> renderTargetPtrs{ 8 };
+	for (const auto& rt : renderTargets)
+	{
+		renderTargetPtrs.push_back(rt.get());
+	}
+
+	m_contextImpl->BeginRendering(renderTargetPtrs);
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<ColorBufferPtr>& renderTargets, DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(std::span<const ColorBufferPtr> renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	m_contextImpl->BeginRendering(renderTargets, depthTarget, depthStencilAspect);
+	std::vector<const IColorBuffer*> renderTargetPtrs{ 8 };
+	for (const auto& rt : renderTargets)
+	{
+		renderTargetPtrs.push_back(rt.get());
+	}
+
+	m_contextImpl->BeginRendering(renderTargetPtrs, depthTarget.get(), depthStencilAspect);
 }
 
 

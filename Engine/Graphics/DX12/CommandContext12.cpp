@@ -178,11 +178,11 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 }
 
 
-void CommandContext12::TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	ResourceState oldState = colorBuffer->GetUsageState();
@@ -201,11 +201,11 @@ void CommandContext12::TransitionResource(ColorBufferPtr& colorBuffer, ResourceS
 }
 
 
-void CommandContext12::TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	ResourceState oldState = depthBuffer->GetUsageState();
@@ -225,11 +225,11 @@ void CommandContext12::TransitionResource(DepthBufferPtr& depthBuffer, ResourceS
 }
 
 
-void CommandContext12::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
 
 	ResourceState oldState = gpuBuffer->GetUsageState();
 
@@ -248,11 +248,11 @@ void CommandContext12::TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState
 }
 
 
-void CommandContext12::TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate)
+void CommandContext12::TransitionResource(ITexture* texture, ResourceState newState, bool bFlushImmediate)
 {
 	// TODO: Try this with GetPlatformObject()
 
-	Texture* texture12 = (Texture*)texture.Get();
+	Texture* texture12 = (Texture*)texture;
 
 	ResourceState oldState = texture->GetUsageState();
 
@@ -307,85 +307,85 @@ DynAlloc CommandContext12::ReserveUploadMemory(size_t sizeInBytes)
 }
 
 
-void CommandContext12::ClearUAV(GpuBufferPtr& gpuBuffer)
+void CommandContext12::ClearUAV(IGpuBuffer* gpuBuffer)
 {
 	// TODO: We need to allocate a GPU descriptor, so need to implement dynamic descriptor heaps to do this.
 }
 
 
-void CommandContext12::ClearColor(ColorBufferPtr& colorBuffer)
+void CommandContext12::ClearColor(IColorBuffer* colorBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvHandle(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearColor(ColorBufferPtr& colorBuffer, Color clearColor)
+void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvHandle(), clearColor.GetPtr(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearDepth(DepthBufferPtr& depthBuffer)
+void CommandContext12::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearStencil(DepthBufferPtr& depthBuffer)
+void CommandContext12::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::ClearDepthAndStencil(DepthBufferPtr& depthBuffer)
+void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	FlushResourceBarriers();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
-void CommandContext12::BeginRendering(ColorBufferPtr& colorBuffer)
+void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	m_rtvs[0] = colorBuffer12->GetRtvHandle();
@@ -398,17 +398,17 @@ void CommandContext12::BeginRendering(ColorBufferPtr& colorBuffer)
 }
 
 
-void CommandContext12::BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	m_rtvs[0] = colorBuffer12->GetRtvHandle();
@@ -425,14 +425,14 @@ void CommandContext12::BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPt
 }
 
 
-void CommandContext12::BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
 	// TODO: Try this with GetPlatformObject()
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
@@ -445,7 +445,7 @@ void CommandContext12::BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilA
 }
 
 
-void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
+void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffers)
 {
 	assert(!m_isRendering);
 	assert(colorBuffers.size() <= 8);
@@ -457,7 +457,7 @@ void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
 	uint32_t i = 0;
 	for (const auto& colorBuffer : colorBuffers)
 	{
-		const ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+		const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 		assert(colorBuffer12 != nullptr);
 
 		m_rtvs[i] = colorBuffer12->GetRtvHandle();
@@ -472,7 +472,7 @@ void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers)
 }
 
 
-void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect)
+void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffers, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect)
 {
 	assert(!m_isRendering);
 	assert(colorBuffers.size() <= 8);
@@ -484,7 +484,7 @@ void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, D
 	uint32_t i = 0;
 	for (const auto& colorBuffer : colorBuffers)
 	{
-		const ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+		const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 		assert(colorBuffer12 != nullptr);
 
 		m_rtvs[i] = colorBuffer12->GetRtvHandle();
@@ -493,7 +493,7 @@ void CommandContext12::BeginRendering(std::span<ColorBufferPtr>& colorBuffers, D
 	}
 	m_numRtvs = (uint32_t)colorBuffers.size();
 
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
+	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
 	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
@@ -1145,10 +1145,10 @@ void CommandContext12::InsertUAVBarrier_Internal(ID3D12Resource* resource, bool 
 }
 
 
-void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset)
+void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 { 
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer.get();
+	GpuBuffer* destBuffer12 = (GpuBuffer*)destBuffer;
 	assert(destBuffer12 != nullptr);
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the destination buffer
@@ -1163,9 +1163,9 @@ void CommandContext12::InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const
 }
 
 
-void CommandContext12::InitializeTexture_Internal(TexturePtr& destTexture, const TextureInitializer& texInit)
+void CommandContext12::InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit)
 {
-	Texture* texture12 = (Texture*)destTexture.Get();
+	Texture* texture12 = (Texture*)destTexture;
 	assert(texture12 != nullptr);
 
 	// Copy subresource info from Luna struct to D3D12 struct

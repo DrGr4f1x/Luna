@@ -80,29 +80,29 @@ public:
 	void BeginFrame() override;
 	uint64_t Finish(bool bWaitForCompletion) override;
 
-	void TransitionResource(ColorBufferPtr& colorBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(DepthBufferPtr& depthBuffer, ResourceState newSTate, bool bFlushImmediate) override;
-	void TransitionResource(GpuBufferPtr& gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
-	void TransitionResource(TexturePtr& texture, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newSTate, bool bFlushImmediate) override;
+	void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
+	void TransitionResource(ITexture* texture, ResourceState newState, bool bFlushImmediate) override;
 	void InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate) override;
 	void InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate) override;
 	void FlushResourceBarriers() override;
 
 	DynAlloc ReserveUploadMemory(size_t sizeInBytes) override;
 
-	void ClearUAV(GpuBufferPtr& gpuBuffer) override;
-	//void ClearUAV(ColorBufferPtr& colorBuffer) override;
-	void ClearColor(ColorBufferPtr& colorBuffer) override;
-	void ClearColor(ColorBufferPtr& colorBuffer, Color clearColor) override;
-	void ClearDepth(DepthBufferPtr& depthBuffer) override;
-	void ClearStencil(DepthBufferPtr& depthBuffer) override;
-	void ClearDepthAndStencil(DepthBufferPtr& depthBuffer) override;
+	void ClearUAV(IGpuBuffer* gpuBuffer) override;
+	//void ClearUAV(IColorBuffer* colorBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer) override;
+	void ClearColor(IColorBuffer* colorBuffer, Color clearColor) override;
+	void ClearDepth(IDepthBuffer* depthBuffer) override;
+	void ClearStencil(IDepthBuffer* depthBuffer) override;
+	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
-	void BeginRendering(ColorBufferPtr& colorBuffer) override;
-	void BeginRendering(ColorBufferPtr& colorBuffer, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect) override;
-	void BeginRendering(std::span<ColorBufferPtr>& colorBuffers) override;
-	void BeginRendering(std::span<ColorBufferPtr>& colorBuffers, DepthBufferPtr& depthBuffer, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(const IColorBuffer* colorBuffer) override;
+	void BeginRendering(const IColorBuffer* colorBuffer, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect) override;
+	void BeginRendering(std::span<const IColorBuffer*> colorBuffers) override;
+	void BeginRendering(std::span<const IColorBuffer*> colorBuffers, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
 	void BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) override;
@@ -161,9 +161,9 @@ public:
 	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) override;
 
 private:
-	void ClearDepthAndStencil_Internal(DepthBufferPtr& depthBuffer, VkImageAspectFlags flags);
-	void InitializeBuffer_Internal(GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
-	void InitializeTexture_Internal(TexturePtr& texture, const TextureInitializer& texInit) override;
+	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
+	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
+	void InitializeTexture_Internal(ITexture* texture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
 	void BindDescriptorHeaps() {}
