@@ -299,7 +299,7 @@ void TerrainTessellationApp::InitTerrain()
 	const uint32_t PATCH_SIZE = 64;
 	const float UV_SCALE = 1.0f;
 
-	const uint32_t scale = m_terrainHeightMap->GetWidth() / PATCH_SIZE;
+	const uint32_t scale = (uint32_t)m_terrainHeightMap->GetWidth() / PATCH_SIZE;
 
 	const uint32_t vertexCount = PATCH_SIZE * PATCH_SIZE;
 	unique_ptr<Vertex[]> vertices(new Vertex[vertexCount]);
@@ -322,7 +322,7 @@ void TerrainTessellationApp::InitTerrain()
 
 	// Calculate normals from height map using a Sobel filter
 	const uint16_t* data = (const uint16_t*)m_terrainHeightMap->GetData();
-	const uint32_t dim = m_terrainHeightMap->GetWidth();
+	const uint32_t dim = (uint32_t)m_terrainHeightMap->GetWidth();
 
 	for (int x = 0; x < (int)PATCH_SIZE; ++x)
 	{

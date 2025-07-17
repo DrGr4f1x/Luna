@@ -1,21 +1,12 @@
 ﻿using Microsoft.Win32;
-using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.IO;
-using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.IO;
-using System.Numerics;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace ShaderCompiler
 {
@@ -561,7 +552,7 @@ namespace ShaderCompiler
 
         public Compiler(Options options)
         {
-              this.Options = options;
+            this.Options = options;
 
             FindVulkanDxcCompiler();
             FindWindowsCompilers();
@@ -595,18 +586,18 @@ namespace ShaderCompiler
         {
             string installedRootsPath = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows Kits\\Installed Roots";
             RegistryKey? installedRootsKey = FindLocalMachineKey(installedRootsPath);
-                       
-            if(installedRootsKey != null)
+
+            if (installedRootsKey != null)
             {
                 var kitsRootDirectory = new DirectoryInfo((string)installedRootsKey.GetValue("KitsRoot10"));
-                
-                if( kitsRootDirectory.Exists)
+
+                if (kitsRootDirectory.Exists)
                 {
                     var binDirectory = new DirectoryInfo(kitsRootDirectory.FullName + "\\bin");
                     if (binDirectory.Exists)
                     {
                         var searchDirectories = binDirectory.GetDirectories("10.0.*");
-           
+
                         Array.Sort(searchDirectories, new DirectoryComparer());
                         searchDirectories.Reverse();
 
@@ -729,7 +720,7 @@ namespace ShaderCompiler
 
         public static string GetDefaultExtension(Platform platform)
         {
-            switch(platform)
+            switch (platform)
             {
                 case Platform.DXBC:
                     return ".dbxc";
@@ -800,12 +791,12 @@ namespace ShaderCompiler
 
                     if (!bHasMatch)
                         continue;
-                    
 
-                     bool bFoundRelaxedInclude = false;
+
+                    bool bFoundRelaxedInclude = false;
                     if (Options.RelaxedIncludes is not null)
                     {
-                        foreach(var relaxedInclude in Options.RelaxedIncludes)
+                        foreach (var relaxedInclude in Options.RelaxedIncludes)
                         {
                             if (relaxedInclude == includeName)
                             {
@@ -872,11 +863,11 @@ namespace ShaderCompiler
                 return true;
 
             }
-            catch 
+            catch
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.Error.WriteLine("ERROR: Can't open file {0}, included in:", file);
-                foreach(var item in callStack)
+                foreach (var item in callStack)
                 {
                     Console.Error.WriteLine("\t{0}", item);
                 }
@@ -901,7 +892,7 @@ namespace ShaderCompiler
             }
 
             // DXBC: skip unsupported profiles
-            if(Options.Platform == Platform.DXBC && (configLine.Profile == "lib" || configLine.Profile == "ms" || configLine.Profile == "as"))
+            if (Options.Platform == Platform.DXBC && (configLine.Profile == "lib" || configLine.Profile == "ms" || configLine.Profile == "as"))
             {
                 return true;
             }
@@ -924,7 +915,7 @@ namespace ShaderCompiler
 
             // Compiled shader name
             var shaderName = configLine.Source;
-            while(shaderName.StartsWith("."))
+            while (shaderName.StartsWith("."))
             {
                 shaderName = shaderName.Substring(1);
                 if (shaderName.StartsWith("/") || shaderName.StartsWith("\\"))
@@ -1263,7 +1254,7 @@ namespace ShaderCompiler
                 Marshal.StructureToPtr(entryData, ptr, true);
                 Marshal.Copy(ptr, entryData, 0, entryDataSize);
             }
-            finally 
+            finally
             {
                 Marshal.FreeHGlobal(ptr);
             }
@@ -1539,7 +1530,7 @@ namespace ShaderCompiler
                     string sourceFile = Path.Combine(Path.Combine(System.IO.Directory.GetParent(Options.ConfigFile).FullName, sourceDir), job.Source);
                     commandArgs += " " + EscapePath(sourceFile);
                 }
-                
+
                 // Debug output
                 if (Options.Verbose)
                     System.Console.WriteLine("{0} {1}", compilerExe, commandArgs);
@@ -1685,7 +1676,7 @@ namespace ShaderCompiler
             }
 
             Compiler compiler = new Compiler(options);
- 
+
             if (!compiler.ValidateCompiler())
             {
                 Console.ForegroundColor = ConsoleColor.Red;
