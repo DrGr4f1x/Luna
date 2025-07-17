@@ -42,7 +42,7 @@ void TerrainTessellationApp::Configure()
 
 void TerrainTessellationApp::Startup()
 {
-	// Application initialization, after device creation
+	m_showGrid = true;
 }
 
 
@@ -98,6 +98,7 @@ void TerrainTessellationApp::Render()
 
 	context.DrawIndexed((uint32_t)m_terrainIndices->GetElementCount());
 
+	RenderGrid(context);
 	RenderUI(context);
 
 	context.EndRendering();
@@ -114,11 +115,12 @@ void TerrainTessellationApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Vector3(18.0f, 22.5f, 57.5f));
+	m_camera.SetPosition(Vector3(-18.0f, -22.5f, -57.5f));
 	//m_camera.SetRotation(Quaternion(XMConvertToRadians(7.5f), XMConvertToRadians(-343.0f), 0.0f));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
+	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Vector3(0.0f, -2.0f, 0.0f), Length(m_camera.GetPosition()), 4.0f);
 

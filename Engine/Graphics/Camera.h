@@ -80,7 +80,6 @@ protected:
 	Math::Frustum m_frustumVS;		// View-space view frustum
 	Math::Frustum m_frustumWS;		// World-space view frustum
 
-	bool m_vulkanCompatMode{ false };
 	float m_zoom{ 0.0f };
 	float m_rotateX{ 0.0f };
 	float m_rotateY{ 0.0f };
@@ -122,7 +121,6 @@ private:
 
 inline void BaseCamera::SetEyeAtUp(Math::Vector3 eye, Math::Vector3 at, Math::Vector3 up)
 {
-	m_vulkanCompatMode = false;
 	SetLookDirection(at - eye, up);
 	SetPosition(eye);
 }
@@ -130,14 +128,12 @@ inline void BaseCamera::SetEyeAtUp(Math::Vector3 eye, Math::Vector3 at, Math::Ve
 
 inline void BaseCamera::SetPosition(Math::Vector3 worldPos)
 {
-	m_vulkanCompatMode = false;
 	m_cameraToWorld.SetTranslation(worldPos);
 }
 
 
 inline void BaseCamera::SetTransform(const Math::AffineTransform& xform)
 {
-	m_vulkanCompatMode = false;
 	// By using these functions, we rederive an orthogonal transform.
 	SetLookDirection(-xform.GetZ(), xform.GetY());
 	SetPosition(xform.GetTranslation());
@@ -146,7 +142,6 @@ inline void BaseCamera::SetTransform(const Math::AffineTransform& xform)
 
 inline void BaseCamera::SetRotation(Math::Quaternion basisRotation)
 {
-	m_vulkanCompatMode = false;
 	m_cameraToWorld.SetRotation(Normalize(basisRotation));
 	m_basis = Math::Matrix3(m_cameraToWorld.GetRotation());
 }
