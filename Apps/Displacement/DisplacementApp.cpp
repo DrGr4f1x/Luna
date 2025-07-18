@@ -120,7 +120,8 @@ void DisplacementApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Vector3(0.830579f, -0.427525f, -0.830579f));
+	m_camera.SetPosition(Vector3(-0.830579f, 0.427525f, 0.830579f));
+	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.0025f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -278,7 +279,7 @@ void DisplacementApp::UpdateConstantBuffers()
 	}
 
 	m_dsConstants.lightPos.SetY(5.0f - m_dsConstants.tessStrength);
-	m_dsConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_dsConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_dsConstants.modelMatrix = m_camera.GetViewMatrix();
 	m_dsConstantBuffer->Update(sizeof(m_dsConstants), &m_dsConstants);
 }

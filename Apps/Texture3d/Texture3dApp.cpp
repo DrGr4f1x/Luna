@@ -168,8 +168,8 @@ void Texture3dApp::Startup()
 
 	m_controller.SetSpeedScale(0.025f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
+	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 }
 
 
@@ -430,7 +430,7 @@ void Texture3dApp::UpdateConstantBuffer()
 {
 	Matrix4 modelMatrix = Matrix4(kIdentity);
 
-	m_constants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_constants.modelMatrix = modelMatrix;
 	m_constants.viewPos = Vector4(m_camera.GetPosition(), 0.0f);
 	m_constants.depth += (float)m_timer.GetElapsedSeconds() * 0.15f;

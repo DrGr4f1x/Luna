@@ -159,6 +159,7 @@ void OcclusionQueryApp::CreateDeviceDependentResources()
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.RefreshFromCamera();
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 
 	InitRootSignature();
@@ -327,7 +328,7 @@ void OcclusionQueryApp::UpdateConstantBuffers()
 {
 	using namespace DirectX;
 
-	Matrix4 projectionMatrix = m_camera.GetProjMatrix();
+	Matrix4 projectionMatrix = m_camera.GetProjectionMatrix();
 	Matrix4 viewMatrix = m_camera.GetViewMatrix();
 
 	Matrix4 rotationMatrix(AffineTransform::MakeYRotation(XMConvertToRadians(-135.0f)));

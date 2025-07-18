@@ -43,6 +43,7 @@ void ComputeClothApp::Configure()
 void ComputeClothApp::Startup()
 {
 	// Application initialization, after device creation
+	m_showGrid = true;
 }
 
 
@@ -131,6 +132,7 @@ void ComputeClothApp::Render()
 
 	context.DrawIndexed((uint32_t)m_clothIndexBuffer->GetElementCount());
 
+	RenderGrid(context);
 	RenderUI(context);
 
 	context.EndRendering();
@@ -147,7 +149,8 @@ void ComputeClothApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Math::Vector3(-2.0f, -2.0f, -2.0f));
+	m_camera.SetPosition(Vector3(2.0f, 2.0f, 2.0f));
+	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -488,7 +491,7 @@ void ComputeClothApp::LoadAssets()
 
 void ComputeClothApp::UpdateConstantBuffers()
 {
-	m_vsConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_vsConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_vsConstants.modelViewMatrix = m_camera.GetViewMatrix();
 	m_vsConstantBuffer->Update(sizeof(VSConstants), &m_vsConstants);
 

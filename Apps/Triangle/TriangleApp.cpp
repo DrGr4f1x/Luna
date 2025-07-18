@@ -255,7 +255,7 @@ void TriangleApp::InitResources()
 void TriangleApp::UpdateConstantBuffer()
 {
 	// Update matrices
-	m_vsConstants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_vsConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 
 	m_constantBuffer->Update(sizeof(m_vsConstants), &m_vsConstants);
 }

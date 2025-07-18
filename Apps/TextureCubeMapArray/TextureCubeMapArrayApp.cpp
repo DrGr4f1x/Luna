@@ -49,8 +49,7 @@ void TextureCubeMapArrayApp::Startup()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.SetPosition(Vector3(0.0f, 0.0f, 4.0f));
-
+	m_camera.SetPosition(Vector3(0.0f, 0.0f, -4.0f));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
@@ -296,14 +295,15 @@ void TextureCubeMapArrayApp::UpdateConstantBuffers()
 {
 	Matrix4 modelMatrix = Matrix4(kIdentity);
 
-	Matrix4 viewMatrix = AffineTransform(m_camera.GetRotation(), Vector3(0.0f, 0.0f, 0.0f));
+	Matrix4 viewMatrix = AffineTransform(m_camera.GetOrientation(), Vector3(0.0f, 0.0f, 0.0f));
 
-	m_vsSkyboxConstants.viewProjectionMatrix = m_camera.GetProjMatrix() * Invert(viewMatrix);
+	m_vsSkyboxConstants.viewProjectionMatrix = m_camera.GetProjectionMatrix() * Invert(viewMatrix);
+	m_vsSkyboxConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_vsSkyboxConstants.modelMatrix = modelMatrix;
 	m_vsSkyboxConstants.eyePos = Vector3(0.0f, 0.0f, 0.0f);
 	m_vsSkyboxConstantBuffer->Update(sizeof(m_vsSkyboxConstants), &m_vsSkyboxConstants);
 
-	m_vsModelConstants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_vsModelConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_vsModelConstants.modelMatrix = modelMatrix;
 	m_vsModelConstants.eyePos = m_camera.GetPosition();
 	m_vsModelConstantBuffer->Update(sizeof(m_vsModelConstants), &m_vsModelConstants);

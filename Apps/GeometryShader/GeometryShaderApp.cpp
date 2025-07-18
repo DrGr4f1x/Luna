@@ -121,7 +121,7 @@ void GeometryShaderApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.SetPosition(Math::Vector3(0.0f, -0.9f, -3.9f));
+	m_camera.SetPosition(Math::Vector3(0.0f, 0.9f, 3.9f));
 	m_camera.Update();
 
 	InitRootSignatures();
@@ -265,7 +265,7 @@ void GeometryShaderApp::InitResourceSets()
 
 void GeometryShaderApp::UpdateConstantBuffer()
 {
-	m_constants.projectionMatrix = m_camera.GetProjMatrix();
+	m_constants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_constants.modelMatrix = m_camera.GetViewMatrix();
 
 	m_constantBuffer->Update(sizeof(m_constants), &m_constants);

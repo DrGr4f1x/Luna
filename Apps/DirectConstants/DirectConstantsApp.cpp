@@ -110,8 +110,8 @@ void DirectConstantsApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.SetPosition(Math::Vector3(18.65f, -14.4f, -18.65f));
-	m_camera.SetZoomRotation(-30.0f, -32.5f, 45.0f, 0.0f);
+	m_camera.SetPosition(Math::Vector3(-18.65f, 14.4f, 18.65f));
+	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -217,7 +217,7 @@ void DirectConstantsApp::InitResourceSet()
 
 void DirectConstantsApp::UpdateConstantBuffer()
 {
-	m_constants.projectionMatrix = m_camera.GetProjMatrix();
+	m_constants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_constants.modelMatrix = m_camera.GetViewMatrix();
 
 	m_constantBuffer->Update(sizeof(m_constants), &m_constants);

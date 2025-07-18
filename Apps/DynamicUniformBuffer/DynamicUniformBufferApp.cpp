@@ -105,7 +105,7 @@ void DynamicUniformBufferApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Vector3(0.0f, 0.0f, -30.0f));
+	m_camera.SetPosition(Vector3(0.0f, 0.0f, 30.0f));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
@@ -288,7 +288,7 @@ void DynamicUniformBufferApp::UpdateConstantBuffers()
 {
 	using namespace Math;
 
-	m_vsConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_vsConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_vsConstants.viewMatrix = m_camera.GetViewMatrix();
 
 	m_vsConstantBuffer->Update(sizeof(m_vsConstants), &m_vsConstants);

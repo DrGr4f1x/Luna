@@ -13,6 +13,7 @@
 #include "Application.h"
 #include "CameraController.h"
 
+
 class StencilBufferApp : public Luna::Application
 {
 public:

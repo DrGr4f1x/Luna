@@ -17,6 +17,9 @@
     <None Include="Shaders\DisplacementDS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\DisplacementHS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -33,10 +36,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\DisplacementHS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

@@ -121,7 +121,8 @@ void ComputeNBodyApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Math::Vector3(-8.0f, -8.0f, -8.0f));
+	m_camera.SetPosition(Math::Vector3(8.0f, 8.0f, 8.0f));
+	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -350,7 +351,7 @@ void ComputeNBodyApp::LoadAssets()
 
 void ComputeNBodyApp::UpdateConstantBuffers()
 {
-	m_graphicsConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_graphicsConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_graphicsConstants.modelViewMatrix = m_camera.GetViewMatrix();
 	m_graphicsConstants.invViewMatrix = Invert(m_camera.GetViewMatrix());
 	m_graphicsConstants.screenDim[0] = (float)GetWindowWidth();

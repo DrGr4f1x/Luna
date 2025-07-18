@@ -117,7 +117,8 @@ void StencilBufferApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Vector3(-4.75f, -3.25f, -4.75f));
+	Vector3 cameraPosition{ 4.75f, 3.25f, 4.75f };
+	m_camera.SetPosition(cameraPosition);
 	m_camera.Update();
 
 	// Create any resources that depend on the device, but not the window size
@@ -134,6 +135,9 @@ void StencilBufferApp::CreateDeviceDependentResources()
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(box.GetCenter(), 4.0f, 0.25f);
+	m_controller.SlowMovement(true);
+	m_controller.SlowRotation(false);
+	m_controller.SetSpeedScale(0.25f);
 }
 
 
@@ -278,7 +282,7 @@ void StencilBufferApp::InitResourceSet()
 
 void StencilBufferApp::UpdateConstantBuffer()
 {
-	m_constants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_constants.modelMatrix = Matrix4(kIdentity);
 	m_constants.lightPos = Vector4(0.0f, 2.0f, 1.0f, 1.0f);
 

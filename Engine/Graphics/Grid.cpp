@@ -27,7 +27,7 @@ namespace Luna
 
 void Grid::Update(const Camera& camera)
 {
-	m_vsConstants.viewProjectionMatrix = camera.GetViewProjMatrix();
+	m_vsConstants.viewProjectionMatrix = camera.GetViewProjectionMatrix();
 	m_constantBuffer->Update(sizeof(m_vsConstants), &m_vsConstants);
 }
 

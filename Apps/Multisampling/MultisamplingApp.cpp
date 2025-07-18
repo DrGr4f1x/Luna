@@ -133,11 +133,12 @@ void MultisamplingApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Vector3(-4.838f, 3.23f, -7.05f));
+	m_camera.SetPosition(Vector3(4.838f, -3.23f, 7.05f));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.RefreshFromCamera();
 	m_controller.SetOrbitTarget(Vector3(0.0f, 3.5f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 
 	InitRootSignature();
@@ -297,7 +298,7 @@ void MultisamplingApp::LoadAssets()
 
 void MultisamplingApp::UpdateConstantBuffer()
 {
-	m_constants.viewProjectionMatrix = m_camera.GetProjMatrix();
+	m_constants.viewProjectionMatrix = m_camera.GetProjectionMatrix();
 	m_constants.modelMatrix = m_camera.GetViewMatrix();
 	m_constants.lightPos = Vector4(5.0f, 5.0f, 5.0f, 1.0f);
 

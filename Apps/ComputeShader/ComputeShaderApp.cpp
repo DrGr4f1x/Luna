@@ -51,7 +51,6 @@ void ComputeShaderApp::Startup()
 		0.001f,
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, 2.0f));
-
 	m_camera.Update();
 
 	m_shaderNames.push_back("Emboss");
@@ -348,7 +347,7 @@ void ComputeShaderApp::InitPipelines()
 
 void ComputeShaderApp::InitConstantBuffer()
 {
-	m_constants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_constants.modelMatrix = Matrix4(kIdentity);
 
 	// Setup constant buffer

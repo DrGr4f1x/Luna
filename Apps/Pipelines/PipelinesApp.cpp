@@ -132,7 +132,7 @@ void PipelinesApp::CreateDeviceDependentResources()
 		(float)GetWindowHeight() / (float)(GetWindowHeight() / 3),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Vector3(2.7f, -6.3f, -8.75f));
+	m_camera.SetPosition(Vector3(-2.7f, 6.3f, 8.75f));
 	m_camera.Update();
 
 	InitRootSignature();
@@ -144,6 +144,7 @@ void PipelinesApp::CreateDeviceDependentResources()
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.RefreshFromCamera();
 	m_controller.SetOrbitTarget(box.GetCenter(), Length(m_camera.GetPosition()), 0.25f);
 }
 
@@ -261,7 +262,7 @@ void PipelinesApp::InitResourceSet()
 
 void PipelinesApp::UpdateConstantBuffer()
 {
-	m_vsConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_vsConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_vsConstants.modelMatrix = m_camera.GetViewMatrix();
 	m_vsConstants.lightPos = Vector4(0.0f, 2.0f, -1.0f, 0.0f);
 

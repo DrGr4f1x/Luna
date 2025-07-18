@@ -10,7 +10,6 @@
 
 #pragma once
 
-
 namespace Luna
 {
 
@@ -25,6 +24,7 @@ enum class CameraMode
 	ArcBall
 };
 
+
 class CameraController
 {
 public:
@@ -38,15 +38,16 @@ public:
 	void SetCameraMode(CameraMode mode);
 	void SetOrbitTarget(Math::Vector3 target, float zoom, float minDistance);
 
-	void SlowMovement(bool enable) { m_fineMovement = enable; }
-	void SlowRotation(bool enable) { m_fineRotation = enable; }
+	void SlowMovement(bool enable) noexcept { m_fineMovement = enable; }
+	void SlowRotation(bool enable) noexcept { m_fineRotation = enable; }
 
-	void EnableMomentum(bool enable) { m_momentum = enable; }
+	void EnableMomentum(bool enable) noexcept { m_momentum = enable; }
 
-	void SetSpeedScale(float scale) { m_speedScale = scale; }
+	void SetSpeedScale(float scale) noexcept { m_speedScale = scale; }
+	void SetPanScale(float scale) noexcept { m_panScale = scale; }
 
 private:
-	CameraController& operator=(const CameraController&) { return *this; }
+	CameraController& operator=(const CameraController&) noexcept { return *this; }
 
 	void ApplyMomentum(float& oldValue, float& newValue, float deltaTime);
 
@@ -56,35 +57,37 @@ private:
 private:
 	CameraMode m_mode{ CameraMode::WASD };
 
-	Math::Vector3 m_worldUp;
-	Math::Vector3 m_worldNorth;
-	Math::Vector3 m_worldEast;
+	Math::Vector3 m_worldUp{ Math::kZero };
+	Math::Vector3 m_worldNorth{ Math::kZero };
+	Math::Vector3 m_worldEast{ Math::kZero };
 	Camera& m_targetCamera;
-	float m_horizontalLookSensitivity;
-	float m_verticalLookSensitivity;
-	float m_moveSpeed;
-	float m_strafeSpeed;
-	float m_mouseSensitivityX;
-	float m_mouseSensitivityY;
+	float m_horizontalLookSensitivity{ 2.0f };
+	float m_verticalLookSensitivity{ 2.0f };
+	float m_moveSpeed{ 1000.0f };
+	float m_strafeSpeed{ 1000.0f };
+	float m_mouseSensitivityX{ 1.0f };
+	float m_mouseSensitivityY{ 1.0f };
 
-	float m_currentHeading;
-	float m_currentPitch;
+	float m_currentHeading{ 0.0f };
+	float m_currentPitch{ 0.0f };
 
-	float m_speedScale;
+	float m_speedScale{ 1.0f };
+	float m_panScale{ 1.0f };
 
-	bool m_fineMovement;
-	bool m_fineRotation;
-	bool m_momentum;
+	bool m_fineMovement{ false };
+	bool m_fineRotation{ false };
+	bool m_momentum{ true };
 
-	float m_lastYaw;
-	float m_lastPitch;
-	float m_lastForward;
-	float m_lastStrafe;
-	float m_lastAscent;
+	float m_lastYaw{ 0.0f };
+	float m_lastPitch{ 0.0f };
+	float m_lastForward{ 0.0f };
+	float m_lastStrafe{ 0.0f };
+	float m_lastAscent{ 0.0f };
 
 	Math::Vector3 m_orbitTarget{ 0.0f, 0.0f, 0.0f };
 	float m_minDistance{ 0.0f };
 	float m_zoom{ 1.0f };
 };
+
 
 } // namespace Luna

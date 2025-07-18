@@ -47,13 +47,13 @@ void TextureApp::Startup()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, m_zoom));
+	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.025f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
+	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 }
 
 
@@ -282,7 +282,7 @@ void TextureApp::UpdateConstantBuffer()
 {
 	using namespace Math;
 
-	m_constants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_constants.modelMatrix = Matrix4(kIdentity);
 	m_constants.viewPos = m_camera.GetPosition();
 	m_constants.flipUVs = m_flipUVs;

@@ -137,11 +137,13 @@ void InstancingApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Vector3(kZero));
+	AffineTransform transform(Quaternion(DirectX::XMConvertToRadians(-17.2f), DirectX::XMConvertToRadians(-4.7f), 0.0f), Vector3(5.5f, -1.85f, -18.5f));
+	m_camera.SetTransform(transform);
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.RefreshFromCamera();
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 
 	InitRootSignatures();
@@ -382,7 +384,7 @@ void InstancingApp::UpdateConstantBuffer()
 {
 	using namespace Math;
 
-	m_planetConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_planetConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 
 	Quaternion rotX{ Vector3(kXUnitVector), XMConvertToRadians(17.2f) };
 	Quaternion rotY{ Vector3(kYUnitVector), XMConvertToRadians(4.7f) };

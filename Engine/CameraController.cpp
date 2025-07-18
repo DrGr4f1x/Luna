@@ -63,23 +63,12 @@ void CameraController::Update(InputSystem* inputSystem, float deltaTime, bool ig
 
 void CameraController::RefreshFromCamera()
 {
-	m_horizontalLookSensitivity = 2.0f;
-	m_verticalLookSensitivity = 2.0f;
-	m_moveSpeed = 1000.0f;
-	m_strafeSpeed = 1000.0f;
-	m_mouseSensitivityX = 1.0f;
-	m_mouseSensitivityY = 1.0f;
+	Vector3 cameraForward = m_targetCamera.GetForwardVec();
+	m_currentPitch = Sin(Dot(cameraForward, m_worldUp));
 
-	m_currentPitch = Sin(Dot(m_targetCamera.GetForwardVec(), m_worldUp));
-
-	Vector3 forward = Normalize(Cross(m_worldUp, m_targetCamera.GetRightVec()));
+	Vector3 cameraRight = m_targetCamera.GetRightVec();
+	Vector3 forward = Normalize(Cross(m_worldUp, cameraRight));
 	m_currentHeading = ATan2(-Dot(forward, m_worldEast), Dot(forward, m_worldNorth));
-
-	m_speedScale = 1.0f;
-
-	m_fineMovement = false;
-	m_fineRotation = false;
-	m_momentum = true;
 
 	m_lastYaw = 0.0f;
 	m_lastPitch = 0.0f;
@@ -100,7 +89,7 @@ void CameraController::SetOrbitTarget(Math::Vector3 target, float zoom, float mi
 	m_zoom = zoom;
 	m_orbitTarget = target;
 	m_minDistance = fabsf(minDistance);
-	m_targetCamera.SetLookDirection(target - m_targetCamera.GetPosition(), m_worldUp);
+	m_targetCamera.SetLookIn(target - m_targetCamera.GetPosition(), m_worldUp);
 	m_targetCamera.Update();
 	RefreshFromCamera();
 }
@@ -124,13 +113,8 @@ void CameraController::ApplyMomentum(float& oldValue, float& newValue, float del
 
 void CameraController::UpdateWASD(InputSystem* inputSystem, float deltaTime, bool ignoreInput)
 {
-	(deltaTime);
-
-	float timeScale = 1.0f;
-	timeScale *= m_speedScale;
-
-	float speedScale = (m_fineMovement ? 0.1f : 1.0f) * timeScale;
-	float panScale = (m_fineRotation ? 0.5f : 1.0f) * timeScale;
+	float speedScale = (m_fineMovement ? 0.1f : 1.0f) * m_speedScale;
+	float panScale = (m_fineRotation ? 0.5f : 1.0f) * m_panScale;
 
 	float yaw = 0.0f;
 	float pitch = 0.0f;
@@ -187,20 +171,16 @@ void CameraController::UpdateWASD(InputSystem* inputSystem, float deltaTime, boo
 		m_currentHeading += XM_2PI;
 	}
 
+	Vector3 cameraPosition = m_targetCamera.GetPosition();
 	Matrix3 orientation = Matrix3(m_worldEast, m_worldUp, -m_worldNorth) * Matrix3::MakeYRotation(m_currentHeading) * Matrix3::MakeXRotation(m_currentPitch);
-	Vector3 position = orientation * Vector3(strafe, ascent, -forward) + m_targetCamera.GetPosition();
+	Vector3 position = orientation * Vector3(strafe, ascent, -forward) + cameraPosition;
 	m_targetCamera.SetTransform(AffineTransform(orientation, position));
 }
 
 
 void CameraController::UpdateArcBall(InputSystem* inputSystem, float deltaTime, bool ignoreInput)
 {
-	(deltaTime);
-
-	float timeScale = 1.0f;
-	timeScale *= m_speedScale;
-
-	float panScale = (m_fineRotation ? 0.5f : 1.0f) * timeScale;
+	float panScale = (m_fineRotation ? 0.5f : 1.0f) * m_panScale;
 
 	float yaw = 0.0f;
 	float pitch = 0.0f;
@@ -247,7 +227,7 @@ void CameraController::UpdateArcBall(InputSystem* inputSystem, float deltaTime, 
 	Vector3 position = Quaternion(m_currentPitch, m_currentHeading, 0.0f) * (-1.0f * Vector3(kZUnitVector));
 	position = m_zoom * position;
 	position += m_orbitTarget;
-	m_targetCamera.SetEyeAtUp(position, m_orbitTarget, Vector3(kYUnitVector));
+	m_targetCamera.SetLookAt(position, m_orbitTarget, Vector3(kYUnitVector));
 }
 
 } // namespace Luna

@@ -82,14 +82,14 @@ void TextureArrayApp::Startup()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.SetPosition(Vector3(0.0f, -1.0f, m_zoom));
+	m_camera.SetPosition(Vector3(0.0f, 1.0f, -m_zoom));
 
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 	m_controller.RefreshFromCamera();
+	m_controller.SetOrbitTarget(Math::Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 }
 
 
@@ -277,7 +277,7 @@ void TextureArrayApp::InitResourceSet()
 
 void TextureArrayApp::UpdateConstantBuffer()
 {
-	m_constants.viewProjectionMatrix = m_camera.GetViewProjMatrix();
+	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 
 	// Just update the vp matrix
 	m_constantBuffer->Update(sizeof(Matrix4), &m_constants);

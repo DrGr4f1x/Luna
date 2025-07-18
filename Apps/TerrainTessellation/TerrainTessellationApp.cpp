@@ -419,11 +419,11 @@ void TerrainTessellationApp::UpdateConstantBuffers()
 
 	Matrix4 viewMatrix = m_camera.GetViewMatrix();
 	viewMatrix.SetW(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
-	m_skyConstants.modelViewProjectionMatrix = m_camera.GetProjMatrix() * viewMatrix;
+	m_skyConstants.modelViewProjectionMatrix = m_camera.GetProjectionMatrix() * viewMatrix;
 	m_skyConstantBuffer->Update(sizeof(SkyConstants), &m_skyConstants);
 
 	m_terrainConstants.modelViewMatrix = m_camera.GetViewMatrix();
-	m_terrainConstants.projectionMatrix = m_camera.GetProjMatrix();
+	m_terrainConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 	m_terrainConstants.lightPos = Vector4(-48.0f, -40.0f, 46.0f, 0.0f);
 	m_terrainConstants.displacementFactor = 32.0f;
 	m_terrainConstants.tessellationFactor = 0.75f;

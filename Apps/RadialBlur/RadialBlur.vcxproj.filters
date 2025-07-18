@@ -17,6 +17,15 @@
     <None Include="Shaders\PhongPassPS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\PhongPassVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\RadialBlurPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\RadialBlurVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -33,16 +42,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\PhongPassVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\RadialBlurPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\RadialBlurVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>
