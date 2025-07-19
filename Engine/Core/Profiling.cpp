@@ -12,6 +12,8 @@
 
 #include "Profiling.h"
 
+#include "Application.h"
+
 #include "pix3.h"
 
 
@@ -38,6 +40,38 @@ void SetMarker(const std::string& marker)
 {
 #if ENABLE_DEBUG_MARKERS
 	PIXSetMarker(0, marker.c_str());
+#endif
+}
+
+
+ScopedEvent::ScopedEvent(const std::string& event)
+{
+#if FRAMEPRO_ENABLED
+	assert(IsFrameProRunning());
+	FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
+	m_stringId = FramePro::RegisterString(event.c_str());
+#endif
+
+	BeginEvent(event);
+}
+
+ScopedEvent::~ScopedEvent()
+{
+	EndEvent();
+
+#if FRAMEPRO_ENABLED
+	assert(IsFrameProRunning());
+	int64_t endTime;
+	FRAMEPRO_GET_CLOCK_COUNT(endTime);
+	int64_t duration = endTime - m_startTime;
+	if (duration < 0)
+	{
+		return;
+	}
+	else if (FramePro::IsConnected() && (duration > FramePro::GetConditionalScopeMinTime()))
+	{
+		FramePro::AddTimeSpan(m_stringId, "none", m_startTime, endTime);
+	}
 #endif
 }
 

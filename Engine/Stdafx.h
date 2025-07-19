@@ -74,6 +74,8 @@
 #include <variant>
 #include <vector>
 
+#include "LunaFramePro.h"
+
 // Core headers
 #include "Core\BitmaskEnum.h"
 #include "Core\Containers.h"

@@ -37,6 +37,8 @@
 #include <string>
 #include <variant>
 
+#include "LunaFramePro.h"
+
 // Engine headers
 #include "Core\BitmaskEnum.h"
 #include "Core\Containers.h"

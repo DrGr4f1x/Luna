@@ -12,6 +12,7 @@
 
 #include "CommandContext.h"
 
+#include "Application.h"
 #include "GraphicsCommon.h"
 #include "DeviceManager.h"
 
@@ -71,7 +72,7 @@ void CommandContext::InitializeTexture(const TexturePtr& destTexture, const Text
 }
 
 
-ComputeContext& ComputeContext::Begin(const string id, bool bAsync)
+ComputeContext& ComputeContext::Begin(const string& id, bool bAsync)
 {
 	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Direct;
 
@@ -90,6 +91,53 @@ ComputeContext& ComputeContext::Begin(const string id, bool bAsync)
 	//m_contextImpl->Begin
 
 	return newContext;
+}
+
+
+ScopedDrawEvent::ScopedDrawEvent(CommandContext& context, const string& label)
+	: m_context{ context.m_contextImpl.get() }
+{
+#if FRAMEPRO_ENABLED
+	assert(IsFrameProRunning());
+	FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
+	m_stringId = FramePro::RegisterString(label.c_str());
+#endif
+
+	m_context->BeginEvent(label);
+}
+
+
+ScopedDrawEvent::ScopedDrawEvent(ICommandContext* context, const std::string& label)
+	: m_context{ context }
+{
+#if FRAMEPRO_ENABLED
+	assert(IsFrameProRunning());
+	FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
+	m_stringId = FramePro::RegisterString(label.c_str());
+#endif
+
+	m_context->BeginEvent(label);
+}
+
+
+ScopedDrawEvent::~ScopedDrawEvent()
+{
+	m_context->EndEvent();
+
+#if FRAMEPRO_ENABLED
+	assert(IsFrameProRunning());
+	int64_t endTime;
+	FRAMEPRO_GET_CLOCK_COUNT(endTime);
+	int64_t duration = endTime - m_startTime;
+	if (duration < 0)
+	{
+		return;
+	}
+	else if (FramePro::IsConnected() && (duration > FramePro::GetConditionalScopeMinTime()))
+	{
+		FramePro::AddTimeSpan(m_stringId, "none", m_startTime, endTime);
+	}
+#endif
 }
 
 } // namespace Luna

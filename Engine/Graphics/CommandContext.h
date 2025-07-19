@@ -157,6 +157,8 @@ protected:
 
 class CommandContext : NonCopyable
 {
+	friend class ScopedDrawEvent;
+
 public:
 	CommandContext(ICommandContext* pContextImpl)
 		: m_contextImpl{ pContextImpl }
@@ -290,7 +292,7 @@ public:
 class ComputeContext : public CommandContext
 {
 public:
-	static ComputeContext& Begin(const std::string id = "", bool bAsync = false);
+	static ComputeContext& Begin(const std::string& id = "", bool bAsync = false);
 
 	void SetRootSignature(const RootSignaturePtr& rootSignature);
 	void SetComputePipeline(const ComputePipelinePtr& computePipeline);
@@ -327,19 +329,16 @@ public:
 class ScopedDrawEvent
 {
 public:
-	ScopedDrawEvent(CommandContext& context, const std::string& label)
-		: m_context(context)
-	{
-		context.BeginEvent(label);
-	}
-
-	~ScopedDrawEvent()
-	{
-		m_context.EndEvent();
-	}
+	ScopedDrawEvent(CommandContext& context, const std::string& label);
+	ScopedDrawEvent(ICommandContext* context, const std::string& label);
+	~ScopedDrawEvent();
 
 private:
-	CommandContext& m_context;
+	ICommandContext* m_context{ nullptr };
+#if FRAMEPRO_ENABLED
+	int64_t m_startTime{ 0 };
+	FramePro::StringId m_stringId{ 0 };
+#endif
 };
 
 

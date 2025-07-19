@@ -22,15 +22,13 @@ void SetMarker(const std::string& marker);
 class ScopedEvent
 {
 public:
-	explicit ScopedEvent(const std::string& event)
-	{
-		BeginEvent(event);
-	}
+	explicit ScopedEvent(const std::string& event);
+	~ScopedEvent();
 
-	~ScopedEvent()
-	{
-		EndEvent();
-	}
+#if FRAMEPRO_ENABLED
+	int64_t m_startTime{ 0 };
+	FramePro::StringId m_stringId{ 0 };
+#endif
 };
 
 } // namespace Luna

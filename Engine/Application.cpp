@@ -93,6 +93,20 @@ void GlfwMousePositionCallback(GLFWwindow* pWindow, double xPos, double yPos)
 
 namespace Luna
 {
+static bool g_isFrameProRunning = false;
+
+FrameProCloser::~FrameProCloser()
+{
+	FRAMEPRO_SHUTDOWN();
+	g_isFrameProRunning = false;
+}
+
+
+bool IsFrameProRunning()
+{
+	return g_isFrameProRunning;
+}
+
 
 Application::Application(uint32_t width, uint32_t height, const string& appTitle)
 {
@@ -205,6 +219,12 @@ void Application::Run()
 
 	while (m_isRunning && !glfwWindowShouldClose(m_pWindow))
 	{
+		FRAMEPRO_FRAME_START();
+		if (!g_isFrameProRunning)
+		{
+			g_isFrameProRunning = true;
+		}
+
 		glfwPollEvents();
 
 		UpdateWindowSize();
@@ -481,12 +501,12 @@ void Application::Finalize()
 
 bool Application::Tick()
 {
-	ScopedEvent event{ "Application::Tick" };
-
 	if (!m_isRunning)
 	{
 		return false;
-	}	
+	}
+
+	ScopedEvent event{ "Application::Tick" };
 
 	m_inputSystem->Update((float)m_timer.GetElapsedSeconds());
 

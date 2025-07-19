@@ -76,6 +76,8 @@ void ComputeClothApp::Render()
 
 	// Cloth simulation
 	{
+		ScopedDrawEvent event(context, "Cloth Sim");
+
 		auto& computeContext = context.GetComputeContext();
 
 		computeContext.TransitionResource(m_clothBuffer[0], ResourceState::ShaderResource);
@@ -114,23 +116,31 @@ void ComputeClothApp::Render()
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
 	// Sphere
-	context.SetRootSignature(m_sphereRootSignature);
-	context.SetGraphicsPipeline(m_spherePipeline);
+	{
+		ScopedDrawEvent event(context, "Render Sphere");
 
-	context.SetResources(m_sphereResources);
+		context.SetRootSignature(m_sphereRootSignature);
+		context.SetGraphicsPipeline(m_spherePipeline);
 
-	m_sphereModel->Render(context);
+		context.SetResources(m_sphereResources);
+
+		m_sphereModel->Render(context);
+	}
 
 	// Cloth
-	context.SetRootSignature(m_clothRootSignature);
-	context.SetGraphicsPipeline(m_clothPipeline);
+	{
+		ScopedDrawEvent event(context, "Render Cloth");
 
-	context.SetResources(m_clothResources);
+		context.SetRootSignature(m_clothRootSignature);
+		context.SetGraphicsPipeline(m_clothPipeline);
 
-	context.SetIndexBuffer(m_clothIndexBuffer);
-	context.SetVertexBuffer(0, m_clothBuffer[0]);
+		context.SetResources(m_clothResources);
 
-	context.DrawIndexed((uint32_t)m_clothIndexBuffer->GetElementCount());
+		context.SetIndexBuffer(m_clothIndexBuffer);
+		context.SetVertexBuffer(0, m_clothBuffer[0]);
+
+		context.DrawIndexed((uint32_t)m_clothIndexBuffer->GetElementCount());
+	}
 
 	RenderGrid(context);
 	RenderUI(context);

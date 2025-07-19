@@ -21,6 +21,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\External\FramePro\FramePro.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\External\imgui\backends\imgui_impl_dx12.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -169,6 +174,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h" />
+    <ClInclude Include="..\External\FramePro\FramePro.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_vulkan.h" />
@@ -300,6 +306,7 @@
     <ClInclude Include="Graphics\Vulkan\VulkanUtil.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="LogSystem.h" />
+    <ClInclude Include="LunaFramePro.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="StepTimer.h" />
   </ItemGroup>
@@ -408,7 +415,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)..\External\assimp;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)..\External\assimp;$(ProjectDir)..\External\FramePro;$(ProjectDir)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -434,7 +441,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)..\External\assimp;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)..\External\assimp;$(ProjectDir)..\External\FramePro;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -461,7 +468,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)..\External\assimp;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VULKAN_SDK)\Include;$(ProjectDIr)..;$(ProjectDir)..\External\ktx\include;$(ProjectDir)..\External\imgui;$(ProjectDir)..\External\D3D12MemoryAllocator\include;$(ProjectDir)..\External\assimp;$(ProjectDir)..\External\FramePro;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

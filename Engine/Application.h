@@ -67,6 +67,15 @@ struct ApplicationInfo
 };
 
 
+class FrameProCloser
+{
+public:
+	~FrameProCloser();
+};
+
+bool IsFrameProRunning();
+
+
 class Application
 {
 public:
@@ -132,6 +141,8 @@ protected:
 	ModelPtr LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault, bool loadMaterials = false);
 
 protected:
+	FrameProCloser m_frameProCloser{};
+
 	ApplicationInfo m_appInfo;
 	std::string m_appNameWithApi;
 
