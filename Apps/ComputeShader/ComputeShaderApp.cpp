@@ -276,7 +276,7 @@ void ComputeShaderApp::InitRootSignatures()
 		.name			= "Compute Root Signature",
 		.rootParameters =
 			{
-				RootParameter::Table({ DescriptorRange::TextureSRV(0), DescriptorRange::TextureUAV(1) }, ShaderStage::Compute),
+				RootParameter::Table({ TextureSRV, TextureUAV(1) }, ShaderStage::Compute),
 			}
 	};
 

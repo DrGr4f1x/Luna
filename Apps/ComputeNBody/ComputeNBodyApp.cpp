@@ -185,7 +185,7 @@ void ComputeNBodyApp::InitRootSignatures()
 	RootSignatureDesc computeRootSignatureDesc{
 		.name				= "Compute Root Signature",
 		.rootParameters		= {
-			RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::StructuredBufferUAV(1) }, ShaderStage::Compute)
+			RootParameter::Table({ ConstantBuffer, StructuredBufferUAV(1) }, ShaderStage::Compute)
 		}
 	};
 	m_computeRootSignature = CreateRootSignature(computeRootSignatureDesc);
