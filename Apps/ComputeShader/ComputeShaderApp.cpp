@@ -264,9 +264,9 @@ void ComputeShaderApp::InitRootSignatures()
 		.flags			= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters =
 			{
-				RootParameter::RootCBV(0, ShaderStage::Vertex),
-				RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
-				RootParameter::Table({ Sampler }, ShaderStage::Pixel)
+				RootCBV(0, ShaderStage::Vertex),
+				Table({ TextureSRV }, ShaderStage::Pixel),
+				Table({ Sampler }, ShaderStage::Pixel)
 			}
 	};
 
@@ -276,7 +276,7 @@ void ComputeShaderApp::InitRootSignatures()
 		.name			= "Compute Root Signature",
 		.rootParameters =
 			{
-				RootParameter::Table({ TextureSRV, TextureUAV(1) }, ShaderStage::Compute),
+				Table({ TextureSRV, TextureUAV(1) }, ShaderStage::Compute),
 			}
 	};
 

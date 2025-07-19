@@ -174,10 +174,10 @@ void ComputeNBodyApp::InitRootSignatures()
 		.name				= "Graphics Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
-			RootParameter::Table({ ConstantBuffer, StructuredBufferSRV(1) }, ShaderStage::Vertex),
-			RootParameter::Table({ ConstantBuffer }, ShaderStage::Geometry),
-			RootParameter::Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
-			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
+			Table({ ConstantBuffer, StructuredBufferSRV(1) }, ShaderStage::Vertex),
+			Table({ ConstantBuffer }, ShaderStage::Geometry),
+			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 	m_rootSignature = CreateRootSignature(graphicsRootSignatureDesc);
@@ -185,7 +185,7 @@ void ComputeNBodyApp::InitRootSignatures()
 	RootSignatureDesc computeRootSignatureDesc{
 		.name				= "Compute Root Signature",
 		.rootParameters		= {
-			RootParameter::Table({ ConstantBuffer, StructuredBufferUAV(1) }, ShaderStage::Compute)
+			Table({ ConstantBuffer, StructuredBufferUAV(1) }, ShaderStage::Compute)
 		}
 	};
 	m_computeRootSignature = CreateRootSignature(computeRootSignatureDesc);

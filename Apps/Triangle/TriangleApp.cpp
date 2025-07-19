@@ -154,7 +154,7 @@ void TriangleApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
+	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, m_zoom));
 	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.025f);
@@ -205,7 +205,7 @@ void TriangleApp::InitRootSignature()
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Sig",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
-		.rootParameters		= { RootParameter::RootCBV(0, ShaderStage::Vertex) }
+		.rootParameters		= { RootCBV(0, ShaderStage::Vertex) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);

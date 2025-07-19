@@ -193,9 +193,9 @@ void TextureArrayApp::InitRootSignature()
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters =
 			{
-				RootParameter::RootCBV(0, ShaderStage::Vertex),
-				RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
-				RootParameter::Table({ Sampler }, ShaderStage::Pixel)
+				RootCBV(0, ShaderStage::Vertex),
+				Table({ TextureSRV }, ShaderStage::Pixel),
+				Table({ Sampler }, ShaderStage::Pixel)
 			}
 	};
 

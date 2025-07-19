@@ -143,69 +143,68 @@ struct RootParameter
 	{
 		return (parameterType == RootParameterType::Table && table[0].descriptorType == DescriptorType::Sampler);
 	}
+};
 
-	static RootParameter RootConstants(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
+using RootParameters = std::vector<RootParameter>;
+
+
+class RootConstantsBuilder
+{
+public:
+	RootParameter operator()(uint32_t startRegister, uint32_t num32BitConstants, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
 	{
-		auto ret = RootParameter
-		{
+		return RootParameter{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::RootConstants,
 			.startRegister		= startRegister,
 			.registerSpace		= registerSpace,
 			.num32BitConstants	= num32BitConstants
 		};
-		return ret;
 	}
+};
 
-	static RootParameter RootCBV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
-	{
-		auto ret = RootParameter
-		{
+inline RootConstantsBuilder RootConstants;
+
+
+class RootSrvUavCbvBuilder
+{
+public:
+	explicit RootSrvUavCbvBuilder(RootParameterType type) : m_type{type}
+	{}
+
+	RootParameter operator()(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	{ 
+		return RootParameter{
 			.shaderVisibility	= shaderVisibility,
-			.parameterType		= RootParameterType::RootCBV,
+			.parameterType		= m_type,
 			.startRegister		= startRegister,
 			.registerSpace		= registerSpace
 		};
-		return ret;
 	}
 
-	static RootParameter RootSRV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
-	{
-		auto ret = RootParameter
-		{
-			.shaderVisibility	= shaderVisibility,
-			.parameterType		= RootParameterType::RootSRV,
-			.startRegister		= startRegister,
-			.registerSpace		= registerSpace
-		};
-		return ret;
-	}
+private:
+	const RootParameterType m_type;
+};
 
-	static RootParameter RootUAV(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
-	{
-		auto ret = RootParameter
-		{
-			.shaderVisibility	= shaderVisibility,
-			.parameterType		= RootParameterType::RootUAV,
-			.startRegister		= startRegister,
-			.registerSpace		= registerSpace
-		};
-		return ret;
-	}
+inline RootSrvUavCbvBuilder RootCBV{ RootParameterType::RootCBV };
+inline RootSrvUavCbvBuilder RootSRV{ RootParameterType::RootSRV };
+inline RootSrvUavCbvBuilder RootUAV{ RootParameterType::RootUAV };
 
-	static RootParameter Table(std::vector<DescriptorRange> ranges, ShaderStage shaderVisibility = ShaderStage::All) noexcept
+
+class RootTableBuilder
+{
+public:
+	RootParameter operator()(std::vector<DescriptorRange> ranges, ShaderStage shaderVisibility = ShaderStage::All)
 	{
-		auto ret = RootParameter
-		{
+		return RootParameter{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::Table,
 			.table				= { ranges }
 		};
-		return ret;
 	}
 };
 
-using RootParameters = std::vector<RootParameter>;
+inline RootTableBuilder Table;
 
 
 struct RootSignatureDesc

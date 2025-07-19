@@ -204,7 +204,7 @@ void ComputeClothApp::InitRootSignatures()
 	RootSignatureDesc sphereRootSignatureDesc{
 		.name				= "Sphere Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
-		.rootParameters		= {	RootParameter::RootCBV(0, ShaderStage::Vertex),	}
+		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 	m_sphereRootSignature = CreateRootSignature(sphereRootSignatureDesc);
 
@@ -213,9 +213,9 @@ void ComputeClothApp::InitRootSignatures()
 		.name				= "Cloth Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
-			RootParameter::RootCBV(0, ShaderStage::Vertex),	
-			RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
-			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
+			RootCBV(0, ShaderStage::Vertex),	
+			Table({ TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 	m_clothRootSignature = CreateRootSignature(clothRootSignatureDesc);
@@ -224,7 +224,7 @@ void ComputeClothApp::InitRootSignatures()
 	RootSignatureDesc clothSimRootSignatureDesc{
 		.name				= "Cloth Sim Root Signature",
 		.rootParameters		= {
-			RootParameter::Table({ StructuredBufferSRV, StructuredBufferUAV(1), ConstantBuffer(2) }, ShaderStage::Compute)
+			Table({ StructuredBufferSRV, StructuredBufferUAV(1), ConstantBuffer(2) }, ShaderStage::Compute)
 		}
 	};
 	m_computeRootSignature = CreateRootSignature(clothSimRootSignatureDesc);

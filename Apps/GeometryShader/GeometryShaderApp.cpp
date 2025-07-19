@@ -175,7 +175,7 @@ void GeometryShaderApp::InitRootSignatures()
 	RootSignatureDesc meshRootSignatureDesc{
 		.name				= "Mesh Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters		= {	RootParameter::RootCBV(0, ShaderStage::Vertex),	}
+		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex),	}
 	};
 
 	m_meshRootSignature = CreateRootSignature(meshRootSignatureDesc);
@@ -183,7 +183,7 @@ void GeometryShaderApp::InitRootSignatures()
 	RootSignatureDesc geomRootSignatureDesc{
 		.name				= "Geom Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters		= {	RootParameter::RootCBV(0, ShaderStage::Geometry) }
+		.rootParameters		= {	RootCBV(0, ShaderStage::Geometry) }
 	};
 
 	m_geomRootSignature = CreateRootSignature(geomRootSignatureDesc);

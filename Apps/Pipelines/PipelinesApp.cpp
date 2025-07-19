@@ -185,7 +185,7 @@ void PipelinesApp::InitRootSignature()
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name = "Root Signature",
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters = {	RootParameter::RootCBV(0, ShaderStage::Vertex) }
+		.rootParameters = {	RootCBV(0, ShaderStage::Vertex) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);

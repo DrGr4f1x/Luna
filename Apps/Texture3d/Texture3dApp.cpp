@@ -305,9 +305,9 @@ void Texture3dApp::InitRootSignature()
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters =
 			{
-				RootParameter::Table({ ConstantBuffer }, ShaderStage::Vertex),
-				RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
-				RootParameter::Table({ Sampler }, ShaderStage::Pixel)
+				Table({ ConstantBuffer }, ShaderStage::Vertex),
+				Table({ TextureSRV }, ShaderStage::Pixel),
+				Table({ Sampler }, ShaderStage::Pixel)
 			}
 	};
 

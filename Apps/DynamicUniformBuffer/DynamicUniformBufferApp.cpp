@@ -157,8 +157,8 @@ void DynamicUniformBufferApp::InitRootSignature()
 		.name				= "Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
 		.rootParameters		= {	
-			RootParameter::RootCBV(0, ShaderStage::Vertex),	
-			RootParameter::RootCBV(1, ShaderStage::Vertex)
+			RootCBV(0, ShaderStage::Vertex),	
+			RootCBV(1, ShaderStage::Vertex)
 		}
 	};
 
