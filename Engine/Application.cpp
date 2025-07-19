@@ -554,6 +554,7 @@ bool Application::Tick()
 
 bool Application::CreateAppWindow()
 {
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	m_pWindow = glfwCreateWindow(m_appInfo.width, m_appInfo.height, m_appInfo.name.c_str(), nullptr, nullptr);
 
 	if (m_pWindow == nullptr)
