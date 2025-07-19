@@ -175,10 +175,10 @@ void DisplacementApp::InitRootSignature()
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters = {	
 			RootParameter::RootCBV(0, ShaderStage::Hull),
-			RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::TextureSRV(1) }, ShaderStage::Domain),
-			RootParameter::Range(DescriptorType::TextureSRV, 0, 1, ShaderStage::Pixel),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Domain),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Pixel)
+			RootParameter::Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Domain),
+			RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
+			RootParameter::Table({ Sampler }, ShaderStage::Domain),
+			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);

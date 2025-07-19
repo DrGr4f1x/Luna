@@ -166,8 +166,8 @@ void TerrainTessellationApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootParameter::RootCBV(0, ShaderStage::Vertex),
-			RootParameter::Range(DescriptorType::TextureSRV, 0, 1, ShaderStage::Pixel),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Pixel)
+			RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
+			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 	m_skyRootSignature = CreateRootSignature(skyRootSignatureDesc);
@@ -176,12 +176,12 @@ void TerrainTessellationApp::InitRootSignatures()
 		.name				= "Terrain Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
-			RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::TextureSRV(1) }, ShaderStage::Hull),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Hull),
-			RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::TextureSRV(1) }, ShaderStage::Domain),
-			RootParameter::Range(DescriptorType::TextureSRV, 0, 2, ShaderStage::Pixel),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Domain),
-			RootParameter::Range(DescriptorType::Sampler, 0, 2, ShaderStage::Pixel)
+			RootParameter::Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Hull),
+			RootParameter::Table({ Sampler}, ShaderStage::Hull),
+			RootParameter::Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Domain),
+			RootParameter::Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
+			RootParameter::Table({ Sampler }, ShaderStage::Domain),
+			RootParameter::Table({ Sampler(0, 2) }, ShaderStage::Pixel)
 		}
 	};
 	m_terrainRootSignature = CreateRootSignature(terrainRootSignatureDesc);

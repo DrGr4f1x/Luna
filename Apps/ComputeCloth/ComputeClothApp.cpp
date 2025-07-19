@@ -214,19 +214,17 @@ void ComputeClothApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootParameter::RootCBV(0, ShaderStage::Vertex),	
-			RootParameter::Range(DescriptorType::TextureSRV, 0, 1, ShaderStage::Pixel),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Pixel)
+			RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
+			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 	m_clothRootSignature = CreateRootSignature(clothRootSignatureDesc);
 
 	// Cloth sim compute
 	RootSignatureDesc clothSimRootSignatureDesc{
-		.name = "Cloth Sim Root Signature",
-		.rootParameters = {
-			RootParameter::Table( 
-				{ DescriptorRange::StructuredBufferSRV(0), DescriptorRange::StructuredBufferUAV(1), DescriptorRange::ConstantBuffer(2) },
-				ShaderStage::Compute),
+		.name				= "Cloth Sim Root Signature",
+		.rootParameters		= {
+			RootParameter::Table({ StructuredBufferSRV, StructuredBufferUAV(1), ConstantBuffer(2) }, ShaderStage::Compute)
 		}
 	};
 	m_computeRootSignature = CreateRootSignature(clothSimRootSignatureDesc);

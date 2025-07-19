@@ -17,6 +17,12 @@
     <None Include="Shaders\ParticleCalculateCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\ParticleGS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\ParticleIntegrateCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -33,13 +39,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\ParticleGS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ParticleIntegrateCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

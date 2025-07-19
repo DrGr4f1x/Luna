@@ -188,8 +188,8 @@ void TextureCubeMapArrayApp::InitRootSignatures()
 		.rootParameters =
 			{
 				RootParameter::RootCBV(0, ShaderStage::Vertex),
-				RootParameter::Table({ DescriptorRange::ConstantBuffer(0), DescriptorRange::TextureSRV(1) }, ShaderStage::Pixel),
-				RootParameter::Table({ DescriptorRange::Sampler(0) }, ShaderStage::Pixel)
+				RootParameter::Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Pixel),
+				RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 			}
 	};
 

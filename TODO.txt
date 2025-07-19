@@ -65,6 +65,7 @@ DONE:
 -- Look into Vulkan Present one more time
 -- Fix .gitignore to allow bin directories under External
 -- Refactor shader compilation using CustomBuild in VS
+-- Fixed busted camera position
 
 
 WON'T DO:

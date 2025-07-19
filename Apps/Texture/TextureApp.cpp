@@ -210,8 +210,8 @@ void TextureApp::InitRootSignature()
 		.rootParameters = 
 			{ 
 				RootParameter::RootCBV(0, ShaderStage::Vertex),
-				RootParameter::Table({ DescriptorRange::TextureSRV(0) }, ShaderStage::Pixel),
-				RootParameter::Table({ DescriptorRange::Sampler(0) }, ShaderStage::Pixel)
+				RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
+				RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 			}
 	};
 

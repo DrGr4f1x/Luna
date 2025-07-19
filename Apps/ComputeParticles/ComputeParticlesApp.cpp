@@ -170,7 +170,7 @@ void ComputeParticlesApp::InitRootSignatures()
 	RootSignatureDesc computeRootSignatureDesc{
 		.name = "Compute Root Signature",
 		.rootParameters = {	
-			RootParameter::Table({ DescriptorRange::StructuredBufferUAV(0), DescriptorRange::ConstantBuffer(1) },  ShaderStage::Compute)
+			RootParameter::Table({ StructuredBufferUAV, ConstantBuffer(1) },  ShaderStage::Compute)
 		}
 	};
 
@@ -179,9 +179,9 @@ void ComputeParticlesApp::InitRootSignatures()
 	RootSignatureDesc graphicsRootSignatureDesc{
 		.name = "Graphics Root Signature",
 		.rootParameters = {	
-			RootParameter::Table({ DescriptorRange::StructuredBufferSRV(0), DescriptorRange::ConstantBuffer(1) },  ShaderStage::Vertex),
-			RootParameter::Range(DescriptorType::TextureSRV, 0, 2, ShaderStage::Pixel),
-			RootParameter::Range(DescriptorType::Sampler, 0, 1, ShaderStage::Pixel)
+			RootParameter::Table({ StructuredBufferSRV, ConstantBuffer(1) },  ShaderStage::Vertex),
+			RootParameter::Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
+			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 

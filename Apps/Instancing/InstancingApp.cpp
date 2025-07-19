@@ -204,8 +204,8 @@ void InstancingApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootParameter::RootCBV(0, ShaderStage::Vertex),	
-			RootParameter::Range( DescriptorType::TextureSRV, 0, 1, ShaderStage::Pixel ),
-			RootParameter::Range( DescriptorType::Sampler, 0, 1, ShaderStage::Pixel )
+			RootParameter::Table({ TextureSRV }, ShaderStage::Pixel),
+			RootParameter::Table({ Sampler }, ShaderStage::Pixel)
 		}
 	};
 	m_modelRootSignature = CreateRootSignature(modelRootSignatureDesc);

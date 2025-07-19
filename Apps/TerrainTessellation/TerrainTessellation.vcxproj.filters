@@ -17,6 +17,13 @@
     <None Include="Shaders\TerrainDS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\TerrainVS.hlsl" />
+    <None Include="Shaders\TerrainHS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\TerrainPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -33,16 +40,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\TerrainHS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\TerrainPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\TerrainVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

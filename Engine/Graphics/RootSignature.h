@@ -178,6 +178,51 @@ struct DescriptorRange
 };
 
 
+class RangeBuilder
+{
+public:
+	explicit RangeBuilder(DescriptorType type) : m_type{ type } 
+	{}
+
+	operator DescriptorRange()
+	{
+		return DescriptorRange{
+			.descriptorType		= m_type,
+			.startRegister		= 0,
+			.numDescriptors		= 1,
+			.registerSpace		= 0
+		};
+	}
+
+	DescriptorRange operator()(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	{
+		return DescriptorRange{
+			.descriptorType		= m_type,
+			.startRegister		= startRegister,
+			.numDescriptors		= numDescriptors,
+			.registerSpace		= registerSpace
+		};
+	}
+
+private:
+	const DescriptorType m_type;
+};
+
+
+inline RangeBuilder ConstantBuffer{ DescriptorType::ConstantBuffer };
+inline RangeBuilder TextureSRV{ DescriptorType::TextureSRV };
+inline RangeBuilder TextureUAV{ DescriptorType::TextureUAV };
+inline RangeBuilder TypedBufferSRV{ DescriptorType::TypedBufferSRV };
+inline RangeBuilder TypedBufferUAV{ DescriptorType::TypedBufferUAV };
+inline RangeBuilder StructuredBufferSRV{ DescriptorType::StructuredBufferSRV };
+inline RangeBuilder StructuredBufferUAV{ DescriptorType::StructuredBufferUAV };
+inline RangeBuilder RawBufferSRV{ DescriptorType::RawBufferSRV };
+inline RangeBuilder RawBufferUAV{ DescriptorType::RawBufferUAV };
+inline RangeBuilder Sampler{ DescriptorType::Sampler };
+inline RangeBuilder RayTracingAccelStruct{ DescriptorType::RayTracingAccelStruct };
+inline RangeBuilder SamplerFeedbackTextureUAV{ DescriptorType::SamplerFeedbackTextureUAV };
+
+
 struct RootParameter
 {
 	Luna::ShaderStage shaderVisibility{ ShaderStage::All };
@@ -286,19 +331,6 @@ struct RootParameter
 			.parameterType		= RootParameterType::RootUAV,
 			.startRegister		= startRegister,
 			.registerSpace		= registerSpace
-		};
-		return ret;
-	}
-
-	static RootParameter Range(Luna::DescriptorType descriptorType, uint32_t startRegister, uint32_t numDescriptors, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0) noexcept
-	{
-		auto ret = RootParameter
-		{
-			.shaderVisibility	= shaderVisibility,
-			.parameterType		= RootParameterType::Table,
-			.startRegister		= startRegister,
-			.registerSpace		= registerSpace,
-			.table = { { descriptorType, startRegister, numDescriptors } }
 		};
 		return ret;
 	}
