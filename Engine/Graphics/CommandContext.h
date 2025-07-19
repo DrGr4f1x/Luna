@@ -336,6 +336,7 @@ public:
 private:
 	ICommandContext* m_context{ nullptr };
 #if FRAMEPRO_ENABLED
+	bool m_eventStarted{ false };
 	int64_t m_startTime{ 0 };
 	FramePro::StringId m_stringId{ 0 };
 #endif

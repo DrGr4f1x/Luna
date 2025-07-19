@@ -10,7 +10,7 @@
 
 #pragma once
 
-#define USE_FRAMEPRO 0
+#define USE_FRAMEPRO 1
 #define FRAMEPRO_ENABLED (USE_FRAMEPRO && (_PROFILE || _DEBUG))
 
 #include "FramePro.h"

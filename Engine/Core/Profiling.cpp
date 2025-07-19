@@ -47,9 +47,12 @@ void SetMarker(const std::string& marker)
 ScopedEvent::ScopedEvent(const std::string& event)
 {
 #if FRAMEPRO_ENABLED
-	assert(IsFrameProRunning());
-	FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
-	m_stringId = FramePro::RegisterString(event.c_str());
+	if (IsFrameProRunning())
+	{
+		FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
+		m_stringId = FramePro::RegisterString(event.c_str());
+		m_eventStarted = true;
+	}
 #endif
 
 	BeginEvent(event);
@@ -60,17 +63,19 @@ ScopedEvent::~ScopedEvent()
 	EndEvent();
 
 #if FRAMEPRO_ENABLED
-	assert(IsFrameProRunning());
-	int64_t endTime;
-	FRAMEPRO_GET_CLOCK_COUNT(endTime);
-	int64_t duration = endTime - m_startTime;
-	if (duration < 0)
+	if (m_eventStarted && IsFrameProRunning())
 	{
-		return;
-	}
-	else if (FramePro::IsConnected() && (duration > FramePro::GetConditionalScopeMinTime()))
-	{
-		FramePro::AddTimeSpan(m_stringId, "none", m_startTime, endTime);
+		int64_t endTime = 0;
+		FRAMEPRO_GET_CLOCK_COUNT(endTime);
+		int64_t duration = endTime - m_startTime;
+		if (duration < 0)
+		{
+			return;
+		}
+		else if (FramePro::IsConnected() && (duration > FramePro::GetConditionalScopeMinTime()))
+		{
+			FramePro::AddTimeSpan(m_stringId, "none", m_startTime, endTime);
+		}
 	}
 #endif
 }
