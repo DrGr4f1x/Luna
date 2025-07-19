@@ -34,7 +34,7 @@ cbuffer VSConstants : register(b0)
 
 
 [[vk::binding(1, 0)]]
-StructuredBuffer<Particle> particles : register(t1);
+StructuredBuffer<Particle> particles : register(t0);
 
 
 VSOutput main(uint id : SV_VertexID)

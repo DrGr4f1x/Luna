@@ -262,22 +262,20 @@ void ComputeShaderApp::InitRootSignatures()
 	auto graphicsDesc = RootSignatureDesc{
 		.name			= "Graphics Root Signature",
 		.flags			= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootCBV(0, ShaderStage::Vertex),
-				Table({ TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+		.rootParameters = {
+			RootCBV(0, ShaderStage::Vertex),
+			Table({ TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
+		}
 	};
 
 	m_graphicsrootSignature = CreateRootSignature(graphicsDesc);
 
 	auto computeDesc = RootSignatureDesc{
 		.name			= "Compute Root Signature",
-		.rootParameters =
-			{
-				Table({ TextureSRV, TextureUAV(1) }, ShaderStage::Compute),
-			}
+		.rootParameters = {
+			Table({ TextureSRV, TextureUAV(1) }, ShaderStage::Compute),
+		}
 	};
 
 	m_computeRootSignature = CreateRootSignature(computeDesc);

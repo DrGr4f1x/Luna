@@ -443,6 +443,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		}
 		else if (rootParameter.parameterType == RootParameterType::Table)
 		{
+			uint32_t currentBinding = 0;
+
 			for (const auto& range : rootParameter.table)
 			{
 				for (uint32_t descriptorIndex = 0; descriptorIndex < range.numDescriptors; ++descriptorIndex)
@@ -451,7 +453,16 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 					vkBinding.descriptorCount = 1;
 					vkBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
 
-					vkBinding.binding = range.startRegister + descriptorIndex;
+					if (range.startRegister == APPEND_REGISTER)
+					{ 
+						vkBinding.binding = (currentBinding++) + descriptorIndex;
+					}
+					else
+					{
+						vkBinding.binding = range.startRegister + descriptorIndex;
+						currentBinding = vkBinding.binding + 1;
+					}
+
 					vkBinding.stageFlags = shaderStageFlags;
 					vkBinding.pImmutableSamplers = nullptr;
 

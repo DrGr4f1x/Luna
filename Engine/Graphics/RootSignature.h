@@ -22,6 +22,8 @@ class IDescriptorSet;
 class IResourceSet;
 
 
+inline const uint32_t APPEND_REGISTER{ ~0u };
+
 struct DescriptorRange
 {
 	DescriptorType descriptorType{ DescriptorType::None };
@@ -46,7 +48,7 @@ public:
 	{
 		return DescriptorRange{
 			.descriptorType		= m_type,
-			.startRegister		= 0,
+			.startRegister		= APPEND_REGISTER,
 			.numDescriptors		= 1,
 			.registerSpace		= 0
 		};

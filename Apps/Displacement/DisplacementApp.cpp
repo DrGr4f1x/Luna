@@ -175,7 +175,7 @@ void DisplacementApp::InitRootSignature()
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters = {	
 			RootCBV(0, ShaderStage::Hull),
-			Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Domain),
+			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Domain),
 			Table({ TextureSRV }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Domain),
 			Table({ Sampler }, ShaderStage::Pixel)

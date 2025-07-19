@@ -41,7 +41,7 @@ cbuffer HSConstants : register(b0)
 
 
 [[vk::binding(1, 0)]]
-Texture2D heightTex : register(t1);
+Texture2D heightTex : register(t0);
 
 [[vk::binding(0, 1)]]
 SamplerState linearSamplerMirror : register(s0);

@@ -205,14 +205,13 @@ void MultisamplingApp::InitRenderTargets()
 void MultisamplingApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
-		.name	= "Root Signature",
-		.flags	= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters = 
-		{	
+		.name				= "Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		=  {	
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-	}
+			Table({ Sampler }, ShaderStage::Pixel) 
+		}
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);

@@ -224,7 +224,7 @@ void ComputeClothApp::InitRootSignatures()
 	RootSignatureDesc clothSimRootSignatureDesc{
 		.name				= "Cloth Sim Root Signature",
 		.rootParameters		= {
-			Table({ StructuredBufferSRV, StructuredBufferUAV(1), ConstantBuffer(2) }, ShaderStage::Compute)
+			Table({ StructuredBufferSRV, StructuredBufferUAV, ConstantBuffer }, ShaderStage::Compute)
 		}
 	};
 	m_computeRootSignature = CreateRootSignature(clothSimRootSignatureDesc);

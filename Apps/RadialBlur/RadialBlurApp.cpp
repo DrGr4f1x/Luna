@@ -209,7 +209,7 @@ void RadialBlurApp::InitRootSignatures()
 		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters =
 			{
-				Table({ TextureSRV, ConstantBuffer(1) }, ShaderStage::Pixel),
+				Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel),
 				Table({ Sampler }, ShaderStage::Pixel)
 			}
 	};

@@ -174,7 +174,7 @@ void ComputeNBodyApp::InitRootSignatures()
 		.name				= "Graphics Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
-			Table({ ConstantBuffer, StructuredBufferSRV(1) }, ShaderStage::Vertex),
+			Table({ ConstantBuffer, StructuredBufferSRV }, ShaderStage::Vertex),
 			Table({ ConstantBuffer }, ShaderStage::Geometry),
 			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Pixel)

@@ -19,7 +19,7 @@ struct Particle
 RWStructuredBuffer<Particle> particles : register(u0);
 
 [[vk::binding(1, 0)]]
-cbuffer CSConstants : register(b1)
+cbuffer CSConstants : register(b0)
 {
     float deltaT;
     float destX;

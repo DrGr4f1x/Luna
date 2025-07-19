@@ -19,7 +19,7 @@ struct Particle
 StructuredBuffer<Particle> particles : register(t0);
 
 [[vk::binding(1, 0)]]
-cbuffer VSConstants : register(b1)
+cbuffer VSConstants : register(b0)
 {
     float2 invTargetSize;
     float pointSize;

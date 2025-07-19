@@ -20,7 +20,7 @@ Texture2D colorTex : register(t0);
 SamplerState linearSampler : register(s0);
 
 [[vk::binding(1,0)]]
-cbuffer PSConstants : register(b1)
+cbuffer PSConstants : register(b0)
 {
     float radialBlurScale;
     float radialBlurStrength;

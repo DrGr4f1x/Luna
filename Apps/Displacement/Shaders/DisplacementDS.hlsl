@@ -47,7 +47,7 @@ cbuffer DSConstants : register(b0)
 };
 
 [[vk::binding(1, 1)]]
-Texture2D displacementMap : register(t1);
+Texture2D displacementMap : register(t0);
 [[vk::binding(0, 3)]]
 SamplerState linearSampler : register(s0);
 

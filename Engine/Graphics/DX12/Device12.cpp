@@ -638,6 +638,8 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
 
+			uint32_t currentRegister[] = { 0, 0, 0, 0 };
+
 			const uint32_t numRanges = (uint32_t)rootParameter.table.size();
 			param.DescriptorTable.NumDescriptorRanges = numRanges;
 			D3D12_DESCRIPTOR_RANGE* pRanges = new D3D12_DESCRIPTOR_RANGE[numRanges];
@@ -647,7 +649,18 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 				const DescriptorRange& range = rootParameter.table[i];
 				d3d12Range.RangeType = DescriptorTypeToDX12(range.descriptorType);
 				d3d12Range.NumDescriptors = range.numDescriptors;
-				d3d12Range.BaseShaderRegister = range.startRegister;
+
+				if (range.startRegister == APPEND_REGISTER)
+				{
+					d3d12Range.BaseShaderRegister = currentRegister[d3d12Range.RangeType];
+					currentRegister[d3d12Range.RangeType] += d3d12Range.NumDescriptors;
+				}
+				else
+				{
+					d3d12Range.BaseShaderRegister = range.startRegister;
+					currentRegister[d3d12Range.RangeType] = d3d12Range.BaseShaderRegister + d3d12Range.NumDescriptors;
+				}
+
 				d3d12Range.RegisterSpace = range.registerSpace;
 				d3d12Range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 				// TODO: Revisit this flag

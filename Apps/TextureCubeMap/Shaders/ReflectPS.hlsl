@@ -21,7 +21,7 @@ struct PSInput
 
 
 VK_BINDING(1, 1)
-TextureCube texCube : register(t1);
+TextureCube texCube : register(t0);
 
 VK_BINDING(0, 2)
 SamplerState samplerLinear : register(s0);

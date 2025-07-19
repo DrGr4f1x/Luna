@@ -176,9 +176,9 @@ void TerrainTessellationApp::InitRootSignatures()
 		.name				= "Terrain Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
-			Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Hull),
+			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Hull),
 			Table({ Sampler}, ShaderStage::Hull),
-			Table({ ConstantBuffer, TextureSRV(1) }, ShaderStage::Domain),
+			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Domain),
 			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Domain),
 			Table({ Sampler(0, 2) }, ShaderStage::Pixel)
