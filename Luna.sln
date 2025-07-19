@@ -17,47 +17,107 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Triangle", "Apps\Triangle\T
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F1CB53BF-7A58-414A-BCDE-87A928AF4C42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderCompiler", "Tools\ShaderCompiler\ShaderCompiler.csproj", "{C547DFBA-C609-49CD-BF64-7C7C954F8DCF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShaderCompiler", "Tools\ShaderCompiler\ShaderCompiler.csproj", "{C547DFBA-C609-49CD-BF64-7C7C954F8DCF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Texture", "Apps\Texture\Texture.vcxproj", "{37958CA0-DD7D-43E8-8D99-C055677155E9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureArray", "Apps\TextureArray\TextureArray.vcxproj", "{426538E6-9B9E-4169-A263-6BFD59E26786}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureCubeMap", "Apps\TextureCubeMap\TextureCubeMap.vcxproj", "{E8842702-889D-453B-8CEB-5AA3E27BFFA9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureCubeMapArray", "Apps\TextureCubeMapArray\TextureCubeMapArray.vcxproj", "{5A449FEA-8FEA-4106-B267-1509ECB89213}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Texture3d", "Apps\Texture3d\Texture3d.vcxproj", "{DF871A8F-0BB8-4DB3-ACAB-17B0C51C5688}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComputeShader", "Apps\ComputeShader\ComputeShader.vcxproj", "{52F31E4E-9537-4856-B82D-ED17DD2880CE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StencilBuffer", "Apps\StencilBuffer\StencilBuffer.vcxproj", "{BEC22C52-8956-43A6-96D4-974AE4DEAC85}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RadialBlur", "Apps\RadialBlur\RadialBlur.vcxproj", "{1CBE17FE-FDF7-447E-919D-E723E22ED819}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GeometryShader", "Apps\GeometryShader\GeometryShader.vcxproj", "{54D817DB-38F4-4EFF-A310-645FC0FC8791}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pipelines", "Apps\Pipelines\Pipelines.vcxproj", "{9F32E4F0-21D0-465E-8FC8-F4D1D4AAA06A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OcclusionQuery", "Apps\OcclusionQuery\OcclusionQuery.vcxproj", "{04DAA390-4B62-4B9D-A7A2-488F7A6447AA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Multisampling", "Apps\Multisampling\Multisampling.vcxproj", "{4904AA56-06D5-41A6-9199-85ECB129E588}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Instancing", "Apps\Instancing\Instancing.vcxproj", "{F30D25FD-B7F7-4079-93F7-3C094C1E16A8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicUniformBuffer", "Apps\DynamicUniformBuffer\DynamicUniformBuffer.vcxproj", "{7F8A6043-80DF-4D0A-8E08-E08EA2DBE086}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Displacement", "Apps\Displacement\Displacement.vcxproj", "{1D0958F2-1ED8-4AFA-B47B-A12318E0A5BD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectConstants", "Apps\DirectConstants\DirectConstants.vcxproj", "{0FC2CB4E-2108-4C93-8152-44472311DDE4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComputeCloth", "Apps\ComputeCloth\ComputeCloth.vcxproj", "{84666709-10F1-4143-847A-804258534228}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComputeNBody", "Apps\ComputeNBody\ComputeNBody.vcxproj", "{F51EE255-D6C7-48AF-A79A-83D77D9136BB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComputeParticles", "Apps\ComputeParticles\ComputeParticles.vcxproj", "{CCF0AAFA-250A-464E-B128-6EDF55F0280E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TerrainTessellation", "Apps\TerrainTessellation\TerrainTessellation.vcxproj", "{8031675A-6A78-43FD-841C-7D7CABF11522}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
