@@ -260,13 +260,20 @@
     <ClCompile Include="..\External\imgui\imgui_widgets.cpp">
       <Filter>External\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
-    <ClCompile Include="Graphics\Vulkan\LinearAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Model.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Grid.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\LinearAllocatorVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\FramePro\FramePro.cpp">
+      <Filter>External\FramePro</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -632,8 +639,6 @@
     <ClInclude Include="..\External\imgui\imstb_truetype.h">
       <Filter>External\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
-    <ClInclude Include="Graphics\Vulkan\LinearAllocatorVK.h" />
     <ClInclude Include="Graphics\Model.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -651,6 +656,16 @@
     </ClInclude>
     <ClInclude Include="Graphics\Grid.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="LunaFramePro.h" />
+    <ClInclude Include="Graphics\DX12\LinearAllocator12.h">
+      <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\LinearAllocatorVK.h">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\FramePro\FramePro.h">
+      <Filter>External\FramePro</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -695,6 +710,9 @@
     </Filter>
     <Filter Include="External\imgui\misc">
       <UniqueIdentifier>{b6f615ff-07e5-4362-a334-00921dbb0734}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\FramePro">
+      <UniqueIdentifier>{25bbef98-7975-4ed9-b196-ea73d75ed1d0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
