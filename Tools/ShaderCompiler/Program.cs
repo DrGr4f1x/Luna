@@ -114,7 +114,7 @@ namespace ShaderCompiler
             optimizationOpt.AddAlias("-O");
 
             var warningsAreErrorsOpt = new Option<bool>("--WX", "Maps to '-WX' DXC/FXC option: warnings are errors");
-            var allResourcesBoundOpt = new Option<bool>("--allResourcesBound", "MAps to -all_resources_bound DXC/FXC option: all resources bound");
+            var allResourcesBoundOpt = new Option<bool>("--allResourcesBound", "Maps to -all_resources_bound DXC/FXC option: all resources bound");
             var pdbOpt = new Option<bool>("--PDB", "Output PDB files in 'out/PDB' folder");
             var embedPDBOpt = new Option<bool>("--embedPDB", "Embed PDB with shader binary");
             var stripReflectionOpt = new Option<bool>("--stripReflection", "Maps to '-Qstrip_reflect' DXC/FXC option: strip reflection information from a shader binary");

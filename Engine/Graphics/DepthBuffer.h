@@ -29,6 +29,7 @@ struct DepthBufferDesc
 	Format format{ Format::Unknown };
 	float clearDepth{ 1.0f };
 	uint8_t clearStencil{ 0 };
+	bool createShaderResources{ false };
 
 	DepthBufferDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr DepthBufferDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
@@ -41,6 +42,7 @@ struct DepthBufferDesc
 	constexpr DepthBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
 	constexpr DepthBufferDesc& SetClearDepth(float value) noexcept { clearDepth = value; return *this; }
 	constexpr DepthBufferDesc& SetClearStencil(uint8_t value) noexcept { clearStencil = value; return *this; }
+	constexpr DepthBufferDesc& SetCreateShaderResources(bool value) noexcept { createShaderResources = value; return *this; }
 };
 
 

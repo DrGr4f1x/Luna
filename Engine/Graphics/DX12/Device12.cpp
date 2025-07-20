@@ -268,6 +268,12 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 
 Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
+	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	if (!depthBufferDesc.createShaderResources)
+	{
+		flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+	}
+
 	// Create resource
 	D3D12_RESOURCE_DESC resourceDesc{
 		.Dimension			= GetResourceDimension(depthBufferDesc.resourceType),
@@ -277,9 +283,9 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 		.DepthOrArraySize	= (UINT16)depthBufferDesc.arraySizeOrDepth,
 		.MipLevels			= (UINT16)depthBufferDesc.numMips,
 		.Format				= FormatToDxgi(depthBufferDesc.format).resourceFormat,
-		.SampleDesc		= { .Count = depthBufferDesc.numSamples, .Quality = 0 },
+		.SampleDesc			= { .Count = depthBufferDesc.numSamples, .Quality = 0 },
 		.Layout				= D3D12_TEXTURE_LAYOUT_UNKNOWN,
-		.Flags				= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+		.Flags				= flags
 	};
 
 	D3D12_CLEAR_VALUE clearValue{};
@@ -341,32 +347,36 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 		dsvHandles[3] = dsvHandles[1];
 	}
 
-	auto depthSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	D3D12_CPU_DESCRIPTOR_HANDLE stencilSrvHandle{};
-	stencilSrvHandle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+	D3D12_CPU_DESCRIPTOR_HANDLE depthSrvHandle{ .ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+	D3D12_CPU_DESCRIPTOR_HANDLE stencilSrvHandle{ .ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
 
-	// Create the shader resource view
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = GetDepthFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
-	if (dsvDesc.ViewDimension == D3D12_DSV_DIMENSION_TEXTURE2D)
+	if (depthBufferDesc.createShaderResources)
 	{
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = 1;
-	}
-	else
-	{
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
-	}
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	m_device->CreateShaderResourceView(resource.get(), &srvDesc, depthSrvHandle);
+		depthSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
-	{
-		stencilSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		// Create the shader resource view
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+		srvDesc.Format = GetDepthFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
+		if (dsvDesc.ViewDimension == D3D12_DSV_DIMENSION_TEXTURE2D)
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Texture2D.MipLevels = 1;
+		}
+		else
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+		}
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		m_device->CreateShaderResourceView(resource.get(), &srvDesc, depthSrvHandle);
 
-		srvDesc.Format = stencilReadFormat;
-		srvDesc.Texture2D.PlaneSlice = (srvDesc.Format == DXGI_FORMAT_X32_TYPELESS_G8X24_UINT) ? 1 : 0;
-		m_device->CreateShaderResourceView(resource.get(), &srvDesc, stencilSrvHandle);
+		if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
+		{
+			stencilSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+			srvDesc.Format = stencilReadFormat;
+			srvDesc.Texture2D.PlaneSlice = (srvDesc.Format == DXGI_FORMAT_X32_TYPELESS_G8X24_UINT) ? 1 : 0;
+			m_device->CreateShaderResourceView(resource.get(), &srvDesc, stencilSrvHandle);
+		}
 	}
 
 	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
