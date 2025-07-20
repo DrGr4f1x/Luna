@@ -1423,7 +1423,7 @@ void CommandContextVK::InitializeTexture_Internal(ITexture* destTexture, const T
 		numSubResources,
 		bufferCopyRegions.data());
 
-	TransitionResource(destTexture, ResourceState::ShaderResource, true);
+	TransitionResource(destTexture, ResourceState::PixelShaderResource, true);
 }
 
 

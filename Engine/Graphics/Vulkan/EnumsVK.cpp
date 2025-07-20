@@ -762,7 +762,7 @@ VkImageLayout GetImageLayout(ResourceState resourceState)
 	if (HasAnyFlag(resourceState, Common | UnorderedAccess)) return VK_IMAGE_LAYOUT_GENERAL;
 	if (HasFlag(resourceState, RenderTarget)) return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 	if (HasAnyFlag(resourceState, DepthRead | DepthWrite)) return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-	if (HasFlag(resourceState, ShaderResource)) return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	if (HasAnyFlag(resourceState, PixelShaderResource | NonPixelShaderResource)) return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	if (HasAnyFlag(resourceState, CopyDest | ResolveDest)) return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	if (HasAnyFlag(resourceState, CopySource | ResolveSource | GenericRead)) return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 	if (HasFlag(resourceState, Present)) return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -782,7 +782,7 @@ VkAccessFlagBits2 GetAccessMask(ResourceState resourceState)
 	bits |= HasFlag(resourceState, VertexBuffer) ? VK_ACCESS_2_VERTEX_ATTRIBUTE_READ_BIT : 0;
 	bits |= HasFlag(resourceState, IndexBuffer) ? VK_ACCESS_2_INDEX_READ_BIT : 0;
 	bits |= HasFlag(resourceState, IndirectArgument) ? VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT : 0;
-	bits |= HasFlag(resourceState, ShaderResource) ? VK_ACCESS_2_SHADER_READ_BIT : 0;
+	bits |= HasAnyFlag(resourceState, PixelShaderResource | NonPixelShaderResource) ? VK_ACCESS_2_SHADER_READ_BIT : 0;
 	bits |= HasFlag(resourceState, UnorderedAccess) ? (VK_ACCESS_2_SHADER_READ_BIT | VK_ACCESS_2_SHADER_WRITE_BIT) : 0;
 	bits |= HasFlag(resourceState, RenderTarget) ? (VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT) : 0;
 	bits |= HasFlag(resourceState, DepthWrite) ? (VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT) : 0;
@@ -808,7 +808,7 @@ VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState)
 	VkPipelineStageFlagBits2 bits{};
 
 	bits |= HasFlag(resourceState, Common) ? VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT : 0;
-	bits |= HasFlag(resourceState, ConstantBuffer | ShaderResource | UnorderedAccess | Present) ? VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT : 0;
+	bits |= HasAnyFlag(resourceState, ConstantBuffer | PixelShaderResource | NonPixelShaderResource | UnorderedAccess | Present) ? VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT : 0;
 	bits |= HasAnyFlag(resourceState, VertexBuffer | IndexBuffer) ? VK_PIPELINE_STAGE_2_VERTEX_INPUT_BIT : 0;
 	bits |= HasFlag(resourceState, IndirectArgument) ? VK_PIPELINE_STAGE_2_DRAW_INDIRECT_BIT : 0;
 	bits |= HasFlag(resourceState, RenderTarget) ? VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT : 0;

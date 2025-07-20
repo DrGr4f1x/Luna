@@ -85,7 +85,7 @@ void ComputeNBodyApp::Render()
 
 		computeContext.Dispatch1D(6 * PARTICLES_PER_ATTRACTOR, 256);
 
-		computeContext.TransitionResource(m_particleBuffer, ResourceState::ShaderResource);
+		computeContext.TransitionResource(m_particleBuffer, ResourceState::NonPixelShaderResource);
 	}
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);

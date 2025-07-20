@@ -111,7 +111,7 @@ void ComputeShaderApp::Render()
 		auto& computeContext = context.GetComputeContext();
 
 		computeContext.TransitionResource(m_computeScratchBuffer, ResourceState::UnorderedAccess);
-		computeContext.TransitionResource(m_texture, ResourceState::ShaderResource);
+		computeContext.TransitionResource(m_texture, ResourceState::NonPixelShaderResource);
 
 		computeContext.SetRootSignature(m_computeRootSignature);
 		if (m_curComputeTechnique == 0)
@@ -131,12 +131,12 @@ void ComputeShaderApp::Render()
 
 		computeContext.Dispatch2D((uint32_t)m_computeScratchBuffer->GetWidth(), m_computeScratchBuffer->GetHeight(), 16, 16);
 
-		computeContext.TransitionResource(m_computeScratchBuffer, ResourceState::ShaderResource);
+		computeContext.TransitionResource(m_computeScratchBuffer, ResourceState::PixelShaderResource);
 	}
 
 	// Graphics
 
-	context.TransitionResource(m_texture, ResourceState::ShaderResource, true);
+	context.TransitionResource(m_texture, ResourceState::PixelShaderResource, true);
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());

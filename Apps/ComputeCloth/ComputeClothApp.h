@@ -114,5 +114,4 @@ protected:
 	const float m_size[2]{ 2.5f, 2.5f };
 	bool m_simulateWind{ true };
 	bool m_pinnedCloth{ false };
-	uint32_t m_readSet{ 1 };
 };

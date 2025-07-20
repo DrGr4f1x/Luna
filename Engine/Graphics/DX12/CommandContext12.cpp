@@ -41,7 +41,7 @@ static bool IsValidComputeResourceState(ResourceState state)
 {
 	switch (state)
 	{
-	case ResourceState::ShaderResource:
+	case ResourceState::NonPixelShaderResource:
 	case ResourceState::UnorderedAccess:
 	case ResourceState::CopyDest:
 	case ResourceState::CopySource:

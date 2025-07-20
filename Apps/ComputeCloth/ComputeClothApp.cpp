@@ -80,27 +80,31 @@ void ComputeClothApp::Render()
 
 		auto& computeContext = context.GetComputeContext();
 
-		computeContext.TransitionResource(m_clothBuffer[0], ResourceState::ShaderResource);
-		computeContext.TransitionResource(m_clothBuffer[1], ResourceState::ShaderResource);
-
 		computeContext.SetRootSignature(m_computeRootSignature);
 		computeContext.SetComputePipeline(m_computePipeline);
+
+		uint32_t readIndex = 0;
+		uint32_t writeIndex = 1;
 
 		const uint32_t iterations = 64;
 		for (uint32_t j = 0; j < iterations; ++j)
 		{
-			m_readSet = 1 - m_readSet;
+			computeContext.TransitionResource(m_clothBuffer[readIndex], ResourceState::NonPixelShaderResource);
+			computeContext.TransitionResource(m_clothBuffer[writeIndex], ResourceState::UnorderedAccess);
+
 			if (j == iterations - 1)
+			{
 				computeContext.SetResources(m_computeNormalResources);
+			}
 			else
-				computeContext.SetResources(m_computeResources[m_readSet]);
+			{
+				computeContext.SetResources(m_computeResources[readIndex]);
+			}
+
 			computeContext.Dispatch2D(m_gridSize[0], m_gridSize[1]);
 
-			if (j != iterations - 1)
-			{
-				computeContext.InsertUAVBarrier(m_clothBuffer[0]);
-				computeContext.InsertUAVBarrier(m_clothBuffer[1]);
-			}
+			readIndex = (readIndex + 1) % 2;
+			writeIndex = (writeIndex + 1) % 2;
 		}
 	}
 

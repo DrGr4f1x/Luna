@@ -549,7 +549,8 @@ D3D12_RESOURCE_STATES ResourceStateToDX12(ResourceState resourceState)
 	result |= HasFlag(resourceState, UnorderedAccess) ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : 0;
 	result |= HasFlag(resourceState, ResourceState::DepthWrite) ? D3D12_RESOURCE_STATE_DEPTH_WRITE : 0;
 	result |= HasFlag(resourceState, DepthRead) ? D3D12_RESOURCE_STATE_DEPTH_READ : 0;
-	result |= HasFlag(resourceState, ShaderResource) ? result |= (D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE) : 0;
+	result |= HasFlag(resourceState, PixelShaderResource) ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : 0;
+	result |= HasFlag(resourceState, NonPixelShaderResource) ? D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE : 0;
 	result |= HasFlag(resourceState, StreamOut) ? D3D12_RESOURCE_STATE_STREAM_OUT : 0;
 	result |= HasFlag(resourceState, IndirectArgument) ? D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT : 0;
 	result |= HasFlag(resourceState, CopyDest) ? D3D12_RESOURCE_STATE_COPY_DEST : 0;

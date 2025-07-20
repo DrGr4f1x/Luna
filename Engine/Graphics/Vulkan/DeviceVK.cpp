@@ -173,7 +173,7 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	VkDescriptorImageInfo imageInfoSrv{
 		.sampler		= VK_NULL_HANDLE,
 		.imageView		= *imageViewSrv,
-		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
+		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
 	};
 	VkDescriptorImageInfo imageInfoUav{
 		.sampler		= VK_NULL_HANDLE,
@@ -273,12 +273,12 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	auto imageInfoDepth = VkDescriptorImageInfo{
 		.sampler		= VK_NULL_HANDLE,
 		.imageView		= *imageViewDepthOnly,
-		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
+		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
 	};
 	auto imageInfoStencil = VkDescriptorImageInfo{
 		.sampler		= VK_NULL_HANDLE,
 		.imageView		= *imageViewStencilOnly,
-		.imageLayout	= GetImageLayout(ResourceState::ShaderResource)
+		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
 	};
 
 	auto depthBuffer = std::make_shared<Luna::VK::DepthBuffer>();
@@ -1076,9 +1076,9 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	textureVK->m_imageViewSrv = CreateImageView(imageViewDesc);
 
 	VkDescriptorImageInfo imageInfoSrv{
-		.sampler = VK_NULL_HANDLE,
-		.imageView = textureVK->m_imageViewSrv->Get(),
-		.imageLayout = GetImageLayout(ResourceState::ShaderResource)
+		.sampler		= VK_NULL_HANDLE,
+		.imageView		= textureVK->m_imageViewSrv->Get(),
+		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
 	};
 	textureVK->m_imageInfoSrv = imageInfoSrv;
 
@@ -1131,7 +1131,7 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	auto imageViewSrv = CreateImageView(imageViewDesc);
 
 	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::ShaderResource) };
+	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::PixelShaderResource) };
 	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
 
 	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();

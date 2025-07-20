@@ -99,7 +99,7 @@ void ComputeParticlesApp::Render()
 
 		computeContext.Dispatch1D(m_particleCount, 256);
 
-		computeContext.TransitionResource(m_particleBuffer, ResourceState::ShaderResource);
+		computeContext.TransitionResource(m_particleBuffer, ResourceState::NonPixelShaderResource);
 	}
 
 	// Render particles

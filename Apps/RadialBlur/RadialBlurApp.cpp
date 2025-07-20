@@ -119,7 +119,7 @@ void RadialBlurApp::Render()
 		context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
 		context.ClearColor(GetColorBuffer());
 		context.ClearDepth(m_depthBuffer);
-		context.TransitionResource(m_offscreenColorBuffer, ResourceState::ShaderResource);
+		context.TransitionResource(m_offscreenColorBuffer, ResourceState::PixelShaderResource);
 
 		context.BeginRendering(GetColorBuffer(), m_depthBuffer);
 
