@@ -89,7 +89,8 @@ void CameraController::SetOrbitTarget(Math::Vector3 target, float zoom, float mi
 	m_zoom = zoom;
 	m_orbitTarget = target;
 	m_minDistance = fabsf(minDistance);
-	m_targetCamera.SetLookIn(target - m_targetCamera.GetPosition(), m_worldUp);
+	Vector3 cameraPosition = m_targetCamera.GetPosition();
+	m_targetCamera.SetLookIn(target - cameraPosition, m_worldUp);
 	m_targetCamera.Update();
 	RefreshFromCamera();
 }
