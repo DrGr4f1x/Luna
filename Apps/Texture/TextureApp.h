@@ -12,12 +12,6 @@
 
 #include "Application.h"
 #include "CameraController.h"
-#include "Graphics\DepthBuffer.h"
-#include "Graphics\GpuBuffer.h"
-#include "Graphics\PipelineState.h"
-#include "Graphics\ResourceSet.h"
-#include "Graphics\RootSignature.h"
-#include "Graphics\Texture.h"
 
 
 class TextureApp : public Luna::Application
@@ -40,7 +34,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitPipelineState();
 	void InitResources();
@@ -59,19 +52,17 @@ protected:
 
 	struct Constants
 	{
-		Math::Matrix4 viewProjectionMatrix;
-		Math::Matrix4 modelMatrix;
-		Math::Vector3 viewPos;
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector3 viewPos{ Math::kZero };
 		float lodBias{ 0.0f };
 		bool flipUVs{ false };
 	};
 
-	Luna::DepthBufferPtr m_depthBuffer;
-
 	Luna::GpuBufferPtr m_vertexBuffer;
 	Luna::GpuBufferPtr m_indexBuffer;
 
-	Constants m_constants;
+	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
 
 	Luna::ResourceSet m_resources;

@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -45,30 +44,28 @@ protected:
 protected:
 	struct HSConstants
 	{
-		float tessLevel;
+		float tessLevel{ 0.0f };
 	};
 
 	struct DSConstants
 	{
-		Math::Matrix4 projectionMatrix;
-		Math::Matrix4 modelMatrix;
-		Math::Vector4 lightPos;
-		float tessAlpha;
-		float tessStrength;
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector4 lightPos{ Math::kZero };
+		float tessAlpha{ 0.0f };
+		float tessStrength{ 0.0f };
 	};
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_pipeline;
 	Luna::GraphicsPipelinePtr m_wireframePipeline;
 	bool m_pipelinesCreated{ false };
 
+	HSConstants m_hsConstants{};
 	Luna::GpuBufferPtr m_hsConstantBuffer;
-	HSConstants m_hsConstants;
 
+	DSConstants m_dsConstants{};
 	Luna::GpuBufferPtr m_dsConstantBuffer;
-	DSConstants m_dsConstants;
 
 	Luna::ResourceSet m_resources;
 

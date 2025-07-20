@@ -77,11 +77,11 @@ void DisplacementApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewport(0.0f, 0.0f, (float)GetWindowWidth(), (float)GetWindowHeight());
 
@@ -140,7 +140,6 @@ void DisplacementApp::CreateDeviceDependentResources()
 
 void DisplacementApp::CreateWindowSizeDependentResources()
 {
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
@@ -155,25 +154,12 @@ void DisplacementApp::CreateWindowSizeDependentResources()
 }
 
 
-void DisplacementApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name		= "Depth Buffer",
-		.width		= GetWindowWidth(),
-		.height		= GetWindowHeight(),
-		.format		= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
-}
-
-
 void DisplacementApp::InitRootSignature()
 {
 	RootSignatureDesc rootSignatureDesc{
-		.name = "Geom Root Signature",
-		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters = {	
+		.name				= "Geom Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Hull),
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Domain),
 			Table({ TextureSRV }, ShaderStage::Pixel),

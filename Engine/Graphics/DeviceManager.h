@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\ColorBuffer.h"
+#include "Graphics\DepthBuffer.h"
 #include "Graphics\Enums.h"
 #include "Graphics\Formats.h"
 
@@ -103,10 +104,11 @@ public:
 
 	virtual GraphicsApi GetGraphicsApi() const = 0;
 
-	virtual ColorBufferPtr GetColorBuffer() = 0;
+	virtual ColorBufferPtr GetColorBuffer() const = 0;
+	virtual DepthBufferPtr GetDepthBuffer() const = 0;
 
-	virtual Format GetColorFormat() = 0;
-	virtual Format GetDepthFormat() = 0;
+	virtual Format GetColorFormat() const = 0;
+	virtual Format GetDepthFormat() const = 0;
 
 	virtual const std::string& GetDeviceName() const = 0;
 

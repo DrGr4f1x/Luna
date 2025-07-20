@@ -17,11 +17,13 @@
     <None Include="Shaders\TerrainDS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\TerrainVS.hlsl" />
     <None Include="Shaders\TerrainHS.hlsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\TerrainPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\TerrainVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

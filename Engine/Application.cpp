@@ -244,6 +244,12 @@ ColorBufferPtr Application::GetColorBuffer() const
 }
 
 
+DepthBufferPtr Application::GetDepthBuffer() const
+{
+	return m_deviceManager->GetDepthBuffer();
+}
+
+
 void Application::SetDefaultRootPath()
 {
 	if (m_fileSystem)

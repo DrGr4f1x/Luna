@@ -33,7 +33,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -53,9 +52,9 @@ protected:
 
 	struct VSConstants
 	{
-		Math::Matrix4 viewProjectionMatrix;
-		Math::Matrix4 modelMatrix;
-		Math::Vector3 eyePos;
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector3 eyePos{ Math::kZero };
 	};
 
 	struct PSConstants
@@ -64,8 +63,6 @@ protected:
 		int arraySlice{ 1 };
 	};
 
-	Luna::DepthBufferPtr m_depthBuffer;
-
 	Luna::RootSignaturePtr m_modelRootSignature;
 	Luna::RootSignaturePtr m_skyboxRootSignature;
 
@@ -73,9 +70,9 @@ protected:
 	Luna::GraphicsPipelinePtr m_skyboxPipeline;
 	bool m_pipelinesCreated{ false };
 
-	VSConstants m_vsSkyboxConstants;
-	VSConstants	m_vsModelConstants;
-	PSConstants	m_psConstants;
+	VSConstants m_vsSkyboxConstants{};
+	VSConstants	m_vsModelConstants{};
+	PSConstants	m_psConstants{};
 	Luna::GpuBufferPtr m_vsSkyboxConstantBuffer;
 	Luna::GpuBufferPtr m_vsModelConstantBuffer;
 	Luna::GpuBufferPtr m_psModelConstantBuffer;

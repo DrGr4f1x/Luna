@@ -116,12 +116,12 @@ void RadialBlurApp::Render()
 		auto& context = GraphicsContext::Begin("Scene");
 
 		context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-		context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+		context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 		context.ClearColor(GetColorBuffer());
-		context.ClearDepth(m_depthBuffer);
+		context.ClearDepth(GetDepthBuffer());
 		context.TransitionResource(m_offscreenColorBuffer, ResourceState::PixelShaderResource);
 
-		context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+		context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 		context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -166,7 +166,6 @@ void RadialBlurApp::CreateDeviceDependentResources()
 void RadialBlurApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
@@ -174,18 +173,6 @@ void RadialBlurApp::CreateWindowSizeDependentResources()
 	}
 }
 
-
-void RadialBlurApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name	= "Depth Buffer",
-		.width	= GetWindowWidth(),
-		.height = GetWindowHeight(),
-		.format = GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
-}
 
 void RadialBlurApp::InitRootSignatures()
 {

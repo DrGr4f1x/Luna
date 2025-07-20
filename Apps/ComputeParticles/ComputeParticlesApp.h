@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -48,24 +47,22 @@ protected:
 	{
 		float pos[2];
 		float vel[2];
-		Math::Vector4 gradientPos;
+		Math::Vector4 gradientPos{ Math::kZero };
 	};
 
 	const uint32_t m_particleCount{ 256 * 1024 };
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::GpuBufferPtr m_particleBuffer;
 
 	struct CSConstants
 	{
-		float deltaT;
-		float destX;
-		float destY;
-		int particleCount;
+		float deltaT{ 0.0f };
+		float destX{ 0.0f };
+		float destY{ 0.0f };
+		int particleCount{ 0 };
 	};
 
-	CSConstants m_csConstants;
+	CSConstants m_csConstants{};
 	Luna::GpuBufferPtr m_csConstantBuffer;
 
 	struct VSConstants
@@ -74,7 +71,7 @@ protected:
 		float pointSize;
 	};
 
-	VSConstants m_vsConstants;
+	VSConstants m_vsConstants{};
 	Luna::GpuBufferPtr m_vsConstantBuffer;
 
 	Luna::RootSignaturePtr m_graphicsRootSignature;
@@ -88,8 +85,8 @@ protected:
 	Luna::TexturePtr m_gradientTexture;
 	Luna::SamplerPtr m_sampler;
 
-	Luna::ResourceSet		m_computeResources;
-	Luna::ResourceSet		m_gfxResources;
+	Luna::ResourceSet m_computeResources;
+	Luna::ResourceSet m_gfxResources;
 
 	bool m_animate{ true };
 	float m_animStart{ 20.0f };

@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffer();
@@ -52,11 +51,9 @@ protected:
 
 	struct Constants
 	{
-		Math::Matrix4 projectionMatrix;
-		Math::Matrix4 modelMatrix;
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
 	};
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_meshRootSignature;
 	Luna::RootSignaturePtr m_geomRootSignature;
@@ -65,8 +62,8 @@ protected:
 	Luna::GraphicsPipelinePtr m_geomPipeline;
 	bool m_pipelinesCreated{ false };
 
+	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
-	Constants m_constants;
 
 	Luna::ResourceSet m_meshResources;
 	Luna::ResourceSet m_geomResources;

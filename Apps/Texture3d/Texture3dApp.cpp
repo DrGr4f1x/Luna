@@ -196,11 +196,11 @@ void Texture3dApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -236,24 +236,24 @@ void Texture3dApp::CreateDeviceDependentResources()
 	};
 
 	GpuBufferDesc vertexBufferDesc{
-		.name = "Vertex Buffer",
-		.resourceType = ResourceType::VertexBuffer,
-		.memoryAccess = MemoryAccess::GpuReadWrite,
-		.elementCount = vertexData.size(),
-		.elementSize = sizeof(Vertex),
-		.initialData = vertexData.data()
+		.name			= "Vertex Buffer",
+		.resourceType	= ResourceType::VertexBuffer,
+		.memoryAccess	= MemoryAccess::GpuReadWrite,
+		.elementCount	= vertexData.size(),
+		.elementSize	= sizeof(Vertex),
+		.initialData	= vertexData.data()
 	};
 	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
 
 	// Setup indices
 	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
 	GpuBufferDesc indexBufferDesc{
-		.name = "Index Buffer",
-		.resourceType = ResourceType::IndexBuffer,
-		.memoryAccess = MemoryAccess::GpuReadWrite,
-		.elementCount = indexData.size(),
-		.elementSize = sizeof(uint32_t),
-		.initialData = indexData.data()
+		.name			= "Index Buffer",
+		.resourceType	= ResourceType::IndexBuffer,
+		.memoryAccess	= MemoryAccess::GpuReadWrite,
+		.elementCount	= indexData.size(),
+		.elementSize	= sizeof(uint32_t),
+		.initialData	= indexData.data()
 	};
 	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
 
@@ -267,7 +267,6 @@ void Texture3dApp::CreateDeviceDependentResources()
 void Texture3dApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
-	InitDepthBuffer();
 	if (!m_pipelineCreated)
 	{
 		InitPipeline();
@@ -281,20 +280,6 @@ void Texture3dApp::CreateWindowSizeDependentResources()
 		0.1f,
 		256.0f);
 	m_camera.Update();
-}
-
-
-void Texture3dApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name			= "Depth Buffer",
-		.resourceType	= ResourceType::Texture2D,
-		.width			= GetWindowWidth(),
-		.height			= GetWindowHeight(),
-		.format			= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

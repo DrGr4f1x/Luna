@@ -12,11 +12,6 @@
 
 #include "Application.h"
 #include "CameraController.h"
-#include "Graphics\DepthBuffer.h"
-#include "Graphics\GpuBuffer.h"
-#include "Graphics\PipelineState.h"
-#include "Graphics\ResourceSet.h"
-#include "Graphics\RootSignature.h"
 
 
 class TriangleApp final : public Luna::Application
@@ -38,7 +33,6 @@ protected:
 	void CreateWindowSizeDependentResources() override;
 
 private:
-	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitPipelineState();
 	void InitResources();
@@ -49,8 +43,6 @@ private:
 	// Camera controls
 	float m_zoom{ -2.5f };
 	Luna::CameraController m_controller;
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	// Vertex layout used in this example
 	struct Vertex
@@ -69,11 +61,12 @@ private:
 	Luna::GpuBufferPtr m_constantBuffer;
 
 	// Vertex shader constants
-	struct
+	struct VSConstants
 	{
-		Math::Matrix4 viewProjectionMatrix;
-		Math::Matrix4 modelMatrix;
-	} m_vsConstants;
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+	};
+	VSConstants m_vsConstants{};
 
 	 // Root signature
 	Luna::RootSignaturePtr m_rootSignature;

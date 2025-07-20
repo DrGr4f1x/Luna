@@ -33,7 +33,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitOffscreenBuffers();
 	void InitRootSignatures();
 	void InitPipelines();
@@ -63,14 +62,13 @@ protected:
 
 	struct BlurConstants
 	{
-		float blurScale;
-		float blurStrength;
-		int blurDirection;
+		float blurScale{ 0.0f };
+		float blurStrength{ 0.0f };
+		int blurDirection{ 0 };
 	};
 
 	Luna::ColorBufferPtr m_offscreenColorBuffer[2];
 	Luna::DepthBufferPtr m_offscreenDepthBuffer;
-	Luna::DepthBufferPtr m_depthBuffer;
 	uint32_t m_offscreenBufferSize{ 256 };
 
 	Luna::RootSignaturePtr m_sceneRootSignature;
@@ -85,15 +83,15 @@ protected:
 	bool m_pipelinesCreated{ false };
 
 	// Constant buffers
-	SceneConstants m_sceneConstants;
+	SceneConstants m_sceneConstants{};
 	Luna::GpuBufferPtr m_sceneConstantBuffer;
 
-	SceneConstants m_skyboxConstants;
+	SceneConstants m_skyboxConstants{};
 	Luna::GpuBufferPtr m_skyboxConstantBuffer;
 
-	BlurConstants m_blurHorizConstants;
+	BlurConstants m_blurHorizConstants{};
 	Luna::GpuBufferPtr m_blurHorizConstantBuffer;
-	BlurConstants m_blurVertConstants;
+	BlurConstants m_blurVertConstants{};
 	Luna::GpuBufferPtr m_blurVertConstantBuffer;
 
 	// Resource sets

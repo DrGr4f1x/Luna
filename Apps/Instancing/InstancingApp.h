@@ -33,7 +33,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffer();
@@ -54,9 +53,7 @@ protected:
 		float globalSpeed{ 0.0f };
 	};
 
-	Luna::DepthBufferPtr m_depthBuffer;
-
-	VSConstants m_planetConstants;
+	VSConstants m_planetConstants{};
 
 	Luna::GpuBufferPtr m_planetConstantBuffer;
 

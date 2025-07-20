@@ -114,9 +114,9 @@ void MultisamplingApp::Render()
 
 	// Render UI after MSAA resolve
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 	RenderUI(context);
 	context.EndRendering();
 
@@ -191,14 +191,6 @@ void MultisamplingApp::InitRenderTargets()
 		.format			= GetDepthFormat()
 	};
 	m_msaaDepthBuffer = CreateDepthBuffer(msaaDepthBufferDesc);
-
-	DepthBufferDesc depthBufferDesc{
-		.name		= "Depth Buffer",
-		.width		= GetWindowWidth(),
-		.height		= GetWindowHeight(),
-		.format		= GetDepthFormat()
-	};
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

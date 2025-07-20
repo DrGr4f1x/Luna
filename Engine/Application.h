@@ -102,6 +102,7 @@ public:
 	void Run();
 
 	ColorBufferPtr GetColorBuffer() const;
+	DepthBufferPtr GetDepthBuffer() const;
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 

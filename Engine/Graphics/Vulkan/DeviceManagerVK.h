@@ -76,10 +76,11 @@ public:
 
 	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::Vulkan; }
 
-	Luna::ColorBufferPtr GetColorBuffer() final;
+	ColorBufferPtr GetColorBuffer() const final;
+	DepthBufferPtr GetDepthBuffer() const final;
 
-	Format GetColorFormat() final;
-	Format GetDepthFormat() final;
+	Format GetColorFormat() const final;
+	Format GetDepthFormat() const final;
 
 	const std::string& GetDeviceName() const override;
 
@@ -160,6 +161,9 @@ private:
 
 	// Swapchain color buffers
 	std::vector<ColorBufferPtr> m_swapChainBuffers;
+
+	// Default depth buffer
+	DepthBufferPtr m_depthBuffer;
 
 	// Queues and queue families
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;

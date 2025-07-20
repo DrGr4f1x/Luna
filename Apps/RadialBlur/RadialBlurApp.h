@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitRenderTargets();
@@ -57,8 +56,8 @@ protected:
 
 	struct SceneConstants
 	{
-		Math::Matrix4 projectionMat;
-		Math::Matrix4 modelMat;
+		Math::Matrix4 projectionMat{ Math::kIdentity };
+		Math::Matrix4 modelMat{ Math::kIdentity };
 		float gradientPos{ 0.0f };
 	};
 
@@ -73,7 +72,6 @@ protected:
 
 	Luna::ColorBufferPtr m_offscreenColorBuffer;
 	Luna::DepthBufferPtr m_offscreenDepthBuffer;
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_radialBlurRootSignature;
 	Luna::RootSignaturePtr m_sceneRootSignature;
@@ -85,10 +83,10 @@ protected:
 	bool m_pipelinesCreated{ false };
 
 	// Constant buffers
-	SceneConstants m_sceneConstants;
+	SceneConstants m_sceneConstants{};
 	Luna::GpuBufferPtr m_sceneConstantBuffer;
 
-	RadialBlurConstants m_radialBlurConstants;
+	RadialBlurConstants m_radialBlurConstants{};
 	Luna::GpuBufferPtr m_radialBlurConstantBuffer;
 
 	// Resource sets

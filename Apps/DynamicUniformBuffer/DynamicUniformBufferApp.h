@@ -31,7 +31,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitPipeline();
 	void InitConstantBuffers();
@@ -46,10 +45,10 @@ protected:
 
 	struct VSConstants
 	{
-		Math::Matrix4 projectionMatrix;
-		Math::Matrix4 viewMatrix;
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
+		Math::Matrix4 viewMatrix{ Math::kIdentity };
 	};
-	VSConstants m_vsConstants;
+	VSConstants m_vsConstants{};
 	Luna::GpuBufferPtr m_vsConstantBuffer;
 
 	struct alignas(256) VSModelConstants
@@ -57,10 +56,8 @@ protected:
 		Math::Matrix4* modelMatrix{ nullptr };
 	};
 	size_t m_dynamicAlignment{ 0 };
-	VSModelConstants m_vsModelConstants;
+	VSModelConstants m_vsModelConstants{};
 	Luna::GpuBufferPtr m_vsModelConstantBuffer;
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_pipeline;

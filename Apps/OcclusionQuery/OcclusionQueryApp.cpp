@@ -76,16 +76,16 @@ void OcclusionQueryApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepthAndStencil(m_depthBuffer);
+	context.ClearDepthAndStencil(GetDepthBuffer());
 
 	const auto activeFrame = m_deviceManager->GetActiveFrame();
 
 	// Occlusion pass
 
 	context.ResetOcclusionQueries(m_queryHeap, 2 * activeFrame, 2);
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 	context.SetRootSignature(m_rootSignature);
@@ -119,11 +119,11 @@ void OcclusionQueryApp::Render()
 	context.ResolveOcclusionQueries(m_queryHeap, 2 * activeFrame, 2, m_readbackBuffer, 2 * activeFrame * sizeof(uint64_t));
 
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepthAndStencil(m_depthBuffer);
+	context.ClearDepthAndStencil(GetDepthBuffer());
 
 	// Visible pass
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 	context.SetRootSignature(m_rootSignature);
@@ -167,13 +167,11 @@ void OcclusionQueryApp::CreateDeviceDependentResources()
 	InitQueryHeap();
 	LoadAssets();
 	InitResourceSets();
-
 }
 
 
 void OcclusionQueryApp::CreateWindowSizeDependentResources()
 {
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
@@ -190,19 +188,6 @@ void OcclusionQueryApp::CreateWindowSizeDependentResources()
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
-}
-
-
-void OcclusionQueryApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name	= "Depth Buffer",
-		.width	= GetWindowWidth(),
-		.height = GetWindowHeight(),
-		.format = GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

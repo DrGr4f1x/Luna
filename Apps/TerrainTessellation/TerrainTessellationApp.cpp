@@ -71,11 +71,11 @@ void TerrainTessellationApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -137,25 +137,18 @@ void TerrainTessellationApp::CreateDeviceDependentResources()
 
 void TerrainTessellationApp::CreateWindowSizeDependentResources()
 {
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
 		m_pipelinesCreated = true;
 	}
-}
 
-
-void TerrainTessellationApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name		= "Depth Buffer",
-		.width		= GetWindowWidth(),
-		.height		= GetWindowHeight(),
-		.format		= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
+	m_camera.SetPerspectiveMatrix(
+		XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
+	m_camera.Update();
 }
 
 

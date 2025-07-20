@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -46,27 +45,25 @@ protected:
 protected:
 	struct GraphicsConstants
 	{
-		Math::Matrix4 projectionMatrix;
-		Math::Matrix4 modelViewMatrix;
-		Math::Matrix4 invViewMatrix;
-		float screenDim[2];
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
+		Math::Matrix4 invViewMatrix{ Math::kIdentity };
+		float screenDim[2] = { 0.0f, 0.0f };
 	};
 
 	struct ComputeConstants
 	{
-		float deltaT;
-		float destX;
-		float destY;
-		int particleCount;
+		float deltaT{ 0.0f };
+		float destX{ 0.0f };
+		float destY{ 0.0f };
+		int particleCount{ 0 };
 	};
 
 	struct Particle
 	{
-		Math::Vector4 pos;
-		Math::Vector4 vel;
+		Math::Vector4 pos{ Math::kZero };
+		Math::Vector4 vel{ Math::kZero };
 	};
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::RootSignaturePtr m_computeRootSignature;
@@ -76,8 +73,8 @@ protected:
 	Luna::ComputePipelinePtr m_computeIntegratePipeline;
 	bool m_pipelinesCreated{ false };
 
-	GraphicsConstants m_graphicsConstants;
-	ComputeConstants m_computeConstants;
+	GraphicsConstants m_graphicsConstants{};
+	ComputeConstants m_computeConstants{};
 
 	Luna::GpuBufferPtr m_graphicsConstantBuffer;
 	Luna::GpuBufferPtr m_computeConstantBuffer;

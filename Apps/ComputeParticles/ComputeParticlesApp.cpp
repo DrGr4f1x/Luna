@@ -105,11 +105,11 @@ void ComputeParticlesApp::Render()
 	// Render particles
 	context.TransitionResource(m_particleBuffer, ResourceState::UnorderedAccess);
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetRootSignature(m_graphicsRootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
@@ -143,7 +143,6 @@ void ComputeParticlesApp::CreateDeviceDependentResources()
 
 void ComputeParticlesApp::CreateWindowSizeDependentResources()
 {
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
@@ -152,24 +151,11 @@ void ComputeParticlesApp::CreateWindowSizeDependentResources()
 }
 
 
-void ComputeParticlesApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name		= "Depth Buffer",
-		.width		= GetWindowWidth(),
-		.height		= GetWindowHeight(),
-		.format		= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
-}
-
-
 void ComputeParticlesApp::InitRootSignatures()
 {
 	RootSignatureDesc computeRootSignatureDesc{
-		.name = "Compute Root Signature",
-		.rootParameters = {	
+		.name				= "Compute Root Signature",
+		.rootParameters		= {	
 			Table({ StructuredBufferUAV, ConstantBuffer },  ShaderStage::Compute)
 		}
 	};
@@ -177,8 +163,8 @@ void ComputeParticlesApp::InitRootSignatures()
 	m_computeRootSignature = CreateRootSignature(computeRootSignatureDesc);
 
 	RootSignatureDesc graphicsRootSignatureDesc{
-		.name = "Graphics Root Signature",
-		.rootParameters = {	
+		.name				= "Graphics Root Signature",
+		.rootParameters		= {	
 			Table({ StructuredBufferSRV, ConstantBuffer },  ShaderStage::Vertex),
 			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Pixel)

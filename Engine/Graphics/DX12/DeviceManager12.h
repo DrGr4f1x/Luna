@@ -45,8 +45,7 @@ struct DeviceRLDOHelper
 
 	DeviceRLDOHelper(bool bDoReport) noexcept
 		: doReport{ bDoReport }
-	{
-	}
+	{}
 
 	~DeviceRLDOHelper();
 };
@@ -96,10 +95,11 @@ public:
 
 	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::D3D12; }
 
-	Luna::ColorBufferPtr GetColorBuffer() final;
+	Luna::ColorBufferPtr GetColorBuffer() const final;
+	Luna::DepthBufferPtr GetDepthBuffer() const final;
 
-	Format GetColorFormat() final;
-	Format GetDepthFormat() final;
+	Format GetColorFormat() const final;
+	Format GetDepthFormat() const final;
 
 	const std::string& GetDeviceName() const override;
 
@@ -179,6 +179,9 @@ private:
 	std::vector<ColorBufferPtr> m_swapChainBuffers;
 	uint32_t m_backBufferIndex{ 0 };
 	Format m_swapChainFormat;
+
+	// Default depth buffer
+	DepthBufferPtr m_depthBuffer;
 
 	// Presentation synchronization
 	wil::com_ptr<ID3D12Fence> m_fence;

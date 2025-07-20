@@ -54,18 +54,16 @@ protected:
 
 	struct Constants
 	{
-		Math::Matrix4 viewProjectionMatrix;
-		Math::Matrix4 modelMatrix;
-		Math::Vector4 lightPos;
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector4 lightPos{ Math::kZero };
 	};
 
 	Luna::ColorBufferPtr m_msaaColorBuffer;
 	Luna::DepthBufferPtr m_msaaDepthBuffer;
 	const uint32_t m_numSamples{ 8 };
 
-	Luna::DepthBufferPtr m_depthBuffer;
-
-	Constants m_constants;
+	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
 
 	std::vector<Luna::ResourceSet> m_resources;
@@ -78,7 +76,7 @@ protected:
 	Luna::ModelPtr m_model;
 	Luna::SamplerPtr m_sampler;
 
-	Luna::CameraController	m_controller;
+	Luna::CameraController m_controller;
 
 	bool m_sampleRateShading{ false };
 };

@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -53,11 +52,9 @@ protected:
 		float visible{ 1.0f };
 	};
 
-	VSConstants m_occluderConstants;
-	VSConstants m_teapotConstants;
-	VSConstants m_sphereConstants;
-
-	Luna::DepthBufferPtr m_depthBuffer;
+	VSConstants m_occluderConstants{};
+	VSConstants m_teapotConstants{};
+	VSConstants m_sphereConstants{};
 
 	Luna::GpuBufferPtr m_occluderConstantBuffer;
 	Luna::GpuBufferPtr m_teapotConstantBuffer;

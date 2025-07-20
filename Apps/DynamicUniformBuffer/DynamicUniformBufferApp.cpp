@@ -66,11 +66,11 @@ void DynamicUniformBufferApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepthAndStencil(m_depthBuffer);
+	context.ClearDepthAndStencil(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 	context.SetRootSignature(m_rootSignature);
@@ -121,7 +121,6 @@ void DynamicUniformBufferApp::CreateDeviceDependentResources()
 
 void DynamicUniformBufferApp::CreateWindowSizeDependentResources()
 {
-	InitDepthBuffer();
 	if (!m_pipelineCreated)
 	{
 		InitPipeline();
@@ -135,19 +134,6 @@ void DynamicUniformBufferApp::CreateWindowSizeDependentResources()
 		0.1f,
 		256.0f);
 	m_camera.Update();
-}
-
-
-void DynamicUniformBufferApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name	= "Depth Buffer",
-		.width	= GetWindowWidth(),
-		.height	= GetWindowHeight(),
-		.format = GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

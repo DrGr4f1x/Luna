@@ -459,6 +459,15 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 	// Reset the index to the current back buffer.
 	m_backBufferIndex = m_dxSwapChain->GetCurrentBackBufferIndex();
+
+	// Create default depth buffer
+	DepthBufferDesc depthBufferDesc{
+		.name		= "Default Depth Buffer",
+		.width		= newBackBufferWidth,
+		.height		= newBackBufferHeight,
+		.format		= GetDepthFormat()
+	};
+	m_depthBuffer = m_device->CreateDepthBuffer(depthBufferDesc);
 }
 
 
@@ -514,19 +523,25 @@ void DeviceManager::FreeContext(CommandContext* usedContext)
 }
 
 
-Luna::ColorBufferPtr DeviceManager::GetColorBuffer()
+ColorBufferPtr DeviceManager::GetColorBuffer() const
 {
 	return m_swapChainBuffers[m_backBufferIndex];
 }
 
 
-Format DeviceManager::GetColorFormat()
+DepthBufferPtr DeviceManager::GetDepthBuffer() const
+{
+	return m_depthBuffer;
+}
+
+
+Format DeviceManager::GetColorFormat() const
 {
 	return m_swapChainFormat;
 }
 
 
-Format DeviceManager::GetDepthFormat()
+Format DeviceManager::GetDepthFormat() const
 {
 	return m_desc.depthBufferFormat;
 }

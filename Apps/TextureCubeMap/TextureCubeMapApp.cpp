@@ -24,8 +24,7 @@ using namespace std;
 TextureCubeMapApp::TextureCubeMapApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
 	, m_controller{ m_camera, Vector3(kYUnitVector) }
-{
-}
+{}
 
 
 int TextureCubeMapApp::ProcessCommandLine(int argc, char* argv[])
@@ -95,11 +94,11 @@ void TextureCubeMapApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -150,8 +149,6 @@ void TextureCubeMapApp::CreateDeviceDependentResources()
 void TextureCubeMapApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
-
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
@@ -165,19 +162,6 @@ void TextureCubeMapApp::CreateWindowSizeDependentResources()
 		0.001f,
 		256.0f);
 	m_camera.Update();
-}
-
-
-void TextureCubeMapApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name			= "Depth Buffer",
-		.width			= GetWindowWidth(),
-		.height			= GetWindowHeight(),
-		.format			= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

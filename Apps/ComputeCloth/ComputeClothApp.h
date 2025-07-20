@@ -33,7 +33,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -47,37 +46,36 @@ protected:
 protected:
 	struct VSConstants
 	{
-		Math::Matrix4 projectionMatrix;
-		Math::Matrix4 modelViewMatrix;
-		Math::Vector4 lightPos;
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
+		Math::Vector4 lightPos{ Math::kZero };
 	};
 
 	struct CSConstants
 	{
-		float deltaT;
-		float particleMass;
-		float springStiffness;
-		float damping;
-		float restDistH;
-		float restDistV;
-		float restDistD;
-		float sphereRadius;
-		Math::Vector4 spherePos;
-		Math::Vector4 gravity;
-		int32_t particleCount[2];
-		uint32_t calculateNormals;
+		float deltaT{ 0.0f };
+		float particleMass{ 0.0f };
+		float springStiffness{ 0.0f };
+		float damping{ 0.0f };
+		float restDistH{ 0.0f };
+		float restDistV{ 0.0f };
+		float restDistD{ 0.0f };
+		float sphereRadius{ 0.0f };
+		Math::Vector4 spherePos{ Math::kIdentity };
+		Math::Vector4 gravity{ Math::kIdentity };
+		int32_t particleCount[2] = { 0, 0 };
+		uint32_t calculateNormals{ 0 };
 	};
 
 	struct Particle
 	{
-		Math::Vector4 pos;
-		Math::Vector4 vel;
-		Math::Vector4 uv;
-		Math::Vector4 normal;
-		Math::Vector4 pinned;
+		Math::Vector4 pos{ Math::kZero };
+		Math::Vector4 vel{ Math::kZero };
+		Math::Vector4 uv{ Math::kZero };
+		Math::Vector4 normal{ Math::kZero };
+		Math::Vector4 pinned{ Math::kZero };
 	};
 
-	Luna::DepthBufferPtr m_depthBuffer;
 	Luna::RootSignaturePtr m_sphereRootSignature;
 	Luna::RootSignaturePtr m_clothRootSignature;
 	Luna::RootSignaturePtr m_computeRootSignature;
@@ -87,10 +85,10 @@ protected:
 	Luna::ComputePipelinePtr m_computePipeline;
 	bool m_pipelinesCreated{ false };
 
-	VSConstants m_vsConstants;
+	VSConstants m_vsConstants{};
 	Luna::GpuBufferPtr m_vsConstantBuffer;
 
-	CSConstants m_csConstants;
+	CSConstants m_csConstants{};
 	Luna::GpuBufferPtr m_csConstantBuffer;
 	Luna::GpuBufferPtr m_csNormalConstantBuffer;
 

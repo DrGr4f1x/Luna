@@ -33,7 +33,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
@@ -54,22 +53,20 @@ protected:
 
 	struct SkyConstants
 	{
-		Math::Matrix4 modelViewProjectionMatrix;
+		Math::Matrix4 modelViewProjectionMatrix{ Math::kIdentity };
 	};
 
 	struct TerrainConstants
 	{
-		Math::Matrix4 projectionMatrix;
-		Math::Matrix4 modelViewMatrix;
-		Math::Vector4 lightPos;
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
+		Math::Vector4 lightPos{ Math::kZero };
 		Math::BoundingPlane frustumPlanes[6];
 		float viewportDim[2];
 		float displacementFactor;
 		float tessellationFactor;
 		float tessellatedEdgeSize;
 	};
-
-	Luna::DepthBufferPtr m_depthBuffer;
 
 	Luna::RootSignaturePtr m_skyRootSignature;
 	Luna::RootSignaturePtr m_terrainRootSignature;
@@ -78,7 +75,7 @@ protected:
 	Luna::GraphicsPipelinePtr m_terrainPipeline;
 	bool m_pipelinesCreated{ false };
 
-	SkyConstants m_skyConstants;
+	SkyConstants m_skyConstants{};
 	Luna::GpuBufferPtr m_skyConstantBuffer;
 
 	TerrainConstants m_terrainConstants;

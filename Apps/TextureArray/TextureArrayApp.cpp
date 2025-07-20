@@ -112,11 +112,11 @@ void TextureArrayApp::Render()
 	auto& context = GraphicsContext::Begin("Scene");
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -155,7 +155,6 @@ void TextureArrayApp::CreateDeviceDependentResources()
 void TextureArrayApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
-	InitDepthBuffer();
 	if (!m_pipelineCreated)
 	{
 		InitGraphicsPipeline();
@@ -169,20 +168,6 @@ void TextureArrayApp::CreateWindowSizeDependentResources()
 		0.001f,
 		256.0f);
 	m_camera.Update();
-}
-
-
-void TextureArrayApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name			= "Depth Buffer",
-		.resourceType	= ResourceType::Texture2D,
-		.width			= GetWindowWidth(),
-		.height			= GetWindowHeight(),
-		.format			= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

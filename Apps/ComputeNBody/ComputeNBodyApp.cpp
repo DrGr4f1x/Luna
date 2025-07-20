@@ -89,11 +89,11 @@ void ComputeNBodyApp::Render()
 	}
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(m_depthBuffer);
+	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), m_depthBuffer);
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -140,7 +140,6 @@ void ComputeNBodyApp::CreateDeviceDependentResources()
 
 void ComputeNBodyApp::CreateWindowSizeDependentResources()
 {
-	InitDepthBuffer();
 	if (!m_pipelinesCreated)
 	{
 		InitPipelines();
@@ -152,19 +151,6 @@ void ComputeNBodyApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-}
-
-
-void ComputeNBodyApp::InitDepthBuffer()
-{
-	DepthBufferDesc depthBufferDesc{
-		.name		= "Depth Buffer",
-		.width		= GetWindowWidth(),
-		.height		= GetWindowHeight(),
-		.format		= GetDepthFormat()
-	};
-
-	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
 }
 
 

@@ -32,7 +32,6 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitDepthBuffer();
 	void InitRootSignature();
 	void InitGraphicsPipeline();
 	void InitConstantBuffer();
@@ -53,23 +52,21 @@ protected:
 	struct InstanceData
 	{
 		// Model matrix
-		Math::Matrix4 modelMatrix;
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
 		// Texture array index
 		// Vec4 due to padding
-		Math::Vector4 arrayIndex;
+		Math::Vector4 arrayIndex{ Math::kZero };
 	};
 
 	struct Constants
 	{
 		// Global matrix
-		Math::Matrix4 viewProjectionMatrix;
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
 
 		// Separate data for each instance
 		InstanceData* instance{ nullptr };
 	};
-	Constants m_constants;
-
-	Luna::DepthBufferPtr m_depthBuffer;
+	Constants m_constants{};
 
 	Luna::GpuBufferPtr m_vertexBuffer;
 	Luna::GpuBufferPtr m_indexBuffer;
