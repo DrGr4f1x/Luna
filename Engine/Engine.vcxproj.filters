@@ -119,25 +119,10 @@
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="CameraController.cpp" />
-    <ClCompile Include="Graphics\PipelineState.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\DescriptorSet.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\RootSignature.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\ResourceSet.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\GpuBuffer.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\DepthBuffer.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\ColorBuffer.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp">
@@ -160,12 +145,6 @@
     </ClCompile>
     <ClCompile Include="Core\Profiling.cpp">
       <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\GpuResource.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\PixelBuffer.cpp">
-      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp">
       <Filter>Graphics\DX12</Filter>
@@ -197,12 +176,6 @@
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\PipelineState12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\PipelineStateVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
@@ -220,12 +193,6 @@
     </ClCompile>
     <ClCompile Include="Graphics\Loaders\STBTextureLoader.cpp">
       <Filter>Graphics\Loaders</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\DX12\Texture12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\TextureVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Limits.cpp">
       <Filter>Graphics</Filter>

@@ -43,7 +43,6 @@ TODO:
 -- Implement a way to get allocate individual DescriptorSets from a RootSignature, so that per-frame data (etc) can be set at a lower cadence than every draw.
 -- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
 -- Auto-register and auto-update window size dependent resources?
--- Actually delete all the Delete Me files
 
 DONE:
 -- Handles and pools for:
@@ -76,6 +75,7 @@ DONE:
 -- Integrate FramePro
 -- Add a default depth buffer to the DeviceManager
 -- Fuck it, put a fence back in to Vulkan present synchro
+-- Actually delete all the Delete Me files
 
 
 WON'T DO:
