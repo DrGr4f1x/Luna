@@ -169,8 +169,10 @@ private:
 	// Present synchronization
 	std::vector<std::shared_ptr<Semaphore>> m_presentCompleteSemaphores;
 	std::vector<std::shared_ptr<Semaphore>> m_renderCompleteSemaphores;
+	std::vector<wil::com_ptr<CVkFence>> m_presentFences;
 	uint32_t m_presentCompleteSemaphoreIndex{ 0 };
 	uint64_t m_frameNumber{ 0 };
+	uint32_t m_activeFrame{ 0 };
 
 	// Command context handling
 	std::mutex m_contextAllocationMutex;

@@ -75,6 +75,7 @@ DONE:
 -- Fixed busted camera position
 -- Integrate FramePro
 -- Add a default depth buffer to the DeviceManager
+-- Fuck it, put a fence back in to Vulkan present synchro
 
 
 WON'T DO:

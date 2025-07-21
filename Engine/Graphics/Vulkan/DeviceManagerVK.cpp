@@ -157,6 +157,10 @@ void DeviceManager::BeginFrame()
 { 
 	ScopedEvent event{ "DeviceManager::BeginFrame" };
 
+	VkFence waitFence = *m_presentFences[m_activeFrame];
+	vkWaitForFences(*m_vkDevice, 1, &waitFence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(*m_vkDevice, 1, &waitFence);
+
 	auto presentCompleteSemaphore = m_presentCompleteSemaphores[m_presentCompleteSemaphoreIndex];
 
 	VkSemaphore semaphore = presentCompleteSemaphore->semaphore->Get();
@@ -183,9 +187,11 @@ void DeviceManager::Present()
 	Queue& graphicsQueue = GetQueue(QueueType::Graphics);
 	graphicsQueue.AddSignalSemaphore(renderCompleteSemaphore, 0);
 	graphicsQueue.AddWaitSemaphore(graphicsQueue.GetTimelineSemaphore(), graphicsQueue.GetLastSubmittedFenceValue());
-	graphicsQueue.ExecuteCommandList(VK_NULL_HANDLE, VK_NULL_HANDLE);
+	graphicsQueue.ExecuteCommandList(VK_NULL_HANDLE, m_presentFences[m_activeFrame]->Get());
 
 	VkSwapchainKHR swapchain = *m_vkSwapChain;
+
+	m_activeFrame = (m_activeFrame + 1) % m_presentFences.size();
 
 	VkSemaphore vkRenderCompleteSemaphore = renderCompleteSemaphore->semaphore->Get();
 
@@ -338,6 +344,7 @@ void DeviceManager::CreateDeviceResources()
 	const uint32_t numSynchronizationPrimitives = m_desc.numSwapChainBuffers + 1;
 	m_presentCompleteSemaphores.reserve(numSynchronizationPrimitives);
 	m_renderCompleteSemaphores.reserve(numSynchronizationPrimitives);
+	m_presentFences.reserve(numSynchronizationPrimitives);
 	for (uint32_t i = 0; i < numSynchronizationPrimitives; ++i)
 	{
 		// Create present-complete semaphore
@@ -358,6 +365,14 @@ void DeviceManager::CreateDeviceResources()
 			string semaphoreName = format("Render Complete Semaphore {}", i);
 			semaphore->name = semaphoreName;
 			SetDebugName(*m_vkDevice, semaphore->semaphore->Get(), semaphoreName);
+		}
+
+		// Create fence
+		{
+			auto fence = CreateFence(m_vkDevice.get(), true);
+			assert(fence);
+			m_presentFences.push_back(fence);
+			SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
 		}
 	}
 }
