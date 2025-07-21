@@ -79,10 +79,10 @@ public:
 	void BeginRendering(std::span<const IColorBuffer*> renderTargets, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void EndRendering() override;
 
-	void BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) override;
-	void EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) override;
-	void ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) override;
-	void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) override {}
+	void BeginQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) override;
+	void EndQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) override;
+	void ResolveQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) override;
+	void ResetQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) override {}
 
 	void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) override;
 	void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) override;

@@ -37,8 +37,13 @@ TODO:
 -- Improve error handling
 -- Mipmap generation
 -- Static sampler support
--- Look at normals in the BloomApp - Vulkan seems wrong
-
+-- Look at normals in the BloomApp - Vulkan seems wrong.
+-- Standardize matrix handling in shaders.
+-- Move default depth buffer to the application level
+-- Implement a way to get allocate individual DescriptorSets from a RootSignature, so that per-frame data (etc) can be set at a lower cadence than every draw.
+-- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
+-- Auto-register and auto-update window size dependent resources?
+-- Actually delete all the Delete Me files
 
 DONE:
 -- Handles and pools for:
@@ -69,6 +74,7 @@ DONE:
 -- Refactor shader compilation using CustomBuild in VS
 -- Fixed busted camera position
 -- Integrate FramePro
+-- Add a default depth buffer to the DeviceManager
 
 
 WON'T DO:

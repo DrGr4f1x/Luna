@@ -27,6 +27,22 @@ class QueryHeap : public IQueryHeap
 
 public:
 	ID3D12QueryHeap* GetQueryHeap() const noexcept { return m_heap.get(); }
+
+	D3D12_QUERY_TYPE GetQueryType() const noexcept
+	{
+		switch (GetType())
+		{
+		case QueryHeapType::Occlusion:
+			return D3D12_QUERY_TYPE_OCCLUSION;
+		case QueryHeapType::Timestamp:
+			return D3D12_QUERY_TYPE_TIMESTAMP;
+		case QueryHeapType::PipelineStats:
+			return D3D12_QUERY_TYPE_PIPELINE_STATISTICS1;
+		default:
+			return D3D12_QUERY_TYPE_OCCLUSION;
+		}
+	}
+
 protected:
 	Device* m_device{ nullptr };
 

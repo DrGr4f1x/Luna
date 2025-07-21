@@ -124,6 +124,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bloom", "Apps\Bloom\Bloom.v
 		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PipelineStatistics", "Apps\PipelineStatistics\PipelineStatistics.vcxproj", "{B9D9C2F7-6916-4922-823F-BCE3B7952105}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -275,6 +280,12 @@ Global
 		{8F2201D5-A788-4C2E-BE98-6AD608098D8D}.Profile|x64.Build.0 = Profile|x64
 		{8F2201D5-A788-4C2E-BE98-6AD608098D8D}.Release|x64.ActiveCfg = Release|x64
 		{8F2201D5-A788-4C2E-BE98-6AD608098D8D}.Release|x64.Build.0 = Release|x64
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105}.Debug|x64.ActiveCfg = Debug|x64
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105}.Debug|x64.Build.0 = Debug|x64
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105}.Profile|x64.ActiveCfg = Profile|x64
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105}.Profile|x64.Build.0 = Profile|x64
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105}.Release|x64.ActiveCfg = Release|x64
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -303,6 +314,7 @@ Global
 		{CCF0AAFA-250A-464E-B128-6EDF55F0280E} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{8031675A-6A78-43FD-841C-7D7CABF11522} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{8F2201D5-A788-4C2E-BE98-6AD608098D8D} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
+		{B9D9C2F7-6916-4922-823F-BCE3B7952105} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CDA0266F-9938-4577-9717-5AEE6F9785A1}

@@ -1085,9 +1085,9 @@ Luna::ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc
 QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 {
 	D3D12_QUERY_HEAP_DESC d3d12Desc{
-		.Type = QueryHeapTypeToDX12(queryHeapDesc.type),
-		.Count = queryHeapDesc.queryCount,
-		.NodeMask = 0
+		.Type		= QueryHeapTypeToDX12(queryHeapDesc.type),
+		.Count		= queryHeapDesc.queryCount,
+		.NodeMask	= 0
 	};
 
 	wil::com_ptr<ID3D12QueryHeap> pQueryHeap;

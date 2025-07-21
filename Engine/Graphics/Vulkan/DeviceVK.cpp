@@ -655,7 +655,7 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 		.depthClampEnable			= VK_FALSE,
-		.rasterizerDiscardEnable	= VK_FALSE,
+		.rasterizerDiscardEnable	= rasterizerState.rasterizerDiscardEnable ? VK_TRUE : VK_FALSE,
 		.polygonMode				= FillModeToVulkan(rasterizerState.fillMode),
 		.cullMode					= CullModeToVulkan(rasterizerState.cullMode),
 		.frontFace					= rasterizerState.frontCounterClockwise ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE,
@@ -860,10 +860,29 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 
 QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 {
+	VkQueryPipelineStatisticFlags pipelineStatisticFlags = 0;
+
+	if (queryHeapDesc.type == QueryHeapType::PipelineStats)
+	{
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_INVOCATIONS_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_GEOMETRY_SHADER_PRIMITIVES_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT;
+		// TODO: Support mesh shader stats
+	}
+
 	VkQueryPoolCreateInfo createInfo{
-		.sType			= VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
-		.queryType		= QueryHeapTypeToVulkan(queryHeapDesc.type),
-		.queryCount		= queryHeapDesc.queryCount
+		.sType					= VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
+		.queryType				= QueryHeapTypeToVulkan(queryHeapDesc.type),
+		.queryCount				= queryHeapDesc.queryCount,
+		.pipelineStatistics		= pipelineStatisticFlags
 	};
 
 	wil::com_ptr<CVkQueryPool> queryPool;

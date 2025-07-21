@@ -91,10 +91,10 @@ public:
 	virtual void BeginRendering(std::span<const IColorBuffer*> renderTargets, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void EndRendering() = 0;
 
-	virtual void BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
-	virtual void EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
-	virtual void ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) = 0;
-	virtual void ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
+	virtual void BeginQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
+	virtual void EndQuery(const IQueryHeap* queryHeap, uint32_t heapIndex) = 0;
+	virtual void ResolveQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset) = 0;
+	virtual void ResetQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries) = 0;
 
 	virtual void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) = 0;
 	virtual void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) = 0;
@@ -234,10 +234,10 @@ public:
 	void BeginRendering(std::span<const ColorBufferPtr> renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
-	void BeginOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
-	void EndOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
-	void ResolveOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset);
-	void ResetOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
+	void BeginQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
+	void EndQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
+	void ResolveQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset);
+	void ResetQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries);
 
 	void SetRootSignature(const RootSignaturePtr& rootSignature);
 	void SetGraphicsPipeline(const GraphicsPipelinePtr& graphicsPipeline);
@@ -529,27 +529,27 @@ inline void GraphicsContext::EndRendering()
 }
 
 
-inline void GraphicsContext::BeginOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex)
+inline void GraphicsContext::BeginQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex)
 {
-	m_contextImpl->BeginOcclusionQuery(queryHeap.get(), heapIndex);
+	m_contextImpl->BeginQuery(queryHeap.get(), heapIndex);
 }
 
 
-inline void GraphicsContext::EndOcclusionQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex)
+inline void GraphicsContext::EndQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex)
 {
-	m_contextImpl->EndOcclusionQuery(queryHeap.get(), heapIndex);
+	m_contextImpl->EndQuery(queryHeap.get(), heapIndex);
 }
 
 
-inline void GraphicsContext::ResolveOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
+inline void GraphicsContext::ResolveQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries, const GpuBufferPtr& destBuffer, uint64_t destBufferOffset)
 {
-	m_contextImpl->ResolveOcclusionQueries(queryHeap.get(), startIndex, numQueries, destBuffer.get(), destBufferOffset);
+	m_contextImpl->ResolveQueries(queryHeap.get(), startIndex, numQueries, destBuffer.get(), destBufferOffset);
 }
 
 
-inline void GraphicsContext::ResetOcclusionQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
+inline void GraphicsContext::ResetQueries(const QueryHeapPtr& queryHeap, uint32_t startIndex, uint32_t numQueries)
 {
-	m_contextImpl->ResetOcclusionQueries(queryHeap.get(), startIndex, numQueries);
+	m_contextImpl->ResetQueries(queryHeap.get(), startIndex, numQueries);
 }
 
 

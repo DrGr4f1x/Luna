@@ -752,7 +752,7 @@ void CommandContextVK::EndRendering()
 }
 
 
-void CommandContextVK::BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
+void CommandContextVK::BeginQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
 	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
@@ -761,7 +761,7 @@ void CommandContextVK::BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t
 }
 
 
-void CommandContextVK::EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
+void CommandContextVK::EndQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
 	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
@@ -770,7 +770,7 @@ void CommandContextVK::EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t h
 }
 
 
-void CommandContextVK::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset)
+void CommandContextVK::ResolveQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset)
 {
 	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);
@@ -780,6 +780,12 @@ void CommandContextVK::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint
 
 	assert(!m_isRendering);
 
+	size_t stride = sizeof(uint64_t);
+	if (queryHeap->GetType() == QueryHeapType::PipelineStats)
+	{
+		stride = sizeof(PipelineStatistics);
+	}
+
 	vkCmdCopyQueryPoolResults(
 		m_commandBuffer,
 		queryHeapVK->GetQueryPool(),
@@ -787,12 +793,12 @@ void CommandContextVK::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint
 		numQueries,
 		destBufferVK->GetBuffer(),
 		destBufferOffset,
-		sizeof(uint64_t), // TODO - don't hardcode this
+		stride,
 		VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
 }
 
 
-void CommandContextVK::ResetOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries)
+void CommandContextVK::ResetQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries)
 {
 	const QueryHeap* queryHeapVK = (const QueryHeap*)queryHeap;
 	assert(queryHeapVK != nullptr);

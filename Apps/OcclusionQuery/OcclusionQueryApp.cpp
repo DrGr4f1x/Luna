@@ -84,7 +84,7 @@ void OcclusionQueryApp::Render()
 
 	// Occlusion pass
 
-	context.ResetOcclusionQueries(m_queryHeap, 2 * activeFrame, 2);
+	context.ResetQueries(m_queryHeap, 2 * activeFrame, 2);
 	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
@@ -98,25 +98,25 @@ void OcclusionQueryApp::Render()
 		m_occluderModel->Render(context);
 
 		// Teapot
-		context.BeginOcclusionQuery(m_queryHeap, 2 * activeFrame);
+		context.BeginQuery(m_queryHeap, 2 * activeFrame);
 
 		context.SetResources(m_teapotResources);
 		m_teapotModel->Render(context);
 
-		context.EndOcclusionQuery(m_queryHeap, 2 * activeFrame);
+		context.EndQuery(m_queryHeap, 2 * activeFrame);
 
 		// Sphere
-		context.BeginOcclusionQuery(m_queryHeap, 2 * activeFrame + 1);
+		context.BeginQuery(m_queryHeap, 2 * activeFrame + 1);
 
 		context.SetResources(m_sphereResources);
 		m_sphereModel->Render(context);
 
-		context.EndOcclusionQuery(m_queryHeap, 2 * activeFrame + 1);
+		context.EndQuery(m_queryHeap, 2 * activeFrame + 1);
 	}
 	context.EndRendering();
 
 	// Copy query results to buffer
-	context.ResolveOcclusionQueries(m_queryHeap, 2 * activeFrame, 2, m_readbackBuffer, 2 * activeFrame * sizeof(uint64_t));
+	context.ResolveQueries(m_queryHeap, 2 * activeFrame, 2, m_readbackBuffer, 2 * activeFrame * sizeof(uint64_t));
 
 	context.ClearColor(GetColorBuffer());
 	context.ClearDepthAndStencil(GetDepthBuffer());

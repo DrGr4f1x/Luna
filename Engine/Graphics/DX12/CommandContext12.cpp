@@ -513,25 +513,25 @@ void CommandContext12::EndRendering()
 }
 
 
-void CommandContext12::BeginOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
+void CommandContext12::BeginQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
 	const QueryHeap* queryHeap12 = (const QueryHeap*)queryHeap;
 	assert(queryHeap12 != nullptr);
 
-	m_commandList->BeginQuery(queryHeap12->GetQueryHeap(), D3D12_QUERY_TYPE_OCCLUSION, heapIndex);
+	m_commandList->BeginQuery(queryHeap12->GetQueryHeap(), queryHeap12->GetQueryType(), heapIndex);
 }
 
 
-void CommandContext12::EndOcclusionQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
+void CommandContext12::EndQuery(const IQueryHeap* queryHeap, uint32_t heapIndex)
 {
 	const QueryHeap* queryHeap12 = (const QueryHeap*)queryHeap;
 	assert(queryHeap12 != nullptr);
 
-	m_commandList->EndQuery(queryHeap12->GetQueryHeap(), D3D12_QUERY_TYPE_OCCLUSION, heapIndex);
+	m_commandList->EndQuery(queryHeap12->GetQueryHeap(), queryHeap12->GetQueryType(), heapIndex);
 }
 
 
-void CommandContext12::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset)
+void CommandContext12::ResolveQueries(const IQueryHeap* queryHeap, uint32_t startIndex, uint32_t numQueries, const IGpuBuffer* destBuffer, uint64_t destBufferOffset)
 {
 	const QueryHeap* queryHeap12 = (const QueryHeap*)queryHeap;
 	assert(queryHeap12 != nullptr);
@@ -541,7 +541,7 @@ void CommandContext12::ResolveOcclusionQueries(const IQueryHeap* queryHeap, uint
 
 	m_commandList->ResolveQueryData(
 		queryHeap12->GetQueryHeap(),
-		D3D12_QUERY_TYPE_OCCLUSION,
+		queryHeap12->GetQueryType(),
 		startIndex,
 		numQueries,
 		destBuffer12->GetResource(),

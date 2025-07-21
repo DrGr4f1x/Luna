@@ -77,6 +77,7 @@ struct RasterizerStateDesc
 	bool antialiasedLineEnable{ false };
 	uint32_t forcedSampleCount{ 0 };
 	bool conservativeRasterizationEnable{ false };
+	bool rasterizerDiscardEnable{ false };
 
 	constexpr RasterizerStateDesc& SetCullMode(CullMode value) noexcept { cullMode = value; return *this; }
 	constexpr RasterizerStateDesc& SetFillMode(FillMode value) noexcept { fillMode = value; return *this; }
@@ -89,6 +90,7 @@ struct RasterizerStateDesc
 	constexpr RasterizerStateDesc& SetAntialiasedLineEnable(bool value) noexcept { antialiasedLineEnable = value; return *this; }
 	constexpr RasterizerStateDesc& SetForcedSampleCount(uint32_t value) noexcept { forcedSampleCount = value; return *this; }
 	constexpr RasterizerStateDesc& SetConservativeRasterizationEnable(bool value) noexcept { conservativeRasterizationEnable = value; return *this; }
+	constexpr RasterizerStateDesc& SetRasterizerDiscardEnable(bool value) noexcept { rasterizerDiscardEnable = value; return *this; }
 };
 
 
