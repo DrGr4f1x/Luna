@@ -101,19 +101,8 @@ void BloomApp::Render()
 
 			context.SetResources(m_sceneResources);
 
-			// Render model
-			{
-				for (const auto& mesh : m_ufoGlowModel->meshes)
-				{
-					context.SetIndexBuffer(mesh->indexBuffer);
-					context.SetVertexBuffer(0, mesh->vertexBuffer);
-
-					for (const auto& meshPart : mesh->meshParts)
-					{
-						context.DrawIndexed(meshPart.indexCount, meshPart.indexBase, meshPart.vertexBase);
-					}
-				}
-			}
+			// Render UFO model
+			m_ufoGlowModel->Render(context);
 
 			context.EndRendering();
 		}
@@ -164,19 +153,8 @@ void BloomApp::Render()
 
 		context.SetResources(m_skyboxResources);
 
-		// Render model
-		{
-			for (const auto& mesh : m_skyboxModel->meshes)
-			{
-				context.SetIndexBuffer(mesh->indexBuffer);
-				context.SetVertexBuffer(0, mesh->vertexBuffer);
-
-				for (const auto& meshPart : mesh->meshParts)
-				{
-					context.DrawIndexed(meshPart.indexCount, meshPart.indexBase, meshPart.vertexBase);
-				}
-			}
-		}
+		// Render skybox model
+		m_skyboxModel->Render(context);
 	}
 
 	// 3D scene (phong pass)
@@ -188,19 +166,8 @@ void BloomApp::Render()
 
 		context.SetResources(m_sceneResources);
 
-		// Render model
-		{
-			for (const auto& mesh : m_ufoGlowModel->meshes)
-			{
-				context.SetIndexBuffer(mesh->indexBuffer);
-				context.SetVertexBuffer(0, mesh->vertexBuffer);
-
-				for (const auto& meshPart : mesh->meshParts)
-				{
-					context.DrawIndexed(meshPart.indexCount, meshPart.indexBase, meshPart.vertexBase);
-				}
-			}
-		}
+		// Render UFO model
+		m_ufoGlowModel->Render(context);
 	}
 
 	// Horizontal blur pass
