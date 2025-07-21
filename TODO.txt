@@ -17,7 +17,6 @@ TODO:
 -- Handle WindowSize better in the DeviceManagers
 -- DX12 device removed (look for TODO in DeviceManager12.cpp)
 -- OnDeviceLost/OnDeviceRestored in DeviceManagers - do I actually need this?
--- Try out std::span for IGpuBuffer::Update
 -- Move CommandContext::Reset logic into CommandManager::AllocateContext (?)
 -- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
@@ -43,6 +42,9 @@ TODO:
 -- Implement a way to get allocate individual DescriptorSets from a RootSignature, so that per-frame data (etc) can be set at a lower cadence than every draw.
 -- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
 -- Auto-register and auto-update window size dependent resources?
+-- Add helper functions to create basic resource types like vertex buffers etc.
+-- Support 16-bit index buffers in Model.h/.cpp
+
 
 DONE:
 -- Handles and pools for:
@@ -89,3 +91,4 @@ WON'T DO:
     -- ComputePipelineState
     -- MeshletPipelineState
     -- RayTracing (??)
+-- Try out std::span for IGpuBuffer::Update

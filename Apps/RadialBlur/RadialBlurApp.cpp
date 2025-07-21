@@ -178,10 +178,9 @@ void RadialBlurApp::InitRootSignatures()
 {
 	// Main scene
 	auto sceneRootSignatureDesc = RootSignatureDesc{
-		.name = "Scene Root Signature",
-		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
+		.name				= "Scene Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
 				RootCBV(0, ShaderStage::Vertex),
 				Table({ TextureSRV }, ShaderStage::Pixel),
 				Table({ Sampler }, ShaderStage::Pixel)
@@ -192,10 +191,9 @@ void RadialBlurApp::InitRootSignatures()
 
 	// Radial blur
 	auto radialBlurRootSignatureDesc = RootSignatureDesc{
-		.name = "Radial Blur Root Signature",
-		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
+		.name				= "Radial Blur Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
 				Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel),
 				Table({ Sampler }, ShaderStage::Pixel)
 			}
@@ -207,13 +205,13 @@ void RadialBlurApp::InitRootSignatures()
 
 void RadialBlurApp::InitPipelines()
 {
+	auto vertexLayout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
+
 	VertexStreamDesc vertexStreamDesc{
 		.inputSlot				= 0,
-		.stride					= sizeof(Vertex),
+		.stride					= vertexLayout.GetSizeInBytes(),
 		.inputClassification	= InputClassification::PerVertexData
 	};
-
-	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
 
 	// Radial blur
 	GraphicsPipelineDesc radialBlurPipelineDesc{
@@ -226,8 +224,6 @@ void RadialBlurApp::InitPipelines()
 		.topology			= PrimitiveTopology::TriangleList,
 		.vertexShader		= { .shaderFile = "RadialBlurVS" },
 		.pixelShader		= { .shaderFile = "RadialBlurPS" },
-		.vertexStreams		= {},
-		.vertexElements		= {},
 		.rootSignature		= m_radialBlurRootSignature
 	};
 
@@ -245,7 +241,7 @@ void RadialBlurApp::InitPipelines()
 		.vertexShader		= { .shaderFile = "PhongPassVS" },
 		.pixelShader		= { .shaderFile = "PhongPassPS" },
 		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= layout.GetElements(),
+		.vertexElements		= vertexLayout.GetElements(),
 		.rootSignature		= m_sceneRootSignature
 	};
 

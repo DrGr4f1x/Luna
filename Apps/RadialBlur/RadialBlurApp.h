@@ -45,15 +45,6 @@ protected:
 
 protected:
 	// Render pipeline resources
-	struct Vertex
-	{
-		float position[3];
-		float normal[3];
-		float color[4];
-		float uv[2];
-	};
-	static_assert(sizeof(Vertex) == 48);
-
 	struct SceneConstants
 	{
 		Math::Matrix4 projectionMat{ Math::kIdentity };
