@@ -427,16 +427,11 @@ void DeviceManager::CreateWindowSizeDependentResources()
 
 	vector<VkImage> images = m_vkbSwapchain.get_images().value();
 
-	m_vkSwapChainImages.reserve(images.size());
-	for (auto image : images)
-	{
-		m_vkSwapChainImages.push_back(Create<CVkImage>(m_vkDevice.get(), image));
-	}
-
 	m_swapChainBuffers.reserve(images.size());
 	for (uint32_t i = 0; i < (uint32_t)images.size(); ++i)
 	{
-		ColorBufferPtr swapChainBuffer = m_device->CreateColorBufferFromSwapChainImage(m_vkSwapChainImages[i].get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i);
+		auto cimage = Create<CVkImage>(m_vkDevice.get(), images[i]);
+		ColorBufferPtr swapChainBuffer = m_device->CreateColorBufferFromSwapChainImage(cimage.get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i);
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
 
@@ -746,7 +741,6 @@ void DeviceManager::ResizeSwapChain()
 	WaitForGpu();
 
 	m_vkSwapChain.reset();
-	m_vkSwapChainImages.clear();
 	m_swapChainBuffers.clear();
 
 	CreateWindowSizeDependentResources();

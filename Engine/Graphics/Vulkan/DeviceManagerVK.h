@@ -152,8 +152,6 @@ private:
 
 	// Swapchain
 	wil::com_ptr<CVkSwapchain> m_vkSwapChain;
-	// TODO - get rid of this, just use m_swapChainBuffers below
-	std::vector<wil::com_ptr<CVkImage>> m_vkSwapChainImages;
 	uint32_t m_swapChainIndex{ (uint32_t)-1 };
 	bool m_swapChainMutableFormatSupported{ false };
 	VkSurfaceFormatKHR m_swapChainSurfaceFormat{};
