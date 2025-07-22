@@ -280,6 +280,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	vector<float> vertexData;
 	vector<float> vertexDataPositionOnly;
 	vector<uint32_t> indexData;
+	vector<uint16_t> indexData16;
 
 	MeshPtr mesh = make_shared<Mesh>();
 	MeshPart meshPart{};
@@ -353,29 +354,69 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 
 	meshPart.vertexCount = aiMesh->mNumVertices;
 
-	uint32_t indexBase = static_cast<uint32_t>(indexData.size());
-	for (unsigned int j = 0; j < aiMesh->mNumFaces; j++)
+	// Find the max index value.  If less than 65536, we can use 16-bit indices
+	bool bUse16BitIndices = true;
+	for (uint32_t j = 0; j < aiMesh->mNumFaces; ++j)
 	{
 		const aiFace& Face = aiMesh->mFaces[j];
 		if (Face.mNumIndices != 3)
 			continue;
-		indexData.push_back(indexBase + Face.mIndices[0]);
-		indexData.push_back(indexBase + Face.mIndices[1]);
-		indexData.push_back(indexBase + Face.mIndices[2]);
-		meshPart.indexCount += 3;
-		indexCount += 3;
+		if (Face.mIndices[0] >= 65536)
+		{
+			bUse16BitIndices = false;
+			break;
+		}
+		if (Face.mIndices[1] >= 65536)
+		{
+			bUse16BitIndices = false;
+			break;
+		}
+		if (Face.mIndices[2] >= 65536)
+		{
+			bUse16BitIndices = false;
+			break;
+		}
+	}
+
+	if (bUse16BitIndices)
+	{
+		for (unsigned int j = 0; j < aiMesh->mNumFaces; j++)
+		{
+			const aiFace& Face = aiMesh->mFaces[j];
+			if (Face.mNumIndices != 3)
+				continue;
+			indexData16.push_back((uint16_t)Face.mIndices[0]);
+			indexData16.push_back((uint16_t)Face.mIndices[1]);
+			indexData16.push_back((uint16_t)Face.mIndices[2]);
+			meshPart.indexCount += 3;
+			indexCount += 3;
+		}
+	}
+	else
+	{
+		for (unsigned int j = 0; j < aiMesh->mNumFaces; j++)
+		{
+			const aiFace& Face = aiMesh->mFaces[j];
+			if (Face.mNumIndices != 3)
+				continue;
+			indexData.push_back(Face.mIndices[0]);
+			indexData.push_back(Face.mIndices[1]);
+			indexData.push_back(Face.mIndices[2]);
+			meshPart.indexCount += 3;
+			indexCount += 3;
+		}
 	}
 
 	// Create vertex buffer
 	uint32_t stride = m_vertexLayout->GetSizeInBytes();
 
 	GpuBufferDesc vertexBufferDesc{
-		.name = "Model|VertexBuffer",
-		.resourceType = ResourceType::VertexBuffer,
-		.memoryAccess = MemoryAccess::GpuRead,
-		.elementCount = sizeof(float) * vertexData.size() / stride,
-		.elementSize = stride,
-		.initialData = vertexData.data()
+		.name			= "Model|VertexBuffer",
+		.resourceType	= ResourceType::VertexBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= sizeof(float) * vertexData.size() / stride,
+		.elementSize	= stride,
+		.initialData	= vertexData.data()
 	};
 	mesh->vertexBuffer = m_device->CreateGpuBuffer(vertexBufferDesc);
 
@@ -383,27 +424,40 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	stride = 3 * sizeof(float);
 	GpuBufferDesc positionOnlyVertexBufferDesc
 	{
-		.name = "Model|VertexBuffer (Position Only)",
-		.resourceType = ResourceType::VertexBuffer,
-		.memoryAccess = MemoryAccess::GpuRead,
-		.elementCount = sizeof(float) * vertexDataPositionOnly.size() / stride,
-		.elementSize = stride,
-		.initialData = vertexDataPositionOnly.data()
+		.name			= "Model|VertexBuffer (Position Only)",
+		.resourceType	= ResourceType::VertexBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= sizeof(float) * vertexDataPositionOnly.size() / stride,
+		.elementSize	= stride,
+		.initialData	= vertexDataPositionOnly.data()
 	};
 	mesh->vertexBufferPositionOnly = m_device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 
-	// TODO: Support uint16 indices
-
 	// Create index buffer
-	GpuBufferDesc indexBufferDesc{
-		.name = "Model|IndexBuffer",
-		.resourceType = ResourceType::IndexBuffer,
-		.memoryAccess = MemoryAccess::GpuRead,
-		.elementCount = indexData.size(),
-		.elementSize = sizeof(uint32_t),
-		.initialData = indexData.data()
-	};
-	mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
+	if (bUse16BitIndices)
+	{
+		GpuBufferDesc indexBufferDesc{
+			.name			= "Model|IndexBuffer",
+			.resourceType	= ResourceType::IndexBuffer,
+			.memoryAccess	= MemoryAccess::GpuRead,
+			.elementCount	= indexData16.size(),
+			.elementSize	= sizeof(uint16_t),
+			.initialData	= indexData16.data()
+		};
+		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
+	}
+	else
+	{
+		GpuBufferDesc indexBufferDesc{
+			.name			= "Model|IndexBuffer",
+			.resourceType	= ResourceType::IndexBuffer,
+			.memoryAccess	= MemoryAccess::GpuRead,
+			.elementCount	= indexData.size(),
+			.elementSize	= sizeof(uint32_t),
+			.initialData	= indexData.data()
+		};
+		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
+	}
 
 	// Set bounding box
 	mesh->boundingBox = Math::BoundingBoxFromMinMax(minExtents, maxExtents);
