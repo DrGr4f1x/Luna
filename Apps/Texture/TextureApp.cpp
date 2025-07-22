@@ -117,8 +117,6 @@ void TextureApp::Render()
 
 void TextureApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
-	// 
 	// Setup vertices for a single uv-mapped quad made from two triangles
 	vector<Vertex> vertexData =
 	{
@@ -127,38 +125,13 @@ void TextureApp::CreateDeviceDependentResources()
 		{ { -1.0f, -1.0f,  0.0f }, { 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
 		{ {  1.0f, -1.0f,  0.0f }, { 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
 	};
-
-	GpuBufferDesc vertexBufferDesc{
-		.name = "Vertex Buffer",
-		.resourceType = ResourceType::VertexBuffer,
-		.memoryAccess = MemoryAccess::GpuReadWrite,
-		.elementCount = vertexData.size(),
-		.elementSize = sizeof(Vertex),
-		.initialData = vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+	m_vertexBuffer = CreateVertexBuffer<Vertex>("Vertex Buffer", vertexData);
 
 	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
-	GpuBufferDesc indexBufferDesc{
-		.name = "Index Buffer",
-		.resourceType = ResourceType::IndexBuffer,
-		.memoryAccess = MemoryAccess::GpuReadWrite,
-		.elementCount = indexData.size(),
-		.elementSize = sizeof(uint32_t),
-		.initialData = indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+	m_indexBuffer = CreateIndexBuffer("Index Buffer", indexData);
 
 	// Setup constant buffer
-	GpuBufferDesc constantBufferDesc{
-		.name = "Constant Buffer",
-		.resourceType = ResourceType::ConstantBuffer,
-		.memoryAccess = MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount = 1,
-		.elementSize = sizeof(m_constants),
-		.initialData = nullptr
-	};
-	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(m_constants));
 	m_constants.modelMatrix = Math::Matrix4(Math::kIdentity);
 
 	UpdateConstantBuffer();

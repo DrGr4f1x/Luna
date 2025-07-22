@@ -163,7 +163,12 @@ void OcclusionQueryApp::CreateDeviceDependentResources()
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 
 	InitRootSignature();
-	InitConstantBuffers();
+	
+	// Create constant buffers
+	m_occluderConstantBuffer = CreateConstantBuffer("Occluder Constant Buffer", 1, sizeof(VSConstants));
+	m_teapotConstantBuffer = CreateConstantBuffer("Teapot Constant Buffer", 1, sizeof(VSConstants));
+	m_sphereConstantBuffer = CreateConstantBuffer("Sphere Constant Buffer", 1, sizeof(VSConstants));
+
 	InitQueryHeap();
 	LoadAssets();
 	InitResourceSets();
@@ -254,25 +259,6 @@ void OcclusionQueryApp::InitPipelines()
 	occluderDesc.SetPixelShader("OccluderPS");
 
 	m_occluderPipeline = CreateGraphicsPipeline(occluderDesc);
-}
-
-
-void OcclusionQueryApp::InitConstantBuffers()
-{
-	GpuBufferDesc desc{
-		.name			= "Occluder Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_occluderConstantBuffer = CreateGpuBuffer(desc);
-
-	desc.SetName("Teapot Constant Buffer");
-	m_teapotConstantBuffer = CreateGpuBuffer(desc);
-
-	desc.SetName("Sphere Constant Buffer");
-	m_sphereConstantBuffer = CreateGpuBuffer(desc);
 }
 
 

@@ -242,6 +242,9 @@
     <ClCompile Include="..\External\FramePro\FramePro.cpp">
       <Filter>External\FramePro</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\GpuBuffer.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />

@@ -147,7 +147,9 @@ void InstancingApp::CreateDeviceDependentResources()
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 
 	InitRootSignatures();
-	InitConstantBuffer();
+	
+	// Create constant buffer
+	m_planetConstantBuffer = CreateConstantBuffer("Planet Constant Buffer", 1, sizeof(VSConstants));
 
 	// Load assets first, since instancing data needs to know how many array slices are in
 	// the rock texture
@@ -275,20 +277,6 @@ void InstancingApp::InitPipelines()
 		.rootSignature		= m_modelRootSignature
 	};
 	m_planetPipeline = CreateGraphicsPipeline(planetPipelineDesc);
-}
-
-
-void InstancingApp::InitConstantBuffer()
-{
-	// Constant buffer
-	GpuBufferDesc desc{
-		.name			= "Planet Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_planetConstantBuffer = CreateGpuBuffer(desc);
 }
 
 

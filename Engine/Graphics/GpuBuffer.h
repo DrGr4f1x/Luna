@@ -63,4 +63,22 @@ protected:
 
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 
+
+// Helper functions for describing and creating basic GpuBuffer types
+GpuBufferDesc DescribeConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize);
+GpuBufferPtr CreateConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
+
+GpuBufferDesc DescribeIndexBuffer(const std::string& name, size_t elementCount, size_t elementSize);
+GpuBufferPtr CreateIndexBuffer(const std::string& name, std::span<uint16_t> indexData);
+GpuBufferPtr CreateIndexBuffer(const std::string& name, std::span<uint32_t> indexData);
+
+GpuBufferDesc DescribeVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize);
+GpuBufferPtr CreateVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
+
+template <typename T>
+GpuBufferPtr CreateVertexBuffer(const std::string& name, std::span<T> vertexData)
+{
+	return CreateVertexBuffer(name, vertexData.size(), sizeof(T), vertexData.data());
+}
+
 } // namespace Luna

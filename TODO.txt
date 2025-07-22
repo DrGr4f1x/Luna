@@ -42,9 +42,9 @@ TODO:
 -- Implement a way to get allocate individual DescriptorSets from a RootSignature, so that per-frame data (etc) can be set at a lower cadence than every draw.
 -- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
 -- Auto-register and auto-update window size dependent resources?
--- Add helper functions to create basic resource types like vertex buffers etc.
 -- Support 16-bit index buffers in Model.h/.cpp
 -- Add instanced draw function to Model class.  Test out in the Instancing app.
+-- Figure out device lost in vulkan multisampling app
 
 DONE:
 -- Handles and pools for:
@@ -78,6 +78,7 @@ DONE:
 -- Add a default depth buffer to the DeviceManager
 -- Fuck it, put a fence back in to Vulkan present synchro
 -- Actually delete all the Delete Me files
+-- Add helper functions to create basic resource types like vertex buffers etc.
 
 
 WON'T DO:

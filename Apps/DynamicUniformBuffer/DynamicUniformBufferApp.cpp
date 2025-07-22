@@ -183,28 +183,14 @@ void DynamicUniformBufferApp::InitPipeline()
 
 void DynamicUniformBufferApp::InitConstantBuffers()
 {
-	GpuBufferDesc desc{
-		.name			= "VS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_vsConstantBuffer = CreateGpuBuffer(desc);
+	m_vsConstantBuffer = CreateConstantBuffer("VS Constant Buffer", 1, sizeof(VSConstants));
 
 	m_dynamicAlignment = AlignUp(sizeof(Matrix4), Limits::ConstantBufferAlignment());
 
 	size_t allocSize = m_numCubes * m_dynamicAlignment;
 	m_vsModelConstants.modelMatrix = (Matrix4*)_aligned_malloc(allocSize, m_dynamicAlignment);
 
-	GpuBufferDesc modelDesc{
-		.name				= "VS Model Constant Buffer",
-		.resourceType		= ResourceType::ConstantBuffer,
-		.memoryAccess		= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount		= m_numCubes,
-		.elementSize		= m_dynamicAlignment
-	};
-	m_vsModelConstantBuffer = CreateGpuBuffer(modelDesc);
+	m_vsModelConstantBuffer = CreateConstantBuffer("VS Model Constant Buffer", m_numCubes, m_dynamicAlignment);
 }
 
 

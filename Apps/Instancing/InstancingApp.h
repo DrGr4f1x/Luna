@@ -35,7 +35,6 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
-	void InitConstantBuffer();
 	void InitInstanceBuffer();
 	void InitResourceSets();
 

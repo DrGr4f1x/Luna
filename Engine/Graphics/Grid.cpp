@@ -53,16 +53,8 @@ void Grid::CreateDeviceDependentResources()
 	InitMesh();
 	InitRootSignature();
 
-	// Setup constant buffer
-	GpuBufferDesc desc{
-		.name			= "Grid Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(m_vsConstants)
-	};
-
-	m_constantBuffer = GetDeviceManager()->GetDevice()->CreateGpuBuffer(desc);
+	// Create constant buffer
+	m_constantBuffer = CreateConstantBuffer("Grid Constant Buffer", 1, sizeof(m_vsConstants));
 	m_vsConstants.viewProjectionMatrix = Math::Matrix4(Math::kIdentity);
 
 	InitResourceSet();
@@ -147,15 +139,7 @@ void Grid::InitMesh()
 	InsertVertex(0.0f, 0.0f, 0.0f, color);
 	InsertVertex(0.0f, height, 0.0f, color);
 
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Grid Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= vertices.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertices.data()
-	};
-	m_vertexBuffer = GetDeviceManager()->GetDevice()->CreateGpuBuffer(vertexBufferDesc);
+	m_vertexBuffer = CreateVertexBuffer<Vertex>("Grid Vertex Buffer", vertices);;
 
 	vector<uint16_t> indices;
 	for (size_t i = 0; i < vertices.size(); ++i)
@@ -163,15 +147,7 @@ void Grid::InitMesh()
 		indices.push_back(uint16_t(i));
 	}
 
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Grid Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= indices.size(),
-		.elementSize	= sizeof(uint16_t),
-		.initialData	= indices.data()
-	};
-	m_indexBuffer = GetDeviceManager()->GetDevice()->CreateGpuBuffer(indexBufferDesc);
+	m_indexBuffer = CreateIndexBuffer("Grid Index Buffer", indices);
 }
 
 

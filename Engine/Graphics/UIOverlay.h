@@ -52,10 +52,9 @@ public:
 
 protected:
 	void InitImGui();
-	void InitRootSig();
-	void InitPSO();
+	void InitRootSignature();
+	void InitPipeline();
 	void InitFontTex();
-	void InitConstantBuffer();
 	void InitResourceSet();
 
 	void UpdateConstantBuffer();

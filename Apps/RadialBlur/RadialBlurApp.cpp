@@ -154,9 +154,13 @@ void RadialBlurApp::Render()
 
 void RadialBlurApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
 	InitRootSignatures();
-	InitConstantBuffers();
+	
+	// Create and initialize constant buffers
+	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
+	m_radialBlurConstantBuffer = CreateConstantBuffer("Radial Blur Constant Buffer", 1, sizeof(RadialBlurConstants));
+	UpdateRadialBlurConstantBuffer();
+
 	InitRenderTargets();
 	LoadAssets();
 	InitResourceSets();
@@ -284,25 +288,6 @@ void RadialBlurApp::InitRenderTargets()
 	};
 
 	m_offscreenDepthBuffer = CreateDepthBuffer(depthBufferDesc);
-}
-
-
-void RadialBlurApp::InitConstantBuffers()
-{
-	GpuBufferDesc constantBufferDesc{
-		.name			= "Scene Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(SceneConstants),
-	};
-	m_sceneConstantBuffer = CreateGpuBuffer(constantBufferDesc);
-
-	constantBufferDesc.SetName("Radial Blur Constant Buffer");
-	constantBufferDesc.SetElementSize(sizeof(RadialBlurConstants));
-	m_radialBlurConstantBuffer = CreateGpuBuffer(constantBufferDesc);
-
-	UpdateRadialBlurConstantBuffer();
 }
 
 

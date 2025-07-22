@@ -234,31 +234,17 @@ void Texture3dApp::CreateDeviceDependentResources()
 		{ { -1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },
 		{ {  1.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } }
 	};
-
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= vertexData.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+	m_vertexBuffer = CreateVertexBuffer<Vertex>("VertexBuffer", vertexData);
 
 	// Setup indices
-	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= indexData.size(),
-		.elementSize	= sizeof(uint32_t),
-		.initialData	= indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+	vector<uint16_t> indexData = { 0,1,2, 2,3,0 };
+	m_indexBuffer = CreateIndexBuffer("Index Buffer", indexData);
 
 	InitRootSignature();
-	InitConstantBuffer();
+
+	// Constant buffer
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
+
 	InitTexture();
 	InitResourceSet();
 }
@@ -286,14 +272,13 @@ void Texture3dApp::CreateWindowSizeDependentResources()
 void Texture3dApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
-		.name = "Root Signature",
-		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				Table({ ConstantBuffer }, ShaderStage::Vertex),
-				Table({ TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+		.name				= "Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
+			Table({ ConstantBuffer }, ShaderStage::Vertex),
+			Table({ TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
+		}
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -331,19 +316,6 @@ void Texture3dApp::InitPipeline()
 	};
 
 	m_graphicsPipeline = CreateGraphicsPipeline(skyBoxDesc);
-}
-
-
-void Texture3dApp::InitConstantBuffer()
-{
-	GpuBufferDesc cbufferDesc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(Constants)
-	};
-	m_constantBuffer = CreateGpuBuffer(cbufferDesc);
 }
 
 

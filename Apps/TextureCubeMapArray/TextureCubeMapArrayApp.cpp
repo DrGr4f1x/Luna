@@ -141,7 +141,12 @@ void TextureCubeMapArrayApp::Render()
 void TextureCubeMapArrayApp::CreateDeviceDependentResources()
 {
 	InitRootSignatures();
-	InitConstantBuffers();
+	
+	// Constant buffers
+	m_vsSkyboxConstantBuffer = CreateConstantBuffer("VS Skybox Constant Buffer", 1, sizeof(VSConstants));
+	m_vsModelConstantBuffer = CreateConstantBuffer("VS Model Constant Buffer", 1, sizeof(VSConstants));
+	m_psConstantBuffer = CreateConstantBuffer("PS Constant Buffer", 1, sizeof(PSConstants));
+
 	LoadAssets();
 	InitResourceSets();
 }
@@ -183,16 +188,12 @@ void TextureCubeMapArrayApp::InitRootSignatures()
 
 void TextureCubeMapArrayApp::InitPipelines()
 {
+	auto vertexLayout = VertexLayout<VertexComponent::PositionNormalTexcoord>();
+
 	VertexStreamDesc vertexStreamDesc{
 		.inputSlot				= 0,
-		.stride					= sizeof(Vertex),
+		.stride					= vertexLayout.GetSizeInBytes(),
 		.inputClassification	= InputClassification::PerVertexData
-	};
-
-	vector<VertexElementDesc> vertexElements{
-		{ "POSITION", 0, Format::RGB32_Float, 0, offsetof(Vertex, position), InputClassification::PerVertexData, 0 },
-		{ "NORMAL", 0, Format::RGB32_Float, 0, offsetof(Vertex, normal), InputClassification::PerVertexData, 0 },
-		{ "TEXCOORD", 0, Format::RG32_Float, 0, offsetof(Vertex, uv), InputClassification::PerVertexData, 0 }
 	};
 
 	GraphicsPipelineDesc skyBoxDesc
@@ -207,7 +208,7 @@ void TextureCubeMapArrayApp::InitPipelines()
 		.vertexShader		= {.shaderFile = "SkyboxVS" },
 		.pixelShader		= {.shaderFile = "SkyboxPS" },
 		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= vertexElements,
+		.vertexElements		= vertexLayout.GetElements(),
 		.rootSignature		= m_rootSignature
 	};
 
@@ -225,38 +226,11 @@ void TextureCubeMapArrayApp::InitPipelines()
 		.vertexShader		= {.shaderFile = "ReflectVS" },
 		.pixelShader		= {.shaderFile = "ReflectPS" },
 		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= vertexElements,
+		.vertexElements		= vertexLayout.GetElements(),
 		.rootSignature		= m_rootSignature
 	};
 
 	m_modelPipeline = CreateGraphicsPipeline(modelDesc);
-}
-
-
-void TextureCubeMapArrayApp::InitConstantBuffers()
-{
-	// Vertex shader cbuffer for the skybox
-	GpuBufferDesc vsCbufferDesc{
-		.name			= "VS Skybox Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_vsSkyboxConstantBuffer = CreateGpuBuffer(vsCbufferDesc);
-
-	// Pixel shader cbuffer, shared
-	GpuBufferDesc psCbufferDesc{
-		.name			= "PS Skybox Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(PSConstants)
-	};
-	m_psConstantBuffer = CreateGpuBuffer(psCbufferDesc);
-
-	// Vertex shader cbuffer for the models
-	m_vsModelConstantBuffer = CreateGpuBuffer(vsCbufferDesc);
 }
 
 

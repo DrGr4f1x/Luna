@@ -211,30 +211,14 @@ void DisplacementApp::InitConstantBuffers()
 	// Hull shader constant buffer
 	m_hsConstants.tessLevel = 64.0f;
 
-	GpuBufferDesc hsConstantBufferDesc{
-		.name			= "HS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(HSConstants),
-		.initialData	= &m_hsConstants
-	};
-	m_hsConstantBuffer = CreateGpuBuffer(hsConstantBufferDesc);
+	m_hsConstantBuffer = CreateConstantBuffer("HS Constant Buffer", 1, sizeof(HSConstants), &m_hsConstants);
 
 	// Domain shader constant buffer
 	m_dsConstants.lightPos = Math::Vector4(0.0f, 5.0f, 0.0f, 0.0f);
 	m_dsConstants.tessAlpha = 1.0f;
 	m_dsConstants.tessStrength = 0.1f;
 
-	GpuBufferDesc dsConstantBufferDesc{
-		.name			= "DS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(DSConstants),
-		.initialData	= &m_dsConstants
-	};
-	m_dsConstantBuffer = CreateGpuBuffer(dsConstantBufferDesc);
+	m_dsConstantBuffer = CreateConstantBuffer("DS Constant Buffer", 1, sizeof(DSConstants), &m_dsConstants);
 }
 
 

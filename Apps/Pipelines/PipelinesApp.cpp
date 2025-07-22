@@ -136,7 +136,9 @@ void PipelinesApp::CreateDeviceDependentResources()
 	m_camera.Update();
 
 	InitRootSignature();
-	InitConstantBuffer();
+
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(VSConstants));
+
 	LoadAssets();
 	InitResourceSet();
 
@@ -223,19 +225,6 @@ void PipelinesApp::InitPipelines()
 	wireframePipelineDesc.SetPixelShader("WireframePS");
 
 	m_wireframePipeline = CreateGraphicsPipeline(wireframePipelineDesc);
-}
-
-
-void PipelinesApp::InitConstantBuffer()
-{
-	GpuBufferDesc desc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_constantBuffer = CreateGpuBuffer(desc);
 }
 
 

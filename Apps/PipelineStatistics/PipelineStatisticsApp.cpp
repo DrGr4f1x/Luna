@@ -198,7 +198,9 @@ void PipelineStatisticsApp::CreateDeviceDependentResources()
 	m_controller.SetSpeedScale(0.25f);
 
 	InitRootSignature();
-	InitConstantBuffer();
+	
+	m_vsConstantBuffer = CreateConstantBuffer("VS Constant Buffer", 1, sizeof(VSConstants));
+
 	InitQueryHeap();
 	LoadAssets();
 	InitResourceSet();
@@ -299,19 +301,6 @@ void PipelineStatisticsApp::InitPipeline()
 		.rootSignature		= m_rootSignature
 	};
 	m_pipeline = CreateGraphicsPipeline(pipelineDesc);
-}
-
-
-void PipelineStatisticsApp::InitConstantBuffer()
-{ 
-	GpuBufferDesc constantBufferDesc{
-		.name			= "VS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_vsConstantBuffer = CreateGpuBuffer(constantBufferDesc);
 }
 
 

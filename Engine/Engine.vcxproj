@@ -118,6 +118,7 @@
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\Shader12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
+    <ClCompile Include="Graphics\GpuBuffer.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
     <ClCompile Include="Graphics\Grid.cpp" />
     <ClCompile Include="Graphics\InputLayout.cpp" />

@@ -35,7 +35,6 @@ protected:
 
 	void InitRootSignature();
 	void InitPipeline();
-	void InitConstantBuffer();
 	void InitQueryHeap();
 	void InitResourceSet();
 

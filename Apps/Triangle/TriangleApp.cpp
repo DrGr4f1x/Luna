@@ -23,8 +23,7 @@ using namespace std;
 TriangleApp::TriangleApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
 	, m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) }
-{
-}
+{}
 
 
 int TriangleApp::ProcessCommandLine(int argc, char* argv[])

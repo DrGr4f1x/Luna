@@ -121,9 +121,11 @@ void StencilBufferApp::CreateDeviceDependentResources()
 	m_camera.SetPosition(cameraPosition);
 	m_camera.Update();
 
-	// Create any resources that depend on the device, but not the window size
 	InitRootSignature();
-	InitConstantBuffer();
+	
+	// Create and initialize constant buffer
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
+	UpdateConstantBuffer();
 
 	LoadAssets();
 
@@ -240,21 +242,6 @@ void StencilBufferApp::InitPipelines()
 
 		m_outlinePipeline = CreateGraphicsPipeline(outlinePipelineDesc);
 	}
-}
-
-
-void StencilBufferApp::InitConstantBuffer()
-{
-	GpuBufferDesc desc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(Constants)
-	};
-	m_constantBuffer = CreateGpuBuffer(desc);
-
-	UpdateConstantBuffer();
 }
 
 

@@ -33,7 +33,6 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
-	void InitConstantBuffer();
 	void InitResourceSets();
 
 	void LoadAssets();

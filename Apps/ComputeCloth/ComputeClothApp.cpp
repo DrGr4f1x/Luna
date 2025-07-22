@@ -310,16 +310,7 @@ void ComputeClothApp::InitConstantBuffers()
 {
 	// VS constants
 	m_vsConstants.lightPos = Vector4(2.0f, 4.0f, 2.0f, 1.0f);
-
-	GpuBufferDesc vsConstantBufferDesc{
-		.name			= "VS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants),
-		.initialData	= &m_vsConstants
-	};
-	m_vsConstantBuffer = CreateGpuBuffer(vsConstantBufferDesc);
+	m_vsConstantBuffer = CreateConstantBuffer("VS Constant Buffer", 1, sizeof(VSConstants), &m_vsConstants);
 
 	// CS constants
 	const float dx = m_size[0] / (m_gridSize[0] - 1);
@@ -339,21 +330,11 @@ void ComputeClothApp::InitConstantBuffers()
 	m_csConstants.particleCount[1] = m_gridSize[1];
 	m_csConstants.calculateNormals = 0;
 
-	GpuBufferDesc csConstantBufferDesc{
-		.name			= "CS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(CSConstants),
-		.initialData	= &m_csConstants
-	};
-	m_csConstantBuffer = CreateGpuBuffer(csConstantBufferDesc);
+	m_csConstantBuffer = CreateConstantBuffer("CS Constant Buffer", 1, sizeof(CSConstants), &m_csConstants);
 
 	// CS normal constant buffer
 	m_csConstants.calculateNormals = 1;
-	GpuBufferDesc csNormalConstantBufferDesc = csConstantBufferDesc;
-	csNormalConstantBufferDesc.SetName("CS Normal Constant Buffer");
-	m_csNormalConstantBuffer = CreateGpuBuffer(csNormalConstantBufferDesc);
+	m_csNormalConstantBuffer = CreateConstantBuffer("CS Normal Constant Buffer", 1, sizeof(CSConstants), &m_csConstants);
 }
 
 

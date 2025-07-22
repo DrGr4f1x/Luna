@@ -39,10 +39,13 @@ void UIOverlay::Startup(GLFWwindow* window, GraphicsApi api, uint32_t width, uin
 	m_depthFormat = depthFormat;
 
 	InitImGui();
-	InitRootSig();
-	InitPSO();
+	InitRootSignature();
+	InitPipeline();
 	InitFontTex();
-	InitConstantBuffer();
+	
+	// Create constant buffer
+	m_vsConstantBuffer = CreateConstantBuffer("UIOverlay Constant Buffer", 1, sizeof(VSConstants));
+
 	InitResourceSet();
 }
 
@@ -265,17 +268,16 @@ void UIOverlay::InitImGui()
 }
 
 
-void UIOverlay::InitRootSig()
+void UIOverlay::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
-		.name = "Root Sig",
-		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootCBV(0, ShaderStage::Vertex),
-				Table({ TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+		.name				= "UIOverlay Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
+			RootCBV(0, ShaderStage::Vertex),
+			Table({ TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
+		}
 	};
 
 	auto device = GetDeviceManager()->GetDevice();
@@ -284,7 +286,7 @@ void UIOverlay::InitRootSig()
 }
 
 
-void UIOverlay::InitPSO()
+void UIOverlay::InitPipeline()
 {
 	VertexStreamDesc vertexStreamDesc{
 		.inputSlot				= 0,
@@ -364,21 +366,6 @@ void UIOverlay::InitFontTex()
 
 	SamplerDesc samplerDesc = CommonStates::SamplerLinearBorder();
 	m_fontSampler = device->CreateSampler(samplerDesc);
-}
-
-
-void UIOverlay::InitConstantBuffer()
-{
-	GpuBufferDesc constantBufferDesc{
-		.name			= "UIOverlay Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-
-	auto device = GetDeviceManager()->GetDevice();
-	m_vsConstantBuffer = device->CreateGpuBuffer(constantBufferDesc);
 }
 
 

@@ -125,7 +125,10 @@ void GeometryShaderApp::CreateDeviceDependentResources()
 	m_camera.Update();
 
 	InitRootSignatures();
-	InitConstantBuffer();
+	
+	// Create constant buffer
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
+
 	LoadAssets();
 	InitResourceSets();
 
@@ -222,20 +225,6 @@ void GeometryShaderApp::InitPipelines()
 	};
 
 	m_geomPipeline = CreateGraphicsPipeline(geomPipelineDesc);
-}
-
-
-void GeometryShaderApp::InitConstantBuffer()
-{
-	// Constant buffer
-	GpuBufferDesc desc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(Constants)
-	};
-	m_constantBuffer = CreateGpuBuffer(desc);
 }
 
 

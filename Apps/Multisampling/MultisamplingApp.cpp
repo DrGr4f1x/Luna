@@ -142,7 +142,9 @@ void MultisamplingApp::CreateDeviceDependentResources()
 	m_controller.SetOrbitTarget(Vector3(0.0f, 3.5f, 0.0f), Length(m_camera.GetPosition()), 0.25f);
 
 	InitRootSignature();
-	InitConstantBuffer();
+	
+	// Create constant buffer
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 
 	LoadAssets();
 
@@ -244,19 +246,6 @@ void MultisamplingApp::InitPipelines()
 	msaaSampleRatePipelineDesc.SetName("MSAA Sample Rate Graphics PSO");
 	msaaSampleRatePipelineDesc.sampleRateShading = true;
 	m_msaaSampleRatePipeline = CreateGraphicsPipeline(msaaSampleRatePipelineDesc);
-}
-
-
-void MultisamplingApp::InitConstantBuffer()
-{
-	GpuBufferDesc desc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(Constants)
-	};
-	m_constantBuffer = CreateGpuBuffer(desc);
 }
 
 

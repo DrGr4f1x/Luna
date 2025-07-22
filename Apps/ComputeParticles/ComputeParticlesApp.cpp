@@ -132,7 +132,11 @@ void ComputeParticlesApp::Render()
 void ComputeParticlesApp::CreateDeviceDependentResources()
 {
 	InitRootSignatures();
-	InitConstantBuffers();
+	
+	// Create constant buffers
+	m_vsConstantBuffer = CreateConstantBuffer("VS Constant Buffer", 1, sizeof(VSConstants));
+	m_csConstantBuffer = CreateConstantBuffer("CS Constant Buffer", 1, sizeof(CSConstants));
+
 	InitParticles();
 
 	LoadAssets();
@@ -212,30 +216,6 @@ void ComputeParticlesApp::InitPipelines()
 		.rootSignature	= m_computeRootSignature
 	};
 	m_computePipeline = CreateComputePipeline(computePipelineDesc);
-}
-
-
-void ComputeParticlesApp::InitConstantBuffers()
-{
-	// VS constant buffer
-	GpuBufferDesc vsConstantBufferDesc{
-		.name			= "VS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_vsConstantBuffer = CreateGpuBuffer(vsConstantBufferDesc);
-
-	// CS constant buffer
-	GpuBufferDesc csConstantBufferDesc{
-		.name			= "CS Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(CSConstants)
-	};
-	m_csConstantBuffer = CreateGpuBuffer(csConstantBufferDesc);
 }
 
 

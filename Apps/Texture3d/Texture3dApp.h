@@ -34,7 +34,6 @@ protected:
 
 	void InitRootSignature();
 	void InitPipeline();
-	void InitConstantBuffer();
 	void InitTexture();
 	void InitResourceSet();
 

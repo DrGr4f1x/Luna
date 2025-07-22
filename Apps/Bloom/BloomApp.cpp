@@ -389,49 +389,22 @@ void BloomApp::InitPipelines()
 void BloomApp::InitConstantBuffers()
 {
 	// Scene constant buffer
-	GpuBufferDesc sceneConstantBufferDesc{
-		.name			= "Scene Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(SceneConstants)
-	};
-	m_sceneConstantBuffer = CreateGpuBuffer(sceneConstantBufferDesc);
+	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
 
 	// Skybox constant buffer
-	GpuBufferDesc skyboxConstantBufferDesc = sceneConstantBufferDesc;
-	skyboxConstantBufferDesc.SetName("Skybox Constant Buffer");
-	m_skyboxConstantBuffer = CreateGpuBuffer(skyboxConstantBufferDesc);
+	m_skyboxConstantBuffer = CreateConstantBuffer("sKybox Constant Buffer", 1, sizeof(SceneConstants));
 
 	// Vertical blur constant buffer
 	m_blurVertConstants.blurScale = m_blurScale;
 	m_blurVertConstants.blurStrength = 1.5f;
 	m_blurVertConstants.blurDirection = 0;
-
-	GpuBufferDesc verticalBlurConstantBufferDesc{
-		.name			= "Vertical Blur Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(BlurConstants),
-		.initialData	= &m_blurVertConstants
-	};
-	m_blurVertConstantBuffer = CreateGpuBuffer(verticalBlurConstantBufferDesc);
+	m_blurVertConstantBuffer = CreateConstantBuffer("Vertical Blur Constant Buffer", 1, sizeof(BlurConstants), &m_blurVertConstants);
 
 	// Horizontal blur constant buffer
 	m_blurHorizConstants.blurScale = m_blurScale;
 	m_blurHorizConstants.blurStrength = 1.5f;
 	m_blurHorizConstants.blurDirection = 1;
-
-	GpuBufferDesc horizontalBlurConstantBufferDesc{
-		.name			= "Horizontal Blur Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(BlurConstants),
-		.initialData	= &m_blurHorizConstants
-	};
-	m_blurHorizConstantBuffer = CreateGpuBuffer(horizontalBlurConstantBufferDesc);
+	m_blurHorizConstantBuffer = CreateConstantBuffer("Horizontal Blur Constant Buffer", 1, sizeof(BlurConstants), &m_blurHorizConstants);
 }
 
 

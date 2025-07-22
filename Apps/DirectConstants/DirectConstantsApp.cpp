@@ -118,7 +118,9 @@ void DirectConstantsApp::CreateDeviceDependentResources()
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 4.0f);
 
 	InitRootSignature();
-	InitConstantBuffer();
+	
+	// Create constant buffer
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 
 	LoadAssets();
 
@@ -177,20 +179,6 @@ void DirectConstantsApp::InitPipeline()
 	};
 
 	m_pipeline = CreateGraphicsPipeline(pipelineDesc);
-}
-
-
-void DirectConstantsApp::InitConstantBuffer()
-{
-	// Constant buffer
-	GpuBufferDesc desc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(Constants)
-	};
-	m_constantBuffer = CreateGpuBuffer(desc);
 }
 
 

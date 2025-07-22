@@ -207,7 +207,11 @@ void ComputeShaderApp::CreateDeviceDependentResources()
 	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
 
 	InitRootSignatures();
-	InitConstantBuffer();
+	
+	// Create and initialize constant buffer
+	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
+	m_constants.modelMatrix = Matrix4(kIdentity);
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants), &m_constants);
 
 	LoadAssets();
 
@@ -325,24 +329,6 @@ void ComputeShaderApp::InitPipelines()
 	};
 
 	m_sharpenPipeline = CreateComputePipeline(sharpenDesc);
-}
-
-
-void ComputeShaderApp::InitConstantBuffer()
-{
-	m_constants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
-	m_constants.modelMatrix = Matrix4(kIdentity);
-
-	// Setup constant buffer
-	GpuBufferDesc constantBufferDesc{
-		.name			= "Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(Constants),
-		.initialData	= &m_constants
-	};
-	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
 }
 
 

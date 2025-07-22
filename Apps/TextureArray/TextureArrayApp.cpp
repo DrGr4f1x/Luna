@@ -54,27 +54,11 @@ void TextureArrayApp::Startup()
 		{ {  2.5f, -2.5f,  0.0f }, { 1.0f, 0.0f } }
 	};
 
-	GpuBufferDesc vertexBufferDesc{
-		.name			= "Vertex Buffer",
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= vertexData.size(),
-		.elementSize	= sizeof(Vertex),
-		.initialData	= vertexData.data()
-	};
-	m_vertexBuffer = CreateGpuBuffer(vertexBufferDesc);
+	m_vertexBuffer = CreateVertexBuffer("Vertex Buffer", vertexData.size(), sizeof(Vertex), vertexData.data());
 
 	// Setup indices
-	vector<uint32_t> indexData = { 0,1,2, 2,3,0 };
-	GpuBufferDesc indexBufferDesc{
-		.name			= "Index Buffer",
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= indexData.size(),
-		.elementSize	= sizeof(uint32_t),
-		.initialData	= indexData.data()
-	};
-	m_indexBuffer = CreateGpuBuffer(indexBufferDesc);
+	vector<uint16_t> indexData = { 0,1,2, 2,3,0 };
+	m_indexBuffer = CreateIndexBuffer("Index Buffer", indexData);
 
 	// Setup camera
 	m_camera.SetPerspectiveMatrix(
@@ -174,14 +158,13 @@ void TextureArrayApp::CreateWindowSizeDependentResources()
 void TextureArrayApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
-		.name = "Root Signature",
-		.flags = RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootCBV(0, ShaderStage::Vertex),
-				Table({ TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+		.name				= "Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
+			RootCBV(0, ShaderStage::Vertex),
+			Table({ TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
+		}
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -232,8 +215,7 @@ void TextureArrayApp::InitConstantBuffer()
 		.resourceType	= ResourceType::ConstantBuffer,
 		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
 		.elementCount	= 1,
-		.elementSize	= sizeof(Matrix4) + (m_layerCount * sizeof(InstanceData)),
-		.initialData	= nullptr
+		.elementSize	= sizeof(Matrix4) + (m_layerCount * sizeof(InstanceData))
 	};
 	m_constantBuffer = CreateGpuBuffer(constantBufferDesc);
 

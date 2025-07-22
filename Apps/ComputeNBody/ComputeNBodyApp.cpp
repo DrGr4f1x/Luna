@@ -129,7 +129,11 @@ void ComputeNBodyApp::CreateDeviceDependentResources()
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), Length(m_camera.GetPosition()), 2.0f);
 
 	InitRootSignatures();
-	InitConstantBuffers();
+	
+	// Create constant buffers
+	m_graphicsConstantBuffer = CreateConstantBuffer("Graphics Constant Buffer", 1, sizeof(GraphicsConstants));
+	m_computeConstantBuffer = CreateConstantBuffer("Compute Constant Buffer", 1, sizeof(ComputeConstants));
+
 	InitParticles();
 
 	LoadAssets();
@@ -223,30 +227,6 @@ void ComputeNBodyApp::InitPipelines()
 		.rootSignature	= m_computeRootSignature
 	};
 	m_computeIntegratePipeline = CreateComputePipeline(computeIntegratePipelineDesc);
-}
-
-
-void ComputeNBodyApp::InitConstantBuffers()
-{
-	// Graphics constant buffer
-	GpuBufferDesc graphicsConstantBufferDesc{
-		.name			= "Graphics Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(GraphicsConstants)
-	};
-	m_graphicsConstantBuffer = CreateGpuBuffer(graphicsConstantBufferDesc);
-
-	// Compute constant buffer
-	GpuBufferDesc computeConstantBufferDesc{
-		.name			= "Compute Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(ComputeConstants)
-	};
-	m_computeConstantBuffer = CreateGpuBuffer(computeConstantBufferDesc);
 }
 
 

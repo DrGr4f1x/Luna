@@ -140,7 +140,12 @@ void TextureCubeMapApp::CreateDeviceDependentResources()
 {
 	// Create any resources that depend on the device, but not the window size
 	InitRootSignatures();
-	InitConstantBuffers();
+	
+	// Constant buffers
+	m_vsSkyboxConstantBuffer = CreateConstantBuffer("VS Skybox Constant Buffer", 1, sizeof(VSConstants));
+	m_vsModelConstantBuffer = CreateConstantBuffer("VS Model Constant Buffer", 1, sizeof(VSConstants));
+	m_psModelConstantBuffer = CreateConstantBuffer("PS Model Constant Buffer", 1, sizeof(PSConstants));
+
 	LoadAssets();
 	InitResourceSets();
 }
@@ -244,40 +249,6 @@ void TextureCubeMapApp::InitPipelines()
 	};
 
 	m_modelPipeline = CreateGraphicsPipeline(modelDesc);
-}
-
-
-void TextureCubeMapApp::InitConstantBuffers()
-{
-	// Vertex shader cbuffer for the skybox
-	GpuBufferDesc vsSkyboxDesc{
-		.name			= "VS Skybox Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_vsSkyboxConstantBuffer = CreateGpuBuffer(vsSkyboxDesc);
-	
-	// Vertex shader cbuffer for the models
-	GpuBufferDesc vsModelDesc{
-		.name			= "VS Model Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(VSConstants)
-	};
-	m_vsModelConstantBuffer = CreateGpuBuffer(vsModelDesc);
-	
-	// Pixel shader cbuffer for the models
-	GpuBufferDesc psModelDesc{
-		.name			= "PS Model Constant Buffer",
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= 1,
-		.elementSize	= sizeof(PSConstants)
-	};
-	m_psModelConstantBuffer = CreateGpuBuffer(psModelDesc);
 }
 
 

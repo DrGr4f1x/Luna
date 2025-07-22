@@ -114,6 +114,12 @@ wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc)
 }
 
 
+IDevice* GetDevice()
+{
+	return GetDeviceManager()->GetDevice();
+}
+
+
 IDeviceManager* GetDeviceManager()
 {
 	assert(g_deviceManager != nullptr);

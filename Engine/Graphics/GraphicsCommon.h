@@ -17,6 +17,7 @@ namespace Luna
 {
 
 // Forward declarations
+class IDevice;
 class IDeviceManager;
 struct DeviceManagerDesc;
 
@@ -103,6 +104,7 @@ struct DynAlloc
 
 wil::com_ptr<IDeviceManager> CreateDeviceManager(const DeviceManagerDesc& desc);
 
+IDevice* GetDevice();
 IDeviceManager* GetDeviceManager();
 uint64_t GetFrameNumber();
 
