@@ -112,6 +112,8 @@ VkAccessFlagBits2 GetAccessMask(ResourceState resourceState);
 
 VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState);
 
+VkBorderColor BorderColorToVulkan(StaticBorderColor borderColor);
+
 bool IsDescriptorImageInfoType(VkDescriptorType descriptorType);
 bool IsDescriptorBufferInfoType(VkDescriptorType descriptorType);
 bool IsDescriptorBufferViewType(VkDescriptorType descriptorType);

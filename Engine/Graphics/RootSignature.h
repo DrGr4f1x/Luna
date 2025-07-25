@@ -12,7 +12,7 @@
 
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\DescriptorSet.h"
-
+#include "Graphics\Sampler.h"
 
 namespace Luna
 {
@@ -209,15 +209,52 @@ public:
 inline RootTableBuilder Table;
 
 
+struct StaticSamplerDesc
+{
+	uint32_t shaderRegister{ 0 };
+	ShaderStage shaderStage{ ShaderStage::All };
+	SamplerDesc samplerDesc{};
+};
+
+using StaticSamplers = std::vector<StaticSamplerDesc>;
+
+
+class StaticSamplerBuilder
+{
+public:
+	StaticSamplerDesc operator()(const SamplerDesc& samplerDesc, ShaderStage shaderStage = ShaderStage::All)
+	{
+		return StaticSamplerDesc{
+			.shaderRegister		= APPEND_REGISTER,
+			.shaderStage		= shaderStage,
+			.samplerDesc		= samplerDesc
+		};
+	}
+
+	StaticSamplerDesc operator()(uint32_t shaderRegister, const SamplerDesc& samplerDesc, ShaderStage shaderStage = ShaderStage::All)
+	{
+		return StaticSamplerDesc{
+			.shaderRegister		= shaderRegister,
+			.shaderStage		= shaderStage,
+			.samplerDesc		= samplerDesc
+		};
+	}
+};
+
+inline StaticSamplerBuilder StaticSampler;
+
+
 struct RootSignatureDesc
 {
 	std::string name{};
 	RootSignatureFlags flags{ RootSignatureFlags::None };
 	RootParameters rootParameters;
+	StaticSamplers staticSamplers;
 
 	RootSignatureDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr RootSignatureDesc& SetFlags(RootSignatureFlags value) noexcept { flags = value; return *this; }
 	RootSignatureDesc& SetRootParameters(const RootParameters& value) { rootParameters = value; return *this; }
+	RootSignatureDesc& SetStaticSamplers(const StaticSamplers& value) { staticSamplers = value; return *this; }
 	RootSignatureDesc& AppendRootParameters(const RootParameters& value)
 	{
 		rootParameters.insert(rootParameters.end(), value.begin(), value.end());

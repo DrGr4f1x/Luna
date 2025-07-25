@@ -19,6 +19,7 @@
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
+#include "DescriptorAllocatorVK.h"
 #include "DescriptorSetVK.h"
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
@@ -393,7 +394,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> descriptorSetLayouts;
 	std::vector<VkPushConstantRange> vkPushConstantRanges;
 	std::unordered_map<uint32_t, std::vector<DescriptorBindingDesc>> layoutBindingMap;
-	std::unordered_map<uint32_t, uint32_t> rootParameterIndexToDescriptorSetMap;
 	uint32_t pushConstantOffset{ 0 };
 
 	size_t hashCode = Utility::g_hashStart;
@@ -494,12 +494,78 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			descriptorSetLayouts.push_back(descriptorSetLayout);
 
 			layoutBindingMap[rootParamIndex] = layoutBindingDescs;
-			rootParameterIndexToDescriptorSetMap[rootParamIndex] = (uint32_t)descriptorSetLayouts.size() - 1;
 		}
 
 		++rootParamIndex;
 	}
 
+	// Setup static samplers
+	vector<SamplerPtr> samplers;
+	VkDescriptorSet staticSamplerDescriptorSet = VK_NULL_HANDLE;
+	uint32_t staticSamplerDescriptorSetIndex = 0;
+	if (!rootSignatureDesc.staticSamplers.empty())
+	{
+		vector<VkSampler> vkSamplers;
+		vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
+
+		// First, loop over the StaticSamplerDescs to create the Samplers and store off the 
+		// internal VkSamplers, which we need to populate the VkDescriptorSetLayoutBindings
+		// in the second pass
+		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
+		{
+			auto sampler = CreateSampler(staticSamplerDesc.samplerDesc);
+			samplers.push_back(sampler);
+
+			Sampler* samplerVK = (Sampler*)sampler.get();
+
+			vkSamplers.push_back(samplerVK->GetSampler());
+		}
+
+		// Now, loop over the StaticSamplerDescs again to create the VkDescriptorSetLayoutBindings
+		uint32_t currentBinding = 0;
+		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
+		{
+			VkDescriptorSetLayoutBinding vkBinding{
+				.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+				.descriptorCount = 1,
+				.stageFlags = VK_SHADER_STAGE_ALL,
+				.pImmutableSamplers = &vkSamplers[currentBinding]
+			};
+
+			if (staticSamplerDesc.shaderRegister == APPEND_REGISTER)
+			{
+				vkBinding.binding = currentBinding++;
+			}
+			else
+			{
+				vkBinding.binding = staticSamplerDesc.shaderRegister;
+				currentBinding = vkBinding.binding + 1;
+			}
+
+			vkLayoutBindings.push_back(vkBinding);
+		}
+
+		// Create the descriptor set layout for the static samplers
+		VkDescriptorSetLayoutCreateInfo createInfo{
+			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
+			.pBindings		= vkLayoutBindings.data()
+		};
+
+		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
+		vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
+		vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
+
+		staticSamplerDescriptorSetIndex = (uint32_t)descriptorSetLayouts.size();
+
+		wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
+		descriptorSetLayouts.push_back(descriptorSetLayout);
+
+		staticSamplerDescriptorSet = AllocateDescriptorSet(vkDescriptorSetLayout);
+	}
+
+	
+	// Finally, create the VkPipelineLayout
 	CVkPipelineLayout** pipelineLayoutRef = nullptr;
 	bool firstCompile = false;
 	{
@@ -555,8 +621,10 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	rootSignature->m_desc = rootSignatureDesc;
 	rootSignature->m_pipelineLayout = pPipelineLayout;
 	rootSignature->m_layoutBindingMap = layoutBindingMap;
-	rootSignature->m_rootParameterIndexToDescriptorSetMap = rootParameterIndexToDescriptorSetMap;
 	rootSignature->m_descriptorSetLayouts = descriptorSetLayouts;
+	rootSignature->m_staticSamplers = samplers;
+	rootSignature->m_staticSamplerDescriptorSetIndex = staticSamplerDescriptorSetIndex;
+	rootSignature->m_staticSamplerDescriptorSet = staticSamplerDescriptorSet;
 
 	return rootSignature;
 }
@@ -967,7 +1035,7 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 		.compareOp					= ComparisonFuncToVulkan(samplerDesc.comparisonFunc),
 		.minLod						= samplerDesc.minLOD,
 		.maxLod						= samplerDesc.maxLOD,
-		.borderColor				= VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK, // TODO
+		.borderColor				= BorderColorToVulkan(samplerDesc.staticBorderColor),
 		.unnormalizedCoordinates	= VK_FALSE
 	};
 

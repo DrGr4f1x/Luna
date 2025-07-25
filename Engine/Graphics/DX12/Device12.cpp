@@ -687,12 +687,49 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		}
 	}
 
+	// Build static samplers
+	vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers;
+	uint32_t currentSamplerRegister = 0;
+	for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
+	{
+		const auto& samplerDesc = staticSamplerDesc.samplerDesc;
+
+		D3D12_STATIC_SAMPLER_DESC d3d12StaticSamplerDesc{
+			.Filter				= TextureFilterToDX12(samplerDesc.filter),
+			.AddressU			= TextureAddressToDX12(samplerDesc.addressU),
+			.AddressV			= TextureAddressToDX12(samplerDesc.addressV),
+			.AddressW			= TextureAddressToDX12(samplerDesc.addressW),
+			.MipLODBias			= samplerDesc.mipLODBias,
+			.MaxAnisotropy		= samplerDesc.maxAnisotropy,
+			.ComparisonFunc		= ComparisonFuncToDX12(samplerDesc.comparisonFunc),
+			.BorderColor		= BorderColorToDX12(samplerDesc.staticBorderColor),
+			.MinLOD				= samplerDesc.minLOD,
+			.MaxLOD				= samplerDesc.maxLOD,
+			.RegisterSpace		= 0,
+			.ShaderVisibility	= ShaderStageToDX12(staticSamplerDesc.shaderStage)
+		};
+
+		// Set shader register
+		if (staticSamplerDesc.shaderRegister == APPEND_REGISTER)
+		{
+			d3d12StaticSamplerDesc.ShaderRegister = currentSamplerRegister;
+			currentSamplerRegister += 1;
+		}
+		else
+		{
+			d3d12StaticSamplerDesc.ShaderRegister = staticSamplerDesc.shaderRegister;
+			currentSamplerRegister = d3d12StaticSamplerDesc.ShaderRegister + 1;
+		}
+
+		staticSamplers.push_back(d3d12StaticSamplerDesc);
+	}
+
 	D3D12_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
-		.NumParameters = (uint32_t)d3d12RootParameters.size(),
-		.pParameters = d3d12RootParameters.data(),
-		.NumStaticSamplers = 0,
-		.pStaticSamplers = nullptr,
-		.Flags = RootSignatureFlagsToDX12(rootSignatureDesc.flags)
+		.NumParameters		= (uint32_t)d3d12RootParameters.size(),
+		.pParameters		= d3d12RootParameters.data(),
+		.NumStaticSamplers	= (uint32_t)staticSamplers.size(),
+		.pStaticSamplers	= staticSamplers.data(),
+		.Flags				= RootSignatureFlagsToDX12(rootSignatureDesc.flags)
 	};
 
 	uint32_t descriptorTableBitmap{ 0 };

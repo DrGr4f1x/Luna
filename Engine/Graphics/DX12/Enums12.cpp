@@ -740,4 +740,21 @@ D3D12_HEAP_TYPE GetHeapType(MemoryAccess memoryAccess)
 	return D3D12_HEAP_TYPE_DEFAULT;
 }
 
+
+D3D12_STATIC_BORDER_COLOR BorderColorToDX12(StaticBorderColor borderColor)
+{
+	if (borderColor == StaticBorderColor::TransparentBlack)
+	{
+		return D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	}
+	else if (borderColor == StaticBorderColor::OpaqueBlack)
+	{
+		return D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	}
+	else
+	{
+		return D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+	}
+}
+
 } // namespace Luna::DX12

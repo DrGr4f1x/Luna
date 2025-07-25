@@ -70,4 +70,6 @@ D3D12_RESOURCE_DIMENSION GetResourceDimension(ResourceType resourceType);
 
 D3D12_HEAP_TYPE GetHeapType(MemoryAccess memoryAccess);
 
+D3D12_STATIC_BORDER_COLOR BorderColorToDX12(StaticBorderColor borderColor);
+
 } // namespace Luna::DX12

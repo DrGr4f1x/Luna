@@ -524,10 +524,10 @@ const SamplerDesc& CommonStates::SamplerShadow()
 const SamplerDesc& CommonStates::SamplerLinearClamp()
 {
 	static SamplerDesc desc{ 
-		.filter = TextureFilter::MinMagMipLinear, 
-		.addressU = TextureAddress::Clamp,
-		.addressV = TextureAddress::Clamp,
-		.addressW = TextureAddress::Clamp
+		.filter		= TextureFilter::MinMagMipLinear, 
+		.addressU	= TextureAddress::Clamp,
+		.addressV	= TextureAddress::Clamp,
+		.addressW	= TextureAddress::Clamp
 	};
 
 	return desc;
@@ -544,38 +544,38 @@ const SamplerDesc& CommonStates::SamplerVolumeWrap()
 const SamplerDesc& CommonStates::SamplerPointClamp()
 {
 	static SamplerDesc desc{ 
-		.filter = TextureFilter::MinMagMipPoint, 
-		.addressU = TextureAddress::Clamp,
-		.addressV = TextureAddress::Clamp,
-		.addressW = TextureAddress::Clamp
+		.filter		= TextureFilter::MinMagMipPoint, 
+		.addressU	= TextureAddress::Clamp,
+		.addressV	= TextureAddress::Clamp,
+		.addressW	= TextureAddress::Clamp
 	};
 
 	return desc;
 }
 
 
-const SamplerDesc& CommonStates::SamplerPointBorder()
+const SamplerDesc& CommonStates::SamplerPointBorder(StaticBorderColor borderColor)
 {
 	static SamplerDesc desc{ 
-		.filter = TextureFilter::MinMagMipPoint, 
-		.addressU = TextureAddress::Clamp,
-		.addressV = TextureAddress::Clamp,
-		.addressW = TextureAddress::Clamp,
-		.borderColor = DirectX::Colors::Transparent
+		.filter				= TextureFilter::MinMagMipPoint, 
+		.addressU			= TextureAddress::Clamp,
+		.addressV			= TextureAddress::Clamp,
+		.addressW			= TextureAddress::Clamp,
+		.staticBorderColor	= borderColor
 	};
 
 	return desc;
 }
 
 
-const SamplerDesc& CommonStates::SamplerLinearBorder()
+const SamplerDesc& CommonStates::SamplerLinearBorder(StaticBorderColor borderColor)
 {
 	static SamplerDesc desc{ 
-		.filter = TextureFilter::MinMagMipLinear, 
-		.addressU = TextureAddress::Clamp,
-		.addressV = TextureAddress::Clamp,
-		.addressW = TextureAddress::Clamp,
-		.borderColor = DirectX::Colors::Transparent
+		.filter				= TextureFilter::MinMagMipLinear, 
+		.addressU			= TextureAddress::Clamp,
+		.addressV			= TextureAddress::Clamp,
+		.addressW			= TextureAddress::Clamp,
+		.staticBorderColor	= borderColor
 	};
 	
 	return desc;
@@ -585,10 +585,10 @@ const SamplerDesc& CommonStates::SamplerLinearBorder()
 const SamplerDesc& CommonStates::SamplerLinearMirror()
 {
 	static SamplerDesc desc{ 
-		.filter = TextureFilter::MinMagMipLinear, 
-		.addressU = TextureAddress::Mirror,
-		.addressV = TextureAddress::Mirror,
-		.addressW = TextureAddress::Mirror
+		.filter		= TextureFilter::MinMagMipLinear, 
+		.addressU	= TextureAddress::Mirror,
+		.addressV	= TextureAddress::Mirror,
+		.addressW	= TextureAddress::Mirror
 	};
 
 	return desc;

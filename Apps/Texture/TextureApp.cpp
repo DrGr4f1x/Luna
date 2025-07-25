@@ -167,9 +167,9 @@ void TextureApp::InitRootSignature()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= { 
 			RootCBV(0, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp(), ShaderStage::Pixel) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -215,7 +215,6 @@ void TextureApp::InitResources()
 	m_resources.Initialize(m_rootSignature);
 	m_resources.SetCBV(0, 0, m_constantBuffer);
 	m_resources.SetSRV(1, 0, m_texture);
-	m_resources.SetSampler(2, 0, m_sampler);
 }
 
 
@@ -230,8 +229,6 @@ void TextureApp::LoadAssets()
 		m_texture = LoadTexture("vulkan_cloth_rgba.ktx2");
 		m_flipUVs = true;
 	}
-	
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
 

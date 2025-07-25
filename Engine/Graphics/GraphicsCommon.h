@@ -23,7 +23,7 @@ struct DeviceManagerDesc;
 
 
 // Constants
-constexpr uint32_t MaxRootParameters = 8;
+constexpr uint32_t MaxRootParameters = 16;
 constexpr uint32_t MaxDescriptorsPerTable = 32;
 
 

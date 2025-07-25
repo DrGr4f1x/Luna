@@ -25,6 +25,7 @@ struct SamplerDesc
 	uint32_t maxAnisotropy{ 16 };
 	ComparisonFunc comparisonFunc{ ComparisonFunc::None };
 	Color borderColor{ DirectX::Colors::Black };
+	StaticBorderColor staticBorderColor{ StaticBorderColor::OpaqueWhite };
 	float minLOD{ 0.0f };
 	float maxLOD{ FLT_MAX };
 
@@ -36,6 +37,7 @@ struct SamplerDesc
 	constexpr SamplerDesc& SetMaxAnisotropy(uint32_t value) noexcept { maxAnisotropy = value; return *this; }
 	constexpr SamplerDesc& SetComparisonFunc(ComparisonFunc value) noexcept { comparisonFunc = value; return *this; }
 	SamplerDesc& SetBorderColor(Color value) noexcept { borderColor = value; return *this; }
+	constexpr SamplerDesc& SetStaticBorderColor(StaticBorderColor value) noexcept { staticBorderColor = value; return *this; }
 	constexpr SamplerDesc& SetMinLOD(float value) noexcept { minLOD = value; return *this; }
 	constexpr SamplerDesc& SetMaxLOD(float value) noexcept { maxLOD = value; return *this; }
 };

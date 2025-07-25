@@ -73,7 +73,6 @@ protected:
 
 	// Assets
 	Luna::TexturePtr m_texture;
-	Luna::SamplerPtr m_sampler;
 	bool m_flipUVs{ false };
 
 	float m_zoom{ -2.5f };

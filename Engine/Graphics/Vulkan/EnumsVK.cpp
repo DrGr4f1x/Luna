@@ -825,6 +825,23 @@ VkPipelineStageFlagBits2 GetPipelineStage(ResourceState resourceState)
 }
 
 
+VkBorderColor BorderColorToVulkan(StaticBorderColor borderColor)
+{
+	if (borderColor == StaticBorderColor::TransparentBlack)
+	{
+		return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+	}
+	else if (borderColor == StaticBorderColor::OpaqueBlack)
+	{
+		return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+	}
+	else
+	{
+		return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+	}
+}
+
+
 bool IsDescriptorImageInfoType(VkDescriptorType descriptorType)
 {
 	return descriptorType == VK_DESCRIPTOR_TYPE_SAMPLER ||

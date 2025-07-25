@@ -834,6 +834,21 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 			m_isGraphicsRootSignatureParsed = false;
 			m_hasDirtyGraphicsDescriptors = false;
 		}
+
+		// Bind static samplers, if needed
+		VkDescriptorSet staticSamplerDescriptorSet = rootSignatureVK->GetStaticSamplerDescriptorSet();
+		if (staticSamplerDescriptorSet != VK_NULL_HANDLE)
+		{
+			vkCmdBindDescriptorSets(
+				m_commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				m_graphicsPipelineLayout,
+				rootSignatureVK->GetStaticSamplerDescriptorSetIndex(),
+				1,
+				&staticSamplerDescriptorSet,
+				0,
+				nullptr);
+		}
 	}
 	else
 	{
@@ -849,6 +864,21 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 			m_computeRootSignature = rootSignature;
 			m_isComputeRootSignatureParsed = false;
 			m_hasDirtyComputeDescriptors = false;
+		}
+
+		// Bind static samplers, if needed
+		VkDescriptorSet staticSamplerDescriptorSet = rootSignatureVK->GetStaticSamplerDescriptorSet();
+		if (staticSamplerDescriptorSet != VK_NULL_HANDLE)
+		{
+			vkCmdBindDescriptorSets(
+				m_commandBuffer,
+				VK_PIPELINE_BIND_POINT_COMPUTE,
+				m_computePipelineLayout,
+				rootSignatureVK->GetStaticSamplerDescriptorSetIndex(),
+				1,
+				&staticSamplerDescriptorSet,
+				0,
+				nullptr);
 		}
 	}
 

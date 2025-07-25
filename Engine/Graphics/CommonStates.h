@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include "Graphics\GraphicsCommon.h"
+
+
 namespace Luna
 {
 
@@ -52,8 +55,8 @@ const SamplerDesc& SamplerShadow();
 const SamplerDesc& SamplerLinearClamp();
 const SamplerDesc& SamplerVolumeWrap();
 const SamplerDesc& SamplerPointClamp();
-const SamplerDesc& SamplerPointBorder();
-const SamplerDesc& SamplerLinearBorder();
+const SamplerDesc& SamplerPointBorder(StaticBorderColor borderColor = StaticBorderColor::OpaqueBlack);
+const SamplerDesc& SamplerLinearBorder(StaticBorderColor borderColor = StaticBorderColor::OpaqueBlack);
 const SamplerDesc& SamplerLinearMirror();
 
 } // namespace CommonStates

@@ -757,6 +757,14 @@ enum class NativeObjectType : uint32_t
 	VK_BufferView				= 0x00020010,
 };
 
+
+enum class StaticBorderColor : uint8_t
+{
+	TransparentBlack,
+	OpaqueBlack,
+	OpaqueWhite
+};
+
 } // namespace Luna
 
 
