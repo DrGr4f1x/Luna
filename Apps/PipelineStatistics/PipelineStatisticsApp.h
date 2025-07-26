@@ -53,7 +53,7 @@ protected:
 	Luna::RootSignaturePtr m_rootSignature;
 
 	Luna::GraphicsPipelinePtr m_pipeline;
-	bool m_pipelinesCreated{ false };
+	bool m_pipelineCreated{ false };
 
 	// Pipeline features
 	int32_t m_cullMode{ 1 };

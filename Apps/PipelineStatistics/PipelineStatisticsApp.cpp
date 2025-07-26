@@ -187,7 +187,6 @@ void PipelineStatisticsApp::CreateDeviceDependentResources()
 	Vector3 cameraPosition{ -3.0f, 1.0f, -2.75f };
 	m_camera.SetPosition(cameraPosition);
 	
-	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 0.0f), 10.0f, 0.25f);
@@ -208,10 +207,10 @@ void PipelineStatisticsApp::CreateDeviceDependentResources()
 void PipelineStatisticsApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
-	if (!m_pipelinesCreated)
+	if (!m_pipelineCreated)
 	{
 		InitPipeline();
-		m_pipelinesCreated = true;
+		m_pipelineCreated = true;
 	}
 
 	m_camera.SetPerspectiveMatrix(

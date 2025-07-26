@@ -543,7 +543,7 @@ void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	ResourceState oldState = colorBuffer->GetUsageState();
 
-	TransitionResource(colorBuffer, ResourceState::CopyDest, false);
+	TransitionResource(colorBuffer, ResourceState::CopyDest, true);
 
 	VkClearColorValue colVal;
 	colVal.float32[0] = clearColor.R();
@@ -559,15 +559,13 @@ void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 		.layerCount			= colorBuffer->GetArraySize()
 	};
 
-	FlushResourceBarriers();
-
 	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
 	vkCmdClearColorImage(m_commandBuffer, colorBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &colVal, 1, &range);
 
-	TransitionResource(colorBuffer, oldState, false);
+	TransitionResource(colorBuffer, oldState, true);
 }
 
 
@@ -593,7 +591,7 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 {
 	ResourceState oldState = depthBuffer->GetUsageState();
 
-	TransitionResource(depthBuffer, ResourceState::CopyDest, false);
+	TransitionResource(depthBuffer, ResourceState::CopyDest, true);
 
 	VkClearDepthStencilValue depthVal{
 		.depth		= depthBuffer->GetClearDepth(),
@@ -608,15 +606,13 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 		.layerCount			= depthBuffer->GetArraySize()
 	};
 
-	FlushResourceBarriers();
-
 	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
 	vkCmdClearDepthStencilImage(m_commandBuffer, depthBufferVK->GetImage(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &depthVal, 1, &range);
 
-	TransitionResource(depthBuffer, oldState, false);
+	TransitionResource(depthBuffer, oldState, true);
 }
 
 
