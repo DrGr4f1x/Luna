@@ -238,15 +238,21 @@ void Application::Run()
 }
 
 
-ColorBufferPtr Application::GetColorBuffer() const
+Format Application::GetColorFormat() const
 {
-	return m_deviceManager->GetColorBuffer();
+	return m_deviceManager->GetColorFormat();
 }
 
 
-DepthBufferPtr Application::GetDepthBuffer() const
+Format Application::GetDepthFormat() const
 {
-	return m_deviceManager->GetDepthBuffer();
+	return m_deviceManager->GetDepthFormat();
+}
+
+
+ColorBufferPtr Application::GetColorBuffer() const
+{
+	return m_deviceManager->GetColorBuffer();
 }
 
 
@@ -281,6 +287,43 @@ void Application::SetDefaultSearchPaths()
 }
 
 
+void Application::CreateDeviceDependentResources()
+{
+	if (m_grid)
+	{
+		m_grid->CreateDeviceDependentResources();
+	}
+
+	if (m_uiOverlay)
+	{
+		m_uiOverlay->CreateDeviceDependentResources();
+	}
+}
+
+
+void Application::CreateWindowSizeDependentResources()
+{
+	// Create default depth buffer
+	DepthBufferDesc depthBufferDesc{
+		.name		= "Default Depth Buffer",
+		.width		= GetWindowWidth(),
+		.height		= GetWindowHeight(),
+		.format		= GetDepthFormat()
+	};
+	m_depthBuffer = CreateDepthBuffer(depthBufferDesc);
+
+	if (m_grid)
+	{
+		m_grid->CreateWindowSizeDependentResources();
+	}
+
+	if (m_uiOverlay)
+	{
+		m_uiOverlay->CreateWindowSizeDependentResources();
+	}
+}
+
+
 void Application::UpdateWindowSize()
 {
 	int width{ 0 };
@@ -305,31 +348,88 @@ void Application::UpdateWindowSize()
 		{
 			m_deviceManager->SetWindowSize(m_appInfo.width, m_appInfo.height);
 
+			Application::CreateWindowSizeDependentResources();
 			CreateWindowSizeDependentResources();
-		}
-
-		if (m_uiOverlay)
-		{
-			m_uiOverlay->SetWindowSize(m_appInfo.width, m_appInfo.height);
-		}
-
-		if (m_grid)
-		{
-			m_grid->CreateWindowSizeDependentResources();
 		}
 	}
 }
 
 
-Format Application::GetColorFormat()
+ColorBufferPtr Application::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
-	return m_deviceManager->GetColorFormat();
+	return m_deviceManager->GetDevice()->CreateColorBuffer(colorBufferDesc);
 }
 
 
-Format Application::GetDepthFormat()
+DepthBufferPtr Application::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
-	return m_deviceManager->GetDepthFormat();
+	return m_deviceManager->GetDevice()->CreateDepthBuffer(depthBufferDesc);
+}
+
+
+GpuBufferPtr Application::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+{
+	return m_deviceManager->GetDevice()->CreateGpuBuffer(gpuBufferDesc);
+}
+
+
+RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+{
+	return m_deviceManager->GetDevice()->CreateRootSignature(rootSignatureDesc);
+}
+
+
+GraphicsPipelinePtr Application::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
+{
+	return m_deviceManager->GetDevice()->CreateGraphicsPipeline(pipelineDesc);
+}
+
+
+ComputePipelinePtr Application::CreateComputePipeline(const ComputePipelineDesc& pipelineDesc)
+{
+	return m_deviceManager->GetDevice()->CreateComputePipeline(pipelineDesc);
+}
+
+
+QueryHeapPtr Application::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
+{
+	return m_deviceManager->GetDevice()->CreateQueryHeap(queryHeapDesc);
+}
+
+
+TexturePtr Application::CreateTexture1D(const TextureDesc& textureDesc)
+{
+	return m_deviceManager->GetDevice()->CreateTexture1D(textureDesc);
+}
+
+
+TexturePtr Application::CreateTexture2D(const TextureDesc& textureDesc)
+{
+	return m_deviceManager->GetDevice()->CreateTexture2D(textureDesc);
+}
+
+
+TexturePtr Application::CreateTexture3D(const TextureDesc& textureDesc)
+{
+	return m_deviceManager->GetDevice()->CreateTexture3D(textureDesc);
+}
+
+
+SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
+{
+	return m_deviceManager->GetDevice()->CreateSampler(samplerDesc);
+}
+
+
+TexturePtr Application::LoadTexture(const std::string& filename, Format format, bool forceSrgb, bool retainData)
+{
+	return GetTextureManager()->Load(filename, format, forceSrgb, retainData);
+}
+
+
+ModelPtr Application::LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale, ModelLoad loadFlags, bool loadMaterials)
+{
+	return Luna::LoadModel(m_deviceManager->GetDevice(), filename, layout, scale, loadFlags, loadMaterials);
 }
 
 
@@ -390,66 +490,6 @@ void Application::RenderGrid(GraphicsContext& context)
 }
 
 
-ColorBufferPtr Application::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
-{ 
-	return m_deviceManager->GetDevice()->CreateColorBuffer(colorBufferDesc);
-}
-
-
-DepthBufferPtr Application::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
-{
-	return m_deviceManager->GetDevice()->CreateDepthBuffer(depthBufferDesc);
-}
-
-
-GpuBufferPtr Application::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
-{
-	return m_deviceManager->GetDevice()->CreateGpuBuffer(gpuBufferDesc);
-}
-
-
-RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
-{
-	return m_deviceManager->GetDevice()->CreateRootSignature(rootSignatureDesc);
-}
-
-
-GraphicsPipelinePtr Application::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
-{
-	return m_deviceManager->GetDevice()->CreateGraphicsPipeline(pipelineDesc);
-}
-
-
-ComputePipelinePtr Application::CreateComputePipeline(const ComputePipelineDesc& pipelineDesc)
-{
-	return m_deviceManager->GetDevice()->CreateComputePipeline(pipelineDesc);
-}
-
-
-QueryHeapPtr Application::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
-{
-	return m_deviceManager->GetDevice()->CreateQueryHeap(queryHeapDesc);
-}
-
-
-SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
-{
-	return m_deviceManager->GetDevice()->CreateSampler(samplerDesc);
-}
-
-
-TexturePtr Application::LoadTexture(const std::string& filename, Format format, bool forceSrgb, bool retainData)
-{
-	return GetTextureManager()->Load(filename, format, forceSrgb, retainData);
-}
-
-
-ModelPtr Application::LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale, ModelLoad loadFlags, bool loadMaterials)
-{
-	return Luna::LoadModel(m_deviceManager->GetDevice(), filename, layout, scale, loadFlags, loadMaterials);
-}
-
-
 bool Application::Initialize()
 {
 	// Create core engine systems
@@ -472,19 +512,21 @@ bool Application::Initialize()
 	m_inputSystem = make_unique<InputSystem>(m_hwnd);
 
 	CreateDeviceManager();
-	CreateDeviceDependentResources();
 
-	m_grid = make_unique<Grid>();
-	m_grid->CreateDeviceDependentResources();
+	m_grid = make_unique<Grid>(this);
+	m_uiOverlay = make_unique<UIOverlay>(this, m_pWindow, m_appInfo.api);
+
+	// Call the base then the derived function
+	Application::CreateDeviceDependentResources();
+	CreateDeviceDependentResources();
 
 	UpdateWindowSize();
 
 	m_deviceManager->CreateWindowSizeDependentResources();
-	CreateWindowSizeDependentResources();
-	m_grid->CreateWindowSizeDependentResources();
 
-	m_uiOverlay = make_unique<UIOverlay>();
-	m_uiOverlay->Startup(m_pWindow, m_appInfo.api, GetWindowWidth(), GetWindowHeight(), GetColorFormat(), GetDepthFormat());
+	// Call the base then the derived function
+	Application::CreateWindowSizeDependentResources();
+	CreateWindowSizeDependentResources();
 
 	Startup();
 
@@ -498,7 +540,7 @@ void Application::Finalize()
 {
 	Shutdown();
 
-	m_uiOverlay->Shutdown();
+	m_uiOverlay.reset();
 
 	glfwDestroyWindow(m_pWindow);
 	m_pWindow = nullptr;

@@ -18,7 +18,6 @@ TODO:
 -- DX12 device removed (look for TODO in DeviceManager12.cpp)
 -- OnDeviceLost/OnDeviceRestored in DeviceManagers - do I actually need this?
 -- Move CommandContext::Reset logic into CommandManager::AllocateContext (?)
--- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
 -- Think about refactoring/simplifying CameraController.  I've never loved this class.
 -- Take another look at Shaders.  Not super happy with how things are.
 -- Refactor Vulkan DescriptorSet, now that DescriptorSetPool exists
@@ -35,15 +34,10 @@ TODO:
 -- Sanity check resource recreation - all the logic for cached resources like pipeline states, shaders, textures etc.
 -- Improve error handling
 -- Mipmap generation
--- Static sampler support
 -- Look at normals in the BloomApp - Vulkan seems wrong.
 -- Standardize matrix handling in shaders.
--- Move default depth buffer to the application level
 -- Implement a way to get allocate individual DescriptorSets from a RootSignature, so that per-frame data (etc) can be set at a lower cadence than every draw.
--- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
 -- Auto-register and auto-update window size dependent resources?
--- Support 16-bit index buffers in Model.h/.cpp
--- Add instanced draw function to Model class.  Test out in the Instancing app.
 -- Figure out device lost in vulkan multisampling app
 
 DONE:
@@ -79,6 +73,12 @@ DONE:
 -- Fuck it, put a fence back in to Vulkan present synchro
 -- Actually delete all the Delete Me files
 -- Add helper functions to create basic resource types like vertex buffers etc.
+-- Support 16-bit index buffers in Model.h/.cpp
+-- Static sampler support
+-- Add instanced draw function to Model class.  Test out in the Instancing app.
+-- Refactor m_vkSwapChainImages in DeviceManagerVK.  This is semi-redundant with m_swapChainBuffers
+-- Move default depth buffer to the application level
+-- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
 
 
 WON'T DO:

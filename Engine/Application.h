@@ -101,31 +101,18 @@ public:
 
 	void Run();
 
-	ColorBufferPtr GetColorBuffer() const;
-	DepthBufferPtr GetDepthBuffer() const;
-
-	const ApplicationInfo& GetInfo() const { return m_appInfo; }
-
-protected:
-	// Filesystem default configuration
-	void SetDefaultRootPath();
-	void SetDefaultSearchPaths();
-
-	virtual void CreateDeviceDependentResources() {}
-	virtual void CreateWindowSizeDependentResources() {}
-
-	void UpdateWindowSize();
 	// TODO: Think about where the authoritative window size is stored
 	uint32_t GetWindowWidth() const { return m_appInfo.width; }
 	uint32_t GetWindowHeight() const { return m_appInfo.height; }
 	float GetWindowAspectRatio() const { return (float)m_appInfo.height / (float)m_appInfo.width; }
 
-	Format GetColorFormat();
-	Format GetDepthFormat();
+	Format GetColorFormat() const;
+	Format GetDepthFormat() const;
 
-	void PrepareUI();
-	void RenderUI(GraphicsContext& context);
-	void RenderGrid(GraphicsContext& context);
+	ColorBufferPtr GetColorBuffer() const;
+	DepthBufferPtr GetDepthBuffer() const { return m_depthBuffer; }
+
+	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 	// Wrappers for graphics resource creation
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
@@ -135,11 +122,28 @@ protected:
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc);
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc);
+	TexturePtr CreateTexture1D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture2D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture3D(const TextureDesc& textureDesc);
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc);
 
 	// Wrappers for resource loading
 	TexturePtr LoadTexture(const std::string& filename, Format format = Format::Unknown, bool forceSrgb = false, bool retainData = false);
 	ModelPtr LoadModel(const std::string& filename, const VertexLayoutBase& layout, float scale = 1.0f, ModelLoad loadFlags = ModelLoad::StandardDefault, bool loadMaterials = false);
+
+protected:
+	// Filesystem default configuration
+	void SetDefaultRootPath();
+	void SetDefaultSearchPaths();
+
+	virtual void CreateDeviceDependentResources();
+	virtual void CreateWindowSizeDependentResources();
+
+	void UpdateWindowSize();
+
+	void PrepareUI();
+	void RenderUI(GraphicsContext& context);
+	void RenderGrid(GraphicsContext& context);
 
 protected:
 	FrameProCloser m_frameProCloser{};
@@ -175,6 +179,9 @@ protected:
 
 	std::unique_ptr<UIOverlay> m_uiOverlay;
 	std::unique_ptr<Grid> m_grid;
+
+	// Rendering resources
+	DepthBufferPtr m_depthBuffer;
 
 private:
 	bool Initialize();

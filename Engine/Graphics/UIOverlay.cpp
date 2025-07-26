@@ -12,11 +12,10 @@
 
 #include "UIOverlay.h"
 
-#include "Filesystem.h"
+#include "Application.h"
 #include "CommandContext.h"
 #include "CommonStates.h"
-#include "Device.h"
-#include "DeviceManager.h"
+#include "Filesystem.h"
 #include "GpuBuffer.h"
 #include "Sampler.h"
 
@@ -27,30 +26,14 @@
 namespace Luna
 {
 
-void UIOverlay::Startup(GLFWwindow* window, GraphicsApi api, uint32_t width, uint32_t height, Format format, Format depthFormat)
-{
-	LogNotice(LogUI) << "Starting up UI overlay" << std::endl;
-
-	m_window = window;
-	m_api = api;
-	m_width = width;
-	m_height = height;
-	m_format = format;
-	m_depthFormat = depthFormat;
-
-	InitImGui();
-	InitRootSignature();
-	InitPipeline();
-	InitFontTex();
-	
-	// Create constant buffer
-	m_vsConstantBuffer = CreateConstantBuffer("UIOverlay Constant Buffer", 1, sizeof(VSConstants));
-
-	InitResourceSet();
-}
+UIOverlay::UIOverlay(Application* application, GLFWwindow* window, GraphicsApi api)
+	: m_application{ application }
+	, m_window{ window }
+	, m_api{ api }
+{}
 
 
-void UIOverlay::Shutdown()
+UIOverlay::~UIOverlay()
 {
 	LogNotice(LogUI) << "Shutting down UI overlay" << std::endl;
 	ImGui_ImplGlfw_Shutdown();
@@ -64,6 +47,33 @@ void UIOverlay::Update()
 }
 
 
+void UIOverlay::CreateDeviceDependentResources()
+{
+	LogNotice(LogUI) << "Starting up UI overlay" << std::endl;
+
+	InitImGui();
+	InitRootSignature();
+	InitFontTex();
+
+	// Create constant buffer
+	m_vsConstantBuffer = CreateConstantBuffer("UIOverlay Constant Buffer", 1, sizeof(VSConstants));
+
+	InitResourceSet();
+}
+
+
+void UIOverlay::CreateWindowSizeDependentResources()
+{
+	if (!m_pipelineCreated)
+	{
+		InitPipeline();
+		m_pipelineCreated = true;
+	}
+
+
+}
+
+
 void UIOverlay::Render(GraphicsContext& context)
 {
 	ImDrawData* imDrawData = ImGui::GetDrawData();
@@ -73,7 +83,7 @@ void UIOverlay::Render(GraphicsContext& context)
 
 	ScopedDrawEvent event(context, "UI Overlay");
 
-	context.SetViewportAndScissor(0u, 0u, m_width, m_height);
+	context.SetViewportAndScissor(0u, 0u, m_application->GetWindowWidth(), m_application->GetWindowHeight());
 
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
@@ -124,13 +134,6 @@ void UIOverlay::Render(GraphicsContext& context)
 		}
 		vertexOffset += cmd_list->VtxBuffer.Size;
 	}
-}
-
-
-void UIOverlay::SetWindowSize(uint32_t width, uint32_t height)
-{
-	m_width = width;
-	m_height = height;
 }
 
 
@@ -280,9 +283,7 @@ void UIOverlay::InitRootSignature()
 		}
 	};
 
-	auto device = GetDeviceManager()->GetDevice();
-
-	m_rootSignature = device->CreateRootSignature(rootSignatureDesc);
+	m_rootSignature = m_application->CreateRootSignature(rootSignatureDesc);
 }
 
 
@@ -322,8 +323,8 @@ void UIOverlay::InitPipeline()
 		.blendState			= blendStateDesc,
 		.depthStencilState	= CommonStates::DepthStateDisabled(),
 		.rasterizerState	= CommonStates::RasterizerTwoSided(),
-		.rtvFormats			= { m_format },
-		.dsvFormat			= m_depthFormat,
+		.rtvFormats			= { m_application->GetColorFormat() },
+		.dsvFormat			= m_application->GetDepthFormat(),
 		.topology			= PrimitiveTopology::TriangleList,
 		.vertexShader		= { .shaderFile = "UIVS" },
 		.pixelShader		= { .shaderFile = "UIPS" },
@@ -332,8 +333,7 @@ void UIOverlay::InitPipeline()
 		.rootSignature		= m_rootSignature
 	};
 
-	auto device = GetDeviceManager()->GetDevice();
-	m_graphicsPipeline = device->CreateGraphicsPipeline(desc);
+	m_graphicsPipeline = m_application->CreateGraphicsPipeline(desc);
 }
 
 
@@ -342,7 +342,6 @@ void UIOverlay::InitFontTex()
 	ImGuiIO& io = ImGui::GetIO();
 
 	auto filesystem = GetFileSystem();
-	auto device = GetDeviceManager()->GetDevice();
 
 	std::string fullPath = filesystem->GetFullPath("Roboto-Medium.ttf");
 	io.Fonts->AddFontFromFileTTF(fullPath.c_str(), 16.0f);
@@ -362,10 +361,9 @@ void UIOverlay::InitFontTex()
 		.data		= (std::byte*)fontData
 	};
 
-	m_fontTex = device->CreateTexture2D(fontDesc);
+	m_fontTex = m_application->CreateTexture2D(fontDesc);
 
-	SamplerDesc samplerDesc = CommonStates::SamplerLinearBorder();
-	m_fontSampler = device->CreateSampler(samplerDesc);
+	m_fontSampler = m_application->CreateSampler(CommonStates::SamplerLinearBorder());
 }
 
 

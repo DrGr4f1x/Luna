@@ -24,19 +24,21 @@ namespace Luna
 {
 
 // Forward declarations
+class Application;
 class GraphicsContext;
 
 
 class UIOverlay
 {
 public:
-	void Startup(GLFWwindow* window, GraphicsApi api, uint32_t width, uint32_t height, Format format, Format depthFormat);
-	void Shutdown();
+	UIOverlay(Application* application, GLFWwindow* window, GraphicsApi api);
+	~UIOverlay();
 
 	void Update();
 	void Render(GraphicsContext& context);
 
-	void SetWindowSize(uint32_t width, uint32_t height);
+	void CreateDeviceDependentResources();
+	void CreateWindowSizeDependentResources();
 
 	float GetScale() const { return m_scale; }
 
@@ -60,6 +62,8 @@ protected:
 	void UpdateConstantBuffer();
 
 protected:
+	Application* m_application{ nullptr };
+
 	struct Vertex
 	{
 		float position[2];
@@ -74,6 +78,7 @@ protected:
 
 	RootSignaturePtr m_rootSignature;
 	GraphicsPipelinePtr m_graphicsPipeline;
+	bool m_pipelineCreated{ false };
 
 	TexturePtr m_fontTex;
 	SamplerPtr m_fontSampler;
@@ -86,10 +91,6 @@ protected:
 	GLFWwindow* m_window{ nullptr };
 	GraphicsApi m_api{ GraphicsApi::D3D12 };
 	float m_scale{ 1.0f };
-	uint32_t m_width{ 0 };
-	uint32_t m_height{ 0 };
-	Format m_format;
-	Format m_depthFormat;
 };
 
 // UI log category

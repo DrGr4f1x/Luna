@@ -105,7 +105,6 @@ public:
 	virtual GraphicsApi GetGraphicsApi() const = 0;
 
 	virtual ColorBufferPtr GetColorBuffer() const = 0;
-	virtual DepthBufferPtr GetDepthBuffer() const = 0;
 
 	virtual Format GetColorFormat() const = 0;
 	virtual Format GetDepthFormat() const = 0;

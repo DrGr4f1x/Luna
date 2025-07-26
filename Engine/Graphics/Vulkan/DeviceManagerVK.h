@@ -77,7 +77,6 @@ public:
 	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::Vulkan; }
 
 	ColorBufferPtr GetColorBuffer() const final;
-	DepthBufferPtr GetDepthBuffer() const final;
 
 	Format GetColorFormat() const final;
 	Format GetDepthFormat() const final;
@@ -159,9 +158,6 @@ private:
 
 	// Swapchain color buffers
 	std::vector<ColorBufferPtr> m_swapChainBuffers;
-
-	// Default depth buffer
-	DepthBufferPtr m_depthBuffer;
 
 	// Queues and queue families
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;

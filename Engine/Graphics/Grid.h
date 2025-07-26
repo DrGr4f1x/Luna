@@ -27,9 +27,11 @@ class GraphicsContext;
 
 class Grid
 {
-	friend class Application;
-
 public:
+	explicit Grid(Application* application) 
+		: m_application{ application } 
+	{}
+
 	void Update(const Camera& camera);
 	void Render(GraphicsContext& context);
 
@@ -43,6 +45,8 @@ protected:
 	void InitResourceSet();
 
 protected:
+	Application* m_application{ nullptr };
+
 	int m_width{ 10 };
 	int m_height{ 10 };
 	float m_spacing{ 1.0f };

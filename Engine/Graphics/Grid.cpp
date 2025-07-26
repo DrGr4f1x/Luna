@@ -16,8 +16,6 @@
 #include "Camera.h"
 #include "CommandContext.h"
 #include "CommonStates.h"
-#include "Device.h"
-#include "DeviceManager.h"
 
 using namespace std;
 
@@ -153,13 +151,13 @@ void Grid::InitMesh()
 
 void Grid::InitRootSignature()
 {
-	auto desc = RootSignatureDesc{
+	RootSignatureDesc desc{
 		.name				= "Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 
-	m_rootSignature = GetDeviceManager()->GetDevice()->CreateRootSignature(desc);
+	m_rootSignature = m_application->CreateRootSignature(desc);
 }
 
 
@@ -173,16 +171,14 @@ void Grid::InitPipeline()
 		.inputClassification	= InputClassification::PerVertexData
 	};
 
-	auto deviceManager = GetDeviceManager();
-
 	GraphicsPipelineDesc pipelineDesc
 	{
 		.name				= "Grid Graphics PSO",
 		.blendState			= CommonStates::BlendDisable(),
 		.depthStencilState	= CommonStates::DepthStateReadOnlyReversed(),
 		.rasterizerState	= CommonStates::RasterizerTwoSided(),
-		.rtvFormats			= { deviceManager->GetColorFormat() },
-		.dsvFormat			= deviceManager->GetDepthFormat(),
+		.rtvFormats			= { m_application->GetColorFormat() },
+		.dsvFormat			= m_application->GetDepthFormat(),
 		.topology			= PrimitiveTopology::LineList,
 		.vertexShader		= { .shaderFile = "GridVS" },
 		.pixelShader		= { .shaderFile = "GridPS" },
@@ -191,7 +187,7 @@ void Grid::InitPipeline()
 		.rootSignature		= m_rootSignature
 	};
 
-	m_pipeline = deviceManager->GetDevice()->CreateGraphicsPipeline(pipelineDesc);
+	m_pipeline = m_application->CreateGraphicsPipeline(pipelineDesc);
 }
 
 

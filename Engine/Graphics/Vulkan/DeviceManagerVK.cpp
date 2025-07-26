@@ -449,15 +449,6 @@ void DeviceManager::CreateWindowSizeDependentResources()
 		ColorBufferPtr swapChainBuffer = m_device->CreateColorBufferFromSwapChainImage(cimage.get(), m_desc.backBufferWidth, m_desc.backBufferHeight, m_swapChainFormat, i);
 		m_swapChainBuffers.emplace_back(swapChainBuffer);
 	}
-
-	// Create default depth buffer
-	DepthBufferDesc depthBufferDesc{
-		.name		= "Default Depth Buffer",
-		.width		= m_desc.backBufferWidth,
-		.height		= m_desc.backBufferHeight,
-		.format		= GetDepthFormat()
-	};
-	m_depthBuffer = m_device->CreateDepthBuffer(depthBufferDesc);
 }
 
 
@@ -503,12 +494,6 @@ void DeviceManager::FreeContext(CommandContext* usedContext)
 ColorBufferPtr DeviceManager::GetColorBuffer() const
 {
 	return m_swapChainBuffers[m_swapChainIndex];
-}
-
-
-DepthBufferPtr DeviceManager::GetDepthBuffer() const
-{
-	return m_depthBuffer;
 }
 
 
