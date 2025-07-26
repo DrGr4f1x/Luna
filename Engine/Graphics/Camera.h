@@ -19,7 +19,7 @@ public:
 	// Call this function once per frame and after you've changed any state.  This
 	// regenerates all matrices.  Calling it more or less than once per frame will break
 	// temporal effects and cause unpredictable results.
-	void Update() noexcept;
+	void Update(bool updateTemporalMatrices = true) noexcept;
 
 	// Public functions for controlling where the camera is and its orientation
 	void SetLookAt(Math::Vector3 cameraPos, Math::Vector3 targetPos, Math::Vector3 upAxis) noexcept;
@@ -96,6 +96,7 @@ protected:
 inline void BaseCamera::SetLookAt(Math::Vector3 cameraPos, Math::Vector3 targetPos, Math::Vector3 upAxis) noexcept
 {
 	m_viewMatrix = Math::Matrix4(XMMatrixLookAtRH(cameraPos, targetPos, upAxis));
+	Update(false);
 }
 
 
@@ -103,12 +104,14 @@ inline void BaseCamera::SetLookAt(Math::Vector3 targetPos, Math::Vector3 upAxis)
 {
 	const Math::Vector3 position = GetPosition();
 	m_viewMatrix = Math::Matrix4(XMMatrixLookAtRH(position, targetPos, upAxis));
+	Update(false);
 }
 
 
 inline void BaseCamera::SetLookIn(Math::Vector3 cameraPos, Math::Vector3 targetDir, Math::Vector3 upAxis) noexcept
 {
 	m_viewMatrix = Math::Matrix4(XMMatrixLookToRH(cameraPos, targetDir, upAxis));
+	Update(false);
 }
 
 
@@ -116,6 +119,7 @@ inline void BaseCamera::SetLookIn(Math::Vector3 targetDir, Math::Vector3 upAxis)
 {
 	const Math::Vector3 position = GetPosition();
 	m_viewMatrix = Math::Matrix4(XMMatrixLookToRH(position, targetDir, upAxis));
+	Update(false);
 }
 
 
@@ -127,6 +131,7 @@ inline void BaseCamera::SetOrientation(Math::Quaternion orientation) noexcept
 	XMMatrixDecompose(&xmScale, &xmRotQuat, &xmTrans, m_viewToWorldMatrix);
 
 	m_viewMatrix = Math::Matrix4(XMMatrixAffineTransformation(xmScale, XMVectorZero(), orientation, xmTrans));
+	Update(false);
 }
 
 
@@ -138,12 +143,14 @@ inline void BaseCamera::SetPosition(Math::Vector3 worldPos) noexcept
 	XMMatrixDecompose(&xmScale, &xmRotQuat, &xmTrans, m_viewToWorldMatrix);
 
 	m_viewMatrix = Math::Matrix4(XMMatrixAffineTransformation(xmScale, XMVectorZero(), xmRotQuat, worldPos));
+	Update(false);
 }
 
 
 inline void BaseCamera::SetTransform(const Math::AffineTransform& xform) noexcept
 {
 	SetLookIn(xform.GetTranslation(), -xform.GetZ(), xform.GetY());
+	Update(false);
 }
 
 
@@ -172,6 +179,7 @@ inline const Math::Quaternion BaseCamera::GetOrientation() const noexcept
 inline void BaseCamera::SetProjectionMatrix(const Math::Matrix4& projectionMatrix) noexcept
 {
 	m_projectionMatrix = projectionMatrix;
+	Update(false);
 }
 
 
@@ -184,6 +192,7 @@ inline void Camera::SetPerspectiveMatrix(float verticalFovRadians, float aspectH
 
 	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(verticalFovRadians, 1.0f / aspectHeightOverWidth, nearZClip, farZClip);
 	SetProjectionMatrix(Math::Matrix4(perspectiveMatrix));
+	Update(false);
 }
 
 } // namespace Luna

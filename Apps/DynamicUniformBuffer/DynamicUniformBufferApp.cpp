@@ -23,7 +23,6 @@ using namespace std;
 
 DynamicUniformBufferApp::DynamicUniformBufferApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -106,7 +105,6 @@ void DynamicUniformBufferApp::CreateDeviceDependentResources()
 		0.1f,
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, 30.0f));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -133,7 +131,6 @@ void DynamicUniformBufferApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.Update();
 }
 
 

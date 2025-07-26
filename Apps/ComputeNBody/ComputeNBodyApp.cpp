@@ -122,7 +122,6 @@ void ComputeNBodyApp::CreateDeviceDependentResources()
 		0.1f,
 		512.0f);
 	m_camera.SetPosition(Math::Vector3(8.0f, 8.0f, 8.0f));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);

@@ -22,7 +22,6 @@ using namespace std;
 
 InstancingApp::InstancingApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -139,7 +138,6 @@ void InstancingApp::CreateDeviceDependentResources()
 		256.0f);
 	AffineTransform transform(Quaternion(DirectX::XMConvertToRadians(-17.2f), DirectX::XMConvertToRadians(-4.7f), 0.0f), Vector3(5.5f, -1.85f, -18.5f));
 	m_camera.SetTransform(transform);
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -174,7 +172,6 @@ void InstancingApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.Update();
 }
 
 

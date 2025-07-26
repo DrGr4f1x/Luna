@@ -22,7 +22,6 @@ using namespace std;
 
 DisplacementApp::DisplacementApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -121,7 +120,6 @@ void DisplacementApp::CreateDeviceDependentResources()
 		0.1f,
 		256.0f);
 	m_camera.SetPosition(Vector3(-0.830579f, 0.427525f, 0.830579f));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.0025f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);

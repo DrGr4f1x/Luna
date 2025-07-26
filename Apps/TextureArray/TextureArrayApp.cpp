@@ -23,7 +23,6 @@ using namespace std;
 
 TextureArrayApp::TextureArrayApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -67,8 +66,6 @@ void TextureArrayApp::Startup()
 		0.001f,
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 1.0f, -m_zoom));
-
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -151,7 +148,6 @@ void TextureArrayApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.Update();
 }
 
 

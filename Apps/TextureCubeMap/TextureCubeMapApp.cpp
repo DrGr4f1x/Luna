@@ -23,7 +23,6 @@ using namespace std;
 
 TextureCubeMapApp::TextureCubeMapApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -51,8 +50,6 @@ void TextureCubeMapApp::Startup()
 		0.001f,
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, -4.0f));
-
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
@@ -166,34 +163,31 @@ void TextureCubeMapApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.Update();
 }
 
 
 void TextureCubeMapApp::InitRootSignatures()
 {
 	auto skyBoxRootSignatureDesc = RootSignatureDesc{
-		.name	= "Skybox Root Signature",
-		.flags	= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootCBV(0, ShaderStage::Vertex),
-				Table({ TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+		.name				= "Skybox Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
+			RootCBV(0, ShaderStage::Vertex),
+			Table({ TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
+		}
 	};
 
 	m_skyboxRootSignature = CreateRootSignature(skyBoxRootSignatureDesc);
 
 	auto modelRootSignatureDesc = RootSignatureDesc{
-		.name	= "Model Root Signature",
-		.flags	= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters =
-			{
-				RootCBV(0, ShaderStage::Vertex),
-				Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+		.name				= "Model Root Signature",
+		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.rootParameters		= {
+			RootCBV(0, ShaderStage::Vertex),
+			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel),
+			Table({ Sampler }, ShaderStage::Pixel)
+		}
 	};
 
 	m_modelRootSignature = CreateRootSignature(modelRootSignatureDesc);

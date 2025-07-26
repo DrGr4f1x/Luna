@@ -22,7 +22,6 @@ using namespace std;
 
 PipelinesApp::PipelinesApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -133,7 +132,6 @@ void PipelinesApp::CreateDeviceDependentResources()
 		0.1f,
 		512.0f);
 	m_camera.SetPosition(Vector3(-2.7f, 6.3f, 8.75f));
-	m_camera.Update();
 
 	InitRootSignature();
 
@@ -164,7 +162,6 @@ void PipelinesApp::CreateWindowSizeDependentResources()
 		(float)GetWindowHeight() / (float)(GetWindowHeight() / 3),
 		0.1f,
 		512.0f);
-	m_camera.Update();
 }
 
 

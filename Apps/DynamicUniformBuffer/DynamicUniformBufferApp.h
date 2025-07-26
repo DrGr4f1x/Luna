@@ -68,7 +68,7 @@ protected:
 
 	Luna::ResourceSet m_resources;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 
 	float m_animationTimer{ 0.0f };
 	Math::Vector3 m_rotations[m_numCubes];

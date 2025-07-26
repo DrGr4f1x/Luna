@@ -76,7 +76,7 @@ protected:
 	Luna::ResourceSet m_rockResources;
 	Luna::ResourceSet m_planetResources;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 	float m_zoom{ -18.5 };
 	float m_rotationSpeed{ 0.25f };
 

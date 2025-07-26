@@ -76,5 +76,5 @@ protected:
 	bool m_flipUVs{ false };
 
 	float m_zoom{ -2.5f };
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };

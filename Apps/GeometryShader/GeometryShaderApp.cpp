@@ -22,7 +22,6 @@ using namespace std;
 
 GeometryShaderApp::GeometryShaderApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -122,7 +121,6 @@ void GeometryShaderApp::CreateDeviceDependentResources()
 		0.001f,
 		256.0f);
 	m_camera.SetPosition(Math::Vector3(0.0f, 0.9f, 3.9f));
-	m_camera.Update();
 
 	InitRootSignatures();
 	
@@ -155,7 +153,6 @@ void GeometryShaderApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.Update();
 }
 
 

@@ -94,5 +94,5 @@ protected:
 	Luna::ResourceSet m_skyResources;
 	Luna::ResourceSet m_terrainResources;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };

@@ -198,7 +198,6 @@ void BloomApp::CreateDeviceDependentResources()
 		0.1f,
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, 10.25f));
-	m_camera.Update();
 	m_camera.SetOrientation(Quaternion(XMConvertToRadians(7.5f), XMConvertToRadians(-343.0f), 0.0f));
 
 	m_controller.SetSpeedScale(0.01f);
@@ -230,7 +229,6 @@ void BloomApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.Update();
 }
 
 

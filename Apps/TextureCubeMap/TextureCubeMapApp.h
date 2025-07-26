@@ -87,5 +87,5 @@ protected:
 	int32_t	m_curModel{ 0 };
 	bool m_displaySkybox{ true };
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };

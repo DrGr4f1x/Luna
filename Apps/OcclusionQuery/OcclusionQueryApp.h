@@ -77,7 +77,7 @@ protected:
 	Luna::QueryHeapPtr m_queryHeap;
 	Luna::GpuBufferPtr m_readbackBuffer;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 	float m_zoom{ -10.0f };
 
 	uint32_t m_passedSamples[2]{ 0,0 };

@@ -75,7 +75,7 @@ protected:
 	Luna::ModelPtr m_model;
 	Luna::SamplerPtr m_sampler;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 
 	bool m_sampleRateShading{ false };
 };

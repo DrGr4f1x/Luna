@@ -76,7 +76,7 @@ protected:
 	std::vector<std::string> m_modelNames;
 	int32_t	m_curModel{ 0 };
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 	float m_zoom{ -10.0f };
 
 	// Application state

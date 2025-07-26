@@ -21,7 +21,6 @@ using namespace std;
 
 TextureApp::TextureApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) }
 {}
 
 
@@ -48,7 +47,6 @@ void TextureApp::Startup()
 		0.1f,
 		256.0f);
 	m_camera.SetPosition(Math::Vector3(0.0f, 0.0f, -m_zoom));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.025f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -156,7 +154,6 @@ void TextureApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.Update();
 }
 
 

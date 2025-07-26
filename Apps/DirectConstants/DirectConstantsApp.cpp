@@ -111,7 +111,6 @@ void DirectConstantsApp::CreateDeviceDependentResources()
 		0.001f,
 		256.0f);
 	m_camera.SetPosition(Math::Vector3(-18.65f, 14.4f, 18.65f));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -135,6 +134,12 @@ void DirectConstantsApp::CreateWindowSizeDependentResources()
 		InitPipeline();
 		m_pipelineCreated = true;
 	}
+
+	m_camera.SetPerspectiveMatrix(
+		XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.001f,
+		256.0f);
 }
 
 

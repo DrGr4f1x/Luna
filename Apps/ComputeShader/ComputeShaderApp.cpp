@@ -51,7 +51,6 @@ void ComputeShaderApp::Startup()
 		0.001f,
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, 2.0f));
-	m_camera.Update();
 
 	m_shaderNames.push_back("Emboss");
 	m_shaderNames.push_back("Edge Detect");
@@ -242,7 +241,6 @@ void ComputeShaderApp::CreateWindowSizeDependentResources()
 		2.0f * GetWindowAspectRatio(),
 		0.001f,
 		256.0f);
-	m_camera.Update();
 }
 
 

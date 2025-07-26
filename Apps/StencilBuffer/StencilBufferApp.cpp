@@ -22,7 +22,6 @@ using namespace std;
 
 StencilBufferApp::StencilBufferApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -119,7 +118,6 @@ void StencilBufferApp::CreateDeviceDependentResources()
 		512.0f);
 	Vector3 cameraPosition{ 4.75f, 3.25f, 4.75f };
 	m_camera.SetPosition(cameraPosition);
-	m_camera.Update();
 
 	InitRootSignature();
 	
@@ -158,7 +156,6 @@ void StencilBufferApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.Update();
 }
 
 

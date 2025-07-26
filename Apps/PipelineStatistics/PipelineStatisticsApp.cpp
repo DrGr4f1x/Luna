@@ -23,7 +23,6 @@ using namespace std;
 
 PipelineStatisticsApp::PipelineStatisticsApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -187,7 +186,6 @@ void PipelineStatisticsApp::CreateDeviceDependentResources()
 		512.0f);
 	Vector3 cameraPosition{ -3.0f, 1.0f, -2.75f };
 	m_camera.SetPosition(cameraPosition);
-	m_camera.Update();
 	
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
@@ -215,6 +213,12 @@ void PipelineStatisticsApp::CreateWindowSizeDependentResources()
 		InitPipeline();
 		m_pipelinesCreated = true;
 	}
+
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
 }
 
 

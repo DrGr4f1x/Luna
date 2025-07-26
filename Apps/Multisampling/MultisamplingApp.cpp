@@ -22,7 +22,6 @@ using namespace std;
 
 MultisamplingApp::MultisamplingApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -134,7 +133,6 @@ void MultisamplingApp::CreateDeviceDependentResources()
 		0.1f,
 		256.0f);
 	m_camera.SetPosition(Vector3(4.838f, -3.23f, 7.05f));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -167,7 +165,6 @@ void MultisamplingApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.Update();
 }
 
 

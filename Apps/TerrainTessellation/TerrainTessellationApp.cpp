@@ -22,7 +22,6 @@ using namespace std;
 
 TerrainTessellationApp::TerrainTessellationApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -117,7 +116,6 @@ void TerrainTessellationApp::CreateDeviceDependentResources()
 		512.0f);
 	m_camera.SetPosition(Vector3(-18.0f, -22.5f, -57.5f));
 	//m_camera.SetRotation(Quaternion(XMConvertToRadians(7.5f), XMConvertToRadians(-343.0f), 0.0f));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
@@ -148,7 +146,6 @@ void TerrainTessellationApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.Update();
 }
 
 

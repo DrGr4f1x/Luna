@@ -23,7 +23,6 @@ using namespace std;
 
 OcclusionQueryApp::OcclusionQueryApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -155,7 +154,6 @@ void OcclusionQueryApp::Render()
 void OcclusionQueryApp::CreateDeviceDependentResources()
 {
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, m_zoom));
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -188,7 +186,6 @@ void OcclusionQueryApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.Update();
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.SetCameraMode(CameraMode::ArcBall);

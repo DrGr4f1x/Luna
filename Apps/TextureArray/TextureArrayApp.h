@@ -86,5 +86,5 @@ protected:
 	// Camera controls
 	float m_zoom{ -15.0f };
 	Math::Vector3 m_rotation{ -15.0f, 35.0f, 0.0f };
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };
