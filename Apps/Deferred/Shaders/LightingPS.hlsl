@@ -22,8 +22,7 @@ SamplerState samplerLinear : register(s0);
 struct Light
 {
     float4 position;
-    float3 color;
-    float radius;
+    float4 colorAndRadius;
 };
 
 
@@ -95,19 +94,22 @@ float4 main(PSInput input) : SV_TARGET
 			// Light to fragment
             L = normalize(L);
 
+            float3 color = lights[i].colorAndRadius.xyz;
+            float radius = lights[i].colorAndRadius.w;
+            
 			// Attenuation
-            float atten = lights[i].radius / (pow(dist, 2.0) + 1.0);
+            float atten = radius / (pow(dist, 2.0) + 1.0);
 
 			// Diffuse part
             float3 N = normalize(normal);
             float NdotL = max(0.0, dot(N, L));
-            float3 diff = lights[i].color * albedo.rgb * NdotL * atten;
+            float3 diff = color * albedo.rgb * NdotL * atten;
 
 			// Specular part
 			// Specular map values are stored in alpha of albedo mrt
             float3 R = reflect(-L, N);
             float NdotR = max(0.0, dot(R, V));
-            float3 spec = lights[i].color * albedo.a * pow(NdotR, 16.0) * atten;
+            float3 spec = color * albedo.a * pow(NdotR, 16.0) * atten;
 
             fragcolor += diff + spec;
         }

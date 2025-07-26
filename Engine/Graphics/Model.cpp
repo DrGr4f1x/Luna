@@ -626,11 +626,32 @@ void Mesh::Render(GraphicsContext& context, bool positionOnly)
 }
 
 
+void Mesh::RenderInstanced(GraphicsContext& context, uint32_t numInstances, bool positionOnly)
+{
+	context.SetIndexBuffer(indexBuffer);
+	context.SetVertexBuffer(0, positionOnly ? vertexBufferPositionOnly : vertexBuffer);
+
+	for (const auto& meshPart : meshParts)
+	{
+		context.DrawIndexedInstanced(meshPart.indexCount, numInstances, meshPart.indexBase, meshPart.vertexBase, 0);
+	}
+}
+
+
 void Model::Render(GraphicsContext& context, bool positionOnly)
 {
 	for (auto mesh : meshes)
 	{
 		mesh->Render(context, positionOnly);
+	}
+}
+
+
+void Model::RenderInstanced(GraphicsContext& context, uint32_t numInstances, bool positionOnly)
+{
+	for (auto mesh : meshes)
+	{
+		mesh->RenderInstanced(context, numInstances, positionOnly);
 	}
 }
 

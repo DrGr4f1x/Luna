@@ -70,8 +70,67 @@ void DeferredApp::UpdateUI()
 
 void DeferredApp::Render()
 {
-	// Application main render loop
-	Application::Render();
+	auto& context = GraphicsContext::Begin("Frame");
+
+	// G-Buffer pass
+	{
+		ScopedDrawEvent offscreenEvent(context, "G-Buffer Pass");
+
+		context.TransitionResource(m_positionBuffer, ResourceState::RenderTarget);
+		context.TransitionResource(m_normalBuffer, ResourceState::RenderTarget);
+		context.TransitionResource(m_albedoBuffer, ResourceState::RenderTarget);
+		context.TransitionResource(m_depthBuffer, ResourceState::DepthWrite);
+		context.ClearColor(m_positionBuffer);
+		context.ClearColor(m_normalBuffer);
+		context.ClearColor(m_albedoBuffer);
+		context.ClearDepth(m_depthBuffer);
+
+		context.BeginRendering({ m_positionBuffer, m_normalBuffer, m_albedoBuffer }, m_depthBuffer);
+
+		context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+
+		context.SetRootSignature(m_gbufferRootSignature);
+		context.SetGraphicsPipeline(m_gbufferPipeline);
+
+		// Render floor
+		context.SetResources(m_floorResources);
+		m_floorModel->Render(context);
+
+		// Render armor model instanced
+		context.SetResources(m_armorResources);
+		m_armorModel->RenderInstanced(context, 3);
+
+		context.EndRendering();
+	}
+
+	context.TransitionResource(m_positionBuffer, ResourceState::PixelShaderResource);
+	context.TransitionResource(m_normalBuffer, ResourceState::PixelShaderResource);
+	context.TransitionResource(m_albedoBuffer, ResourceState::PixelShaderResource);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
+
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
+
+	// Lighting pass
+	{
+		ScopedDrawEvent offscreenEvent(context, "Lighting Pass");
+
+		context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+
+		context.SetRootSignature(m_lightingRootSignature);
+		context.SetGraphicsPipeline(m_lightingPipeline);
+
+		context.SetResources(m_lightingResources);
+
+		context.Draw(3);
+	}
+
+	RenderUI(context);
+
+	context.EndRendering();
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+
+	context.Finish();
 }
 
 
@@ -83,7 +142,7 @@ void DeferredApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition({ 2.15f, 0.3f, -8.75f });
+	m_camera.SetPosition({ -2.15f, 0.3f, 8.75f });
 
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -92,11 +151,9 @@ void DeferredApp::CreateDeviceDependentResources()
 	m_controller.SlowRotation(false);
 	m_controller.SetSpeedScale(0.25f);
 
-	InitGBuffer();
 	InitRootSignatures();
 	InitConstantBuffers();
 	LoadAssets();
-	InitResourceSets();
 }
 
 
@@ -115,6 +172,8 @@ void DeferredApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
+
+	InitResourceSets();
 }
 
 
@@ -171,7 +230,7 @@ void DeferredApp::InitRootSignatures()
 			RootCBV(0, ShaderStage::Vertex),
 			Table({TextureSRV, TextureSRV}, ShaderStage::Pixel)
 		},
-		.staticSamplers		= {	StaticSampler(CommonStates::SamplerPointClamp()) }
+		.staticSamplers		= {	StaticSampler(CommonStates::SamplerLinearWrap()) }
 	};
 
 	m_gbufferRootSignature = CreateRootSignature(gbufferDesc);
@@ -202,14 +261,14 @@ void DeferredApp::InitPipelines()
 		{ "POSITION", 0, Format::RGB32_Float, 0, offsetof(Vertex, position), InputClassification::PerVertexData, 0 },
 		{ "NORMAL", 0, Format::RGB32_Float, 0, offsetof(Vertex, normal), InputClassification::PerVertexData, 0 },
 		{ "TANGENT", 0, Format::RGB32_Float, 0, offsetof(Vertex, tangent), InputClassification::PerVertexData, 0 },
-		{ "COLOR", 0, Format::RGB32_Float, 0, offsetof(Vertex, color), InputClassification::PerVertexData, 0 },
+		{ "COLOR", 0, Format::RGBA32_Float, 0, offsetof(Vertex, color), InputClassification::PerVertexData, 0 },
 		{ "TEXCOORD", 0, Format::RG32_Float, 0, offsetof(Vertex, uv), InputClassification::PerVertexData, 0 }
 	};
 
 	GraphicsPipelineDesc gbufferGraphicsPipelineDesc{
 		.name				= "G-Buffer Graphics Pipeline",
 		.blendState			= CommonStates::BlendDisable(),
-		.depthStencilState	= CommonStates::DepthStateReadOnlyReversed(),
+		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
 		.rasterizerState	= CommonStates::RasterizerDefault(),
 		.rtvFormats			= { Format::RGBA16_Float, Format::RGBA16_Float, Format::RGBA8_UNorm },
 		.dsvFormat			= GetDepthFormat(),
@@ -225,8 +284,8 @@ void DeferredApp::InitPipelines()
 	GraphicsPipelineDesc lightingGraphicsPipelineDesc{
 		.name				= "Lighting Graphics Pipeline",
 		.blendState			= CommonStates::BlendDisable(),
-		.depthStencilState	= CommonStates::DepthStateReadOnlyReversed(),
-		.rasterizerState	= CommonStates::RasterizerDefault(),
+		.depthStencilState	= CommonStates::DepthStateDisabled(),
+		.rasterizerState	= CommonStates::RasterizerTwoSided(),
 		.rtvFormats			= { GetColorFormat() },
 		.dsvFormat			= GetDepthFormat(),
 		.topology			= PrimitiveTopology::TriangleList,
@@ -293,36 +352,32 @@ void DeferredApp::UpdateConstantBuffers()
 	m_gbufferConstantBuffer->Update(sizeof(GBufferConstants), &m_gbufferConstants);
 
 	// Lighting constants
+	// Radius is packed into w component of colorAndRadius
+	
 	// White
 	m_lightingConstants.lights[0].position = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
-	m_lightingConstants.lights[0].color = Vector3(1.0f);
-	m_lightingConstants.lights[0].radius = 15.0f * 0.25f;
+	m_lightingConstants.lights[0].colorAndRadius = Vector4(1.0f, 1.0f, 1.0f, 15.0f * 0.25f);
 	// Red
 	m_lightingConstants.lights[1].position = Vector4(-2.0f, 0.0f, 0.0f, 0.0f);
-	m_lightingConstants.lights[1].color = Vector3(1.0f, 0.0f, 0.0f);
-	m_lightingConstants.lights[1].radius = 15.0f;
+	m_lightingConstants.lights[1].colorAndRadius = Vector4(1.0f, 0.0f, 0.0f, 15.0f);
 	// Blue
-	m_lightingConstants.lights[2].position = Vector4(2.0f, -1.0f, 0.0f, 0.0f);
-	m_lightingConstants.lights[2].color = Vector3(0.0f, 0.0f, 2.5f);
-	m_lightingConstants.lights[2].radius = 5.0f;
+	m_lightingConstants.lights[2].position = Vector4(2.0f, 1.0f, 0.0f, 0.0f);
+	m_lightingConstants.lights[2].colorAndRadius = Vector4(0.0f, 0.0f, 2.5f, 5.0f);
 	// Yellow
-	m_lightingConstants.lights[3].position = Vector4(0.0f, -0.9f, 0.5f, 0.0f);
-	m_lightingConstants.lights[3].color = Vector3(1.0f, 1.0f, 0.0f);
-	m_lightingConstants.lights[3].radius = 2.0f;
+	m_lightingConstants.lights[3].position = Vector4(0.0f, 0.9f, 0.5f, 0.0f);
+	m_lightingConstants.lights[3].colorAndRadius = Vector4(1.0f, 1.0f, 0.0f, 2.0f);
 	// Green
-	m_lightingConstants.lights[4].position = Vector4(0.0f, -0.5f, 0.0f, 0.0f);
-	m_lightingConstants.lights[4].color = Vector3(0.0f, 1.0f, 0.2f);
-	m_lightingConstants.lights[4].radius = 5.0f;
+	m_lightingConstants.lights[4].position = Vector4(0.0f, 0.5f, 0.0f, 0.0f);
+	m_lightingConstants.lights[4].colorAndRadius = Vector4(0.0f, 1.0f, 0.2f, 5.0f);
 	// Yellow
-	m_lightingConstants.lights[5].position = Vector4(0.0f, -1.0f, 0.0f, 0.0f);
-	m_lightingConstants.lights[5].color = Vector3(1.0f, 0.7f, 0.3f);
-	m_lightingConstants.lights[5].radius = 25.0f;
+	m_lightingConstants.lights[5].position = Vector4(0.0f, 1.0f, 0.0f, 0.0f);
+	m_lightingConstants.lights[5].colorAndRadius = Vector4(1.0f, 0.7f, 0.3f, 25.0f);
 
 	// Animate the lights
-	if (m_isRunning) 
+	if (m_isRunning)
 	{
 		using namespace DirectX;
-		const float time = (float)m_timer.GetTotalSeconds();
+		const float time = 0.1f * (float)m_timer.GetTotalSeconds();
 
 		m_lightingConstants.lights[0].position.SetX(sinf(XMConvertToRadians(360.0f * time)) * 5.0f);
 		m_lightingConstants.lights[0].position.SetZ(cosf(XMConvertToRadians(360.0f * time)) * 5.0f);
@@ -341,7 +396,9 @@ void DeferredApp::UpdateConstantBuffers()
 	}
 
 	// Current view position
-	m_lightingConstants.viewPosition = Vector4(m_camera.GetPosition(), 0.0f) * Vector4(-1.0f, 1.0f, -1.0f, 1.0f);
+	m_lightingConstants.viewPosition = Vector4(m_camera.GetPosition(), 0.0f);
 
 	m_lightingConstants.displayBuffer = m_displayBuffer;
+
+	m_lightingConstantBuffer->Update(sizeof(LightingConstants), &m_lightingConstants);
 }

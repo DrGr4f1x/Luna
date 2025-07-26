@@ -109,6 +109,7 @@ struct MeshPart
 struct Mesh
 {
 	void Render(GraphicsContext& context, bool positionOnly = false);
+	void RenderInstanced(GraphicsContext& context, uint32_t numInstances, bool positionOnly = false);
 
 	std::string name;
 
@@ -132,6 +133,7 @@ using MeshPtr = std::shared_ptr<Mesh>;
 struct Model
 {
 	void Render(GraphicsContext& context, bool positionOnly = false);
+	void RenderInstanced(GraphicsContext& context, uint32_t numInstances, bool positionOnly = false);
 
 	std::string name;
 

@@ -63,7 +63,7 @@ protected:
 		float position[3];
 		float normal[3];
 		float tangent[3];
-		float color[3];
+		float color[4];
 		float uv[2];
 	};
 
@@ -81,8 +81,7 @@ protected:
 	struct Light
 	{
 		Math::Vector4 position{ Math::kIdentity };
-		Math::Vector3 color{ Math::kZero };
-		float radius{ 1.0f };
+		Math::Vector4 colorAndRadius{ Math::kZero };
 	};
 
 	// Lighting pass constants

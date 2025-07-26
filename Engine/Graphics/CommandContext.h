@@ -230,8 +230,8 @@ public:
 	void BeginRendering(const ColorBufferPtr& renderTarget);
 	void BeginRendering(const ColorBufferPtr& renderTarget, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void BeginRendering(const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
-	void BeginRendering(std::span<const ColorBufferPtr> renderTargets);
-	void BeginRendering(std::span<const ColorBufferPtr> renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
+	void BeginRendering(const std::vector<ColorBufferPtr>& renderTargets);
+	void BeginRendering(const std::vector<ColorBufferPtr>& renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void EndRendering();
 
 	void BeginQuery(const QueryHeapPtr& queryHeap, uint32_t heapIndex);
@@ -499,24 +499,26 @@ inline void GraphicsContext::BeginRendering(const DepthBufferPtr& depthTarget, D
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<const ColorBufferPtr> renderTargets)
+inline void GraphicsContext::BeginRendering(const std::vector<ColorBufferPtr>& renderTargets)
 {
-	std::vector<const IColorBuffer*> renderTargetPtrs{ 8 };
+	std::vector<const IColorBuffer*> renderTargetPtrs{ renderTargets.size()};
+	uint32_t i = 0;
 	for (const auto& rt : renderTargets)
 	{
-		renderTargetPtrs.push_back(rt.get());
+		renderTargetPtrs[i++] = rt.get();
 	}
 
 	m_contextImpl->BeginRendering(renderTargetPtrs);
 }
 
 
-inline void GraphicsContext::BeginRendering(std::span<const ColorBufferPtr> renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
+inline void GraphicsContext::BeginRendering(const std::vector<ColorBufferPtr>& renderTargets, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	std::vector<const IColorBuffer*> renderTargetPtrs{ 8 };
+	std::vector<const IColorBuffer*> renderTargetPtrs{ renderTargets.size()};
+	uint32_t i = 0;
 	for (const auto& rt : renderTargets)
 	{
-		renderTargetPtrs.push_back(rt.get());
+		renderTargetPtrs[i++] = rt.get();
 	}
 
 	m_contextImpl->BeginRendering(renderTargetPtrs, depthTarget.get(), depthStencilAspect);
