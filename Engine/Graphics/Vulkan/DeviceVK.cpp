@@ -310,9 +310,12 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
 	VkBufferUsageFlags extraFlags{};
 	if (gpuBufferDesc.bAllowShaderResource || gpuBufferDesc.bAllowUnorderedAccess)
 		extraFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	if (gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
+		extraFlags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 
 	VkBufferCreateInfo bufferCreateInfo{
 		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -519,6 +522,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			Sampler* samplerVK = (Sampler*)sampler.get();
 
 			vkSamplers.push_back(samplerVK->GetSampler());
+
+			//hashCode = Utility::HashState(&staticSamplerDesc.samplerDesc, 1, hashCode);
 		}
 
 		// Now, loop over the StaticSamplerDescs again to create the VkDescriptorSetLayoutBindings
@@ -543,6 +548,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			}
 
 			vkLayoutBindings.push_back(vkBinding);
+
+			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
 		}
 
 		// Create the descriptor set layout for the static samplers

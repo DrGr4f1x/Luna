@@ -131,7 +131,13 @@ void CommandContext12::Reset()
 
 void CommandContext12::Initialize()
 {
-	GetD3D12DeviceManager()->CreateNewCommandList(m_commandListType, &m_commandList, &m_currentAllocator);
+	GetD3D12DeviceManager()->CreateNewCommandList(
+		m_commandListType, 
+		&m_commandList, 
+		&m_currentAllocator,
+		&m_drawIndirectSignature,
+		&m_drawIndexedIndirectSignature,
+		&m_dispatchIndirectSignature);
 }
 
 
@@ -1028,6 +1034,36 @@ void CommandContext12::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
+void CommandContext12::DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset)
+{
+	assert(argumentBuffer->GetResourceType() == ResourceType::IndirectArgsBuffer);
+	assert(argumentBuffer->GetElementSize() == sizeof(D3D12_DRAW_ARGUMENTS));
+
+	const GpuBuffer* argumentBuffer12 = (const GpuBuffer*)argumentBuffer;
+	assert(argumentBuffer12 != nullptr);
+
+	FlushResourceBarriers();
+	m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_commandList->ExecuteIndirect(m_drawIndirectSignature, 1, argumentBuffer12->GetResource(), argumentBufferOffset, nullptr, 0);
+}
+
+
+void CommandContext12::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset)
+{
+	assert(argumentBuffer->GetResourceType() == ResourceType::IndirectArgsBuffer);
+	assert(argumentBuffer->GetElementSize() == sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
+
+	const GpuBuffer* argumentBuffer12 = (const GpuBuffer*)argumentBuffer;
+	assert(argumentBuffer12 != nullptr);
+
+	FlushResourceBarriers();
+	m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
+	m_commandList->ExecuteIndirect(m_drawIndexedIndirectSignature, 1, argumentBuffer12->GetResource(), argumentBufferOffset, nullptr, 0);
+}
+
+
 void CommandContext12::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format)
 {
 	const ColorBuffer* srcBuffer12 = (const ColorBuffer*)srcBuffer;
@@ -1071,6 +1107,21 @@ void CommandContext12::Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, 
 		Math::DivideByMultiple(threadCountX, groupSizeX),
 		Math::DivideByMultiple(threadCountY, groupSizeY),
 		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
+
+
+void CommandContext12::DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset)
+{
+	assert(argumentBuffer->GetResourceType() == ResourceType::IndirectArgsBuffer);
+	assert(argumentBuffer->GetElementSize() == sizeof(D3D12_DISPATCH_ARGUMENTS));
+
+	const GpuBuffer* argumentBuffer12 = (const GpuBuffer*)argumentBuffer;
+	assert(argumentBuffer12 != nullptr);
+
+	FlushResourceBarriers();
+	m_dynamicViewDescriptorHeap.CommitComputeRootDescriptorTables(m_commandList);
+	m_dynamicSamplerDescriptorHeap.CommitComputeRootDescriptorTables(m_commandList);
+	m_commandList->ExecuteIndirect(m_dispatchIndirectSignature, 1, argumentBuffer12->GetResource(), argumentBufferOffset, nullptr, 0);
 }
 
 

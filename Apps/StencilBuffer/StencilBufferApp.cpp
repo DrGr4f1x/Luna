@@ -131,7 +131,6 @@ void StencilBufferApp::CreateDeviceDependentResources()
 
 	BoundingBox box = m_model->boundingBox;
 
-	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
 	m_controller.SetOrbitTarget(box.GetCenter(), 4.0f, 0.25f);

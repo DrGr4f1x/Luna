@@ -1328,6 +1328,42 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 }
 
 
+void CommandContextVK::DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset)
+{
+	assert(argumentBuffer->GetResourceType() == ResourceType::IndirectArgsBuffer);
+	assert(argumentBuffer->GetElementSize() == sizeof(VkDrawIndirectCommand));
+
+	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
+	assert(argumentBufferVK != nullptr);
+
+	// TODO: support multi-draw indirect	
+	vkCmdDrawIndexedIndirect(
+		m_commandBuffer, 
+		argumentBufferVK->GetBuffer(), 
+		argumentBufferOffset, 
+		1, 
+		argumentBuffer->GetElementSize());
+}
+
+
+void CommandContextVK::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset)
+{
+	assert(argumentBuffer->GetResourceType() == ResourceType::IndirectArgsBuffer);
+	assert(argumentBuffer->GetElementSize() == sizeof(VkDrawIndexedIndirectCommand));
+
+	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
+	assert(argumentBufferVK != nullptr);
+
+	// TODO: support multi-draw indirect	
+	vkCmdDrawIndexedIndirect(
+		m_commandBuffer,
+		argumentBufferVK->GetBuffer(),
+		argumentBufferOffset,
+		1,
+		argumentBuffer->GetElementSize());
+}
+
+
 void CommandContextVK::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format)
 {
 	const ColorBuffer* srcBufferVK = (const ColorBuffer*)srcBuffer;
@@ -1402,6 +1438,18 @@ void CommandContextVK::Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, 
 		Math::DivideByMultiple(threadCountX, groupSizeX),
 		Math::DivideByMultiple(threadCountY, groupSizeY),
 		Math::DivideByMultiple(threadCountZ, groupSizeZ));
+}
+
+
+void CommandContextVK::DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset)
+{
+	assert(argumentBuffer->GetResourceType() == ResourceType::IndirectArgsBuffer);
+	assert(argumentBuffer->GetElementSize() == sizeof(VkDispatchIndirectCommand));
+
+	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
+	assert(argumentBufferVK != nullptr);
+
+	vkCmdDispatchIndirect(m_commandBuffer, argumentBufferVK->GetBuffer(), argumentBufferOffset);
 }
 
 

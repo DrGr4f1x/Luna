@@ -115,4 +115,82 @@ GpuBufferPtr CreateVertexBuffer(const string& name, size_t elementCount, size_t 
 	return GetDevice()->CreateGpuBuffer(desc);
 }
 
+
+GpuBufferDesc DescribeDrawIndirectArgsBuffer(const std::string& name, size_t elementCount)
+{
+	return GpuBufferDesc{
+		.name			= name,
+		.resourceType	= ResourceType::IndirectArgsBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= elementCount,
+		.elementSize	= sizeof(DrawIndirectArgs)
+	};
+}
+
+
+GpuBufferPtr CreateDrawIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData)
+{
+	GpuBufferDesc desc{
+		.name			= name,
+		.resourceType	= ResourceType::IndirectArgsBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= elementCount,
+		.elementSize	= sizeof(DrawIndirectArgs),
+		.initialData	= initialData
+	};
+	return GetDevice()->CreateGpuBuffer(desc);
+}
+
+
+GpuBufferDesc DescribeDrawIndexedIndirectArgsBuffer(const std::string& name, size_t elementCount)
+{
+	return GpuBufferDesc{
+		.name			= name,
+		.resourceType	= ResourceType::IndirectArgsBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= elementCount,
+		.elementSize	= sizeof(DrawIndirectArgs)
+	};
+}
+
+
+GpuBufferPtr CreateDrawIndexedIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData)
+{
+	GpuBufferDesc desc{
+		.name			= name,
+		.resourceType	= ResourceType::IndirectArgsBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= elementCount,
+		.elementSize	= sizeof(DrawIndexedIndirectArgs),
+		.initialData	= initialData
+	};
+	return GetDevice()->CreateGpuBuffer(desc);
+}
+
+
+GpuBufferDesc DescribeDispatchIndirectArgsBuffer(const std::string& name, size_t elementCount)
+{
+	return GpuBufferDesc{
+		.name			= name,
+		.resourceType	= ResourceType::IndirectArgsBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= elementCount,
+		.elementSize	= sizeof(DispatchIndirectArgs)
+	};
+}
+
+
+GpuBufferPtr CreateDispatchIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData)
+{ 
+	GpuBufferDesc desc{
+		.name = name,
+		.resourceType	= ResourceType::IndirectArgsBuffer,
+		.memoryAccess	= MemoryAccess::GpuRead,
+		.elementCount	= elementCount,
+		.elementSize	= sizeof(DispatchIndirectArgs),
+		.initialData	= initialData
+	};
+	return GetDevice()->CreateGpuBuffer(desc);
+}
+
 } // namespace Luna

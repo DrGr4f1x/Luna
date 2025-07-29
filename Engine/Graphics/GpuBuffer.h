@@ -64,6 +64,34 @@ protected:
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 
 
+// Indirect argument buffer payloads
+struct DrawIndirectArgs
+{
+	uint32_t vertexCountPerInstance;
+	uint32_t instanceCount;
+	uint32_t startVertexLocation;
+	uint32_t startInstanceLocation;
+};
+
+
+struct DrawIndexedIndirectArgs
+{
+	uint32_t indexCountPerInstance;
+	uint32_t instanceCount;
+	uint32_t startIndexLocation;
+	uint32_t baseVertexLocation;
+	uint32_t startInstanceLocation;
+};
+
+
+struct DispatchIndirectArgs
+{
+	uint32_t threadGroupCountX;
+	uint32_t threadGroupCountY;
+	uint32_t threadGroupCountZ;
+};
+
+
 // Helper functions for describing and creating basic GpuBuffer types
 GpuBufferDesc DescribeConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize);
 GpuBufferPtr CreateConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
@@ -80,5 +108,14 @@ GpuBufferPtr CreateVertexBuffer(const std::string& name, std::span<T> vertexData
 {
 	return CreateVertexBuffer(name, vertexData.size(), sizeof(T), vertexData.data());
 }
+
+GpuBufferDesc DescribeDrawIndirectArgsBuffer(const std::string& name, size_t elementCount);
+GpuBufferPtr CreateDrawIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData = nullptr);
+
+GpuBufferDesc DescribeDrawIndexedIndirectArgsBuffer(const std::string& name, size_t elementCount);
+GpuBufferPtr CreateDrawIndexedIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData = nullptr);
+
+GpuBufferDesc DescribeDispatchIndirectArgsBuffer(const std::string& name, size_t elementCount);
+GpuBufferPtr CreateDispatchIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData = nullptr);
 
 } // namespace Luna

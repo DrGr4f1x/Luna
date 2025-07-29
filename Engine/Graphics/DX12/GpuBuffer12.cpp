@@ -16,6 +16,11 @@
 namespace Luna::DX12
 {
 
+static_assert(sizeof(DrawIndirectArgs) == sizeof(D3D12_DRAW_ARGUMENTS));
+static_assert(sizeof(DrawIndexedIndirectArgs) == sizeof(D3D12_DRAW_INDEXED_ARGUMENTS));
+static_assert(sizeof(DispatchIndirectArgs) == sizeof(D3D12_DISPATCH_ARGUMENTS));
+
+
 void GpuBuffer::Update(size_t sizeInBytes, const void* data)
 {
 	Update(sizeInBytes, 0, data);

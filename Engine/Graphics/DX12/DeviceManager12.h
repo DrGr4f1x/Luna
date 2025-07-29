@@ -90,7 +90,13 @@ public:
 	void CreateWindowSizeDependentResources() final;
 
 	CommandContext* AllocateContext(CommandListType commandListType) final;
-	void CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator);
+	void CreateNewCommandList(
+		CommandListType commandListType, 
+		ID3D12GraphicsCommandList** commandList, 
+		ID3D12CommandAllocator** allocator,
+		ID3D12CommandSignature** drawIndirectSignature,
+		ID3D12CommandSignature** drawIndexedIndirectSignature,
+		ID3D12CommandSignature** dispatchIndirectSignature);
 	void FreeContext(CommandContext* usedContext) final;
 
 	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::D3D12; }
@@ -128,6 +134,8 @@ private:
 
 	Queue& GetQueue(QueueType queueType);
 	Queue& GetQueue(CommandListType commandListType);
+
+	void CreateCommandSignatures();
 
 	void InstallDebugCallback();
 	void ReadCaps();
@@ -213,6 +221,11 @@ private:
 		wil::com_ptr<D3D12MA::Allocation> allocation;
 	};
 	std::list<DeferredReleaseResource> m_deferredResources;
+
+	// Indirect command signatures
+	wil::com_ptr<ID3D12CommandSignature> m_drawIndirectSignature;
+	wil::com_ptr<ID3D12CommandSignature> m_drawIndexedIndirectSignature;
+	wil::com_ptr<ID3D12CommandSignature> m_dispatchIndirectSignature;
 };
 
 

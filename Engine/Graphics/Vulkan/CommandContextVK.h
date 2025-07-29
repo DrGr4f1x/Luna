@@ -152,6 +152,8 @@ public:
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
+	void DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
+	void DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
 	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 
@@ -159,6 +161,7 @@ public:
 	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) override;
 	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8) override;
 	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) override;
+	void DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);

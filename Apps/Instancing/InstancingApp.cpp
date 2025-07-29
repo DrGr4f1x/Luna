@@ -257,8 +257,6 @@ void InstancingApp::InitPipelines()
 		.inputClassification	= InputClassification::PerVertexData
 	};
 
-	auto layout = VertexLayout<VertexComponent::PositionNormalColor>();
-
 	GraphicsPipelineDesc planetPipelineDesc{
 		.name				= "Planet Graphics PSO",
 		.blendState			= CommonStates::BlendDisable(),

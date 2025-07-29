@@ -361,6 +361,9 @@ void DeviceManager::CreateDeviceResources()
 	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Create("User Descriptor Heap, CBV_SRV_UAV");
 	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Create("User Descriptor Heap, SAMPLER");
 
+	// Create command signatures
+	CreateCommandSignatures();
+
 	m_caps = make_unique<DeviceCaps>();
 	ReadCaps();
 }
@@ -493,7 +496,13 @@ CommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 }
 
 
-void DeviceManager::CreateNewCommandList(CommandListType commandListType, ID3D12GraphicsCommandList** commandList, ID3D12CommandAllocator** allocator)
+void DeviceManager::CreateNewCommandList(
+	CommandListType commandListType, 
+	ID3D12GraphicsCommandList** commandList, 
+	ID3D12CommandAllocator** allocator,
+	ID3D12CommandSignature** drawIndirectSignature,
+	ID3D12CommandSignature** drawIndexedIndirectSignature,
+	ID3D12CommandSignature** dispatchIndirectSignature)
 {
 	assert_msg(commandListType != CommandListType::Bundle, "Bundles are not yet supported");
 
@@ -502,6 +511,10 @@ void DeviceManager::CreateNewCommandList(CommandListType commandListType, ID3D12
 	assert_succeeded(m_dxDevice->CreateCommandList(1, CommandListTypeToDX12(commandListType), *allocator, nullptr, IID_PPV_ARGS(commandList)));
 
 	(*commandList)->SetName(L"CommandList");
+
+	*drawIndirectSignature = m_drawIndirectSignature.get();
+	*drawIndexedIndirectSignature = m_drawIndexedIndirectSignature.get();
+	*dispatchIndirectSignature = m_dispatchIndirectSignature.get();
 }
 
 
@@ -853,6 +866,55 @@ Queue& DeviceManager::GetQueue(CommandListType commandListType)
 {
 	const auto queueType = CommandListTypeToQueueType(commandListType);
 	return GetQueue(queueType);
+}
+
+
+void DeviceManager::CreateCommandSignatures()
+{
+	// Draw indirect
+	{
+		D3D12_INDIRECT_ARGUMENT_DESC args{
+			.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW
+		};
+
+		D3D12_COMMAND_SIGNATURE_DESC signatureDesc{
+			.ByteStride			= sizeof(D3D12_DRAW_ARGUMENTS),
+			.NumArgumentDescs	= 1,
+			.pArgumentDescs		= &args
+		};
+		
+		assert_succeeded(m_dxDevice->CreateCommandSignature(&signatureDesc, nullptr, IID_PPV_ARGS(&m_drawIndirectSignature)));
+	}
+
+	// Draw indexed indirect
+	{
+		D3D12_INDIRECT_ARGUMENT_DESC args{
+			.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED
+		};
+
+		D3D12_COMMAND_SIGNATURE_DESC signatureDesc{
+			.ByteStride			= sizeof(D3D12_DRAW_INDEXED_ARGUMENTS),
+			.NumArgumentDescs	= 1,
+			.pArgumentDescs		= &args
+		};
+
+		assert_succeeded(m_dxDevice->CreateCommandSignature(&signatureDesc, nullptr, IID_PPV_ARGS(&m_drawIndexedIndirectSignature)));
+	}
+
+	// Dispatch indirect
+	{
+		D3D12_INDIRECT_ARGUMENT_DESC args{
+			.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH
+		};
+
+		D3D12_COMMAND_SIGNATURE_DESC signatureDesc{
+			.ByteStride			= sizeof(D3D12_DISPATCH_ARGUMENTS),
+			.NumArgumentDescs	= 1,
+			.pArgumentDescs		= &args
+		};
+
+		assert_succeeded(m_dxDevice->CreateCommandSignature(&signatureDesc, nullptr, IID_PPV_ARGS(&m_dispatchIndirectSignature)));
+	}
 }
 
 

@@ -139,7 +139,9 @@ public:
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) = 0;
 	virtual void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) = 0;
-
+	virtual void DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) = 0;
+	virtual void DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) = 0;
+	
 	virtual void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) = 0;
 
 	// Compute context
@@ -147,6 +149,7 @@ public:
 	virtual void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) = 0;
 	virtual void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8) = 0;
 	virtual void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) = 0;
+	virtual void DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) = 0;
 	
 protected:
 	virtual void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
@@ -284,7 +287,9 @@ public:
 		uint32_t startVertexLocation = 0, uint32_t startInstanceLocation = 0);
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation);
-
+	void DrawIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset = 0);
+	void DrawIndexedIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset = 0);
+	
 	void Resolve(const ColorBufferPtr& srcBuffer, const ColorBufferPtr& destBuffer, Format format);
 };
 
@@ -323,6 +328,7 @@ public:
 	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64);
 	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8);
 	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ);
+	void DispatchIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset = 0);
 };
 
 
@@ -774,6 +780,18 @@ inline void GraphicsContext::DrawIndexedInstanced(uint32_t indexCountPerInstance
 }
 
 
+inline void GraphicsContext::DrawIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset)
+{
+	m_contextImpl->DrawIndirect(argumentBuffer.get(), argumentBufferOffset);
+}
+
+
+inline void GraphicsContext::DrawIndexedIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset)
+{
+	m_contextImpl->DrawIndexedIndirect(argumentBuffer.get(), argumentBufferOffset);
+}
+
+
 inline void GraphicsContext::Resolve(const ColorBufferPtr& srcBuffer, const ColorBufferPtr& destBuffer, Format format)
 {
 	m_contextImpl->Resolve(srcBuffer.get(), destBuffer.get(), format);
@@ -921,6 +939,12 @@ inline void ComputeContext::Dispatch2D(uint32_t threadCountX, uint32_t threadCou
 inline void ComputeContext::Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ)
 {
 	m_contextImpl->Dispatch3D(threadCountX, threadCountY, threadCountZ, groupSizeX, groupSizeY, groupSizeZ);
+}
+
+
+inline void ComputeContext::DispatchIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset)
+{
+	m_contextImpl->DispatchIndirect(argumentBuffer.get(), argumentBufferOffset);
 }
 
 } // namespace Luna

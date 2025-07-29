@@ -126,6 +126,8 @@ public:
 		uint32_t startVertexLocation, uint32_t startInstanceLocation) override;
 	void DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
+	void DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
+	void DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
 	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 
@@ -134,6 +136,7 @@ public:
 	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64) override;
 	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8) override;
 	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) override;
+	void DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
 	// Platform-specific functions
 	void SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, ID3D12DescriptorHeap* heapPtr);
@@ -163,6 +166,10 @@ private:
 	ID3D12RootSignature* m_computeRootSignature{ nullptr };
 	ID3D12PipelineState* m_graphicsPipelineState{ nullptr };
 	ID3D12PipelineState* m_computePipelineState{ nullptr };
+
+	ID3D12CommandSignature* m_drawIndirectSignature{nullptr};
+	ID3D12CommandSignature* m_drawIndexedIndirectSignature{nullptr};
+	ID3D12CommandSignature* m_dispatchIndirectSignature{nullptr};
 
 	DynamicDescriptorHeap m_dynamicViewDescriptorHeap;
 	DynamicDescriptorHeap m_dynamicSamplerDescriptorHeap;
