@@ -88,7 +88,7 @@ void PipelinesApp::Render()
 	context.SetScissor(0, 0, width, height);
 
 	context.SetRootSignature(m_rootSignature);
-	context.SetResources(m_resources);
+	context.SetDescriptors(0, m_cbvDescriptorSet);
 
 	// Left : solid color
 	{
@@ -138,7 +138,7 @@ void PipelinesApp::CreateDeviceDependentResources()
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(VSConstants));
 
 	LoadAssets();
-	InitResourceSet();
+	InitDescriptorSet();
 
 	auto box = m_model->boundingBox;
 
@@ -225,10 +225,10 @@ void PipelinesApp::InitPipelines()
 }
 
 
-void PipelinesApp::InitResourceSet()
+void PipelinesApp::InitDescriptorSet()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 
