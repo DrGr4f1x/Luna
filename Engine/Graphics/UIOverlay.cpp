@@ -349,8 +349,9 @@ void UIOverlay::InitFontTex()
 	unsigned char* fontData{ nullptr };
 	int texWidth{ 0 };
 	int texHeight{ 0 };
+	int bytesPerPixel{ 0 };
 
-	io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
+	io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight, &bytesPerPixel);
 
 	TextureDesc fontDesc{
 		.name		= "Roboto-Medium.ttf",
@@ -358,6 +359,7 @@ void UIOverlay::InitFontTex()
 		.height		= (uint32_t)texHeight,
 		.depth		= 1,
 		.format		= Format::RGBA8_UNorm,
+		.dataSize	= (size_t)(texWidth * texHeight * bytesPerPixel),
 		.data		= (std::byte*)fontData
 	};
 

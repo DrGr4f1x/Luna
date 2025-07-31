@@ -111,7 +111,10 @@ void TextureCubeMapArrayApp::Render()
 		context.SetRootSignature(m_rootSignature);
 		context.SetGraphicsPipeline(m_skyboxPipeline);
 
-		context.SetResources(m_skyboxResources);
+		// Bind descriptor sets
+		context.SetDescriptors(0, m_skyBoxCbvDescriptorSet);
+		context.SetDescriptors(1, m_psCbvSrvDescriptorSet);
+		context.SetDescriptors(2, m_psSamplerDescriptorSet);
 
 		m_skyboxModel->Render(context);
 	}
@@ -124,8 +127,11 @@ void TextureCubeMapArrayApp::Render()
 		context.SetRootSignature(m_rootSignature);
 		context.SetGraphicsPipeline(m_modelPipeline);
 
-		context.SetResources(m_modelResources);
-
+		// Bind descriptor sets
+		context.SetDescriptors(0, m_modelCbvDescriptorSet);
+		context.SetDescriptors(1, m_psCbvSrvDescriptorSet);
+		context.SetDescriptors(2, m_psSamplerDescriptorSet);
+		
 		model->Render(context);
 	}
 
@@ -148,7 +154,7 @@ void TextureCubeMapArrayApp::CreateDeviceDependentResources()
 	m_psConstantBuffer = CreateConstantBuffer("PS Constant Buffer", 1, sizeof(PSConstants));
 
 	LoadAssets();
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -234,19 +240,18 @@ void TextureCubeMapArrayApp::InitPipelines()
 }
 
 
-void TextureCubeMapArrayApp::InitResourceSets()
+void TextureCubeMapArrayApp::InitDescriptorSets()
 {
-	m_skyboxResources.Initialize(m_rootSignature);
-	m_skyboxResources.SetCBV(0, 0, m_vsSkyboxConstantBuffer);
-	m_skyboxResources.SetCBV(1, 0, m_psConstantBuffer);
-	m_skyboxResources.SetSRV(1, 1, m_skyboxTex);
-	m_skyboxResources.SetSampler(2, 0, m_sampler);
+	m_skyBoxCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_modelCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_psSamplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
 
-	m_modelResources.Initialize(m_rootSignature);
-	m_modelResources.SetCBV(0, 0, m_vsModelConstantBuffer);
-	m_modelResources.SetCBV(1, 0, m_psConstantBuffer);
-	m_modelResources.SetSRV(1, 1, m_skyboxTex);
-	m_modelResources.SetSampler(2, 0, m_sampler);
+	m_skyBoxCbvDescriptorSet->SetCBV(0, m_vsSkyboxConstantBuffer);
+	m_modelCbvDescriptorSet->SetCBV(0, m_vsModelConstantBuffer);
+	m_psCbvSrvDescriptorSet->SetCBV(0, m_psConstantBuffer);
+	m_psCbvSrvDescriptorSet->SetSRV(1, m_skyboxTex);
+	m_psSamplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 void TextureCubeMapArrayApp::UpdateConstantBuffers()

@@ -75,7 +75,7 @@ void TriangleApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetResources(m_resources);
+	context.SetDescriptors(0, m_cbvDescriptorSet);
 	//context.SetConstantBuffer(0, m_constantBuffer);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
@@ -162,7 +162,7 @@ void TriangleApp::CreateDeviceDependentResources()
 	UpdateConstantBuffer();
 
 	InitRootSignature();
-	InitResources();
+	InitDescriptorSet();
 }
 
 
@@ -229,10 +229,10 @@ void TriangleApp::InitPipelineState()
 }
 
 
-void TriangleApp::InitResources()
+void TriangleApp::InitDescriptorSet()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 

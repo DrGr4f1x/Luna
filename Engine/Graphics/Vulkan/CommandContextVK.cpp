@@ -1342,7 +1342,7 @@ void CommandContextVK::DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t a
 		argumentBufferVK->GetBuffer(), 
 		argumentBufferOffset, 
 		1, 
-		argumentBuffer->GetElementSize());
+		(uint32_t)argumentBuffer->GetElementSize());
 }
 
 
@@ -1354,13 +1354,13 @@ void CommandContextVK::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uin
 	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
 	assert(argumentBufferVK != nullptr);
 
-	// TODO: support multi-draw indirect	
+	// TODO: support multi-draw indirect
 	vkCmdDrawIndexedIndirect(
 		m_commandBuffer,
 		argumentBufferVK->GetBuffer(),
 		argumentBufferOffset,
 		1,
-		argumentBuffer->GetElementSize());
+		(uint32_t)argumentBuffer->GetElementSize());
 }
 
 

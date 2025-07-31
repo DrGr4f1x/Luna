@@ -1422,11 +1422,8 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 	const size_t height = dimension == TextureDimension::Texture1D ? 1 : textureDesc.height;
 	const size_t depth = dimension == TextureDimension::Texture3D ? textureDesc.depth : 1;
 
-	size_t numBytes = 0;
-	size_t rowPitch = 0;
-	GetSurfaceInfo(textureDesc.width, height, textureDesc.format, &numBytes, &rowPitch, nullptr, nullptr, nullptr);
-
-	numBytes *= depth;
+	assert(textureDesc.dataSize != 0);
+	assert(textureDesc.data != nullptr);
 
 	TextureInitializer texInit{
 		.format				= textureDesc.format,
@@ -1434,7 +1431,7 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 		.width				= textureDesc.width,
 		.height				= (uint32_t)height,
 		.arraySizeOrDepth	= (uint32_t)depth,
-		.numMips			= 1
+		.numMips			= textureDesc.numMips
 	};
 	texInit.subResourceData.push_back(TextureSubresourceData{});
 
@@ -1443,11 +1440,11 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 		textureDesc.width,
 		height,
 		depth,
-		1, // numMips
+		textureDesc.numMips,
 		1, // arraySize
 		textureDesc.format,
 		0, // maxSize
-		numBytes,
+		textureDesc.dataSize,
 		textureDesc.data,
 		skipMip,
 		texInit);

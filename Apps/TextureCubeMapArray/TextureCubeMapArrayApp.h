@@ -35,7 +35,7 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffers();
 
@@ -76,8 +76,10 @@ protected:
 	Luna::GpuBufferPtr m_vsModelConstantBuffer;
 	Luna::GpuBufferPtr m_psConstantBuffer;
 
-	Luna::ResourceSet m_modelResources;
-	Luna::ResourceSet m_skyboxResources;
+	Luna::DescriptorSetPtr m_skyBoxCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_modelCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_psCbvSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_psSamplerDescriptorSet;
 
 	Luna::TexturePtr m_skyboxTex;
 	Luna::ModelPtr m_skyboxModel;

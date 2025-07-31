@@ -94,7 +94,8 @@ void TextureApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetResources(m_resources);
+	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetDescriptors(1, m_srvDescriptorSet);
 	//context.SetCBV(0, 0, m_constantBuffer);
 	//context.SetSRV(1, 0, *m_texture);
 
@@ -135,7 +136,7 @@ void TextureApp::CreateDeviceDependentResources()
 	UpdateConstantBuffer();
 	InitRootSignature();
 	LoadAssets();
-	InitResources();
+	InitDescriptorSets();
 }
 
 
@@ -207,11 +208,13 @@ void TextureApp::InitPipelineState()
 }
 
 
-void TextureApp::InitResources()
+void TextureApp::InitDescriptorSets()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
-	m_resources.SetSRV(1, 0, m_texture);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
+	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
 
 

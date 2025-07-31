@@ -205,7 +205,10 @@ void Texture3dApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetResources(m_resources);
+	// Bind descriptor sets
+	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetDescriptors(1, m_srvDescriptorSet);
+	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
 	context.SetIndexBuffer(m_indexBuffer);
@@ -244,7 +247,7 @@ void Texture3dApp::CreateDeviceDependentResources()
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 
 	InitTexture();
-	InitResourceSet();
+	InitDescriptorSets();
 }
 
 
@@ -361,6 +364,7 @@ void Texture3dApp::InitTexture()
 		.height		= height,
 		.depth		= depth,
 		.format		= Format::R8_UNorm,
+		.dataSize	= width * height * depth,
 		.data		= data.get()
 	};
 
@@ -372,12 +376,15 @@ void Texture3dApp::InitTexture()
 }
 
 
-void Texture3dApp::InitResourceSet()
+void Texture3dApp::InitDescriptorSets()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
-	m_resources.SetSRV(1, 0, m_texture);
-	m_resources.SetSampler(2, 0, m_sampler);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
+
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
+	m_srvDescriptorSet->SetSRV(0, m_texture);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 void Texture3dApp::UpdateConstantBuffer()

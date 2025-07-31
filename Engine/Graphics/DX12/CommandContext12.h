@@ -151,6 +151,7 @@ protected:
 	void SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 
 private:
+	void BindUserDescriptorHeaps();
 	void BindDescriptorHeaps();
 	void BindRenderTargets();
 	void ResetRenderTargets();

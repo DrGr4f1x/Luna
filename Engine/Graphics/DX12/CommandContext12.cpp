@@ -1249,6 +1249,8 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		return;
 	}
 
+	BindUserDescriptorHeaps();
+
 	// Copy descriptors
 	descriptorSet12->UpdateGpuDescriptors();
 
@@ -1289,6 +1291,21 @@ void CommandContext12::SetDynamicDescriptors_Internal(CommandListType type, uint
 	{
 		m_dynamicViewDescriptorHeap.SetComputeDescriptorHandles(rootIndex, offset, numDescriptors, handles);
 	}
+}
+
+
+void CommandContext12::BindUserDescriptorHeaps()
+{
+	D3D12_DESCRIPTOR_HEAP_TYPE heapTypes[] = {
+		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+		D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+	};
+
+	ID3D12DescriptorHeap* heaps[] = {
+		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].GetHeapPointer(),
+		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].GetHeapPointer()
+	};
+	SetDescriptorHeaps(2, heapTypes, heaps);
 }
 
 

@@ -63,7 +63,9 @@ struct TextureDesc
 	uint64_t width{ 0 };
 	uint32_t height{ 0 };
 	uint32_t depth{ 0 };
+	uint32_t numMips{ 1 };
 	Format format{ Format::Unknown };
+	size_t dataSize{ 0 };
 	std::byte* data{ nullptr };
 };
 

@@ -35,7 +35,7 @@ protected:
 	void InitRootSignature();
 	void InitGraphicsPipeline();
 	void InitConstantBuffer();
-	void InitResourceSet();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffer();
 
@@ -72,7 +72,9 @@ protected:
 	Luna::GpuBufferPtr m_indexBuffer;
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	Luna::ResourceSet m_resources;
+	Luna::DescriptorSetPtr m_cbvDescriptorSet;
+	Luna::DescriptorSetPtr m_srvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_graphicsPipeline;

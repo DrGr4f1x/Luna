@@ -102,8 +102,12 @@ void RadialBlurApp::Render()
 		context.SetRootSignature(m_sceneRootSignature);
 		context.SetGraphicsPipeline(m_colorPassPipeline);
 
+		// Bind descriptor sets
+		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
+		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
+		context.SetDescriptors(2, m_sceneSamplerDescriptorSet);
+
 		// Draw the model
-		context.SetResources(m_sceneResources);
 		m_model->Render(context);
 
 		context.EndRendering();
@@ -128,8 +132,12 @@ void RadialBlurApp::Render()
 		context.SetRootSignature(m_sceneRootSignature);
 		context.SetGraphicsPipeline(m_phongPassPipeline);
 
+		// Bind descriptor sets
+		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
+		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
+		context.SetDescriptors(2, m_sceneSamplerDescriptorSet);
+
 		// Draw the model
-		context.SetResources(m_sceneResources);
 		m_model->Render(context);
 
 		if (m_blur)
@@ -137,7 +145,9 @@ void RadialBlurApp::Render()
 			context.SetRootSignature(m_radialBlurRootSignature);
 			context.SetGraphicsPipeline(m_displayTexture ? m_displayTexturePipeline : m_radialBlurPipeline);
 
-			context.SetResources(m_blurResources);
+			// Bind descriptor sets
+			context.SetDescriptors(0, m_blurCbvSrvDescriptorSet);
+			context.SetDescriptors(1, m_blurSamplerDescriptorSet);
 
 			context.Draw(3);
 		}
@@ -163,7 +173,7 @@ void RadialBlurApp::CreateDeviceDependentResources()
 
 	InitRenderTargets();
 	LoadAssets();
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -291,17 +301,22 @@ void RadialBlurApp::InitRenderTargets()
 }
 
 
-void RadialBlurApp::InitResourceSets()
+void RadialBlurApp::InitDescriptorSets()
 {
-	m_sceneResources.Initialize(m_sceneRootSignature);
-	m_sceneResources.SetCBV(0, 0, m_sceneConstantBuffer);
-	m_sceneResources.SetSRV(1, 0, m_gradientTex);
-	m_sceneResources.SetSampler(2, 0, m_samplerLinearWrap);
+	m_sceneCbvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
+	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1);
+	m_sceneSamplerDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(2);
+	
+	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(0);
+	m_blurSamplerDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(1);
 
-	m_blurResources.Initialize(m_radialBlurRootSignature);
-	m_blurResources.SetSRV(0, 0, m_offscreenColorBuffer);
-	m_blurResources.SetCBV(0, 1, m_radialBlurConstantBuffer);
-	m_blurResources.SetSampler(1, 0, m_samplerLinearClamp);
+	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer);
+	m_sceneSrvDescriptorSet->SetSRV(0, m_gradientTex);
+	m_sceneSamplerDescriptorSet->SetSampler(0, m_samplerLinearWrap);
+
+	m_blurCbvSrvDescriptorSet->SetSRV(0, m_offscreenColorBuffer);
+	m_blurCbvSrvDescriptorSet->SetCBV(1, m_radialBlurConstantBuffer);
+	m_blurSamplerDescriptorSet->SetSampler(0, m_samplerLinearClamp);
 }
 
 

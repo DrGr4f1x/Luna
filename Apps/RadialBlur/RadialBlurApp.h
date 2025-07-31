@@ -35,7 +35,7 @@ protected:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitRenderTargets();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void LoadAssets();
 
@@ -79,9 +79,12 @@ protected:
 	RadialBlurConstants m_radialBlurConstants{};
 	Luna::GpuBufferPtr m_radialBlurConstantBuffer;
 
-	// Resource sets
-	Luna::ResourceSet m_sceneResources;
-	Luna::ResourceSet m_blurResources;
+	// Descriptor sets
+	Luna::DescriptorSetPtr m_sceneCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_sceneSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_sceneSamplerDescriptorSet;
+	Luna::DescriptorSetPtr m_blurCbvSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_blurSamplerDescriptorSet;
 
 	// Assets
 	Luna::ModelPtr m_model;
