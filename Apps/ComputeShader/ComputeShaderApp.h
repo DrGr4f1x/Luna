@@ -33,7 +33,7 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void LoadAssets();
 
@@ -57,7 +57,7 @@ protected:
 	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	Luna::RootSignaturePtr m_graphicsrootSignature;
+	Luna::RootSignaturePtr m_graphicsRootSignature;
 	Luna::RootSignaturePtr m_computeRootSignature;
 
 	Luna::GraphicsPipelinePtr m_graphicsPipeline;
@@ -66,9 +66,12 @@ protected:
 	Luna::ComputePipelinePtr m_sharpenPipeline;
 	bool m_pipelinesCreated{ false };
 
-	Luna::ResourceSet m_computeResources;
-	Luna::ResourceSet m_gfxLeftResources;
-	Luna::ResourceSet m_gfxRightResources;
+	Luna::DescriptorSetPtr m_computeSrvUavDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsLeftCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsLeftSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsRightCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsRightSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::ColorBufferPtr m_computeScratchBuffer;
 
