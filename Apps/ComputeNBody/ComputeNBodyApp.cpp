@@ -75,7 +75,7 @@ void ComputeNBodyApp::Render()
 		computeContext.SetRootSignature(m_computeRootSignature);
 		computeContext.SetComputePipeline(m_computeCalculatePipeline);
 
-		computeContext.SetResources(m_computeResources);
+		computeContext.SetDescriptors(0, m_computeCbvUavDescriptorSet);
 
 		computeContext.Dispatch1D(6 * PARTICLES_PER_ATTRACTOR, 256);
 
@@ -101,7 +101,10 @@ void ComputeNBodyApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetResources(m_graphicsResources);
+	context.SetDescriptors(0, m_graphicsVsCbvSrvDescriptorSet);
+	context.SetDescriptors(1, m_graphicsGsCbvDescriptorSet);
+	context.SetDescriptors(2, m_graphicsPsSrvDescriptorSet);
+	context.SetDescriptors(3, m_samplerDescriptorSet);
 
 	context.Draw(6 * PARTICLES_PER_ATTRACTOR);
 
@@ -137,7 +140,7 @@ void ComputeNBodyApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -229,19 +232,25 @@ void ComputeNBodyApp::InitPipelines()
 }
 
 
-void ComputeNBodyApp::InitResourceSets()
+void ComputeNBodyApp::InitDescriptorSets()
 {
-	m_graphicsResources.Initialize(m_rootSignature);
-	m_graphicsResources.SetCBV(0, 0, m_graphicsConstantBuffer);
-	m_graphicsResources.SetSRV(0, 1, m_particleBuffer);
-	m_graphicsResources.SetCBV(1, 0, m_graphicsConstantBuffer);
-	m_graphicsResources.SetSRV(2, 0, m_colorTexture);
-	m_graphicsResources.SetSRV(2, 1, m_gradientTexture);
-	m_graphicsResources.SetSampler(3, 0, m_sampler);
+	m_graphicsVsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_graphicsVsCbvSrvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
+	m_graphicsVsCbvSrvDescriptorSet->SetSRV(1, m_particleBuffer);
 
-	m_computeResources.Initialize(m_computeRootSignature);
-	m_computeResources.SetCBV(0, 0, m_computeConstantBuffer);
-	m_computeResources.SetUAV(0, 1, m_particleBuffer);
+	m_graphicsGsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_graphicsGsCbvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
+
+	m_graphicsPsSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
+	m_graphicsPsSrvDescriptorSet->SetSRV(0, m_colorTexture);
+	m_graphicsPsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
+
+	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(3);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
+
+	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
+	m_computeCbvUavDescriptorSet->SetCBV(0, m_computeConstantBuffer);
+	m_computeCbvUavDescriptorSet->SetUAV(1, m_particleBuffer);
 }
 
 

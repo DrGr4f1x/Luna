@@ -34,7 +34,7 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
-	void InitResourceSets();
+	void InitDescriptorSets();
 	void InitParticles();
 
 	void LoadAssets();
@@ -80,8 +80,11 @@ protected:
 
 	Luna::GpuBufferPtr m_particleBuffer;
 
-	Luna::ResourceSet m_graphicsResources;
-	Luna::ResourceSet m_computeResources;
+	Luna::DescriptorSetPtr m_graphicsVsCbvSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsGsCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsPsSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
+	Luna::DescriptorSetPtr m_computeCbvUavDescriptorSet;
 
 	Luna::TexturePtr m_gradientTexture;
 	Luna::TexturePtr m_colorTexture;
