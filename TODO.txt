@@ -39,6 +39,8 @@ TODO:
 -- Auto-register and auto-update window size dependent resources?
 -- Figure out device lost in vulkan multisampling app
 -- IndirectDraw app - support multi-draw indirect
+-- Directly create DescriptorSets without needing RootSignature
+-- Do a StaticSampler pass over all apps
 
 DONE:
 -- Handles and pools for:

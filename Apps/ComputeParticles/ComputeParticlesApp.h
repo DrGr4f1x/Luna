@@ -35,7 +35,7 @@ protected:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitParticles();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffers();
 
@@ -84,8 +84,10 @@ protected:
 	Luna::TexturePtr m_gradientTexture;
 	Luna::SamplerPtr m_sampler;
 
-	Luna::ResourceSet m_computeResources;
-	Luna::ResourceSet m_gfxResources;
+	Luna::DescriptorSetPtr m_computeUavCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsSrvCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_graphicsSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	bool m_animate{ true };
 	float m_animStart{ 20.0f };

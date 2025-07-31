@@ -95,7 +95,7 @@ void ComputeParticlesApp::Render()
 		computeContext.SetRootSignature(m_computeRootSignature);
 		computeContext.SetComputePipeline(m_computePipeline);
 
-		computeContext.SetResources(m_computeResources);
+		computeContext.SetDescriptors(0, m_computeUavCbvDescriptorSet);
 
 		computeContext.Dispatch1D(m_particleCount, 256);
 
@@ -116,7 +116,9 @@ void ComputeParticlesApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.SetResources(m_gfxResources);
+	context.SetDescriptors(0, m_graphicsSrvCbvDescriptorSet);
+	context.SetDescriptors(1, m_graphicsSrvDescriptorSet);
+	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.Draw(6 * m_particleCount);
 
@@ -141,7 +143,7 @@ void ComputeParticlesApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -245,18 +247,22 @@ void ComputeParticlesApp::InitParticles()
 }
 
 
-void ComputeParticlesApp::InitResourceSets()
+void ComputeParticlesApp::InitDescriptorSets()
 {
-	m_computeResources.Initialize(m_computeRootSignature);
-	m_computeResources.SetUAV(0, 0, m_particleBuffer);
-	m_computeResources.SetCBV(0, 1, m_csConstantBuffer);
+	m_computeUavCbvDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
+	m_computeUavCbvDescriptorSet->SetUAV(0, m_particleBuffer);
+	m_computeUavCbvDescriptorSet->SetCBV(1, m_csConstantBuffer);
 
-	m_gfxResources.Initialize(m_graphicsRootSignature);
-	m_gfxResources.SetSRV(0, 0, m_particleBuffer);
-	m_gfxResources.SetCBV(0, 1, m_vsConstantBuffer);
-	m_gfxResources.SetSRV(1, 0, m_colorTexture);
-	m_gfxResources.SetSRV(1, 1, m_gradientTexture);
-	m_gfxResources.SetSampler(2, 0, m_sampler);
+	m_graphicsSrvCbvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(0);
+	m_graphicsSrvCbvDescriptorSet->SetSRV(0, m_particleBuffer);
+	m_graphicsSrvCbvDescriptorSet->SetCBV(1, m_vsConstantBuffer);
+
+	m_graphicsSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
+	m_graphicsSrvDescriptorSet->SetSRV(0, m_colorTexture);
+	m_graphicsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
+
+	m_samplerDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(2);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
