@@ -22,7 +22,6 @@ using namespace std;
 
 DirectConstantsApp::DirectConstantsApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -89,7 +88,7 @@ void DirectConstantsApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_pipeline);
 
-	context.SetResources(m_resources);
+	context.SetDescriptors(0, m_cbvDescriptorSet);
 	context.SetConstantArray(1, 24, &m_lightConstants);
 
 	m_model->Render(context);
@@ -123,7 +122,7 @@ void DirectConstantsApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResourceSet();
+	InitDescriptorSet();
 }
 
 
@@ -187,10 +186,10 @@ void DirectConstantsApp::InitPipeline()
 }
 
 
-void DirectConstantsApp::InitResourceSet()
+void DirectConstantsApp::InitDescriptorSet()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 

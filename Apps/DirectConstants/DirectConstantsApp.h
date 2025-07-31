@@ -33,7 +33,7 @@ protected:
 
 	void InitRootSignature();
 	void InitPipeline();
-	void InitResourceSet();
+	void InitDescriptorSet();
 
 	void UpdateConstantBuffer();
 
@@ -60,9 +60,9 @@ protected:
 
 	LightConstants m_lightConstants{};
 
-	Luna::ResourceSet m_resources;
+	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 
 	Luna::ModelPtr m_model;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };
