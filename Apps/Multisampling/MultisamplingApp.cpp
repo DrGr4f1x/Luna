@@ -93,7 +93,9 @@ void MultisamplingApp::Render()
 			context.SetIndexBuffer(mesh->indexBuffer);
 			context.SetVertexBuffer(0, mesh->vertexBuffer);
 
-			context.SetResources(m_resources[meshIndex]);
+			context.SetDescriptors(0, m_cbvDescriptorSet);
+			context.SetDescriptors(1, m_srvDescriptorSets[meshIndex]);
+			context.SetDescriptors(2, m_samplerDescriptorSet);
 
 			for (const auto& meshPart : mesh->meshParts)
 			{
@@ -146,7 +148,7 @@ void MultisamplingApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResources();
+	InitDescriptorSets();
 }
 
 
@@ -246,21 +248,24 @@ void MultisamplingApp::InitPipelines()
 }
 
 
-void MultisamplingApp::InitResources()
+void MultisamplingApp::InitDescriptorSets()
 {
 	for (uint32_t i = 0; i < (uint32_t)m_model->meshes.size(); ++i)
 	{
 		const uint32_t materialIndex = m_model->meshes[i]->materialIndex;
 		TexturePtr texture = m_model->materials[materialIndex].diffuseTexture;
 
-		ResourceSet resources;
-		resources.Initialize(m_rootSignature);
-		resources.SetCBV(0, 0, m_constantBuffer);
-		resources.SetSRV(1, 0, texture);
-		resources.SetSampler(2, 0, m_sampler);
+		auto srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+		srvDescriptorSet->SetSRV(0, texture);
 
-		m_resources.push_back(resources);
+		m_srvDescriptorSets.push_back(srvDescriptorSet);
 	}
+
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
+
+	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 

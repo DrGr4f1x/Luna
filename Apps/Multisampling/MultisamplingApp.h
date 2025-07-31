@@ -36,7 +36,7 @@ protected:
 	void InitRenderTargets();
 	void InitRootSignature();
 	void InitPipelines();
-	void InitResources();
+	void InitDescriptorSets();
 
 	void LoadAssets();
 
@@ -65,7 +65,9 @@ protected:
 	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	std::vector<Luna::ResourceSet> m_resources;
+	Luna::DescriptorSetPtr m_cbvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
+	std::vector<Luna::DescriptorSetPtr> m_srvDescriptorSets;
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_msaaPipeline;
