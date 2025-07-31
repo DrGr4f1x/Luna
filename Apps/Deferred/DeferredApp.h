@@ -37,7 +37,7 @@ protected:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void LoadAssets();
 
@@ -97,10 +97,11 @@ protected:
 	Luna::GpuBufferPtr m_gbufferConstantBuffer;
 	Luna::GpuBufferPtr m_lightingConstantBuffer;
 
-	// Resource sets
-	Luna::ResourceSet m_armorResources;
-	Luna::ResourceSet m_floorResources;
-	Luna::ResourceSet m_lightingResources;
+	// Descriptor sets
+	Luna::DescriptorSetPtr m_gbufferCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_armorSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_floorSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_lightingCbvSrvDescriptorSet;
 
 	// Assets
 	Luna::ModelPtr m_armorModel;

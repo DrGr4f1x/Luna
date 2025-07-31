@@ -93,11 +93,12 @@ void DeferredApp::Render()
 		context.SetGraphicsPipeline(m_gbufferPipeline);
 
 		// Render floor
-		context.SetResources(m_floorResources);
+		context.SetDescriptors(0, m_gbufferCbvDescriptorSet);
+		context.SetDescriptors(1, m_floorSrvDescriptorSet);
 		m_floorModel->Render(context);
 
 		// Render armor model instanced
-		context.SetResources(m_armorResources);
+		context.SetDescriptors(1, m_armorSrvDescriptorSet);
 		m_armorModel->RenderInstanced(context, 3);
 
 		context.EndRendering();
@@ -120,7 +121,7 @@ void DeferredApp::Render()
 		context.SetRootSignature(m_lightingRootSignature);
 		context.SetGraphicsPipeline(m_lightingPipeline);
 
-		context.SetResources(m_lightingResources);
+		context.SetDescriptors(0, m_lightingCbvSrvDescriptorSet);
 
 		context.Draw(3);
 	}
@@ -173,7 +174,7 @@ void DeferredApp::CreateWindowSizeDependentResources()
 		0.1f,
 		512.0f);
 
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -304,23 +305,24 @@ void DeferredApp::InitConstantBuffers()
 }
 
 
-void DeferredApp::InitResourceSets()
+void DeferredApp::InitDescriptorSets()
 {
-	m_armorResources.Initialize(m_gbufferRootSignature);
-	m_armorResources.SetCBV(0, 0, m_gbufferConstantBuffer);
-	m_armorResources.SetSRV(1, 0, m_armorColorTexture);
-	m_armorResources.SetSRV(1, 1, m_armorNormalTexture);
+	m_gbufferCbvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(0);
+	m_gbufferCbvDescriptorSet->SetCBV(0, m_gbufferConstantBuffer);
 
-	m_floorResources.Initialize(m_gbufferRootSignature);
-	m_floorResources.SetCBV(0, 0, m_gbufferConstantBuffer);
-	m_floorResources.SetSRV(1, 0, m_floorColorTexture);
-	m_floorResources.SetSRV(1, 1, m_floorNormalTexture);
+	m_armorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(1);
+	m_armorSrvDescriptorSet->SetSRV(0, m_armorColorTexture);
+	m_armorSrvDescriptorSet->SetSRV(1, m_armorNormalTexture);
 
-	m_lightingResources.Initialize(m_lightingRootSignature);
-	m_lightingResources.SetSRV(0, 0, m_positionBuffer);
-	m_lightingResources.SetSRV(0, 1, m_normalBuffer);
-	m_lightingResources.SetSRV(0, 2, m_albedoBuffer);
-	m_lightingResources.SetCBV(0, 3, m_lightingConstantBuffer);
+	m_floorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(1);
+	m_floorSrvDescriptorSet->SetSRV(0, m_floorColorTexture);
+	m_floorSrvDescriptorSet->SetSRV(1, m_floorNormalTexture);
+
+	m_lightingCbvSrvDescriptorSet = m_lightingRootSignature->CreateDescriptorSet(0);
+	m_lightingCbvSrvDescriptorSet->SetSRV(0, m_positionBuffer);
+	m_lightingCbvSrvDescriptorSet->SetSRV(1, m_normalBuffer);
+	m_lightingCbvSrvDescriptorSet->SetSRV(2, m_albedoBuffer);
+	m_lightingCbvSrvDescriptorSet->SetCBV(3, m_lightingConstantBuffer);
 }
 
 
