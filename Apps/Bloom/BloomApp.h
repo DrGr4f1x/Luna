@@ -37,7 +37,7 @@ protected:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void LoadAssets();
 
@@ -94,11 +94,13 @@ protected:
 	BlurConstants m_blurVertConstants{};
 	Luna::GpuBufferPtr m_blurVertConstantBuffer;
 
-	// Resource sets
-	Luna::ResourceSet m_sceneResources;
-	Luna::ResourceSet m_skyboxResources;
-	Luna::ResourceSet m_blurHorizResources;
-	Luna::ResourceSet m_blurVertResources;
+	// Descriptor sets
+	Luna::DescriptorSetPtr m_sceneCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_skyBoxCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_skyBoxSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
+	Luna::DescriptorSetPtr m_blurHorizDescriptorSet;
+	Luna::DescriptorSetPtr m_blurVertDescriptorSet;
 
 	// Assets
 	Luna::ModelPtr m_ufoModel;
@@ -107,7 +109,7 @@ protected:
 	Luna::TexturePtr m_skyboxTexture;
 	Luna::SamplerPtr m_sampler;
 
-	Luna::CameraController m_controller;
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 
 	bool m_bloom{ true };
 	float m_blurScale{ 1.0f };

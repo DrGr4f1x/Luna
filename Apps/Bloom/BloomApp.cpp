@@ -22,7 +22,6 @@ using namespace std;
 
 BloomApp::BloomApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-	, m_controller{ m_camera, Vector3(kYUnitVector) }
 {}
 
 
@@ -99,7 +98,7 @@ void BloomApp::Render()
 			context.SetRootSignature(m_sceneRootSignature);
 			context.SetGraphicsPipeline(m_colorPassPipeline);
 
-			context.SetResources(m_sceneResources);
+			context.SetDescriptors(0, m_sceneCbvDescriptorSet);
 
 			// Render UFO model
 			m_ufoGlowModel->Render(context);
@@ -120,7 +119,9 @@ void BloomApp::Render()
 			context.SetRootSignature(m_blurRootSignature);
 			context.SetGraphicsPipeline(m_blurVertPipeline);
 
-			context.SetResources(m_blurVertResources);
+			context.SetDescriptors(0, m_blurVertDescriptorSet);
+			context.SetDescriptors(1, m_samplerDescriptorSet);
+
 			context.Draw(3);
 
 			context.EndRendering();
@@ -151,7 +152,9 @@ void BloomApp::Render()
 		context.SetRootSignature(m_skyboxRootSignature);
 		context.SetGraphicsPipeline(m_skyboxPipeline);
 
-		context.SetResources(m_skyboxResources);
+		context.SetDescriptors(0, m_skyBoxCbvDescriptorSet);
+		context.SetDescriptors(1, m_skyBoxSrvDescriptorSet);
+		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		// Render skybox model
 		m_skyboxModel->Render(context);
@@ -164,7 +167,7 @@ void BloomApp::Render()
 		context.SetRootSignature(m_sceneRootSignature);
 		context.SetGraphicsPipeline(m_phongPassPipeline);
 
-		context.SetResources(m_sceneResources);
+		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
 
 		// Render UFO model
 		m_ufoGlowModel->Render(context);
@@ -177,7 +180,9 @@ void BloomApp::Render()
 		context.SetRootSignature(m_blurRootSignature);
 		context.SetGraphicsPipeline(m_blurHorizPipeline);
 
-		context.SetResources(m_blurHorizResources);
+		context.SetDescriptors(0, m_blurHorizDescriptorSet);
+		context.SetDescriptors(1, m_samplerDescriptorSet);
+
 		context.Draw(3);
 	}
 
@@ -211,7 +216,7 @@ void BloomApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -406,25 +411,27 @@ void BloomApp::InitConstantBuffers()
 }
 
 
-void BloomApp::InitResourceSets()
+void BloomApp::InitDescriptorSets()
 {
-	m_sceneResources.Initialize(m_sceneRootSignature);
-	m_sceneResources.SetCBV(0, 0, m_sceneConstantBuffer);
+	m_sceneCbvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
+	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer);
 
-	m_skyboxResources.Initialize(m_skyboxRootSignature);
-	m_skyboxResources.SetCBV(0, 0, m_skyboxConstantBuffer);
-	m_skyboxResources.SetSRV(1, 0, m_skyboxTexture);
-	m_skyboxResources.SetSampler(2, 0, m_sampler);
+	m_skyBoxCbvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(0);
+	m_skyBoxCbvDescriptorSet->SetCBV(0, m_skyboxConstantBuffer);
 
-	m_blurHorizResources.Initialize(m_blurRootSignature);
-	m_blurHorizResources.SetSRV(0, 0, m_offscreenColorBuffer[1]);
-	m_blurHorizResources.SetCBV(0, 1, m_blurHorizConstantBuffer);
-	m_blurHorizResources.SetSampler(1, 0, m_sampler);
+	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
+	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture);
 
-	m_blurVertResources.Initialize(m_blurRootSignature);
-	m_blurVertResources.SetSRV(0, 0, m_offscreenColorBuffer[0]);
-	m_blurVertResources.SetCBV(0, 1, m_blurVertConstantBuffer);
-	m_blurVertResources.SetSampler(1, 0, m_sampler);
+	m_samplerDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(2);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
+
+	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(0);
+	m_blurHorizDescriptorSet->SetSRV(0, m_offscreenColorBuffer[1]);
+	m_blurHorizDescriptorSet->SetCBV(1, m_blurHorizConstantBuffer);
+
+	m_blurVertDescriptorSet = m_blurRootSignature->CreateDescriptorSet(0);
+	m_blurVertDescriptorSet->SetSRV(0, m_offscreenColorBuffer[0]);
+	m_blurVertDescriptorSet->SetCBV(1, m_blurVertConstantBuffer);
 }
 
 

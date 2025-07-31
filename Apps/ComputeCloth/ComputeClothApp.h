@@ -37,7 +37,7 @@ protected:
 	void InitPipelines();
 	void InitConstantBuffers();
 	void InitCloth();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void LoadAssets();
 
@@ -99,10 +99,12 @@ protected:
 	Luna::TexturePtr m_texture;
 	Luna::SamplerPtr m_sampler;
 
-	Luna::ResourceSet m_sphereResources;
-	Luna::ResourceSet m_clothResources;
-	Luna::ResourceSet m_computeResources[2];
-	Luna::ResourceSet m_computeNormalResources;
+	Luna::DescriptorSetPtr m_sphereCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_clothCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_clothSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
+	Luna::DescriptorSetPtr m_computeDescriptorSet[2];
+	Luna::DescriptorSetPtr m_computeNormalDescriptorSet;
 
 	Luna::CameraController m_controller;
 

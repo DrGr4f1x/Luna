@@ -94,11 +94,11 @@ void ComputeClothApp::Render()
 
 			if (j == iterations - 1)
 			{
-				computeContext.SetResources(m_computeNormalResources);
+				computeContext.SetDescriptors(0, m_computeNormalDescriptorSet);
 			}
 			else
 			{
-				computeContext.SetResources(m_computeResources[readIndex]);
+				computeContext.SetDescriptors(0, m_computeDescriptorSet[readIndex]);
 			}
 
 			computeContext.Dispatch2D(m_gridSize[0], m_gridSize[1]);
@@ -126,7 +126,7 @@ void ComputeClothApp::Render()
 		context.SetRootSignature(m_sphereRootSignature);
 		context.SetGraphicsPipeline(m_spherePipeline);
 
-		context.SetResources(m_sphereResources);
+		context.SetDescriptors(0, m_sphereCbvDescriptorSet);
 
 		m_sphereModel->Render(context);
 	}
@@ -138,7 +138,9 @@ void ComputeClothApp::Render()
 		context.SetRootSignature(m_clothRootSignature);
 		context.SetGraphicsPipeline(m_clothPipeline);
 
-		context.SetResources(m_clothResources);
+		context.SetDescriptors(0, m_clothCbvDescriptorSet);
+		context.SetDescriptors(1, m_clothSrvDescriptorSet);
+		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		context.SetIndexBuffer(m_clothIndexBuffer);
 		context.SetVertexBuffer(0, m_clothBuffer[0]);
@@ -175,7 +177,7 @@ void ComputeClothApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -422,30 +424,34 @@ void ComputeClothApp::InitCloth()
 }
 
 
-void ComputeClothApp::InitResourceSets()
+void ComputeClothApp::InitDescriptorSets()
 {
-	m_sphereResources.Initialize(m_sphereRootSignature);
-	m_sphereResources.SetCBV(0, 0, m_vsConstantBuffer);
+	m_sphereCbvDescriptorSet = m_sphereRootSignature->CreateDescriptorSet(0);
+	m_sphereCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
-	m_clothResources.Initialize(m_clothRootSignature);
-	m_clothResources.SetCBV(0, 0, m_vsConstantBuffer);
-	m_clothResources.SetSRV(1, 0, m_texture);
-	m_clothResources.SetSampler(2, 0, m_sampler);
+	m_clothCbvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(0);
+	m_clothCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
-	m_computeResources[0].Initialize(m_computeRootSignature);
-	m_computeResources[0].SetSRV(0, 0, m_clothBuffer[0]);
-	m_computeResources[0].SetUAV(0, 1, m_clothBuffer[1]);
-	m_computeResources[0].SetCBV(0, 2, m_csConstantBuffer);
+	m_clothSrvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(1);
+	m_clothSrvDescriptorSet->SetSRV(0, m_texture);
 
-	m_computeResources[1].Initialize(m_computeRootSignature);
-	m_computeResources[1].SetSRV(0, 0, m_clothBuffer[1]);
-	m_computeResources[1].SetUAV(0, 1, m_clothBuffer[0]);
-	m_computeResources[1].SetCBV(0, 2, m_csConstantBuffer);
+	m_samplerDescriptorSet = m_clothRootSignature->CreateDescriptorSet(2);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 
-	m_computeNormalResources.Initialize(m_computeRootSignature);
-	m_computeNormalResources.SetSRV(0, 0, m_clothBuffer[1]);
-	m_computeNormalResources.SetUAV(0, 1, m_clothBuffer[0]);
-	m_computeNormalResources.SetCBV(0, 2, m_csNormalConstantBuffer);
+	m_computeDescriptorSet[0] = m_computeRootSignature->CreateDescriptorSet(0);
+	m_computeDescriptorSet[0]->SetSRV(0, m_clothBuffer[0]);
+	m_computeDescriptorSet[0]->SetUAV(1, m_clothBuffer[1]);
+	m_computeDescriptorSet[0]->SetCBV(2, m_csConstantBuffer);
+
+	m_computeDescriptorSet[1] = m_computeRootSignature->CreateDescriptorSet(0);
+	m_computeDescriptorSet[1]->SetSRV(0, m_clothBuffer[1]);
+	m_computeDescriptorSet[1]->SetUAV(1, m_clothBuffer[0]);
+	m_computeDescriptorSet[1]->SetCBV(2, m_csConstantBuffer);
+
+	m_computeNormalDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
+	m_computeNormalDescriptorSet->SetSRV(0, m_clothBuffer[1]);
+	m_computeNormalDescriptorSet->SetUAV(1, m_clothBuffer[0]);
+	m_computeNormalDescriptorSet->SetCBV(2, m_csNormalConstantBuffer);
 }
 
 
