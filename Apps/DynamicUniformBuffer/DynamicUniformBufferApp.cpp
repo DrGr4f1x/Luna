@@ -78,12 +78,15 @@ void DynamicUniformBufferApp::Render()
 	context.SetIndexBuffer(m_indexBuffer);
 	context.SetVertexBuffer(0, m_vertexBuffer);
 
+	context.SetDescriptors(0, m_vsCbvDescriptorSet);
+
 	for (uint32_t i = 0; i < m_numCubes; ++i)
 	{
 		uint32_t dynamicOffset = i * (uint32_t)m_dynamicAlignment;
-		m_resources.SetDynamicOffset(1, dynamicOffset);
 
-		context.SetResources(m_resources);
+		m_vsModelCbvDescriptorSet->SetDynamicOffset(dynamicOffset);
+
+		context.SetDescriptors(1, m_vsModelCbvDescriptorSet);
 
 		context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
 	}
@@ -113,7 +116,7 @@ void DynamicUniformBufferApp::CreateDeviceDependentResources()
 	InitRootSignature();
 	InitConstantBuffers();
 	InitBox();
-	InitResourceSet();
+	InitDescriptorSets();
 }
 
 
@@ -245,11 +248,13 @@ void DynamicUniformBufferApp::InitBox()
 }
 
 
-void DynamicUniformBufferApp::InitResourceSet()
+void DynamicUniformBufferApp::InitDescriptorSets()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_vsConstantBuffer);
-	m_resources.SetCBV(1, 0, m_vsModelConstantBuffer);
+	m_vsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_vsCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
+
+	m_vsModelCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_vsModelCbvDescriptorSet->SetCBV(0, m_vsModelConstantBuffer);
 }
 
 
