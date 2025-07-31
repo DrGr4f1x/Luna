@@ -35,7 +35,7 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffer();
 
@@ -82,10 +82,10 @@ protected:
 	// Indirect arguments buffer
 	Luna::GpuBufferPtr m_indirectArgsBuffer;
 
-	// Resource sets
-	Luna::ResourceSet m_skySphereResources;
-	Luna::ResourceSet m_groundResources;
-	Luna::ResourceSet m_plantsResources;
+	// Descriptor sets
+	Luna::DescriptorSetPtr m_cbvDescriptorSet;
+	Luna::DescriptorSetPtr m_groundSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_plantsSrvDescriptorSet;
 
 	// Assets
 	Luna::ModelPtr m_skySphereModel;

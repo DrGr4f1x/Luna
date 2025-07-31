@@ -83,7 +83,7 @@ void IndirectDrawApp::Render()
 		context.SetRootSignature(m_skySphereRootSignature);
 		context.SetGraphicsPipeline(m_skySpherePipeline);
 
-		context.SetResources(m_skySphereResources);
+		context.SetDescriptors(0, m_cbvDescriptorSet);
 
 		m_skySphereModel->Render(context);
 	}
@@ -93,7 +93,8 @@ void IndirectDrawApp::Render()
 		context.SetRootSignature(m_groundRootSignature);
 		context.SetGraphicsPipeline(m_groundPipeline);
 
-		context.SetResources(m_groundResources);
+		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetDescriptors(1, m_groundSrvDescriptorSet);
 
 		m_groundModel->Render(context);
 	}
@@ -103,7 +104,8 @@ void IndirectDrawApp::Render()
 		context.SetRootSignature(m_plantsRootSignature);
 		context.SetGraphicsPipeline(m_plantsPipeline);
 		
-		context.SetResources(m_plantsResources);
+		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetDescriptors(1, m_plantsSrvDescriptorSet);
 
 		// TODO: Support multi-draw
 		if (false)
@@ -153,7 +155,7 @@ void IndirectDrawApp::CreateDeviceDependentResources()
 	LoadAssets();
 	InitIndirectArgs();
 	InitInstanceData();
-	InitResourceSets();
+	InitDescriptorSets();
 
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -312,18 +314,16 @@ void IndirectDrawApp::InitPipelines()
 }
 
 
-void IndirectDrawApp::InitResourceSets()
+void IndirectDrawApp::InitDescriptorSets()
 {
-	m_skySphereResources.Initialize(m_skySphereRootSignature);
-	m_skySphereResources.SetCBV(0, 0, m_vsConstantBuffer);
+	m_cbvDescriptorSet = m_skySphereRootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
-	m_groundResources.Initialize(m_groundRootSignature);
-	m_groundResources.SetCBV(0, 0, m_vsConstantBuffer);
-	m_groundResources.SetSRV(1, 0, m_groundTexture);
+	m_groundSrvDescriptorSet = m_groundRootSignature->CreateDescriptorSet(1);
+	m_groundSrvDescriptorSet->SetSRV(0, m_groundTexture);
 
-	m_plantsResources.Initialize(m_plantsRootSignature);
-	m_plantsResources.SetCBV(0, 0, m_vsConstantBuffer);
-	m_plantsResources.SetSRV(1, 0, m_plantsTextureArray);
+	m_plantsSrvDescriptorSet = m_plantsRootSignature->CreateDescriptorSet(1);
+	m_plantsSrvDescriptorSet->SetSRV(0, m_plantsTextureArray);
 }
 
 
