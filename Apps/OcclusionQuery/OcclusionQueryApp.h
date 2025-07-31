@@ -35,7 +35,7 @@ protected:
 	void InitRootSignature();
 	void InitPipelines();
 	void InitQueryHeap();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffers();
 
@@ -59,9 +59,9 @@ protected:
 	Luna::GpuBufferPtr m_teapotConstantBuffer;
 	Luna::GpuBufferPtr m_sphereConstantBuffer;
 
-	Luna::ResourceSet m_occluderResources;
-	Luna::ResourceSet m_teapotResources;
-	Luna::ResourceSet m_sphereResources;
+	Luna::DescriptorSetPtr m_occluderCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_teapotCbvDescriptorSet;
+	Luna::DescriptorSetPtr m_sphereCbvDescriptorSet;
 
 	Luna::RootSignaturePtr m_rootSignature;
 

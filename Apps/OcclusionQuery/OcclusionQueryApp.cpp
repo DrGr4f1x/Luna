@@ -93,13 +93,13 @@ void OcclusionQueryApp::Render()
 		context.SetGraphicsPipeline(m_simplePipeline);
 
 		// Occluder plane
-		context.SetResources(m_occluderResources);
+		context.SetDescriptors(0, m_occluderCbvDescriptorSet);
 		m_occluderModel->Render(context);
 
 		// Teapot
 		context.BeginQuery(m_queryHeap, 2 * activeFrame);
 
-		context.SetResources(m_teapotResources);
+		context.SetDescriptors(0, m_teapotCbvDescriptorSet);
 		m_teapotModel->Render(context);
 
 		context.EndQuery(m_queryHeap, 2 * activeFrame);
@@ -107,7 +107,7 @@ void OcclusionQueryApp::Render()
 		// Sphere
 		context.BeginQuery(m_queryHeap, 2 * activeFrame + 1);
 
-		context.SetResources(m_sphereResources);
+		context.SetDescriptors(0, m_sphereCbvDescriptorSet);
 		m_sphereModel->Render(context);
 
 		context.EndQuery(m_queryHeap, 2 * activeFrame + 1);
@@ -129,16 +129,16 @@ void OcclusionQueryApp::Render()
 	{
 		// Teapot
 		context.SetGraphicsPipeline(m_solidPipeline);
-		context.SetResources(m_teapotResources);
+		context.SetDescriptors(0, m_teapotCbvDescriptorSet);
 		m_teapotModel->Render(context);
 
 		// Sphere
-		context.SetResources(m_sphereResources);
+		context.SetDescriptors(0, m_sphereCbvDescriptorSet);
 		m_sphereModel->Render(context);
 
 		// Occluder plane
 		context.SetGraphicsPipeline(m_occluderPipeline);
-		context.SetResources(m_occluderResources);
+		context.SetDescriptors(0, m_occluderCbvDescriptorSet);
 		m_occluderModel->Render(context);
 	}
 
@@ -169,7 +169,7 @@ void OcclusionQueryApp::CreateDeviceDependentResources()
 
 	InitQueryHeap();
 	LoadAssets();
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -279,16 +279,16 @@ void OcclusionQueryApp::InitQueryHeap()
 }
 
 
-void OcclusionQueryApp::InitResourceSets()
+void OcclusionQueryApp::InitDescriptorSets()
 {
-	m_occluderResources.Initialize(m_rootSignature);
-	m_occluderResources.SetCBV(0, 0, m_occluderConstantBuffer);
+	m_occluderCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_occluderCbvDescriptorSet->SetCBV(0, m_occluderConstantBuffer);
 
-	m_teapotResources.Initialize(m_rootSignature);
-	m_teapotResources.SetCBV(0, 0, m_teapotConstantBuffer);
+	m_teapotCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_teapotCbvDescriptorSet->SetCBV(0, m_teapotConstantBuffer);
 
-	m_sphereResources.Initialize(m_rootSignature);
-	m_sphereResources.SetCBV(0, 0, m_sphereConstantBuffer);
+	m_sphereCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_sphereCbvDescriptorSet->SetCBV(0, m_sphereConstantBuffer);
 }
 
 
