@@ -90,7 +90,7 @@ void GeometryShaderApp::Render()
 	context.SetRootSignature(m_meshRootSignature);
 	context.SetGraphicsPipeline(m_meshPipeline);
 
-	context.SetResources(m_meshResources);
+	context.SetDescriptors(0, m_vsCbvDescriptorSet);
 
 	m_model->Render(context);
 
@@ -99,7 +99,7 @@ void GeometryShaderApp::Render()
 		context.SetRootSignature(m_geomRootSignature);
 		context.SetGraphicsPipeline(m_geomPipeline);
 
-		context.SetResources(m_geomResources);
+		context.SetDescriptors(0, m_gsCbvDescriptorSet);
 
 		m_model->Render(context);
 	}
@@ -128,7 +128,7 @@ void GeometryShaderApp::CreateDeviceDependentResources()
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 
 	LoadAssets();
-	InitResourceSets();
+	InitDescriptorSet();
 
 	auto box = m_model->boundingBox;
 
@@ -225,13 +225,13 @@ void GeometryShaderApp::InitPipelines()
 }
 
 
-void GeometryShaderApp::InitResourceSets()
+void GeometryShaderApp::InitDescriptorSet()
 {
-	m_meshResources.Initialize(m_meshRootSignature);
-	m_meshResources.SetCBV(0, 0, m_constantBuffer);
+	m_vsCbvDescriptorSet = m_meshRootSignature->CreateDescriptorSet(0);
+	m_vsCbvDescriptorSet->SetCBV(0, m_constantBuffer);
 
-	m_geomResources.Initialize(m_geomRootSignature);
-	m_geomResources.SetCBV(0, 0, m_constantBuffer);
+	m_gsCbvDescriptorSet = m_geomRootSignature->CreateDescriptorSet(0);
+	m_gsCbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 
