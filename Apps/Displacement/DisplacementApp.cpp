@@ -86,7 +86,11 @@ void DisplacementApp::Render()
 
 	context.SetRootSignature(m_rootSignature);
 
-	context.SetResources(m_resources);
+	context.SetDescriptors(0, m_hsCbvDescriptorSet);
+	context.SetDescriptors(1, m_dsCbvSrvDescriptorSet);
+	context.SetDescriptors(2, m_psSrvDescriptorSet);
+	context.SetDescriptors(3, m_dsSamplerDescriptorSet);
+	context.SetDescriptors(4, m_psSamplerDescriptorSet);
 
 	// Wireframe
 	if (m_split)
@@ -132,7 +136,7 @@ void DisplacementApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	InitResourceSet();
+	InitDescriptorSets();
 }
 
 
@@ -220,15 +224,23 @@ void DisplacementApp::InitConstantBuffers()
 }
 
 
-void DisplacementApp::InitResourceSet()
+void DisplacementApp::InitDescriptorSets()
 {
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_hsConstantBuffer);
-	m_resources.SetCBV(1, 0, m_dsConstantBuffer);
-	m_resources.SetSRV(1, 1, m_texture);
-	m_resources.SetSRV(2, 0, m_texture);
-	m_resources.SetSampler(3, 0, m_sampler);
-	m_resources.SetSampler(4, 0, m_sampler);
+	m_hsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_hsCbvDescriptorSet->SetCBV(0, m_hsConstantBuffer);
+
+	m_dsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_dsCbvSrvDescriptorSet->SetCBV(0, m_dsConstantBuffer);
+	m_dsCbvSrvDescriptorSet->SetSRV(1, m_texture);
+
+	m_psSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
+	m_psSrvDescriptorSet->SetSRV(0, m_texture);
+
+	m_dsSamplerDescriptorSet = m_rootSignature->CreateDescriptorSet(3);
+	m_dsSamplerDescriptorSet->SetSampler(0, m_sampler);
+
+	m_psSamplerDescriptorSet = m_rootSignature->CreateDescriptorSet(4);
+	m_psSamplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
