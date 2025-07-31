@@ -36,7 +36,7 @@ protected:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitInstanceBuffer();
-	void InitResourceSets();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffer();
 
@@ -52,9 +52,9 @@ protected:
 		float globalSpeed{ 0.0f };
 	};
 
-	VSConstants m_planetConstants{};
+	VSConstants m_vsConstants{};
 
-	Luna::GpuBufferPtr m_planetConstantBuffer;
+	Luna::GpuBufferPtr m_vsConstantBuffer;
 
 	Luna::GpuBufferPtr m_instanceBuffer;
 
@@ -73,8 +73,10 @@ protected:
 	Luna::ModelPtr m_rockModel;
 	Luna::ModelPtr m_planetModel;
 
-	Luna::ResourceSet m_rockResources;
-	Luna::ResourceSet m_planetResources;
+	Luna::DescriptorSetPtr m_cbvDescriptorSet;
+	Luna::DescriptorSetPtr m_rockSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_planetSrvDescriptorSet;
+	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 	float m_zoom{ -18.5 };

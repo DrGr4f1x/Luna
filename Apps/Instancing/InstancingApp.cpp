@@ -94,7 +94,9 @@ void InstancingApp::Render()
 		context.SetRootSignature(m_modelRootSignature);
 		context.SetGraphicsPipeline(m_planetPipeline);
 
-		context.SetResources(m_planetResources);
+		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetDescriptors(1, m_planetSrvDescriptorSet);
+		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		m_planetModel->Render(context);
 	}
@@ -103,7 +105,9 @@ void InstancingApp::Render()
 	{
 		context.SetGraphicsPipeline(m_rockPipeline);
 
-		context.SetResources(m_rockResources);
+		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetDescriptors(1, m_rockSrvDescriptorSet);
+		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		{
 			for(const auto mesh : m_rockModel->meshes)
@@ -147,14 +151,14 @@ void InstancingApp::CreateDeviceDependentResources()
 	InitRootSignatures();
 	
 	// Create constant buffer
-	m_planetConstantBuffer = CreateConstantBuffer("Planet Constant Buffer", 1, sizeof(VSConstants));
+	m_vsConstantBuffer = CreateConstantBuffer("VS Constant Buffer", 1, sizeof(VSConstants));
 
 	// Load assets first, since instancing data needs to know how many array slices are in
 	// the rock texture
 	LoadAssets();
 	InitInstanceBuffer();
 
-	InitResourceSets();
+	InitDescriptorSets();
 }
 
 
@@ -335,17 +339,19 @@ void InstancingApp::InitInstanceBuffer()
 }
 
 
-void InstancingApp::InitResourceSets()
+void InstancingApp::InitDescriptorSets()
 {
-	m_rockResources.Initialize(m_modelRootSignature);
-	m_rockResources.SetCBV(0, 0, m_planetConstantBuffer);
-	m_rockResources.SetSRV(1, 0, m_rockTexture);
-	m_rockResources.SetSampler(2, 0, m_sampler);
+	m_cbvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
-	m_planetResources.Initialize(m_modelRootSignature);
-	m_planetResources.SetCBV(0, 0, m_planetConstantBuffer);
-	m_planetResources.SetSRV(1, 0, m_planetTexture);
-	m_planetResources.SetSampler(2, 0, m_sampler);
+	m_rockSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1);
+	m_rockSrvDescriptorSet->SetSRV(0, m_rockTexture);
+
+	m_planetSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1);
+	m_planetSrvDescriptorSet->SetSRV(0, m_planetTexture);
+
+	m_samplerDescriptorSet = m_modelRootSignature->CreateDescriptorSet(2);
+	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
@@ -353,7 +359,7 @@ void InstancingApp::UpdateConstantBuffer()
 {
 	using namespace Math;
 
-	m_planetConstants.projectionMatrix = m_camera.GetProjectionMatrix();
+	m_vsConstants.projectionMatrix = m_camera.GetProjectionMatrix();
 
 	Quaternion rotX{ Vector3(kXUnitVector), XMConvertToRadians(17.2f) };
 	Quaternion rotY{ Vector3(kYUnitVector), XMConvertToRadians(4.7f) };
@@ -363,11 +369,11 @@ void InstancingApp::UpdateConstantBuffer()
 
 	Matrix4 viewMatrix{ AffineTransform(rotTotal, Vector3(5.5f, 1.85f, 0.0f) + Vector3(0.0f, 0.0f, m_zoom)) };
 
-	m_planetConstants.modelViewMatrix = viewMatrix;
-	m_planetConstants.localSpeed += (float)m_timer.GetElapsedSeconds() * 0.35f;
-	m_planetConstants.globalSpeed += (float)m_timer.GetElapsedSeconds() * 0.01f;
+	m_vsConstants.modelViewMatrix = viewMatrix;
+	m_vsConstants.localSpeed += (float)m_timer.GetElapsedSeconds() * 0.35f;
+	m_vsConstants.globalSpeed += (float)m_timer.GetElapsedSeconds() * 0.01f;
 
-	m_planetConstantBuffer->Update(sizeof(m_planetConstants), &m_planetConstants);
+	m_vsConstantBuffer->Update(sizeof(VSConstants), &m_vsConstants);
 }
 
 
