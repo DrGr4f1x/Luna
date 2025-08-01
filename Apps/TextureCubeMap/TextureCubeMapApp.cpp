@@ -109,7 +109,6 @@ void TextureCubeMapApp::Render()
 		// Bind descriptors
 		context.SetDescriptors(0, m_skyBoxCbvDescriptorSet);
 		context.SetDescriptors(1, m_skyBoxSrvDescriptorSet);
-		context.SetDescriptors(2, m_psSamplerDescriptorSet);
 
 		m_skyboxModel->Render(context);
 	}
@@ -125,7 +124,6 @@ void TextureCubeMapApp::Render()
 		// Bind descriptors
 		context.SetDescriptors(0, m_modelCbvDescriptorSet);
 		context.SetDescriptors(1, m_modelCbvSrvDescriptorSet);
-		context.SetDescriptors(2, m_psSamplerDescriptorSet);
 
 		model->Render(context);
 	}
@@ -179,9 +177,9 @@ void TextureCubeMapApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_skyboxRootSignature = CreateRootSignature(skyBoxRootSignatureDesc);
@@ -191,9 +189,9 @@ void TextureCubeMapApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
-			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_modelRootSignature = CreateRootSignature(modelRootSignatureDesc);
@@ -256,13 +254,11 @@ void TextureCubeMapApp::InitDescriptorSets()
 {
 	m_skyBoxCbvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(0);
 	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
-	m_psSamplerDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(2);
 	m_modelCbvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(0);
 	m_modelCbvSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1);
 
 	m_skyBoxCbvDescriptorSet->SetCBV(0, m_vsSkyboxConstantBuffer);
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTex);
-	m_psSamplerDescriptorSet->SetSampler(0, m_sampler);
 	m_modelCbvDescriptorSet->SetCBV(0, m_vsModelConstantBuffer);
 	m_modelCbvSrvDescriptorSet->SetCBV(0, m_psModelConstantBuffer);
 	m_modelCbvSrvDescriptorSet->SetSRV(1, m_skyboxTex);
@@ -312,6 +308,4 @@ void TextureCubeMapApp::LoadAssets()
 	m_modelNames.push_back("Teapot");
 	m_modelNames.push_back("Torus knot");
 	m_modelNames.push_back("Venus");
-
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }

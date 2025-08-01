@@ -114,7 +114,6 @@ void TextureCubeMapArrayApp::Render()
 		// Bind descriptor sets
 		context.SetDescriptors(0, m_skyBoxCbvDescriptorSet);
 		context.SetDescriptors(1, m_psCbvSrvDescriptorSet);
-		context.SetDescriptors(2, m_psSamplerDescriptorSet);
 
 		m_skyboxModel->Render(context);
 	}
@@ -130,7 +129,6 @@ void TextureCubeMapArrayApp::Render()
 		// Bind descriptor sets
 		context.SetDescriptors(0, m_modelCbvDescriptorSet);
 		context.SetDescriptors(1, m_psCbvSrvDescriptorSet);
-		context.SetDescriptors(2, m_psSamplerDescriptorSet);
 		
 		model->Render(context);
 	}
@@ -182,10 +180,10 @@ void TextureCubeMapArrayApp::InitRootSignatures()
 		.name				= "Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
-				RootCBV(0, ShaderStage::Vertex),
-				Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+			RootCBV(0, ShaderStage::Vertex),
+			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -245,13 +243,11 @@ void TextureCubeMapArrayApp::InitDescriptorSets()
 	m_skyBoxCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_modelCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-	m_psSamplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
 
 	m_skyBoxCbvDescriptorSet->SetCBV(0, m_vsSkyboxConstantBuffer);
 	m_modelCbvDescriptorSet->SetCBV(0, m_vsModelConstantBuffer);
 	m_psCbvSrvDescriptorSet->SetCBV(0, m_psConstantBuffer);
 	m_psCbvSrvDescriptorSet->SetSRV(1, m_skyboxTex);
-	m_psSamplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 void TextureCubeMapArrayApp::UpdateConstantBuffers()
@@ -299,6 +295,4 @@ void TextureCubeMapArrayApp::LoadAssets()
 	m_modelNames.push_back("Teapot");
 	m_modelNames.push_back("Torus knot");
 	m_modelNames.push_back("Venus");
-
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }

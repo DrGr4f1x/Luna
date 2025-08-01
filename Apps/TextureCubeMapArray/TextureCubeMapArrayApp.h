@@ -79,11 +79,9 @@ protected:
 	Luna::DescriptorSetPtr m_skyBoxCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_modelCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_psCbvSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_psSamplerDescriptorSet;
 
 	Luna::TexturePtr m_skyboxTex;
 	Luna::ModelPtr m_skyboxModel;
-	Luna::SamplerPtr m_sampler;
 	std::vector<Luna::ModelPtr> m_models;
 	std::vector<std::string> m_modelNames;
 	int32_t	m_curModel{ 0 };

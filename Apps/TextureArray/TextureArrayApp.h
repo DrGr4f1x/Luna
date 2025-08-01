@@ -74,7 +74,6 @@ protected:
 
 	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	Luna::DescriptorSetPtr m_srvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_graphicsPipeline;
@@ -82,7 +81,6 @@ protected:
 
 	// Assets
 	Luna::TexturePtr m_texture;
-	Luna::SamplerPtr m_sampler;
 	uint32_t m_layerCount{ 0 };
 
 	// Camera controls

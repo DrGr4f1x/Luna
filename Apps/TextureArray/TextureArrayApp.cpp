@@ -107,7 +107,6 @@ void TextureArrayApp::Render()
 	// Bind descriptor sets
 	context.SetDescriptors(0, m_cbvDescriptorSet);
 	context.SetDescriptors(1, m_srvDescriptorSet);
-	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 	context.SetVertexBuffer(0, m_vertexBuffer);
@@ -161,9 +160,9 @@ void TextureArrayApp::InitRootSignature()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -237,11 +236,9 @@ void TextureArrayApp::InitDescriptorSets()
 {
 	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
 
 	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 void TextureArrayApp::UpdateConstantBuffer()
@@ -256,6 +253,4 @@ void TextureArrayApp::LoadAssets()
 {
 	m_texture = LoadTexture("texturearray_bc3_unorm.ktx");
 	m_layerCount = m_texture->GetArraySize();
-
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }

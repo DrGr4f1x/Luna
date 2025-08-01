@@ -40,7 +40,6 @@ TODO:
 -- Figure out device lost in vulkan multisampling app
 -- IndirectDraw app - support multi-draw indirect
 -- Directly create DescriptorSets without needing RootSignature
--- Do a StaticSampler pass over all apps
 
 DONE:
 -- Handles and pools for:
@@ -82,6 +81,7 @@ DONE:
 -- Move default depth buffer to the application level
 -- Refactor CreateWindowSizeDependentResources such that the Application method always gets called first, and then calls the derived Application method
 -- ComputeContext
+-- Do a StaticSampler pass over all apps
 
 
 WON'T DO:
