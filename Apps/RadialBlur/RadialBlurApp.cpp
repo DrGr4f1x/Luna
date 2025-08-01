@@ -105,7 +105,6 @@ void RadialBlurApp::Render()
 		// Bind descriptor sets
 		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
 		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
-		context.SetDescriptors(2, m_sceneSamplerDescriptorSet);
 
 		// Draw the model
 		m_model->Render(context);
@@ -135,7 +134,6 @@ void RadialBlurApp::Render()
 		// Bind descriptor sets
 		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
 		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
-		context.SetDescriptors(2, m_sceneSamplerDescriptorSet);
 
 		// Draw the model
 		m_model->Render(context);
@@ -147,7 +145,6 @@ void RadialBlurApp::Render()
 
 			// Bind descriptor sets
 			context.SetDescriptors(0, m_blurCbvSrvDescriptorSet);
-			context.SetDescriptors(1, m_blurSamplerDescriptorSet);
 
 			context.Draw(3);
 		}
@@ -196,9 +193,9 @@ void RadialBlurApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 				RootCBV(0, ShaderStage::Vertex),
-				Table({ TextureSRV }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+				Table({ TextureSRV }, ShaderStage::Pixel)
+			},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearWrap()) }
 	};
 
 	m_sceneRootSignature = CreateRootSignature(sceneRootSignatureDesc);
@@ -208,9 +205,9 @@ void RadialBlurApp::InitRootSignatures()
 		.name				= "Radial Blur Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
-				Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel),
-				Table({ Sampler }, ShaderStage::Pixel)
-			}
+				Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel)
+			},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_radialBlurRootSignature = CreateRootSignature(radialBlurRootSignatureDesc);
@@ -305,18 +302,14 @@ void RadialBlurApp::InitDescriptorSets()
 {
 	m_sceneCbvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
 	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1);
-	m_sceneSamplerDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(2);
 	
 	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(0);
-	m_blurSamplerDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(1);
 
 	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer);
 	m_sceneSrvDescriptorSet->SetSRV(0, m_gradientTex);
-	m_sceneSamplerDescriptorSet->SetSampler(0, m_samplerLinearWrap);
 
 	m_blurCbvSrvDescriptorSet->SetSRV(0, m_offscreenColorBuffer);
 	m_blurCbvSrvDescriptorSet->SetCBV(1, m_radialBlurConstantBuffer);
-	m_blurSamplerDescriptorSet->SetSampler(0, m_samplerLinearClamp);
 }
 
 
@@ -325,8 +318,6 @@ void RadialBlurApp::LoadAssets()
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
 	m_model = LoadModel("glowsphere.gltf", layout, 0.6f);
 	m_gradientTex = LoadTexture("particle_gradient_rgba.ktx");
-	m_samplerLinearWrap = CreateSampler(CommonStates::SamplerLinearWrap());
-	m_samplerLinearClamp = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
 

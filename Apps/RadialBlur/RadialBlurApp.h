@@ -82,15 +82,11 @@ protected:
 	// Descriptor sets
 	Luna::DescriptorSetPtr m_sceneCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_sceneSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_sceneSamplerDescriptorSet;
 	Luna::DescriptorSetPtr m_blurCbvSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_blurSamplerDescriptorSet;
 
 	// Assets
 	Luna::ModelPtr m_model;
 	Luna::TexturePtr m_gradientTex;
-	Luna::SamplerPtr m_samplerLinearWrap;
-	Luna::SamplerPtr m_samplerLinearClamp;
 
 	// Camera controls
 	float m_zoom{ -10.0f };

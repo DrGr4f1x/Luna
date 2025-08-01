@@ -66,7 +66,6 @@ protected:
 	Luna::GpuBufferPtr m_constantBuffer;
 
 	Luna::DescriptorSetPtr m_cbvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 	std::vector<Luna::DescriptorSetPtr> m_srvDescriptorSets;
 
 	Luna::RootSignaturePtr m_rootSignature;
@@ -75,7 +74,6 @@ protected:
 	bool m_pipelinesCreated{ false };
 
 	Luna::ModelPtr m_model;
-	Luna::SamplerPtr m_sampler;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 

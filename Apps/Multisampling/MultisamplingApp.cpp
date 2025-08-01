@@ -95,7 +95,6 @@ void MultisamplingApp::Render()
 
 			context.SetDescriptors(0, m_cbvDescriptorSet);
 			context.SetDescriptors(1, m_srvDescriptorSets[meshIndex]);
-			context.SetDescriptors(2, m_samplerDescriptorSet);
 
 			for (const auto& meshPart : mesh->meshParts)
 			{
@@ -200,11 +199,11 @@ void MultisamplingApp::InitRootSignature()
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
-		.rootParameters		=  {	
+		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel) 
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -263,9 +262,6 @@ void MultisamplingApp::InitDescriptorSets()
 
 	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
-
-	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
@@ -274,7 +270,6 @@ void MultisamplingApp::LoadAssets()
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
 
 	m_model = LoadModel("voyager.gltf", layout, 1.0f, ModelLoad::StandardDefault, true);
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
 
