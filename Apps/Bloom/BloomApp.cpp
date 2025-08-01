@@ -120,7 +120,6 @@ void BloomApp::Render()
 			context.SetGraphicsPipeline(m_blurVertPipeline);
 
 			context.SetDescriptors(0, m_blurVertDescriptorSet);
-			context.SetDescriptors(1, m_samplerDescriptorSet);
 
 			context.Draw(3);
 
@@ -154,7 +153,6 @@ void BloomApp::Render()
 
 		context.SetDescriptors(0, m_skyBoxCbvDescriptorSet);
 		context.SetDescriptors(1, m_skyBoxSrvDescriptorSet);
-		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		// Render skybox model
 		m_skyboxModel->Render(context);
@@ -181,7 +179,6 @@ void BloomApp::Render()
 		context.SetGraphicsPipeline(m_blurHorizPipeline);
 
 		context.SetDescriptors(0, m_blurHorizDescriptorSet);
-		context.SetDescriptors(1, m_samplerDescriptorSet);
 
 		context.Draw(3);
 	}
@@ -276,9 +273,9 @@ void BloomApp::InitRootSignatures()
 		.name				= "Blur Root Signature",
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyVertexShaderRootAccess,
 		.rootParameters		= {	
-			Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 	m_blurRootSignature = CreateRootSignature(blurRootSignatureDesc);
 
@@ -288,9 +285,9 @@ void BloomApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			Table({ ConstantBuffer }, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 	m_skyboxRootSignature = CreateRootSignature(skyboxRootSignatureDesc);
 }
@@ -422,9 +419,6 @@ void BloomApp::InitDescriptorSets()
 	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture);
 
-	m_samplerDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(2);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
-
 	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(0);
 	m_blurHorizDescriptorSet->SetSRV(0, m_offscreenColorBuffer[1]);
 	m_blurHorizDescriptorSet->SetCBV(1, m_blurHorizConstantBuffer);
@@ -442,7 +436,6 @@ void BloomApp::LoadAssets()
 	m_ufoGlowModel = LoadModel("retroufo_glow.gltf", layout, 1.0f);
 	m_skyboxModel = LoadModel("cube.gltf", layout, 1.0f);
 	m_skyboxTexture = LoadTexture("cubemap_space.ktx");
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
 

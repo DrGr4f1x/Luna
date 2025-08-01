@@ -98,7 +98,6 @@ protected:
 	Luna::DescriptorSetPtr m_sceneCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_skyBoxCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_skyBoxSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 	Luna::DescriptorSetPtr m_blurHorizDescriptorSet;
 	Luna::DescriptorSetPtr m_blurVertDescriptorSet;
 
@@ -107,7 +106,6 @@ protected:
 	Luna::ModelPtr m_ufoGlowModel;
 	Luna::ModelPtr m_skyboxModel;
 	Luna::TexturePtr m_skyboxTexture;
-	Luna::SamplerPtr m_sampler;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 
