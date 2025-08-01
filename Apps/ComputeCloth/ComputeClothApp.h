@@ -97,12 +97,10 @@ protected:
 
 	Luna::ModelPtr m_sphereModel;
 	Luna::TexturePtr m_texture;
-	Luna::SamplerPtr m_sampler;
 
 	Luna::DescriptorSetPtr m_sphereCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_clothCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_clothSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 	Luna::DescriptorSetPtr m_computeDescriptorSet[2];
 	Luna::DescriptorSetPtr m_computeNormalDescriptorSet;
 

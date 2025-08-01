@@ -140,7 +140,6 @@ void ComputeClothApp::Render()
 
 		context.SetDescriptors(0, m_clothCbvDescriptorSet);
 		context.SetDescriptors(1, m_clothSrvDescriptorSet);
-		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		context.SetIndexBuffer(m_clothIndexBuffer);
 		context.SetVertexBuffer(0, m_clothBuffer[0]);
@@ -214,9 +213,9 @@ void ComputeClothApp::InitRootSignatures()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),	
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 	m_clothRootSignature = CreateRootSignature(clothRootSignatureDesc);
 
@@ -435,9 +434,6 @@ void ComputeClothApp::InitDescriptorSets()
 	m_clothSrvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(1);
 	m_clothSrvDescriptorSet->SetSRV(0, m_texture);
 
-	m_samplerDescriptorSet = m_clothRootSignature->CreateDescriptorSet(2);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
-
 	m_computeDescriptorSet[0] = m_computeRootSignature->CreateDescriptorSet(0);
 	m_computeDescriptorSet[0]->SetSRV(0, m_clothBuffer[0]);
 	m_computeDescriptorSet[0]->SetUAV(1, m_clothBuffer[1]);
@@ -468,7 +464,6 @@ void ComputeClothApp::LoadAssets()
 	{
 		m_texture = LoadTexture("vulkan_cloth_rgba.ktx2");
 	}
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
 
