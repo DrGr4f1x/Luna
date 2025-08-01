@@ -96,7 +96,6 @@ void InstancingApp::Render()
 
 		context.SetDescriptors(0, m_cbvDescriptorSet);
 		context.SetDescriptors(1, m_planetSrvDescriptorSet);
-		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		m_planetModel->Render(context);
 	}
@@ -107,7 +106,6 @@ void InstancingApp::Render()
 
 		context.SetDescriptors(0, m_cbvDescriptorSet);
 		context.SetDescriptors(1, m_rockSrvDescriptorSet);
-		context.SetDescriptors(2, m_samplerDescriptorSet);
 
 		{
 			for(const auto mesh : m_rockModel->meshes)
@@ -181,21 +179,22 @@ void InstancingApp::CreateWindowSizeDependentResources()
 
 void InstancingApp::InitRootSignatures()
 {
+	using enum RootSignatureFlags;
+
 	RootSignatureDesc starfieldRootSignatureDesc{
 		.name	= "Starfield Root Signature",
-		.flags	= RootSignatureFlags::AllowInputAssemblerInputLayout |
-					RootSignatureFlags::DenyPixelShaderRootAccess
+		.flags	= AllowInputAssemblerInputLayout | DenyPixelShaderRootAccess
 	};
 	m_starfieldRootSignature = CreateRootSignature(starfieldRootSignatureDesc);
 
 	RootSignatureDesc modelRootSignatureDesc{
 		.name				= "Model Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
+		.flags				= AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),	
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearWrap()) }
 	};
 	m_modelRootSignature = CreateRootSignature(modelRootSignatureDesc);
 }
@@ -349,9 +348,6 @@ void InstancingApp::InitDescriptorSets()
 
 	m_planetSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1);
 	m_planetSrvDescriptorSet->SetSRV(0, m_planetTexture);
-
-	m_samplerDescriptorSet = m_modelRootSignature->CreateDescriptorSet(2);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
@@ -381,7 +377,6 @@ void InstancingApp::LoadAssets()
 {
 	m_rockTexture = LoadTexture("texturearray_rocks_rgba.ktx", Format::Unknown, true);
 	m_planetTexture = LoadTexture("lavaplanet_rgba.ktx", Format::Unknown, true);
-	m_sampler = CreateSampler(CommonStates::SamplerLinearWrap());
 
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
 

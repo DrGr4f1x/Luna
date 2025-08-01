@@ -68,7 +68,6 @@ protected:
 
 	Luna::TexturePtr m_rockTexture;
 	Luna::TexturePtr m_planetTexture;
-	Luna::SamplerPtr m_sampler;
 
 	Luna::ModelPtr m_rockModel;
 	Luna::ModelPtr m_planetModel;
@@ -76,7 +75,6 @@ protected:
 	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	Luna::DescriptorSetPtr m_rockSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_planetSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 	float m_zoom{ -18.5 };
