@@ -104,7 +104,6 @@ void ComputeNBodyApp::Render()
 	context.SetDescriptors(0, m_graphicsVsCbvSrvDescriptorSet);
 	context.SetDescriptors(1, m_graphicsGsCbvDescriptorSet);
 	context.SetDescriptors(2, m_graphicsPsSrvDescriptorSet);
-	context.SetDescriptors(3, m_samplerDescriptorSet);
 
 	context.Draw(6 * PARTICLES_PER_ATTRACTOR);
 
@@ -168,9 +167,9 @@ void ComputeNBodyApp::InitRootSignatures()
 		.rootParameters		= {
 			Table({ ConstantBuffer, StructuredBufferSRV }, ShaderStage::Vertex),
 			Table({ ConstantBuffer }, ShaderStage::Geometry),
-			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 	m_rootSignature = CreateRootSignature(graphicsRootSignatureDesc);
 
@@ -245,9 +244,6 @@ void ComputeNBodyApp::InitDescriptorSets()
 	m_graphicsPsSrvDescriptorSet->SetSRV(0, m_colorTexture);
 	m_graphicsPsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
 
-	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(3);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
-
 	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
 	m_computeCbvUavDescriptorSet->SetCBV(0, m_computeConstantBuffer);
 	m_computeCbvUavDescriptorSet->SetUAV(1, m_particleBuffer);
@@ -319,7 +315,6 @@ void ComputeNBodyApp::LoadAssets()
 {
 	m_gradientTexture = LoadTexture("particle_gradient_rgba.ktx");
 	m_colorTexture = LoadTexture("particle01_rgba.ktx");
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
 
 

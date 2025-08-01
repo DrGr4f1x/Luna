@@ -83,12 +83,10 @@ protected:
 	Luna::DescriptorSetPtr m_graphicsVsCbvSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_graphicsGsCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_graphicsPsSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 	Luna::DescriptorSetPtr m_computeCbvUavDescriptorSet;
 
 	Luna::TexturePtr m_gradientTexture;
 	Luna::TexturePtr m_colorTexture;
-	Luna::SamplerPtr m_sampler;
 
 	Luna::CameraController m_controller;
 };
