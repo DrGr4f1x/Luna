@@ -89,8 +89,6 @@ void DisplacementApp::Render()
 	context.SetDescriptors(0, m_hsCbvDescriptorSet);
 	context.SetDescriptors(1, m_dsCbvSrvDescriptorSet);
 	context.SetDescriptors(2, m_psSrvDescriptorSet);
-	context.SetDescriptors(3, m_dsSamplerDescriptorSet);
-	context.SetDescriptors(4, m_psSamplerDescriptorSet);
 
 	// Wireframe
 	if (m_split)
@@ -164,10 +162,9 @@ void DisplacementApp::InitRootSignature()
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Hull),
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Domain),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Domain),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearWrap()) }
 	};
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
 }
@@ -235,12 +232,6 @@ void DisplacementApp::InitDescriptorSets()
 
 	m_psSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
 	m_psSrvDescriptorSet->SetSRV(0, m_texture);
-
-	m_dsSamplerDescriptorSet = m_rootSignature->CreateDescriptorSet(3);
-	m_dsSamplerDescriptorSet->SetSampler(0, m_sampler);
-
-	m_psSamplerDescriptorSet = m_rootSignature->CreateDescriptorSet(4);
-	m_psSamplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
@@ -268,7 +259,6 @@ void DisplacementApp::UpdateConstantBuffers()
 void DisplacementApp::LoadAssets()
 {
 	m_texture = LoadTexture("stonefloor03_color_height_rgba.ktx");
-	m_sampler = CreateSampler(CommonStates::SamplerLinearWrap());
 
 	auto layout = VertexLayout<VertexComponent::PositionNormalTexcoord>();
 	m_model = LoadModel("displacement_plane.gltf", layout, 1.0f);

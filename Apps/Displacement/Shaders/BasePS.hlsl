@@ -20,7 +20,7 @@ struct PSInput
 
 [[vk::binding(0, 2)]]
 Texture2D colorTex : register(t0);
-[[vk::binding(0, 4)]]
+[[vk::binding(0, 3)]]
 SamplerState linearSampler : register(s0);
 
 

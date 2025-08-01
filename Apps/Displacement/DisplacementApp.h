@@ -70,12 +70,9 @@ protected:
 	Luna::DescriptorSetPtr m_hsCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_dsCbvSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_psSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_dsSamplerDescriptorSet;
-	Luna::DescriptorSetPtr m_psSamplerDescriptorSet;
 
 	Luna::TexturePtr m_texture;
 	Luna::ModelPtr m_model;
-	Luna::SamplerPtr m_sampler;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 

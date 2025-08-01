@@ -71,12 +71,10 @@ protected:
 	Luna::DescriptorSetPtr m_graphicsLeftSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_graphicsRightCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_graphicsRightSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::ColorBufferPtr m_computeScratchBuffer;
 
 	Luna::TexturePtr m_texture;
-	Luna::SamplerPtr m_sampler;
 
 	std::vector<std::string> m_shaderNames;
 	int32_t	m_curComputeTechnique{ 0 };

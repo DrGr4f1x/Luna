@@ -150,7 +150,6 @@ void ComputeShaderApp::Render()
 
 	context.SetDescriptors(0, m_graphicsLeftCbvDescriptorSet);
 	context.SetDescriptors(1, m_graphicsLeftSrvDescriptorSet);
-	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
 	context.SetIndexBuffer(m_indexBuffer);
@@ -161,7 +160,6 @@ void ComputeShaderApp::Render()
 
 	context.SetDescriptors(0, m_graphicsRightCbvDescriptorSet);
 	context.SetDescriptors(1, m_graphicsRightSrvDescriptorSet);
-	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
 	context.SetIndexBuffer(m_indexBuffer);
@@ -258,9 +256,9 @@ void ComputeShaderApp::InitRootSignatures()
 		.flags			= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters = {
 			RootCBV(0, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers	= { StaticSampler(CommonStates::SamplerLinearClamp()) }
 	};
 
 	m_graphicsRootSignature = CreateRootSignature(graphicsDesc);
@@ -354,14 +352,10 @@ void ComputeShaderApp::InitDescriptorSets()
 
 	m_graphicsRightSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
 	m_graphicsRightSrvDescriptorSet->SetSRV(0, m_computeScratchBuffer);
-
-	m_samplerDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(2);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
 void ComputeShaderApp::LoadAssets()
 {
 	m_texture = LoadTexture("het_kanonschot_rgba8.ktx");
-	m_sampler = CreateSampler(CommonStates::SamplerLinearClamp());
 }
