@@ -118,7 +118,6 @@ void ComputeParticlesApp::Render()
 
 	context.SetDescriptors(0, m_graphicsSrvCbvDescriptorSet);
 	context.SetDescriptors(1, m_graphicsSrvDescriptorSet);
-	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.Draw(6 * m_particleCount);
 
@@ -172,9 +171,9 @@ void ComputeParticlesApp::InitRootSignatures()
 		.name				= "Graphics Root Signature",
 		.rootParameters		= {	
 			Table({ StructuredBufferSRV, ConstantBuffer },  ShaderStage::Vertex),
-			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearWrap()) }
 	};
 
 	m_graphicsRootSignature = CreateRootSignature(graphicsRootSignatureDesc);
@@ -260,9 +259,6 @@ void ComputeParticlesApp::InitDescriptorSets()
 	m_graphicsSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
 	m_graphicsSrvDescriptorSet->SetSRV(0, m_colorTexture);
 	m_graphicsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
-
-	m_samplerDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(2);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 
@@ -287,5 +283,4 @@ void ComputeParticlesApp::LoadAssets()
 {
 	m_colorTexture = LoadTexture("particle01_rgba.ktx");
 	m_gradientTexture = LoadTexture("particle_gradient_rgba.ktx");
-	m_sampler = CreateSampler(CommonStates::SamplerLinearWrap());
 }
