@@ -208,7 +208,6 @@ void Texture3dApp::Render()
 	// Bind descriptor sets
 	context.SetDescriptors(0, m_cbvDescriptorSet);
 	context.SetDescriptors(1, m_srvDescriptorSet);
-	context.SetDescriptors(2, m_samplerDescriptorSet);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
 	context.SetIndexBuffer(m_indexBuffer);
@@ -276,9 +275,9 @@ void Texture3dApp::InitRootSignature()
 		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			Table({ ConstantBuffer }, ShaderStage::Vertex),
-			Table({ TextureSRV }, ShaderStage::Pixel),
-			Table({ Sampler }, ShaderStage::Pixel)
-		}
+			Table({ TextureSRV }, ShaderStage::Pixel)
+		},
+		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearWrap()) }
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);
@@ -370,9 +369,6 @@ void Texture3dApp::InitTexture()
 
 	auto device = m_deviceManager->GetDevice();
 	m_texture = device->CreateTexture3D(desc);
-
-	// Create the sampler
-	m_sampler = CreateSampler(CommonStates::SamplerLinearWrap());
 }
 
 
@@ -380,11 +376,9 @@ void Texture3dApp::InitDescriptorSets()
 {
 	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-	m_samplerDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
 
 	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
-	m_samplerDescriptorSet->SetSampler(0, m_sampler);
 }
 
 void Texture3dApp::UpdateConstantBuffer()

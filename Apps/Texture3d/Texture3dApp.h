@@ -64,13 +64,11 @@ protected:
 
 	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	Luna::DescriptorSetPtr m_srvDescriptorSet;
-	Luna::DescriptorSetPtr m_samplerDescriptorSet;
 
 	Luna::GpuBufferPtr m_vertexBuffer;
 	Luna::GpuBufferPtr m_indexBuffer;
 
 	Luna::TexturePtr m_texture;
-	Luna::SamplerPtr m_sampler;
 
 	float m_zoom{ -2.5f };
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
