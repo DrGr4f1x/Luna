@@ -16,20 +16,31 @@
 namespace Luna::DX12
 {
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthBuffer::GetSrvHandle(bool depthSrv) const noexcept
+DepthBuffer::DepthBuffer(Device* device)
 {
-	return depthSrv ? m_depthSrvHandle : m_stencilSrvHandle;
+	for (auto& dsvDescriptor : m_dsvDescriptors)
+	{
+		dsvDescriptor.SetDevice(device);
+	}
+	m_depthSrvDescriptor.SetDevice(device);
+	m_stencilSrvDescriptor.SetDevice(device);
 }
 
 
-D3D12_CPU_DESCRIPTOR_HANDLE DepthBuffer::GetDsvHandle(DepthStencilAspect depthStencilAspect) const noexcept
+const Descriptor& DepthBuffer::GetSrvDescriptor(bool depthSrv) const noexcept
+{
+	return depthSrv ? m_depthSrvDescriptor : m_stencilSrvDescriptor;
+}
+
+
+const Descriptor& DepthBuffer::GetDsvDescriptor(DepthStencilAspect depthStencilAspect) const noexcept
 {
 	switch (depthStencilAspect)
 	{
-	case DepthStencilAspect::ReadWrite:		return m_dsvHandles[0];
-	case DepthStencilAspect::ReadOnly:		return m_dsvHandles[1];
-	case DepthStencilAspect::DepthReadOnly:	return m_dsvHandles[2];
-	default:								return m_dsvHandles[3];
+	case DepthStencilAspect::ReadWrite:		return m_dsvDescriptors[0];
+	case DepthStencilAspect::ReadOnly:		return m_dsvDescriptors[1];
+	case DepthStencilAspect::DepthReadOnly:	return m_dsvDescriptors[2];
+	default:								return m_dsvDescriptors[3];
 	}
 }
 

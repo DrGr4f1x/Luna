@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\Texture.h"
+#include "Graphics\Vulkan\DescriptorVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
@@ -29,14 +30,12 @@ public:
 	bool IsValid() const override { return m_image != nullptr; }
 
 	VkImage GetImage() const { return m_image->Get(); }
-	VkImageView GetImageViewSrv() const { return m_imageViewSrv->Get(); }
-	VkDescriptorImageInfo GetImageInfoSrv() const { return m_imageInfoSrv; }
+	const Descriptor& GetDescriptor() const { return m_descriptor; }
 
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkImage> m_image;
-	wil::com_ptr<CVkImageView> m_imageViewSrv;
-	VkDescriptorImageInfo m_imageInfoSrv{};
+	Descriptor m_descriptor;
 	std::string m_name;
 };
 

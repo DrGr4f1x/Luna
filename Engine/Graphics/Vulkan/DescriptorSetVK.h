@@ -22,9 +22,6 @@ namespace Luna::VK
 class Device;
 
 
-using DescriptorData = std::variant<VkDescriptorImageInfo, VkDescriptorBufferInfo, VkBufferView>;
-
-
 class DescriptorSet : public IDescriptorSet
 {
 	friend class Device;
@@ -45,7 +42,7 @@ public:
 
 	void SetDynamicOffset(uint32_t offset) override;
 
-	void UpdateGpuDescriptors() override;
+	void UpdateGpuDescriptors() override {}
 
 	bool HasDescriptors() const;
 	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
@@ -57,9 +54,7 @@ protected:
 
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
 	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> m_writeDescriptorSets;
-	std::array<DescriptorData, MaxDescriptorsPerTable> m_descriptorData;
 	uint32_t m_numDescriptors{ 0 };
-	uint32_t m_dirtyBits{ 0 };
 	uint32_t m_dynamicOffset{ 0 };
 	bool m_isDynamicBuffer{ false };
 };

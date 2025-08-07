@@ -10,20 +10,31 @@
 
 #include "Stdafx.h"
 
-#include "DepthBufferVK.h"
+#include "DescriptorVK.h"
 
 
 namespace Luna::VK
 {
 
-const Descriptor& DepthBuffer::GetDescriptor(DepthStencilAspect depthStencilAspect) const noexcept
-{ 
-	switch (depthStencilAspect)
-	{
-	case DepthStencilAspect::DepthReadOnly:		return m_depthOnlyDescriptor;
-	case DepthStencilAspect::StencilReadOnly:	return m_stencilOnlyDescriptor;
-	default:									return m_depthStencilDescriptor;
-	}
+Descriptor::~Descriptor()
+{}
+
+
+void Descriptor::SetImageView(CVkImageView* imageView)
+{
+	m_imageView = imageView;
+}
+
+
+void Descriptor::SetBufferView(CVkBufferView* bufferView)
+{
+	m_bufferView = bufferView;
+}
+
+
+void Descriptor::SetSampler(CVkSampler* sampler)
+{
+	m_sampler = sampler;
 }
 
 } // namespace Luna::VK

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\Texture.h"
 
@@ -26,15 +27,16 @@ class Texture : public ITexture
 	friend class Device;
 
 public:
-	bool IsValid() const override { return m_resource != nullptr; }
+	explicit Texture(Device* device);
 
-	ID3D12Resource* GetResource() const { return m_resource.get(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const { return m_srvHandle; }
+	bool IsValid() const noexcept override { return m_resource != nullptr; }
+
+	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
+	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<ID3D12Resource> m_resource;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle{ .ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+	Descriptor m_srvDescriptor;
 	std::string m_name;
 };
 

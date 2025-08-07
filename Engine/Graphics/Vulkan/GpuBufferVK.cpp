@@ -56,22 +56,4 @@ VkBuffer GpuBuffer::GetBuffer() const noexcept
 	return m_buffer ? m_buffer->Get() : VK_NULL_HANDLE;
 }
 
-
-VkBufferView GpuBuffer::GetBufferView() const noexcept
-{
-	return m_bufferView ? m_bufferView->Get() : VK_NULL_HANDLE;
-}
-
-
-VkDescriptorBufferInfo GpuBuffer::GetBufferInfo(bool dynamicRange) const noexcept
-{
-	if (dynamicRange)
-	{
-		auto bufferInfoDynamic = m_bufferInfo;
-		bufferInfoDynamic.range = GetElementSize();
-		return bufferInfoDynamic;
-	}
-	return m_bufferInfo;
-}
-
 } // namespace Luna::VK

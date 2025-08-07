@@ -11,7 +11,9 @@
 #pragma once
 
 #include "Graphics\DepthBuffer.h"
+#include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DirectXCommon.h"
+
 
 namespace Luna::DX12
 {
@@ -25,16 +27,17 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
+	explicit DepthBuffer(Device* device);
+
 	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle(DepthStencilAspect depthStencilAspect) const noexcept;
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle(bool depthSrv) const noexcept;
+	const Descriptor& GetDsvDescriptor(DepthStencilAspect depthStencilAspect) const noexcept;
+	const Descriptor& GetSrvDescriptor(bool depthSrv) const noexcept;
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<ID3D12Resource> m_resource;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4> m_dsvHandles{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_depthSrvHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_stencilSrvHandle{};
+	std::array<Descriptor, 4> m_dsvDescriptors{};
+	Descriptor m_depthSrvDescriptor{};
+	Descriptor m_stencilSrvDescriptor{};
 };
 
 } // namespace Luna::DX12

@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\Vulkan\DescriptorVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
@@ -33,14 +34,11 @@ public:
 	void Unmap() override;
 
 	VkBuffer GetBuffer() const noexcept;
-	VkBufferView GetBufferView() const noexcept;
-	VkDescriptorBufferInfo GetBufferInfo(bool dynamicRange = false) const noexcept;
+	const Descriptor& GetDescriptor() const noexcept { return m_descriptor; }
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<CVkBuffer> m_buffer;
-	wil::com_ptr<CVkBufferView> m_bufferView;
-	VkDescriptorBufferInfo m_bufferInfo;
+	Descriptor m_descriptor;
 
 	bool m_isCpuWriteable{ false };
 };

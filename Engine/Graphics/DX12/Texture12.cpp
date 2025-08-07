@@ -10,27 +10,14 @@
 
 #include "Stdafx.h"
 
-#include "ColorBuffer12.h"
+#include "Texture12.h"
 
 namespace Luna::DX12
 {
 
-ColorBuffer::ColorBuffer(Device* device)
+Texture::Texture(Device* device)
 {
-	m_rtvDescriptor.SetDevice(device);
 	m_srvDescriptor.SetDevice(device);
-	for (auto& uavDescriptor : m_uavDescriptors)
-	{
-		uavDescriptor.SetDevice(device);
-	}
-}
-
-
-const Descriptor& ColorBuffer::GetUavDescriptor(uint32_t index) const
-{
-	assert(index < m_uavDescriptors.size());
-
-	return m_uavDescriptors[index];
 }
 
 } // namespace Luna::DX12

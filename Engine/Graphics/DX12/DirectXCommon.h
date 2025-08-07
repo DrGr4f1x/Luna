@@ -59,6 +59,17 @@ struct ResourceData
 };
 
 
+struct DescriptorHeapDesc
+{
+	wil::com_ptr<ID3D12DescriptorHeap> heap;
+	uint64_t basePointerCPU{ 0 };
+	uint64_t basePointerGPU{ 0 };
+	uint32_t descriptorSize{ 0 };
+	uint32_t num{ 0 };
+};
+
+constexpr uint32_t DESCRIPTOR_BATCH_SIZE{ 1024 };
+
 void SetDebugName(IDXGIObject* object, const std::string& name);
 void SetDebugName(ID3D12Object* object, const std::string& name);
 

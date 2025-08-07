@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\ColorBuffer.h"
+#include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 
@@ -26,17 +27,21 @@ class ColorBuffer : public IColorBuffer
 	friend class Device;
 
 public:
+	explicit ColorBuffer(Device* device);
+
 	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const noexcept { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle() const noexcept { return m_rtvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUavHandle(uint32_t index) const;
+
+	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
+	const Descriptor& GetRtvDescriptor() const noexcept { return m_rtvDescriptor; }
+	const Descriptor& GetUavDescriptor(uint32_t index) const;
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<ID3D12Resource> m_resource;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_rtvHandle;
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> m_uavHandles;
+
+	// Dscriptors
+	Descriptor m_srvDescriptor;
+	Descriptor m_rtvDescriptor;
+	std::array<Descriptor, 12> m_uavDescriptors;
 };
 
 } // namespace Luna::DX12

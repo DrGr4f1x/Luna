@@ -14,6 +14,7 @@
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
+#include "Descriptor12.h"
 #include "Device12.h"
 #include "GpuBuffer12.h"
 #include "Sampler12.h"
@@ -30,8 +31,8 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
-	auto descriptor = colorBuffer12->GetSrvHandle();
-	SetDescriptor(slot, descriptor);
+	const auto& descriptor = colorBuffer12->GetSrvDescriptor();
+	SetDescriptor(slot, descriptor.GetHandleCPU());
 }
 
 
@@ -42,8 +43,8 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
-	auto descriptor = depthBuffer12->GetSrvHandle(depthSrv);
-	SetDescriptor(slot, descriptor);
+	const auto& descriptor = depthBuffer12->GetSrvDescriptor(depthSrv);
+	SetDescriptor(slot, descriptor.GetHandleCPU());
 }
 
 
@@ -61,8 +62,8 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		auto descriptor = gpuBuffer12->GetSrvHandle();
-		SetDescriptor(slot, descriptor);
+		const auto& descriptor = gpuBuffer12->GetSrvDescriptor();
+		SetDescriptor(slot, descriptor.GetHandleCPU());
 	}
 }
 
@@ -74,8 +75,8 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 	const Texture* texture12 = (const Texture*)texture.Get();
 	assert(texture12 != nullptr);
 
-	auto descriptor = texture12->GetSrvHandle();
-	SetDescriptor(slot, descriptor);
+	const auto& descriptor = texture12->GetSrvDescriptor();
+	SetDescriptor(slot, descriptor.GetHandleCPU());
 }
 
 
@@ -86,8 +87,8 @@ void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t u
 	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
-	auto descriptor = colorBuffer12->GetUavHandle(uavIndex);
-	SetDescriptor(slot, descriptor);
+	const auto& descriptor = colorBuffer12->GetUavDescriptor(uavIndex);
+	SetDescriptor(slot, descriptor.GetHandleCPU());
 }
 
 
@@ -116,8 +117,8 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		auto descriptor = gpuBuffer12->GetUavHandle();
-		SetDescriptor(slot, descriptor);
+		const auto& descriptor = gpuBuffer12->GetUavDescriptor();
+		SetDescriptor(slot, descriptor.GetHandleCPU());
 	}
 }
 
@@ -136,8 +137,8 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		auto descriptor = gpuBuffer12->GetCbvHandle();
-		SetDescriptor(slot, descriptor);
+		const auto& descriptor = gpuBuffer12->GetCbvDescriptor();
+		SetDescriptor(slot, descriptor.GetHandleCPU());
 	}
 }
 
@@ -149,8 +150,8 @@ void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 	const Sampler* sampler12 = (const Sampler*)sampler.get();
 	assert(sampler12 != nullptr);
 
-	auto descriptor = sampler12->GetSamplerHandle();
-	SetDescriptor(slot, descriptor);
+	const auto& descriptor = sampler12->GetDescriptor();
+	SetDescriptor(slot, descriptor.GetHandleCPU());
 }
 
 

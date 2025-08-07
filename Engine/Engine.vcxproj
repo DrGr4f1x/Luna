@@ -101,6 +101,7 @@
     <ClCompile Include="Graphics\CommonStates.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp" />
+    <ClCompile Include="Graphics\DX12\Descriptor12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp" />
     <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp" />
@@ -116,7 +117,9 @@
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
+    <ClCompile Include="Graphics\DX12\Sampler12.cpp" />
     <ClCompile Include="Graphics\DX12\Shader12.cpp" />
+    <ClCompile Include="Graphics\DX12\Texture12.cpp" />
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GpuBuffer.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
@@ -137,6 +140,7 @@
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\GpuBufferVK.cpp" />
@@ -213,11 +217,13 @@
     <ClInclude Include="Graphics\CommandContext.h" />
     <ClInclude Include="Graphics\CommonStates.h" />
     <ClInclude Include="Graphics\DepthBuffer.h" />
+    <ClInclude Include="Graphics\Descriptor.h" />
     <ClInclude Include="Graphics\DescriptorSet.h" />
     <ClInclude Include="Graphics\Device.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\DepthBuffer12.h" />
+    <ClInclude Include="Graphics\DX12\Descriptor12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSet12.h" />
     <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h" />
@@ -268,6 +274,7 @@
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceVK.h" />
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\GpuBufferVK.h" />

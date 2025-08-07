@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\DepthBuffer.h"
+#include "Graphics\Vulkan\DescriptorVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 namespace Luna::VK
@@ -26,21 +27,13 @@ class DepthBuffer : public IDepthBuffer
 
 public:
 	VkImage GetImage() const noexcept { return m_image->Get(); }
-	VkImageView GetImageViewDepthStencil() const noexcept { return m_imageViewDepthStencil->Get(); }
-	VkImageView GetImageViewDepthOnly() const noexcept { return m_imageViewDepthOnly->Get(); }
-	VkImageView GetImageViewStencilOnly() const noexcept { return m_imageViewStencilOnly->Get(); }
-	VkImageView GetImageView(DepthStencilAspect depthStencilAspect) const noexcept;
-	VkDescriptorImageInfo GetImageInfoDepth() const noexcept { return m_imageInfoDepth; }
-	VkDescriptorImageInfo GetImageInfoStencil() const noexcept { return m_imageInfoStencil; }
+	const Descriptor& GetDescriptor(DepthStencilAspect depthStencilAspect) const noexcept;
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<CVkImage> m_image;
-	wil::com_ptr<CVkImageView> m_imageViewDepthStencil;
-	wil::com_ptr<CVkImageView> m_imageViewDepthOnly;
-	wil::com_ptr<CVkImageView> m_imageViewStencilOnly;
-	VkDescriptorImageInfo m_imageInfoDepth{};
-	VkDescriptorImageInfo m_imageInfoStencil{};
+	Descriptor m_depthStencilDescriptor;
+	Descriptor m_depthOnlyDescriptor;
+	Descriptor m_stencilOnlyDescriptor;
 };
 
 } // namespace Luna::VK

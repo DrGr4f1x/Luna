@@ -12,7 +12,9 @@
 
 #include "Graphics\Device.h"
 #include "Graphics\DX12\DirectXCommon.h"
+#include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DescriptorAllocator12.h"
+#include "Graphics\DX12\Sampler12.h"
 
 
 namespace Luna::DX12
@@ -60,6 +62,11 @@ public:
 
 	ID3D12Device* GetD3D12Device() { return m_device.get(); }
 
+	// CPU descriptors
+	DescriptorHandle2 AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+	void FreeDescriptorHandle(const DescriptorHandle2& handle);
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorHandleCPU(const DescriptorHandle2 handle);
+
 protected:
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
@@ -67,6 +74,12 @@ protected:
 protected:
 	wil::com_ptr<ID3D12Device> m_device;
 	wil::com_ptr<D3D12MA::Allocator> m_allocator;
+
+	// CPU descriptors
+	std::array<std::mutex, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_freeDescriptorMutexes;
+	std::mutex m_descriptorHeapLock;
+	std::vector<std::vector<DescriptorHandle2>> m_freeDescriptors;
+	std::vector<DescriptorHeapDesc> m_descriptorHeaps;
 
 	// Root signature cache
 	std::mutex m_rootSignatureMutex;
@@ -82,7 +95,7 @@ protected:
 
 	// Sampler state cache
 	std::mutex m_samplerMutex;
-	std::map<size_t, D3D12_CPU_DESCRIPTOR_HANDLE> m_samplerMap;
+	std::map<size_t, std::shared_ptr<Sampler>> m_samplerMap;
 };
 
 

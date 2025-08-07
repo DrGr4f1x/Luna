@@ -328,7 +328,7 @@ void CommandContext12::ClearColor(IColorBuffer* colorBuffer)
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
-	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvHandle(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvDescriptor().GetHandleCPU(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
@@ -341,7 +341,7 @@ void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
-	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvHandle(), clearColor.GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvDescriptor().GetHandleCPU(), clearColor.GetPtr(), 0, nullptr);
 }
 
 
@@ -354,7 +354,7 @@ void CommandContext12::ClearDepth(IDepthBuffer* depthBuffer)
 	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvDescriptor(DepthStencilAspect::ReadWrite).GetHandleCPU(), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
@@ -367,7 +367,7 @@ void CommandContext12::ClearStencil(IDepthBuffer* depthBuffer)
 	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvDescriptor(DepthStencilAspect::ReadWrite).GetHandleCPU(), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
@@ -380,7 +380,7 @@ void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvHandle(DepthStencilAspect::ReadWrite), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvDescriptor(DepthStencilAspect::ReadWrite).GetHandleCPU(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
@@ -394,7 +394,7 @@ void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer)
 	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
-	m_rtvs[0] = colorBuffer12->GetRtvHandle();
+	m_rtvs[0] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
 	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
@@ -417,11 +417,11 @@ void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer, const IDe
 	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_rtvs[0] = colorBuffer12->GetRtvHandle();
+	m_rtvs[0] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
 	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
-	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
+	m_dsv = depthBuffer12->GetDsvDescriptor(depthStencilAspect).GetHandleCPU();
 	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -441,7 +441,7 @@ void CommandContext12::BeginRendering(const IDepthBuffer* depthBuffer, DepthSten
 	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
+	m_dsv = depthBuffer12->GetDsvDescriptor(depthStencilAspect).GetHandleCPU();
 	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -466,7 +466,7 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 		const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 		assert(colorBuffer12 != nullptr);
 
-		m_rtvs[i] = colorBuffer12->GetRtvHandle();
+		m_rtvs[i] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
 		m_rtvFormats[i] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 		++i;
 	}
@@ -493,7 +493,7 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 		const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
 		assert(colorBuffer12 != nullptr);
 
-		m_rtvs[i] = colorBuffer12->GetRtvHandle();
+		m_rtvs[i] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
 		m_rtvFormats[i] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 		++i;
 	}
@@ -502,7 +502,7 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_dsv = depthBuffer12->GetDsvHandle(depthStencilAspect);
+	m_dsv = depthBuffer12->GetDsvDescriptor(depthStencilAspect).GetHandleCPU();
 	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -832,7 +832,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
-	auto descriptor = colorBuffer12->GetSrvHandle();
+	auto descriptor = colorBuffer12->GetSrvDescriptor().GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -844,7 +844,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
 	assert(depthBuffer12 != nullptr);
 
-	auto descriptor = depthBuffer12->GetSrvHandle(depthSrv);
+	auto descriptor = depthBuffer12->GetSrvDescriptor(depthSrv).GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -856,7 +856,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	auto descriptor = gpuBuffer12->GetSrvHandle();
+	auto descriptor = gpuBuffer12->GetSrvDescriptor().GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -868,7 +868,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	Texture* texture12 = (Texture*)texture.Get();
 	assert(texture12 != nullptr);
 
-	auto descriptor = texture12->GetSrvHandle();
+	auto descriptor = texture12->GetSrvDescriptor().GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -881,7 +881,7 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	assert(colorBuffer12 != nullptr);
 
 	// TODO: Need a UAV index parameter
-	auto descriptor = colorBuffer12->GetUavHandle(0);
+	auto descriptor = colorBuffer12->GetUavDescriptor(0).GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -900,7 +900,7 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	auto descriptor = gpuBuffer12->GetUavHandle();
+	auto descriptor = gpuBuffer12->GetUavDescriptor().GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -912,7 +912,7 @@ void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	auto descriptor = gpuBuffer12->GetCbvHandle();
+	auto descriptor = gpuBuffer12->GetCbvDescriptor().GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }

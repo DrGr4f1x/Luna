@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\Sampler.h"
+#include "Graphics\Vulkan\DescriptorVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 namespace Luna::VK
@@ -25,13 +26,11 @@ class Sampler : public ISampler
 	friend class Device;
 
 public:
-	VkSampler GetSampler() const { return m_sampler->Get(); }
-	VkDescriptorImageInfo GetImageInfoSampler() const { return m_imageInfoSampler; }
+	VkSampler GetSampler() const { return m_descriptor.GetSampler(); }
+	const Descriptor& GetDescriptor() const noexcept { return m_descriptor; }
 
 protected:
-	Device* m_device{ nullptr };
-	wil::com_ptr<CVkSampler> m_sampler;
-	VkDescriptorImageInfo m_imageInfoSampler;
+	Descriptor m_descriptor;
 };
 
 } // namespace Luna::VK

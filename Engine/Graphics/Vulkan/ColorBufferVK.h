@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\ColorBuffer.h"
+#include "Graphics\Vulkan\DescriptorVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
@@ -27,18 +28,13 @@ class ColorBuffer : public IColorBuffer
 
 public:
 	VkImage GetImage() const noexcept { return m_image->Get(); }
-	VkImageView GetImageViewRtv() const noexcept { return m_imageViewRtv->Get(); }
-	VkImageView GetImageViewSrv() const noexcept { return m_imageViewSrv->Get(); }
-	VkDescriptorImageInfo GetImageInfoSrv() const noexcept { return m_imageInfoSrv; }
-	VkDescriptorImageInfo GetImageInfoUav() const noexcept { return m_imageInfoUav; }
+	const Descriptor& GetRtvDescriptor() const noexcept { return m_rtvDescriptor; }
+	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<CVkImage> m_image;
-	wil::com_ptr<CVkImageView> m_imageViewRtv;
-	wil::com_ptr<CVkImageView> m_imageViewSrv;
-	VkDescriptorImageInfo m_imageInfoSrv{};
-	VkDescriptorImageInfo m_imageInfoUav{};
+	Descriptor m_rtvDescriptor;
+	Descriptor m_srvDescriptor;
 };
 
 } // namespace Luna::VK

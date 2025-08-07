@@ -89,6 +89,8 @@ Device::Device(ID3D12Device* device, D3D12MA::Allocator* allocator)
 	: m_device{ device }
 	, m_allocator{ allocator }
 {
+	m_freeDescriptors.resize(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES, vector<DescriptorHandle2>());
+
 	assert(g_d3d12Device == nullptr);
 	g_d3d12Device = this;
 }
@@ -96,9 +98,23 @@ Device::Device(ID3D12Device* device, D3D12MA::Allocator* allocator)
 
 Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
+	// Create color buffer
+	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>(this);
+	colorBuffer->m_type = colorBufferDesc.resourceType;
+	colorBuffer->m_width = colorBufferDesc.width;
+	colorBuffer->m_height = colorBufferDesc.height;
+	colorBuffer->m_arraySizeOrDepth = colorBufferDesc.arraySizeOrDepth;
+	colorBuffer->m_numSamples = colorBufferDesc.numSamples;
+	colorBuffer->m_planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
+	colorBuffer->m_format = colorBufferDesc.format;
+	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
+	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
+	
 	// Create resource
 	auto numMips = colorBufferDesc.numMips == 0 ? ComputeNumMips(colorBufferDesc.width, colorBufferDesc.height) : colorBufferDesc.numMips;
 	auto flags = CombineResourceFlags(colorBufferDesc.numSamples);
+
+	colorBuffer->m_numMips = numMips;
 
 	D3D12_RESOURCE_DESC resourceDesc{
 		.Dimension			= GetResourceDimension(colorBufferDesc.resourceType),
@@ -126,6 +142,8 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&resource)));
 
 	SetDebugName(resource.get(), colorBufferDesc.name);
+
+	colorBuffer->m_resource = resource;
 
 	// Create descriptors and derived views
 	assert_msg(colorBufferDesc.arraySizeOrDepth == 1 || numMips == 1, "We don't support auto-mips on texture arrays");
@@ -211,55 +229,25 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 		srvDesc.Texture2D.MostDetailedMip = 0;
 	}
 
-	auto rtvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	// Create the render target view
-	m_device->CreateRenderTargetView(resource.get(), &rtvDesc, rtvHandle);
-
-	// Create the shader resource view
-	m_device->CreateShaderResourceView(resource.get(), &srvDesc, srvHandle);
+	// Create SRV and RTV descriptors
+	colorBuffer->m_srvDescriptor.CreateShaderResourceView(resource.get(), srvDesc);
+	colorBuffer->m_rtvDescriptor.CreateRenderTargetView(resource.get(), rtvDesc);
 
 	// Create the UAVs for each mip level (RWTexture2D)
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 12> uavHandles;
-	for (uint32_t i = 0; i < (uint32_t)uavHandles.size(); ++i)
+	for (auto& uavHandle : uavHandles)
 	{
-		uavHandles[i].ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
+		uavHandle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
 	}
 
 	if (colorBufferDesc.numSamples == 1)
 	{
 		for (uint32_t i = 0; i < numMips; ++i)
 		{
-			uavHandles[i] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-			m_device->CreateUnorderedAccessView(resource.get(), nullptr, &uavDesc, uavHandles[i]);
+			colorBuffer->m_uavDescriptors[i].CreateUnorderedAccessView(resource.get(), uavDesc);
 
 			uavDesc.Texture2D.MipSlice++;
 		}
-	}
-
-	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
-
-	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>();
-
-	colorBuffer->m_device = this;
-	colorBuffer->m_type = colorBufferDesc.resourceType;
-	colorBuffer->m_width = colorBufferDesc.width;
-	colorBuffer->m_height = colorBufferDesc.height;
-	colorBuffer->m_arraySizeOrDepth = colorBufferDesc.arraySizeOrDepth;
-	colorBuffer->m_numMips = numMips;
-	colorBuffer->m_numSamples = colorBufferDesc.numSamples;
-	colorBuffer->m_planeCount = planeCount;
-	colorBuffer->m_format = colorBufferDesc.format;
-	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
-	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
-	colorBuffer->m_resource = resource;
-	colorBuffer->m_srvHandle = srvHandle;
-	colorBuffer->m_rtvHandle = rtvHandle;
-	for (uint32_t i = 0; i < uavHandles.size(); ++i)
-	{
-		colorBuffer->m_uavHandles[i] = uavHandles[i];
 	}
 
 	return colorBuffer;
@@ -268,6 +256,20 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 
 Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
+	auto depthBuffer = std::make_shared<Luna::DX12::DepthBuffer>(this);
+
+	depthBuffer->m_type = depthBufferDesc.resourceType;
+	depthBuffer->m_width = depthBufferDesc.width;
+	depthBuffer->m_height = depthBufferDesc.height;
+	depthBuffer->m_arraySizeOrDepth = depthBufferDesc.arraySizeOrDepth;
+	depthBuffer->m_numMips = 1;
+	depthBuffer->m_numSamples = depthBufferDesc.numSamples;
+	depthBuffer->m_planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
+	depthBuffer->m_format = depthBufferDesc.format;
+	depthBuffer->m_dimension = ResourceTypeToTextureDimension(depthBuffer->m_type);
+	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
+	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
+
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 	if (!depthBufferDesc.createShaderResources)
 	{
@@ -300,6 +302,8 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 
 	SetDebugName(resource.get(), depthBufferDesc.name);
 
+	depthBuffer->m_resource = resource;
+
 	// Create descriptors and derived views
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = GetDSVFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
@@ -314,46 +318,33 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 	}
 
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 4> dsvHandles{};
-	for (auto& handle : dsvHandles)
-	{
-		handle.ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN;
-	}
-
-	dsvHandles[0] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	dsvHandles[1] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-	m_device->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[0]);
+	depthBuffer->m_dsvDescriptors[0].CreateDepthStencilView(resource.get(), dsvDesc);
 
 	dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH;
-	m_device->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[1]);
+	depthBuffer->m_dsvDescriptors[1].CreateDepthStencilView(resource.get(), dsvDesc);
 
 	auto stencilReadFormat = GetStencilFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 	if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
 	{
-		dsvHandles[2] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-		dsvHandles[3] = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_STENCIL;
-		m_device->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[2]);
+		depthBuffer->m_dsvDescriptors[2].CreateDepthStencilView(resource.get(), dsvDesc);
 
 		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH | D3D12_DSV_FLAG_READ_ONLY_STENCIL;
-		m_device->CreateDepthStencilView(resource.get(), &dsvDesc, dsvHandles[3]);
+		depthBuffer->m_dsvDescriptors[3].CreateDepthStencilView(resource.get(), dsvDesc);
 	}
 	else
 	{
-		dsvHandles[2] = dsvHandles[0];
-		dsvHandles[3] = dsvHandles[1];
-	}
+		// dsvDescriptors 2 and 3 are the same as 0 and 1, respectively
+		dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+		depthBuffer->m_dsvDescriptors[2].CreateDepthStencilView(resource.get(), dsvDesc);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE depthSrvHandle{ .ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
-	D3D12_CPU_DESCRIPTOR_HANDLE stencilSrvHandle{ .ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+		dsvDesc.Flags = D3D12_DSV_FLAG_READ_ONLY_DEPTH;
+		depthBuffer->m_dsvDescriptors[3].CreateDepthStencilView(resource.get(), dsvDesc);
+	}
 
 	if (depthBufferDesc.createShaderResources)
 	{
-		depthSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
 		// Create the shader resource view
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 		srvDesc.Format = GetDepthFormat(FormatToDxgi(depthBufferDesc.format).resourceFormat);
@@ -367,41 +358,17 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
 		}
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		m_device->CreateShaderResourceView(resource.get(), &srvDesc, depthSrvHandle);
+
+		depthBuffer->m_depthSrvDescriptor.CreateShaderResourceView(resource.get(), srvDesc);
 
 		if (stencilReadFormat != DXGI_FORMAT_UNKNOWN)
 		{
-			stencilSrvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
 			srvDesc.Format = stencilReadFormat;
 			srvDesc.Texture2D.PlaneSlice = (srvDesc.Format == DXGI_FORMAT_X32_TYPELESS_G8X24_UINT) ? 1 : 0;
-			m_device->CreateShaderResourceView(resource.get(), &srvDesc, stencilSrvHandle);
+			
+			depthBuffer->m_stencilSrvDescriptor.CreateShaderResourceView(resource.get(), srvDesc);
 		}
 	}
-
-	const uint8_t planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
-
-	auto depthBuffer = std::make_shared<Luna::DX12::DepthBuffer>();
-
-	depthBuffer->m_device = this;
-	depthBuffer->m_type = depthBufferDesc.resourceType;
-	depthBuffer->m_width = depthBufferDesc.width;
-	depthBuffer->m_height = depthBufferDesc.height;
-	depthBuffer->m_arraySizeOrDepth = depthBufferDesc.arraySizeOrDepth;
-	depthBuffer->m_numMips = 1;
-	depthBuffer->m_numSamples = depthBufferDesc.numSamples;
-	depthBuffer->m_planeCount = planeCount;
-	depthBuffer->m_format = depthBufferDesc.format;
-	depthBuffer->m_dimension = ResourceTypeToTextureDimension(depthBuffer->m_type);
-	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
-	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
-	depthBuffer->m_resource = resource;
-	for (uint32_t i = 0; i < dsvHandles.size(); ++i)
-	{
-		depthBuffer->m_dsvHandles[i] = dsvHandles[i];
-	}
-	depthBuffer->m_depthSrvHandle = depthSrvHandle;
-	depthBuffer->m_stencilSrvHandle = stencilSrvHandle;
 
 	return depthBuffer;
 }
@@ -417,14 +384,22 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 		gpuBufferDesc.elementSize = Math::AlignUp(gpuBufferDescIn.elementSize, 256);
 	}
 
+	// Create GpuBuffer
+	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
+	gpuBuffer->m_type = gpuBufferDesc.resourceType;
+	gpuBuffer->m_usageState = initialState;
+	gpuBuffer->m_format = gpuBufferDesc.format;
+	gpuBuffer->m_elementSize = gpuBufferDescIn.elementSize;
+	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
+	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
+	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
+
 	wil::com_ptr<D3D12MA::Allocation> allocation = AllocateBuffer(gpuBufferDesc);
 	ID3D12Resource* pResource = allocation->GetResource();
 
 	SetDebugName(pResource, gpuBufferDesc.name);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE uavHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE cbvHandle{};
+	gpuBuffer->m_allocation = allocation;
 
 	const size_t bufferSize = gpuBufferDesc.elementCount * gpuBufferDesc.elementSize;
 
@@ -440,8 +415,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
 			.Format				= DXGI_FORMAT_R32_TYPELESS,
@@ -452,8 +426,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
 	}
 
 	if (gpuBufferDesc.resourceType == ResourceType::StructuredBuffer)
@@ -469,8 +442,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
 			.Format				= DXGI_FORMAT_UNKNOWN,
@@ -483,8 +455,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
 	}
 
 	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
@@ -499,8 +470,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
 			.Format				= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
@@ -511,8 +481,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
 	}
 
 	if (gpuBufferDesc.resourceType == ResourceType::ConstantBuffer)
@@ -522,8 +491,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			.SizeInBytes		= (uint32_t)(gpuBufferDesc.elementCount * gpuBufferDesc.elementSize)
 		};
 
-		cbvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		m_device->CreateConstantBufferView(&cbvDesc, cbvHandle);
+		gpuBuffer->m_cbvDescriptor.CreateConstantBufferView(cbvDesc);
 	}
 
 	if (gpuBufferDesc.resourceType == ResourceType::VertexBuffer || gpuBufferDesc.resourceType == ResourceType::IndexBuffer)
@@ -541,8 +509,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 				}
 			};
 
-			srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-			m_device->CreateShaderResourceView(pResource, &srvDesc, srvHandle);
+			gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
 		}
 
 		if (gpuBufferDesc.bAllowUnorderedAccess)
@@ -558,25 +525,9 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 				}
 			};
 
-			uavHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-			m_device->CreateUnorderedAccessView(pResource, nullptr, &uavDesc, uavHandle);
+			gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
 		}
 	}
-
-	auto gpuBuffer = std::make_shared<GpuBuffer>();
-
-	gpuBuffer->m_device = this;
-	gpuBuffer->m_type = gpuBufferDesc.resourceType;
-	gpuBuffer->m_usageState = initialState;
-	gpuBuffer->m_format = gpuBufferDesc.format;
-	gpuBuffer->m_elementSize = gpuBufferDescIn.elementSize;
-	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_allocation = allocation;
-	gpuBuffer->m_srvHandle = srvHandle;
-	gpuBuffer->m_uavHandle = uavHandle;
-	gpuBuffer->m_cbvHandle = cbvHandle;
-	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
 	if (gpuBufferDescIn.initialData)
 	{
@@ -1172,7 +1123,7 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 		.MaxLOD				= { samplerDesc.maxLOD }
 	};
 
-	D3D12_CPU_DESCRIPTOR_HANDLE samplerHandle;
+	shared_ptr<Sampler> sampler;
 
 	const size_t hashValue = Utility::HashState(&d3d12SamplerDesc);
 
@@ -1181,22 +1132,17 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 	auto iter = m_samplerMap.find(hashValue);
 	if (iter != m_samplerMap.end())
 	{
-		samplerHandle = iter->second;
+		sampler = iter->second;
 	}
 	else
 	{
-		samplerHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		m_device->CreateSampler(&d3d12SamplerDesc, samplerHandle);
+		sampler = make_shared<Sampler>(this);
+		sampler->m_samplerDescriptor.CreateSampler(d3d12SamplerDesc);
 
-		m_samplerMap[hashValue] = samplerHandle;
+		m_samplerMap[hashValue] = sampler;
 	}
 
-	auto samplerPtr = std::make_shared<Sampler>();
-
-	samplerPtr->m_device = this;
-	samplerPtr->m_samplerHandle = samplerHandle;
-
-	return samplerPtr;
+	return sampler;
 }
 
 
@@ -1220,7 +1166,7 @@ TexturePtr Device::CreateTexture3D(const TextureDesc& textureDesc)
 
 ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
 {
-	Texture* tex = new Texture();
+	Texture* tex = new Texture(this);
 	tex->m_name = name;
 	tex->m_mapKey = mapKey;
 	return tex;
@@ -1236,7 +1182,6 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	const bool isCubemap = HasAnyFlag(type, ResourceType::TextureCube_Type);
 	uint32_t effectiveArraySize = isCubemap ? texInit.arraySizeOrDepth / 6 : texInit.arraySizeOrDepth;
 
-	texture12->m_device = this;
 	texture12->m_type = type;
 	texture12->m_usageState = ResourceState::CopyDest;
 	texture12->m_width = texInit.width;
@@ -1322,11 +1267,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		return false;
 	}
 
-	if (texture12->m_srvHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
-	{
-		texture12->m_srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	}
-	m_device->CreateShaderResourceView(texture12->GetResource(), &srvDesc, texture12->m_srvHandle);
+	texture12->m_srvDescriptor.CreateShaderResourceView(texture12->GetResource(), srvDesc);
 
 	return true;
 }
@@ -1340,18 +1281,10 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain,
 	const std::string name = std::format("Primary SwapChain Image {}", imageIndex);
 	SetDebugName(displayPlane.get(), name);
 
-	auto rtvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	m_device->CreateRenderTargetView(displayPlane.get(), nullptr, rtvHandle);
-
-	auto srvHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_device->CreateShaderResourceView(displayPlane.get(), nullptr, srvHandle);
-
 	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
 	const uint8_t planeCount = GetFormatPlaneCount(resourceDesc.Format);
 
-	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>();
-
-	colorBuffer->m_device = this;
+	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>(this);
 	colorBuffer->m_type = ResourceType::Texture2D;
 	colorBuffer->m_width = resourceDesc.Width;
 	colorBuffer->m_height = resourceDesc.Height;
@@ -1363,10 +1296,90 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain,
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = DirectX::Colors::Black;
 	colorBuffer->m_resource = displayPlane;
-	colorBuffer->m_srvHandle = srvHandle;
-	colorBuffer->m_rtvHandle = rtvHandle;
+
+	colorBuffer->m_srvDescriptor.CreateShaderResourceView(displayPlane.get());
+	colorBuffer->m_rtvDescriptor.CreateRenderTargetView(displayPlane.get());
 	
 	return colorBuffer;
+}
+
+
+DescriptorHandle2 Device::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE heapType)
+{
+	lock_guard lock(m_freeDescriptorMutexes[heapType]);
+
+	DescriptorHandle2 descriptorHandle{};
+
+	// Create a new descriptor heap if there is no a free descriptor
+	auto& freeDescriptors = m_freeDescriptors[heapType];
+	if (freeDescriptors.empty())
+	{
+		lock_guard lock2(m_descriptorHeapLock);
+
+		// Can't create a new heap because the index doesn't fit into "DESCRIPTOR_HANDLE_HEAP_INDEX_BIT_NUM" bits
+		size_t heapIndex = m_descriptorHeaps.size();
+		assert(heapIndex < (1 << DESCRIPTOR_HANDLE_HEAP_INDEX_BIT_NUM));
+
+		// Create a new batch of descriptors
+		D3D12_DESCRIPTOR_HEAP_DESC desc{
+			.Type = heapType,
+			.NumDescriptors = DESCRIPTOR_BATCH_SIZE,
+			.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+			.NodeMask = 1
+		};
+
+		wil::com_ptr<ID3D12DescriptorHeap> descriptorHeap;
+		assert_succeeded(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
+
+		DescriptorHeapDesc descriptorHeapDesc{
+			.heap = descriptorHeap,
+			.basePointerCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart().ptr,
+			.descriptorSize = m_device->GetDescriptorHandleIncrementSize(heapType)
+		};
+
+		m_descriptorHeaps.push_back(descriptorHeapDesc);
+
+		// Add the new batch of free descriptors
+		freeDescriptors.reserve(desc.NumDescriptors);
+
+		for (uint32_t i = 0; i < desc.NumDescriptors; ++i)
+		{
+			DescriptorHandle2 handle{
+				.heapType		= (uint32_t)heapType,
+				.heapIndex		= (uint32_t)heapIndex,
+				.heapOffset		= i,
+				.allocated		= true
+			};
+
+			freeDescriptors.push_back(handle);
+		}
+	}
+
+	// Reserve and return one descriptor
+	descriptorHandle = freeDescriptors.back();
+	freeDescriptors.pop_back();
+
+	return descriptorHandle;
+}
+
+
+void Device::FreeDescriptorHandle(const DescriptorHandle2& handle)
+{
+	lock_guard lock(m_freeDescriptorMutexes[handle.heapType]);
+
+	auto& freeDescriptors = m_freeDescriptors[handle.heapType];
+	freeDescriptors.push_back(handle);
+}
+
+
+D3D12_CPU_DESCRIPTOR_HANDLE Device::GetDescriptorHandleCPU(const DescriptorHandle2 handle)
+{
+	lock_guard lock(m_descriptorHeapLock);
+
+	const DescriptorHeapDesc& descriptorHeapDesc = m_descriptorHeaps[handle.heapIndex];
+	D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandleCPU{ descriptorHeapDesc.basePointerCPU + handle.heapOffset * descriptorHeapDesc.descriptorSize };
+
+	return descriptorHandleCPU;
 }
 
 

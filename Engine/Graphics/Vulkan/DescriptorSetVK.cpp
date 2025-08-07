@@ -32,19 +32,27 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	VkDescriptorImageInfo info{
+		.imageView		= colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		.pImageInfo			= &info
+	};
 
-	m_descriptorData[slot] = colorBufferVK->GetImageInfoSrv();
-	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
-
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -55,19 +63,29 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	const auto& descriptor = depthSrv ? depthBufferVK->GetDescriptor(DepthStencilAspect::DepthReadOnly) : depthBufferVK->GetDescriptor(DepthStencilAspect::StencilReadOnly);
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
+	VkDescriptorImageInfo info{
+		.imageView		= descriptor.GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
 
-	m_descriptorData[slot] = depthSrv ? depthBufferVK->GetImageInfoDepth() : depthBufferVK->GetImageInfoStencil();
-	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		.pImageInfo			= &info
+	};
 
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -83,28 +101,41 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		assert(slot == 0);
 	}
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	const auto& descriptor = gpuBufferVK->GetDescriptor();
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
+	VkBufferView texelBufferView = VK_NULL_HANDLE;
+	VkDescriptorBufferInfo info{};
+
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+	};
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
-		m_descriptorData[slot] = gpuBufferVK->GetBufferView();
-		writeSet.pTexelBufferView = std::get_if<VkBufferView>(&m_descriptorData[slot]);
+		texelBufferView = descriptor.GetBufferView();
+
+		writeDescriptorSet.pTexelBufferView = &texelBufferView;
 	}
 	else
 	{
-		writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo(m_isDynamicBuffer);
-		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
+		info.buffer = gpuBufferVK->GetBuffer();
+		info.offset = 0;
+		info.range = m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE;
+
+		writeDescriptorSet.pBufferInfo = &info;
 	}
 
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -115,19 +146,27 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 	const Texture* textureVK = (const Texture*)texture.Get();
 	assert(textureVK != nullptr);
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	VkDescriptorImageInfo info{
+		.imageView		= textureVK->GetDescriptor().GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		.pImageInfo			= &info
+	};
 
-	m_descriptorData[slot] = textureVK->GetImageInfoSrv();
-	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
-
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -138,19 +177,27 @@ void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t u
 	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer.get();
 	assert(colorBufferVK != nullptr);
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	VkDescriptorImageInfo info{
+		.imageView		= colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
+	};
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+		.pImageInfo			= &info
+	};
 
-	m_descriptorData[slot] = colorBufferVK->GetImageInfoUav();
-	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
-
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -177,28 +224,41 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		assert(slot == 0);
 	}
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	const auto& descriptor = gpuBufferVK->GetDescriptor();
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
+	VkBufferView texelBufferView = VK_NULL_HANDLE;
+	VkDescriptorBufferInfo info{};
+
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+	};
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		writeSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
-		m_descriptorData[slot] = gpuBufferVK->GetBufferView();
-		writeSet.pTexelBufferView = std::get_if<VkBufferView>(&m_descriptorData[slot]);
+		texelBufferView = descriptor.GetBufferView();
+
+		writeDescriptorSet.pTexelBufferView = &texelBufferView;
 	}
 	else
 	{
-		writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		m_descriptorData[slot] = gpuBufferVK->GetBufferInfo(m_isDynamicBuffer);
-		writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
+		info.buffer = gpuBufferVK->GetBuffer();
+		info.offset = 0;
+		info.range = m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE;
+
+		writeDescriptorSet.pBufferInfo = &info;
 	}
 
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -214,18 +274,30 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		assert(slot == 0);
 	}
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	const auto& descriptor = gpuBufferVK->GetDescriptor();
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
-	m_descriptorData[slot] = gpuBufferVK->GetBufferInfo(m_isDynamicBuffer);
-	writeSet.pBufferInfo = std::get_if<VkDescriptorBufferInfo>(&m_descriptorData[slot]);
+	VkDescriptorBufferInfo info{
+		.buffer		= gpuBufferVK->GetBuffer(),
+		.offset		= 0,
+		.range		= m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE
+	};
 
-	m_dirtyBits |= (1 << slot);
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pBufferInfo		= &info
+	};
+
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -236,18 +308,27 @@ void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 	const Sampler* samplerVK = (const Sampler*)sampler.get();
 	assert(samplerVK != nullptr);
 
-	VkWriteDescriptorSet& writeSet = m_writeDescriptorSets[slot];
+	VkDescriptorImageInfo info{
+		.sampler		= samplerVK->GetDescriptor().GetSampler(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
 
-	writeSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	writeSet.descriptorCount = 1;
-	writeSet.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
-	writeSet.dstSet = m_descriptorSet;
-	writeSet.dstBinding = slot;
-	writeSet.dstArrayElement = 0;
-	m_descriptorData[slot] = samplerVK->GetImageInfoSampler();
-	writeSet.pImageInfo = std::get_if<VkDescriptorImageInfo>(&m_descriptorData[slot]);
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= slot,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLER,
+		.pImageInfo			= &info
+	};
 
-	m_dirtyBits |= (1 << slot);
+	vkUpdateDescriptorSets(
+		m_device->GetVulkanDevice(),
+		1,
+		&writeDescriptorSet,
+		0,
+		nullptr);
 }
 
 
@@ -256,34 +337,6 @@ void DescriptorSet::SetDynamicOffset(uint32_t offset)
 	assert(m_isDynamicBuffer);
 
 	m_dynamicOffset = offset;
-}
-
-
-void DescriptorSet::UpdateGpuDescriptors()
-{
-	if (m_dirtyBits == 0)
-	{
-		return;
-	}
-
-	array<VkWriteDescriptorSet, MaxDescriptorsPerTable> liveDescriptors;
-
-	unsigned long setBit{ 0 };
-	uint32_t paramIndex{ 0 };
-	while (_BitScanForward(&setBit, m_dirtyBits))
-	{
-		liveDescriptors[paramIndex++] = m_writeDescriptorSets[setBit];
-		m_dirtyBits &= ~(1 << setBit);
-	}
-
-	assert(m_dirtyBits == 0);
-
-	vkUpdateDescriptorSets(
-		m_device->GetVulkanDevice(),
-		(uint32_t)paramIndex,
-		liveDescriptors.data(),
-		0,
-		nullptr);
 }
 
 

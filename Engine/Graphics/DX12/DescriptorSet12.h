@@ -19,6 +19,7 @@ namespace Luna::DX12
 {
 
 // Forward declarations
+class Descriptor;
 class Device;
 
 

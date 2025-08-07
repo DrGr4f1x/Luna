@@ -11,7 +11,9 @@
 #pragma once
 
 #include "Graphics\Sampler.h"
+#include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DirectXCommon.h"
+
 
 namespace Luna::DX12
 {
@@ -25,11 +27,12 @@ class Sampler : public ISampler
 	friend class Device;
 	
 public:
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSamplerHandle() const { return m_samplerHandle; }
+	Sampler(Device* device);
+
+	const Descriptor& GetDescriptor() const { return m_samplerDescriptor; }
 
 protected:
-	Device* m_device{ nullptr };
-	D3D12_CPU_DESCRIPTOR_HANDLE m_samplerHandle;
+	Descriptor m_samplerDescriptor;
 };
 
 } // namespace Luna::DX12

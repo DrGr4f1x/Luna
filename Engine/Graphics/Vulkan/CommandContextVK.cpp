@@ -59,7 +59,7 @@ VkClearValue GetDepthStencilClearValue(float depth, uint32_t stencil)
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTarget)
 {
-	VkImageView imageView = renderTarget.GetImageViewRtv();
+	VkImageView imageView = renderTarget.GetRtvDescriptor().GetImageView();
 
 	VkRenderingAttachmentInfo info{
 		.sType			= VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -77,7 +77,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTa
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	VkImageView imageView = depthTarget.GetImageView(depthStencilAspect);
+	VkImageView imageView = depthTarget.GetDescriptor(depthStencilAspect).GetImageView();
 
 	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
@@ -1061,7 +1061,14 @@ void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootInde
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
-	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, gpuBufferVK->GetBufferInfo(), graphicsPipe);
+
+	VkDescriptorBufferInfo info{
+		.buffer		= gpuBufferVK->GetBuffer(),
+		.offset		= 0,
+		.range		= VK_WHOLE_SIZE
+	};
+
+	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, info, graphicsPipe);
 
 	MarkDescriptorsDirty(type);
 }
@@ -1102,7 +1109,13 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
-	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoSrv(), graphicsPipe);
+
+	VkDescriptorImageInfo info{
+		.imageView		= colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, info, graphicsPipe);
 
 	MarkDescriptorsDirty(type);
 }
@@ -1117,14 +1130,15 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
-	if (depthSrv)
-	{
-		m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, depthBufferVK->GetImageInfoDepth(), graphicsPipe);
-	}
-	else
-	{
-		m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, depthBufferVK->GetImageInfoStencil(), graphicsPipe);
-	}
+
+	DepthStencilAspect aspect = depthSrv ? DepthStencilAspect::DepthReadOnly : DepthStencilAspect::StencilReadOnly;
+
+	VkDescriptorImageInfo info{
+		.imageView		= depthBufferVK->GetDescriptor(aspect).GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, info, graphicsPipe);
 
 	MarkDescriptorsDirty(type);
 }
@@ -1141,11 +1155,16 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	const bool graphicsPipe = type == CommandListType::Direct;
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetBufferView(), graphicsPipe);
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetDescriptor().GetBufferView(), graphicsPipe);
 	}
 	else
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), graphicsPipe);
+		VkDescriptorBufferInfo info{
+			.buffer		= gpuBufferVK->GetBuffer(),
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
+		};
+		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, info, graphicsPipe);
 	}
 
 	MarkDescriptorsDirty(type);
@@ -1161,7 +1180,13 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
-	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, textureVK->GetImageInfoSrv(), graphicsPipe);
+
+	VkDescriptorImageInfo info{
+		.imageView		= textureVK->GetDescriptor().GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, info, graphicsPipe);
 
 	MarkDescriptorsDirty(type);
 }
@@ -1176,7 +1201,13 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
-	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, colorBufferVK->GetImageInfoUav(), graphicsPipe);
+
+	VkDescriptorImageInfo info{
+		.imageView = colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageLayout = VK_IMAGE_LAYOUT_GENERAL
+	};
+
+	m_dynamicDescriptorHeap->SetDescriptorImageInfo(rootIndex, offset, info, graphicsPipe);
 
 	MarkDescriptorsDirty(type);
 }
@@ -1201,11 +1232,16 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	const bool graphicsPipe = type == CommandListType::Direct;
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetBufferView(), graphicsPipe);
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetDescriptor().GetBufferView(), graphicsPipe);
 	}
 	else
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), graphicsPipe);
+		VkDescriptorBufferInfo info{
+			.buffer		= gpuBufferVK->GetBuffer(),
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
+		};
+		m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, info, graphicsPipe);
 	}
 
 	MarkDescriptorsDirty(type);
@@ -1221,7 +1257,14 @@ void CommandContextVK::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
-	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, gpuBufferVK->GetBufferInfo(), graphicsPipe);
+
+	VkDescriptorBufferInfo info{
+		.buffer		= gpuBufferVK->GetBuffer(),
+		.offset		= 0,
+		.range		= VK_WHOLE_SIZE
+	};
+
+	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, offset, info, graphicsPipe);
 
 	MarkDescriptorsDirty(type);
 }

@@ -11,7 +11,9 @@
 #pragma once
 
 #include "Graphics\GpuBuffer.h"
+#include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DirectXCommon.h"
+
 
 namespace Luna::DX12
 {
@@ -25,6 +27,8 @@ class GpuBuffer : public IGpuBuffer
 	friend class Device;
 
 public:
+	explicit GpuBuffer(Device* device);
+
 	void Update(size_t sizeInBytes, const void* data) override;
 	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
 
@@ -34,18 +38,18 @@ public:
 	ID3D12Resource* GetResource() const noexcept { return m_allocation->GetResource(); }
 	D3D12MA::Allocation* GetAllocation() const noexcept { return m_allocation.get(); }
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSrvHandle() const noexcept { return m_srvHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUavHandle() const noexcept { return m_uavHandle; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetCbvHandle() const noexcept { return m_cbvHandle; }
+	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
+	const Descriptor& GetUavDescriptor() const noexcept { return m_uavDescriptor; }
+	const Descriptor& GetCbvDescriptor() const noexcept { return m_cbvDescriptor; }
 
 	uint64_t GetGpuAddress() const noexcept;
 
 protected:
-	Device* m_device{ nullptr };
 	wil::com_ptr<D3D12MA::Allocation> m_allocation;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_uavHandle{};
-	D3D12_CPU_DESCRIPTOR_HANDLE m_cbvHandle{};
+
+	Descriptor m_srvDescriptor{};
+	Descriptor m_uavDescriptor{};
+	Descriptor m_cbvDescriptor{};
 
 	bool m_isCpuWriteable{ false };
 };

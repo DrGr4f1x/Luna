@@ -170,21 +170,8 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	imageViewDesc.SetImageUsage(GpuImageUsage::ShaderResource);
 	auto imageViewSrv = CreateImageView(imageViewDesc);
 
-	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewSrv,
-		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
-	};
-	VkDescriptorImageInfo imageInfoUav{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewSrv,
-		.imageLayout	= GetImageLayout(ResourceState::UnorderedAccess)
-	};
-
+	// Create ColorBuffer
 	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
-
-	colorBuffer->m_device = this;
 	colorBuffer->m_type = colorBufferDesc.resourceType;
 	colorBuffer->m_usageState = ResourceState::Undefined;
 	colorBuffer->m_width = colorBufferDesc.width;
@@ -196,10 +183,8 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = image;
-	colorBuffer->m_imageViewRtv = imageViewRtv;
-	colorBuffer->m_imageViewSrv = imageViewSrv;
-	colorBuffer->m_imageInfoSrv = imageInfoSrv;
-	colorBuffer->m_imageInfoUav = imageInfoUav;
+	colorBuffer->m_rtvDescriptor.SetImageView(imageViewRtv.get());
+	colorBuffer->m_srvDescriptor.SetImageView(imageViewSrv.get());
 
 	return colorBuffer;
 }
@@ -271,20 +256,8 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 		imageViewStencilOnly = imageViewDepthStencil;
 	}
 
-	auto imageInfoDepth = VkDescriptorImageInfo{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewDepthOnly,
-		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
-	};
-	auto imageInfoStencil = VkDescriptorImageInfo{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= *imageViewStencilOnly,
-		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
-	};
-
+	// Create DepthBuffer
 	auto depthBuffer = std::make_shared<Luna::VK::DepthBuffer>();
-
-	depthBuffer->m_device = this;
 	depthBuffer->m_type = depthBufferDesc.resourceType;
 	depthBuffer->m_usageState = ResourceState::Undefined;
 	depthBuffer->m_width = depthBufferDesc.width;
@@ -297,11 +270,9 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
 	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
 	depthBuffer->m_image = image;
-	depthBuffer->m_imageViewDepthStencil = imageViewDepthStencil;
-	depthBuffer->m_imageViewDepthOnly = imageViewDepthOnly;
-	depthBuffer->m_imageViewStencilOnly = imageViewStencilOnly;
-	depthBuffer->m_imageInfoDepth = imageInfoDepth;
-	depthBuffer->m_imageInfoStencil = imageInfoStencil;
+	depthBuffer->m_depthStencilDescriptor.SetImageView(imageViewDepthStencil.get());
+	depthBuffer->m_depthOnlyDescriptor.SetImageView(imageViewDepthOnly.get());
+	depthBuffer->m_stencilOnlyDescriptor.SetImageView(imageViewStencilOnly.get());
 
 	return depthBuffer;
 }
@@ -352,9 +323,9 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 		bufferView = Create<CVkBufferView>(m_device.get(), vkBufferView);
 	}
 
+	// Create GpuBuffer
 	auto gpuBuffer = std::make_shared<GpuBuffer>();
 
-	gpuBuffer->m_device = this;
 	gpuBuffer->m_type = gpuBufferDesc.resourceType;
 	gpuBuffer->m_format = gpuBufferDesc.format;
 	gpuBuffer->m_usageState = ResourceState::GenericRead;
@@ -362,8 +333,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
 	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
 	gpuBuffer->m_buffer = buffer;
-	gpuBuffer->m_bufferView = bufferView;
-	gpuBuffer->m_bufferInfo = { .buffer = vkBuffer, .offset = 0, .range = VK_WHOLE_SIZE };
+	gpuBuffer->m_descriptor.SetBufferView(bufferView.get());
 	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
 	if (gpuBufferDesc.initialData)
@@ -1071,11 +1041,9 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	// Create Sampler
 	auto samplerPtr = std::make_shared<Sampler>();
-
-	samplerPtr->m_device = this;
-	samplerPtr->m_sampler = pSampler;
-	samplerPtr->m_imageInfoSampler = imageInfoSampler;
+	samplerPtr->m_descriptor.SetSampler(pSampler.get());
 
 	return samplerPtr;
 };
@@ -1167,14 +1135,9 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		.baseArraySlice		= 0,
 		.arraySize			= isVolume ? 1 : texInit.arraySizeOrDepth
 	};
-	textureVK->m_imageViewSrv = CreateImageView(imageViewDesc);
+	auto imageView = CreateImageView(imageViewDesc);
 
-	VkDescriptorImageInfo imageInfoSrv{
-		.sampler		= VK_NULL_HANDLE,
-		.imageView		= textureVK->m_imageViewSrv->Get(),
-		.imageLayout	= GetImageLayout(ResourceState::PixelShaderResource)
-	};
-	textureVK->m_imageInfoSrv = imageInfoSrv;
+	textureVK->m_descriptor.SetImageView(imageView.get());
 
 	// Copy initial data
 	TexturePtr temp = texture;
@@ -1230,7 +1193,6 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 
 	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
 
-	colorBuffer->m_device = this;
 	colorBuffer->m_type = colorBufferDesc.resourceType;
 	colorBuffer->m_usageState = ResourceState::Undefined;
 	colorBuffer->m_width = colorBufferDesc.width;
@@ -1242,10 +1204,8 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = swapChainImage;
-	colorBuffer->m_imageViewRtv = imageViewRtv;
-	colorBuffer->m_imageViewSrv = imageViewSrv;
-	colorBuffer->m_imageInfoSrv = imageInfoSrv;
-	colorBuffer->m_imageInfoUav = imageInfoUav;
+	colorBuffer->m_rtvDescriptor.SetImageView(imageViewRtv.get());
+	colorBuffer->m_srvDescriptor.SetImageView(imageViewSrv.get());
 
 	return colorBuffer;
 }

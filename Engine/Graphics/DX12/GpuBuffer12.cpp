@@ -21,6 +21,14 @@ static_assert(sizeof(DrawIndexedIndirectArgs) == sizeof(D3D12_DRAW_INDEXED_ARGUM
 static_assert(sizeof(DispatchIndirectArgs) == sizeof(D3D12_DISPATCH_ARGUMENTS));
 
 
+GpuBuffer::GpuBuffer(Device* device)
+{
+	m_srvDescriptor.SetDevice(device);
+	m_uavDescriptor.SetDevice(device);
+	m_cbvDescriptor.SetDevice(device);
+}
+
+
 void GpuBuffer::Update(size_t sizeInBytes, const void* data)
 {
 	Update(sizeInBytes, 0, data);
