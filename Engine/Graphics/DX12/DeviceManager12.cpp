@@ -352,12 +352,6 @@ void DeviceManager::CreateDeviceResources()
 		InstallDebugCallback();
 	}
 
-	// Create descriptor allocators
-	m_descriptorAllocators[0] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_descriptorAllocators[1] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-	m_descriptorAllocators[2] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	m_descriptorAllocators[3] = make_unique<DescriptorAllocator>(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-
 	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Create("User Descriptor Heap, CBV_SRV_UAV");
 	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Create("User Descriptor Heap, SAMPLER");
 
@@ -581,12 +575,6 @@ uint8_t DeviceManager::GetFormatPlaneCount(DXGI_FORMAT format)
 	}
 
 	return planeCount;
-}
-
-
-D3D12_CPU_DESCRIPTOR_HANDLE DeviceManager::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count)
-{
-	return m_descriptorAllocators[type]->Allocate(m_dxDevice.get(), count);
 }
 
 
@@ -1136,12 +1124,6 @@ void DeviceManager::ReleaseDeferredResources()
 DeviceManager* GetD3D12DeviceManager()
 {
 	return g_d3d12DeviceManager;
-}
-
-
-D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count)
-{
-	return GetD3D12DeviceManager()->AllocateDescriptor(type, count);
 }
 
 

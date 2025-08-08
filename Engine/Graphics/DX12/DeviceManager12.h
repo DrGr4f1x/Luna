@@ -117,8 +117,6 @@ public:
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t count = 1);
-
 	void HandleDeviceLost();
 
 	void ReleaseResource(ID3D12Resource* resource, D3D12MA::Allocation* allocation = nullptr);
@@ -164,9 +162,6 @@ private:
 	wil::com_ptr<ID3D12InfoQueue1> m_dxInfoQueue;
 	wil::com_ptr<D3D12MA::Allocator> m_d3d12maAllocator;
 	DWORD m_callbackCookie{ 0 };
-
-	// Descriptor allocators
-	std::array<std::unique_ptr<DescriptorAllocator>, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_descriptorAllocators;
 
 	// DirectX caps
 	std::unique_ptr<DeviceCaps> m_caps;
