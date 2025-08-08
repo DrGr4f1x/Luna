@@ -225,7 +225,6 @@ void PipelineStatisticsApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			RootConstants(1, 4, ShaderStage::Vertex)

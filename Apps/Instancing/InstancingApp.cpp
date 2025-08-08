@@ -179,17 +179,13 @@ void InstancingApp::CreateWindowSizeDependentResources()
 
 void InstancingApp::InitRootSignatures()
 {
-	using enum RootSignatureFlags;
-
 	RootSignatureDesc starfieldRootSignatureDesc{
-		.name	= "Starfield Root Signature",
-		.flags	= AllowInputAssemblerInputLayout | DenyPixelShaderRootAccess
+		.name	= "Starfield Root Signature"
 	};
 	m_starfieldRootSignature = CreateRootSignature(starfieldRootSignatureDesc);
 
 	RootSignatureDesc modelRootSignatureDesc{
 		.name				= "Model Root Signature",
-		.flags				= AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),	
 			Table({ TextureSRV }, ShaderStage::Pixel)

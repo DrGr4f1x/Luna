@@ -174,7 +174,6 @@ void TextureCubeMapApp::InitRootSignatures()
 {
 	auto skyBoxRootSignatureDesc = RootSignatureDesc{
 		.name				= "Skybox Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel)
@@ -186,7 +185,6 @@ void TextureCubeMapApp::InitRootSignatures()
 
 	auto modelRootSignatureDesc = RootSignatureDesc{
 		.name				= "Model Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel)

@@ -412,24 +412,50 @@ D3D12_DESCRIPTOR_RANGE_TYPE DescriptorTypeToDX12(DescriptorType type)
 }
 
 
-D3D12_ROOT_SIGNATURE_FLAGS RootSignatureFlagsToDX12(RootSignatureFlags rootSignatureFlags)
+D3D12_ROOT_SIGNATURE_FLAGS ShaderStageToRootSignatureFlags(ShaderStage shaderStage)
 {
-	using enum RootSignatureFlags;
+	D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
-	uint32_t result = 0;
-	result |= HasFlag(rootSignatureFlags, AllowInputAssemblerInputLayout) ? D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT : 0;
-	result |= HasFlag(rootSignatureFlags, DenyVertexShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, DenyHullShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, DenyDomainShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, DenyGeometryShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, DenyPixelShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, AllowStreamOutput) ? D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT : 0;
-	result |= HasFlag(rootSignatureFlags, DenyAmplificationShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, DenyMeshShaderRootAccess) ? D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS : 0;
-	result |= HasFlag(rootSignatureFlags, CbvSrvUavHeapDirectlyIndexed) ? D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED : 0;
-	result |= HasFlag(rootSignatureFlags, SamplerHeapDirectlyIndexed) ? D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED : 0;
+	if (HasFlag(shaderStage, ShaderStage::Vertex))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	}
+	else
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
+	}
 
-	return (D3D12_ROOT_SIGNATURE_FLAGS)result;
+	if (!HasFlag(shaderStage, ShaderStage::Hull))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+	}
+
+	if (!HasFlag(shaderStage, ShaderStage::Domain))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS;
+	}
+
+	if (!HasFlag(shaderStage, ShaderStage::Geometry))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	}
+
+	if (!HasFlag(shaderStage, ShaderStage::Pixel))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+	}
+
+	if (!HasFlag(shaderStage, ShaderStage::Amplification))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS;
+	}
+
+	if (!HasFlag(shaderStage, ShaderStage::Mesh))
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
+	}
+
+	return flags;
 }
 
 

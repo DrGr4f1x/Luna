@@ -274,26 +274,6 @@ enum class DescriptorType : uint8_t
 };
 
 
-enum class RootSignatureFlags
-{
-	None								= 0x0000,
-	AllowInputAssemblerInputLayout		= 0x0001,
-	DenyVertexShaderRootAccess			= 0x0002,
-	DenyHullShaderRootAccess			= 0x0004,
-	DenyDomainShaderRootAccess			= 0x0008,
-	DenyGeometryShaderRootAccess		= 0x0010,
-	DenyPixelShaderRootAccess			= 0x0020,
-	AllowStreamOutput					= 0x0040,
-	LocalRootSignature					= 0x0080,
-	DenyAmplificationShaderRootAccess	= 0x0100,
-	DenyMeshShaderRootAccess			= 0x0200,
-	CbvSrvUavHeapDirectlyIndexed		= 0x0400,
-	SamplerHeapDirectlyIndexed			= 0x0800
-};
-
-template <> struct EnableBitmaskOperators<RootSignatureFlags> { static const bool enable = true; };
-
-
 enum class TextureFilter
 {
 	MinMagMipPoint,

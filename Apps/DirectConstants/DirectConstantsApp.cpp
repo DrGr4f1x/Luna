@@ -146,7 +146,6 @@ void DirectConstantsApp::InitRootSignature()
 {
 	RootSignatureDesc rootSignatureDesc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),
 			RootConstants(1, 24, ShaderStage::Vertex)

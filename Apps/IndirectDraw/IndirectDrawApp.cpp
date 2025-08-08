@@ -188,7 +188,6 @@ void IndirectDrawApp::InitRootSignatures()
 	// Sky sphere
 	RootSignatureDesc skySphereRootSignatureDesc{
 		.name				= "Sky Sphere Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
 		.rootParameters		= { RootCBV(0, ShaderStage::Vertex) }
 	};
 	m_skySphereRootSignature = CreateRootSignature(skySphereRootSignatureDesc);
@@ -196,7 +195,6 @@ void IndirectDrawApp::InitRootSignatures()
 	// Ground plane
 	RootSignatureDesc groundRootSignatureDesc{
 		.name				= "Ground Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel)
@@ -208,7 +206,6 @@ void IndirectDrawApp::InitRootSignatures()
 	// Plants
 	RootSignatureDesc plantsRootSignatureDesc{
 		.name				= "Plants Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel)

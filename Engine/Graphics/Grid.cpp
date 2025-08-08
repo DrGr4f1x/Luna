@@ -153,7 +153,6 @@ void Grid::InitRootSignature()
 {
 	RootSignatureDesc desc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 

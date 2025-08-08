@@ -158,7 +158,6 @@ void DisplacementApp::InitRootSignature()
 {
 	RootSignatureDesc rootSignatureDesc{
 		.name				= "Geom Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Hull),
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Domain),

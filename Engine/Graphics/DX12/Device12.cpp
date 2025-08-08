@@ -571,8 +571,11 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 	}
 
 	// Build DX12 root parameter descriptions
+	ShaderStage combinedShaderStages{};
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
+		combinedShaderStages |= rootParameter.shaderVisibility;
+
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
 			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
@@ -643,6 +646,8 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 	uint32_t currentSamplerRegister = 0;
 	for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
 	{
+		combinedShaderStages |= staticSamplerDesc.shaderStage;
+
 		const auto& samplerDesc = staticSamplerDesc.samplerDesc;
 
 		D3D12_STATIC_SAMPLER_DESC d3d12StaticSamplerDesc{
@@ -680,7 +685,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		.pParameters		= d3d12RootParameters.data(),
 		.NumStaticSamplers	= (uint32_t)staticSamplers.size(),
 		.pStaticSamplers	= staticSamplers.data(),
-		.Flags				= RootSignatureFlagsToDX12(rootSignatureDesc.flags)
+		.Flags				= ShaderStageToRootSignatureFlags(combinedShaderStages)
 	};
 
 	uint32_t descriptorTableBitmap{ 0 };

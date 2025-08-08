@@ -153,7 +153,6 @@ void TerrainTessellationApp::InitRootSignatures()
 {
 	RootSignatureDesc skyRootSignatureDesc{
 		.name				= "Sky Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel),
@@ -164,7 +163,6 @@ void TerrainTessellationApp::InitRootSignatures()
 
 	RootSignatureDesc terrainRootSignatureDesc{
 		.name				= "Terrain Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Hull),
 			Table({ Sampler}, ShaderStage::Hull),

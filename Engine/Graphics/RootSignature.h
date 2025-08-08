@@ -247,12 +247,10 @@ inline StaticSamplerBuilder StaticSampler;
 struct RootSignatureDesc
 {
 	std::string name{};
-	RootSignatureFlags flags{ RootSignatureFlags::None };
 	RootParameters rootParameters;
 	StaticSamplers staticSamplers;
 
 	RootSignatureDesc& SetName(const std::string& value) { name = value; return *this; }
-	constexpr RootSignatureDesc& SetFlags(RootSignatureFlags value) noexcept { flags = value; return *this; }
 	RootSignatureDesc& SetRootParameters(const RootParameters& value) { rootParameters = value; return *this; }
 	RootSignatureDesc& SetStaticSamplers(const StaticSamplers& value) { staticSamplers = value; return *this; }
 	RootSignatureDesc& AppendRootParameters(const RootParameters& value)

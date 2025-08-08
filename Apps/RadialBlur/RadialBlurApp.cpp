@@ -190,7 +190,6 @@ void RadialBlurApp::InitRootSignatures()
 	// Main scene
 	auto sceneRootSignatureDesc = RootSignatureDesc{
 		.name				= "Scene Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 				RootCBV(0, ShaderStage::Vertex),
 				Table({ TextureSRV }, ShaderStage::Pixel)
@@ -203,7 +202,6 @@ void RadialBlurApp::InitRootSignatures()
 	// Radial blur
 	auto radialBlurRootSignatureDesc = RootSignatureDesc{
 		.name				= "Radial Blur Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 				Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel)
 			},

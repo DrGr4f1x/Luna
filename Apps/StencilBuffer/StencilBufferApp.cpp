@@ -162,7 +162,6 @@ void StencilBufferApp::InitRootSignature()
 {
 	auto desc = RootSignatureDesc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 

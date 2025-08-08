@@ -178,7 +178,6 @@ void TextureCubeMapArrayApp::InitRootSignatures()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Pixel)

@@ -263,7 +263,6 @@ void BloomApp::InitRootSignatures()
 	// Scene root signature
 	RootSignatureDesc sceneRootSignatureDesc{
 		.name				= "Scene Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
 		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 	m_sceneRootSignature = CreateRootSignature(sceneRootSignatureDesc);
@@ -271,7 +270,6 @@ void BloomApp::InitRootSignatures()
 	// Blur root signature
 	RootSignatureDesc blurRootSignatureDesc{
 		.name				= "Blur Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyVertexShaderRootAccess,
 		.rootParameters		= {	
 			Table({ TextureSRV, ConstantBuffer }, ShaderStage::Pixel)
 		},
@@ -282,7 +280,6 @@ void BloomApp::InitRootSignatures()
 	// Skybox root signature
 	RootSignatureDesc skyboxRootSignatureDesc{
 		.name				= "Skybox Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			Table({ ConstantBuffer }, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel)

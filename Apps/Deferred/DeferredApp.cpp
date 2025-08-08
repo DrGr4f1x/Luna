@@ -226,7 +226,6 @@ void DeferredApp::InitRootSignatures()
 	// G-Buffer pass root signature
 	RootSignatureDesc gbufferDesc{
 		.name				= "G-Buffer Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex),
 			Table({TextureSRV, TextureSRV}, ShaderStage::Pixel)
@@ -239,7 +238,6 @@ void DeferredApp::InitRootSignatures()
 	// Lighting pass root signature
 	RootSignatureDesc lightingDesc{
 		.name				= "Lighting Root Signature",
-		.flags				= RootSignatureFlags::DenyVertexShaderRootAccess,
 		.rootParameters		= {
 			Table({TextureSRV, TextureSRV, TextureSRV, ConstantBuffer}, ShaderStage::Pixel)
 		},

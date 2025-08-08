@@ -162,7 +162,6 @@ void TextureApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= { 
 			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel)

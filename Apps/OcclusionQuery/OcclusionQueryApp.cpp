@@ -197,7 +197,6 @@ void OcclusionQueryApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 

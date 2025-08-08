@@ -202,7 +202,6 @@ void ComputeClothApp::InitRootSignatures()
 	// Sphere graphics
 	RootSignatureDesc sphereRootSignatureDesc{
 		.name				= "Sphere Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout | RootSignatureFlags::DenyPixelShaderRootAccess,
 		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
 	};
 	m_sphereRootSignature = CreateRootSignature(sphereRootSignatureDesc);
@@ -210,7 +209,6 @@ void ComputeClothApp::InitRootSignatures()
 	// Cloth graphics
 	RootSignatureDesc clothRootSignatureDesc{
 		.name				= "Cloth Root Signature",
-		.flags				= RootSignatureFlags::AllowInputAssemblerInputLayout,
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),	
 			Table({ TextureSRV }, ShaderStage::Pixel)
