@@ -394,9 +394,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 			createLayout = false;
 		}
-		else if (rootParameter.parameterType == RootParameterType::RootCBV ||
-			rootParameter.parameterType == RootParameterType::RootSRV ||
-			rootParameter.parameterType == RootParameterType::RootUAV)
+		else if (IsRootDescriptorType(rootParameter.parameterType))
 		{
 			VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
 			vkBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);

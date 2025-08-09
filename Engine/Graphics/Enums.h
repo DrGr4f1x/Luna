@@ -435,6 +435,13 @@ enum class RootParameterType : uint8_t
 };
 
 
+inline bool IsRootDescriptorType(RootParameterType type)
+{
+	using enum RootParameterType;
+	return type == RootCBV || type == RootSRV || type == RootUAV;
+}
+
+
 enum class ResourceType : uint32_t
 {
 	Unknown				= 0x0000,

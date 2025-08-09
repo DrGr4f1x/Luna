@@ -25,9 +25,7 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 	// Don't need descriptors for root constants
 	assert(rootParam.parameterType != RootParameterType::RootConstants);
 
-	const bool isDynamicBuffer = rootParam.parameterType == RootParameterType::RootCBV ||
-		rootParam.parameterType == RootParameterType::RootSRV ||
-		rootParam.parameterType == RootParameterType::RootUAV;
+	const bool isDynamicBuffer = IsRootDescriptorType(rootParam.parameterType);
 
 	DescriptorSetDesc descriptorSetDesc{
 		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex].get(),

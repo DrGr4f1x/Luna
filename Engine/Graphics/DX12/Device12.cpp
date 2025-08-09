@@ -585,9 +585,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 			param.Constants.RegisterSpace = rootParameter.registerSpace;
 			param.Constants.ShaderRegister = rootParameter.startRegister;
 		}
-		else if (rootParameter.parameterType == RootParameterType::RootCBV ||
-			rootParameter.parameterType == RootParameterType::RootSRV ||
-			rootParameter.parameterType == RootParameterType::RootUAV)
+		else if (IsRootDescriptorType(rootParameter.parameterType))
 		{
 			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = RootParameterTypeToDX12(rootParameter.parameterType);
