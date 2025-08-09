@@ -30,11 +30,13 @@ struct DescriptorRange
 	uint32_t startRegister{ 0 };
 	uint32_t numDescriptors{ 1 };
 	uint32_t registerSpace{ 0 };
+	DescriptorRangeFlags flags{ DescriptorRangeFlags::None };
 
 	constexpr DescriptorRange& SetDescriptorType(DescriptorType value) noexcept { descriptorType = value; return *this; }
 	constexpr DescriptorRange& SetStartRegister(uint32_t value) noexcept { startRegister = value; return *this; }
 	constexpr DescriptorRange& SetNumDescriptors(uint32_t value) noexcept { numDescriptors = value; return *this; }
 	constexpr DescriptorRange& SetRegisterSpace(uint32_t value) noexcept { registerSpace = value; return *this; }
+	constexpr DescriptorRange& SetFlags(DescriptorRangeFlags value) noexcept { flags = value; return *this; }
 };
 
 
@@ -44,28 +46,36 @@ public:
 	explicit RangeBuilder(DescriptorType type) : m_type{ type } 
 	{}
 
+	RangeBuilder(DescriptorType type, DescriptorRangeFlags flags)
+		: m_type{ type }
+		, m_flags{ flags }
+	{}
+
 	operator DescriptorRange()
 	{
 		return DescriptorRange{
 			.descriptorType		= m_type,
 			.startRegister		= APPEND_REGISTER,
 			.numDescriptors		= 1,
-			.registerSpace		= 0
+			.registerSpace		= 0,
+			.flags				= m_flags
 		};
 	}
 
-	DescriptorRange operator()(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0)
+	DescriptorRange operator()(uint32_t startRegister, uint32_t numDescriptors = 1, uint32_t registerSpace = 0, DescriptorRangeFlags flags = DescriptorRangeFlags::None)
 	{
 		return DescriptorRange{
 			.descriptorType		= m_type,
 			.startRegister		= startRegister,
 			.numDescriptors		= numDescriptors,
-			.registerSpace		= registerSpace
+			.registerSpace		= registerSpace,
+			.flags				= flags
 		};
 	}
 
 private:
 	const DescriptorType m_type;
+	const DescriptorRangeFlags m_flags{ DescriptorRangeFlags::None };
 };
 
 
@@ -81,6 +91,18 @@ inline RangeBuilder RawBufferUAV{ DescriptorType::RawBufferUAV };
 inline RangeBuilder Sampler{ DescriptorType::Sampler };
 inline RangeBuilder RayTracingAccelStruct{ DescriptorType::RayTracingAccelStruct };
 inline RangeBuilder SamplerFeedbackTextureUAV{ DescriptorType::SamplerFeedbackTextureUAV };
+
+inline DescriptorRangeFlags BindlessFlags{ DescriptorRangeFlags::AllowUpdateAfterSet | DescriptorRangeFlags::PartiallyBound | DescriptorRangeFlags::VariableSizedArray };
+inline RangeBuilder BindlessConstantBuffer{ DescriptorType::ConstantBuffer, BindlessFlags };
+inline RangeBuilder BindlessTextureSRV{ DescriptorType::TextureSRV, BindlessFlags };
+inline RangeBuilder BindlessTextureUAV{ DescriptorType::TextureUAV, BindlessFlags };
+inline RangeBuilder BindlessTypedBufferSRV{ DescriptorType::TypedBufferSRV, BindlessFlags };
+inline RangeBuilder BindlessTypedBufferUAV{ DescriptorType::TypedBufferUAV, BindlessFlags };
+inline RangeBuilder BindlessStructuredBufferSRV{ DescriptorType::StructuredBufferSRV, BindlessFlags };
+inline RangeBuilder BindlessStructuredBufferUAV{ DescriptorType::StructuredBufferUAV, BindlessFlags };
+inline RangeBuilder BindlessRawBufferSRV{ DescriptorType::RawBufferSRV, BindlessFlags };
+inline RangeBuilder BindlessRawBufferUAV{ DescriptorType::RawBufferUAV, BindlessFlags };
+inline RangeBuilder BindlessSampler{ DescriptorType::Sampler, BindlessFlags };
 
 
 struct RootParameter

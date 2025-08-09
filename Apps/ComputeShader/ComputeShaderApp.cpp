@@ -135,7 +135,7 @@ void ComputeShaderApp::Render()
 
 	// Graphics
 
-	context.TransitionResource(m_texture, ResourceState::PixelShaderResource, true);
+	context.TransitionResource(m_texture, ResourceState::PixelShaderResource);
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());

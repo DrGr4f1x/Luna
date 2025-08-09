@@ -274,6 +274,18 @@ enum class DescriptorType : uint8_t
 };
 
 
+enum class DescriptorRangeFlags : uint8_t
+{
+	None,
+	AllowUpdateAfterSet,
+	PartiallyBound,
+	Array,
+	VariableSizedArray
+};
+
+template <> struct EnableBitmaskOperators<DescriptorRangeFlags> { static const bool enable = true; };
+
+
 enum class TextureFilter
 {
 	MinMagMipPoint,

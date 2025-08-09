@@ -549,7 +549,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
-	std::vector<D3D12_ROOT_PARAMETER> d3d12RootParameters;
+	std::vector<D3D12_ROOT_PARAMETER1> d3d12RootParameters;
 
 	auto exitGuard = wil::scope_exit([&]()
 		{
@@ -578,7 +578,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
-			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
+			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
 			param.Constants.Num32BitValues = rootParameter.num32BitConstants;
@@ -589,16 +589,16 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 			rootParameter.parameterType == RootParameterType::RootSRV ||
 			rootParameter.parameterType == RootParameterType::RootUAV)
 		{
-			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
+			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = RootParameterTypeToDX12(rootParameter.parameterType);
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
-			//param.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC;
+			param.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_NONE;
 			param.Descriptor.RegisterSpace = rootParameter.registerSpace;
 			param.Descriptor.ShaderRegister = rootParameter.startRegister;
 		}
 		else if (rootParameter.parameterType == RootParameterType::Table)
 		{
-			D3D12_ROOT_PARAMETER& param = d3d12RootParameters.emplace_back();
+			D3D12_ROOT_PARAMETER1& param = d3d12RootParameters.emplace_back();
 			param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			param.ShaderVisibility = ShaderStageToDX12(rootParameter.shaderVisibility);
 
@@ -606,10 +606,13 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 
 			const uint32_t numRanges = (uint32_t)rootParameter.table.size();
 			param.DescriptorTable.NumDescriptorRanges = numRanges;
-			D3D12_DESCRIPTOR_RANGE* pRanges = new D3D12_DESCRIPTOR_RANGE[numRanges];
+			D3D12_DESCRIPTOR_RANGE1* pRanges = new D3D12_DESCRIPTOR_RANGE1[numRanges];
+
 			for (uint32_t i = 0; i < numRanges; ++i)
 			{
-				D3D12_DESCRIPTOR_RANGE& d3d12Range = pRanges[i];
+				D3D12_DESCRIPTOR_RANGE1& d3d12Range = pRanges[i];
+				D3D12_DESCRIPTOR_RANGE_FLAGS descriptorRangeFlags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+
 				const DescriptorRange& range = rootParameter.table[i];
 				d3d12Range.RangeType = DescriptorTypeToDX12(range.descriptorType);
 				d3d12Range.NumDescriptors = range.numDescriptors;
@@ -627,15 +630,24 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 
 				d3d12Range.RegisterSpace = range.registerSpace;
 				d3d12Range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-				// TODO: Revisit this flag
-				/*if (d3d12Range.RangeType != D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER)
+
+				// Set flags
+				if (HasAnyFlag(range.flags, DescriptorRangeFlags::PartiallyBound | DescriptorRangeFlags::AllowUpdateAfterSet))
 				{
-					d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE | D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
+					descriptorRangeFlags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
 				}
-				else
+				if (range.descriptorType != DescriptorType::Sampler)
 				{
-					d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
-				}*/
+					if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
+					{
+						descriptorRangeFlags |= D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
+					}
+					else
+					{
+						descriptorRangeFlags |= D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
+					}
+				}
+				d3d12Range.Flags = descriptorRangeFlags;
 			}
 			param.DescriptorTable.pDescriptorRanges = pRanges;
 		}
@@ -680,12 +692,15 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		staticSamplers.push_back(d3d12StaticSamplerDesc);
 	}
 
-	D3D12_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
-		.NumParameters		= (uint32_t)d3d12RootParameters.size(),
-		.pParameters		= d3d12RootParameters.data(),
-		.NumStaticSamplers	= (uint32_t)staticSamplers.size(),
-		.pStaticSamplers	= staticSamplers.data(),
-		.Flags				= ShaderStageToRootSignatureFlags(combinedShaderStages)
+	D3D12_VERSIONED_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
+		.Version			= D3D_ROOT_SIGNATURE_VERSION_1_1,
+		.Desc_1_1 = {
+			.NumParameters			= (uint32_t)d3d12RootParameters.size(),
+			.pParameters			= d3d12RootParameters.data(),
+			.NumStaticSamplers		= (uint32_t)staticSamplers.size(),
+			.pStaticSamplers		= staticSamplers.data(),
+			.Flags					= ShaderStageToRootSignatureFlags(combinedShaderStages)
+		}
 	};
 
 	uint32_t descriptorTableBitmap{ 0 };
@@ -695,9 +710,9 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 
 	// Calculate hash
 	size_t hashCode = 0;
-	for (uint32_t param = 0; param < d3d12RootSignatureDesc.NumParameters; ++param)
+	for (uint32_t param = 0; param < d3d12RootSignatureDesc.Desc_1_1.NumParameters; ++param)
 	{
-		const D3D12_ROOT_PARAMETER& rootParam = d3d12RootSignatureDesc.pParameters[param];
+		const D3D12_ROOT_PARAMETER1& rootParam = d3d12RootSignatureDesc.Desc_1_1.pParameters[param];
 		descriptorTableSize.push_back(0);
 
 		if (rootParam.ParameterType == D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE)
@@ -754,7 +769,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		wil::com_ptr<ID3DBlob> pOutBlob, pErrorBlob;
 
 		HRESULT hr = S_OK;
-		hr = D3D12SerializeRootSignature(&d3d12RootSignatureDesc,D3D_ROOT_SIGNATURE_VERSION_1, &pOutBlob, &pErrorBlob);
+		hr = D3D12SerializeVersionedRootSignature(&d3d12RootSignatureDesc, &pOutBlob, &pErrorBlob);
 		if (hr != S_OK)
 		{
 			LogError(LogDirectX) << "Error compiling root signature, HRESULT  0x" << std::hex << std::setw(8) << hr << endl;

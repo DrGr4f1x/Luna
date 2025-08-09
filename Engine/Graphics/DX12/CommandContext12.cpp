@@ -780,6 +780,8 @@ void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootInde
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
+	FlushResourceBarriers();
+
 	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
@@ -799,12 +801,16 @@ void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootInde
 
 void CommandContext12::SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
+	FlushResourceBarriers();
+
 	SetDescriptors_Internal(type, rootIndex, descriptorSet);
 }
 
 
 void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceSet)
 {
+	FlushResourceBarriers();
+
 	// TODO: Need to rework this.  Should use a single shader-visible heap (of each type) for all descriptors.
 	// See the MSDN docs on SetDescriptorHeaps.  Should only set descriptor heaps once per frame.
 	ID3D12DescriptorHeap* heaps[] = {
