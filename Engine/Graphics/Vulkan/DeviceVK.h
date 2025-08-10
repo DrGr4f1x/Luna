@@ -13,6 +13,7 @@
 #include "Graphics\Device.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\Vulkan\DescriptorPoolVK.h"
+#include "Graphics\Vulkan\RootSignatureVK.h"
 
 
 namespace Luna
@@ -75,6 +76,12 @@ protected:
 
 	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
 	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
+
+	void CreateDescriptorSetLayout(
+		VkDescriptorSetLayout* setLayout,
+		std::vector<DescriptorBindingDesc>& bindingDescs,
+		const RootParameter& rootParameter,
+		size_t& hashCode);
 
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 

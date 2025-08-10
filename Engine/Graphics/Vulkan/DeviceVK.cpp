@@ -24,7 +24,6 @@
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
 #include "QueryHeapVK.h"
-#include "RootSignatureVK.h"
 #include "SamplerVK.h"
 #include "TextureVK.h"
 
@@ -379,8 +378,9 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
 
-		bool createLayout = true;
 		uint32_t offset = 0;
+
+		VkDescriptorSetLayout setLayout = VK_NULL_HANDLE;
 
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
@@ -391,77 +391,21 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			pushConstantOffset += rootParameter.num32BitConstants * 4;
 
 			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
-
-			createLayout = false;
 		}
 		else if (IsRootDescriptorType(rootParameter.parameterType))
 		{
-			VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
-			vkBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);
-
-			vkBinding.binding = 0;
-			vkBinding.descriptorCount = 1;
-			vkBinding.stageFlags = shaderStageFlags;
-			vkBinding.pImmutableSamplers = nullptr;
-
-			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
-
-			DescriptorBindingDesc& bindingDesc = layoutBindingDescs.emplace_back();
-			bindingDesc.descriptorType = vkBinding.descriptorType;
-			bindingDesc.startSlot = rootParameter.startRegister;
-			bindingDesc.numDescriptors = vkBinding.descriptorCount;
-			bindingDesc.offset = offset;
+			CreateDescriptorSetLayout(&setLayout, layoutBindingDescs, rootParameter, hashCode);
 		}
 		else if (rootParameter.parameterType == RootParameterType::Table)
 		{
-			uint32_t currentBinding = 0;
-
-			for (const auto& range : rootParameter.table)
-			{
-				for (uint32_t descriptorIndex = 0; descriptorIndex < range.numDescriptors; ++descriptorIndex)
-				{
-					VkDescriptorSetLayoutBinding& vkBinding = vkLayoutBindings.emplace_back();
-					vkBinding.descriptorCount = 1;
-					vkBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
-
-					if (range.startRegister == APPEND_REGISTER)
-					{ 
-						vkBinding.binding = (currentBinding++) + descriptorIndex;
-					}
-					else
-					{
-						vkBinding.binding = range.startRegister + descriptorIndex;
-						currentBinding = vkBinding.binding + 1;
-					}
-
-					vkBinding.stageFlags = shaderStageFlags;
-					vkBinding.pImmutableSamplers = nullptr;
-
-					hashCode = Utility::HashState(&vkBinding, 1, hashCode);
-
-					// TODO: Look into this, it might be wrong
-					DescriptorBindingDesc& bindingDesc = layoutBindingDescs.emplace_back();
-					bindingDesc.descriptorType = vkBinding.descriptorType;
-					bindingDesc.startSlot = rootParameter.startRegister;
-					bindingDesc.numDescriptors = vkBinding.descriptorCount;
-					bindingDesc.offset = offset;
-				}
-			}
+			CreateDescriptorSetLayout(&setLayout, layoutBindingDescs, rootParameter, hashCode);
 		}
 
-		if (createLayout)
+		if (setLayout != VK_NULL_HANDLE)
 		{
-			VkDescriptorSetLayoutCreateInfo createInfo{
-				.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount	= (uint32_t)vkLayoutBindings.size(),
-				.pBindings		= vkLayoutBindings.data()
-			};
+			vkDescriptorSetLayouts.push_back(setLayout);
 
-			VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
-			vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
-			vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
-
-			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
+			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), setLayout);
 			descriptorSetLayouts.push_back(descriptorSetLayout);
 
 			layoutBindingMap[rootParamIndex] = layoutBindingDescs;
@@ -1372,6 +1316,147 @@ wil::com_ptr<CVkPipelineCache> Device::CreatePipelineCache() const
 	}
 
 	return nullptr;
+}
+
+
+void Device::CreateDescriptorSetLayout(
+	VkDescriptorSetLayout* setLayout, 
+	std::vector<DescriptorBindingDesc>& bindingDescs,
+	const RootParameter& rootParameter,
+	size_t& hashCode)
+{
+	// Count descriptor bindings
+	uint32_t numBindings = 0;
+	if (IsRootDescriptorType(rootParameter.parameterType))
+	{
+		numBindings = 1;
+	}
+	else if (rootParameter.parameterType == RootParameterType::Table)
+	{
+		for (const auto& range : rootParameter.table)
+		{
+			const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
+			numBindings += isArray ? 1 : range.numDescriptors;
+		}
+	}
+
+	vector<VkDescriptorSetLayoutBinding> bindings;
+	vector<VkDescriptorBindingFlags> bindingFlags;
+	bindings.reserve(numBindings);
+	bindingFlags.reserve(numBindings);
+	bool allowUpdateAfterSet = false;
+
+	// Root descriptor
+	if (IsRootDescriptorType(rootParameter.parameterType))
+	{
+		VkDescriptorBindingFlags& bindFlags = bindingFlags.emplace_back();
+		bindFlags = 0;
+
+		VkDescriptorSetLayoutBinding& descriptorBinding = bindings.emplace_back();
+		descriptorBinding = {};
+		descriptorBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);
+		descriptorBinding.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
+		descriptorBinding.binding = rootParameter.startRegister;
+		descriptorBinding.descriptorCount = 1;
+
+		hashCode = Utility::HashState(&descriptorBinding, 1, hashCode);
+
+		DescriptorBindingDesc& bindingDesc = bindingDescs.emplace_back();
+		bindingDesc.descriptorType = descriptorBinding.descriptorType;
+		bindingDesc.startSlot = rootParameter.startRegister;
+		bindingDesc.numDescriptors = 1;
+		bindingDesc.offset = 0; // TODO: What is offset supposed to be?
+	}
+	// Table
+	else if (rootParameter.parameterType == RootParameterType::Table)
+	{
+		uint32_t currentBinding = 0;
+
+		for (const auto& range : rootParameter.table)
+		{
+			const uint32_t baseBindingIndex = range.startRegister;
+
+			VkDescriptorBindingFlags flags = 0;
+			if (HasFlag(range.flags, DescriptorRangeFlags::PartiallyBound))
+			{
+				flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+			}
+			if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
+			{
+				flags |= VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+				allowUpdateAfterSet = true;
+			}
+
+			uint32_t numDescriptors = 1;
+			const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
+
+			if (isArray)
+			{
+				if (HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray))
+				{
+					flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
+				}
+			}
+			else
+			{
+				numDescriptors = range.numDescriptors;
+			}
+
+			for (uint32_t j = 0; j < numDescriptors; ++j)
+			{
+				VkDescriptorBindingFlags& bindFlags = bindingFlags.emplace_back();
+				bindFlags = flags;
+
+				VkDescriptorSetLayoutBinding& descriptorBinding = bindings.emplace_back();
+				descriptorBinding = {};
+				descriptorBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
+				descriptorBinding.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
+				descriptorBinding.descriptorCount = isArray ? range.numDescriptors : 1;
+
+				if (range.startRegister == APPEND_REGISTER)
+				{
+					descriptorBinding.binding = (currentBinding++) + j;
+				}
+				else
+				{
+					descriptorBinding.binding = range.startRegister + j;
+					currentBinding = descriptorBinding.binding + 1;
+				}
+
+				hashCode = Utility::HashState(&bindFlags, 1, hashCode);
+				hashCode = Utility::HashState(&descriptorBinding, 1, hashCode);
+
+				// TODO: Look into this, it might be wrong
+				DescriptorBindingDesc& bindingDesc = bindingDescs.emplace_back();
+				bindingDesc.descriptorType = descriptorBinding.descriptorType;
+				bindingDesc.startSlot = rootParameter.startRegister;
+				bindingDesc.numDescriptors = descriptorBinding.descriptorCount;
+				bindingDesc.offset = 0; // TODO: What is offset supposed to be?
+			}
+		}
+	}
+
+	VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo{
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
+		.bindingCount	= (uint32_t)bindingFlags.size(),
+		.pBindingFlags	= bindingFlags.data()
+	};
+
+	VkDescriptorSetLayoutCreateFlags layoutFlags{};
+	if (allowUpdateAfterSet)
+	{
+		layoutFlags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+	}
+
+	VkDescriptorSetLayoutCreateInfo info{ 
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext			= &bindingFlagsInfo, // TODO: Check device for descriptorIndexing support
+		.flags			= layoutFlags,
+		.bindingCount	= (uint32_t)bindings.size(),
+		.pBindings		= bindings.data()
+	};
+	
+	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, setLayout);
 }
 
 
