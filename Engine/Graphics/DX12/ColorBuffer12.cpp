@@ -26,11 +26,11 @@ ColorBuffer::ColorBuffer(Device* device)
 }
 
 
-const Descriptor& ColorBuffer::GetUavDescriptor(uint32_t index) const
+const IDescriptor* ColorBuffer::GetUavDescriptor(uint32_t index) const noexcept
 {
 	assert(index < m_uavDescriptors.size());
 
-	return m_uavDescriptors[index];
+	return &m_uavDescriptors[index];
 }
 
 } // namespace Luna::DX12

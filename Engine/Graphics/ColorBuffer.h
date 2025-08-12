@@ -17,6 +17,10 @@
 namespace Luna
 {
 
+// Forward declarations
+class IDescriptor;
+
+
 struct ColorBufferDesc
 {
 	std::string name;
@@ -50,6 +54,10 @@ class IColorBuffer : public IPixelBuffer
 {
 public:
 	Color GetClearColor() const noexcept { return m_clearColor; }
+
+	virtual const IDescriptor* GetSrvDescriptor() const noexcept = 0;
+	virtual const IDescriptor* GetRtvDescriptor() const noexcept = 0;
+	virtual const IDescriptor* GetUavDescriptor(uint32_t index = 0) const noexcept = 0;
 
 protected:
 	Color m_clearColor{ DirectX::Colors::Black };

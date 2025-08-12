@@ -323,12 +323,7 @@ void CommandContext12::ClearColor(IColorBuffer* colorBuffer)
 {
 	FlushResourceBarriers();
 
-	// TODO: Try this with GetPlatformObject()
-
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
-	assert(colorBuffer12 != nullptr);
-
-	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvDescriptor().GetHandleCPU(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU(), colorBuffer->GetClearColor().GetPtr(), 0, nullptr);
 }
 
 
@@ -336,12 +331,7 @@ void CommandContext12::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 {
 	FlushResourceBarriers();
 
-	// TODO: Try this with GetPlatformObject()
-
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
-	assert(colorBuffer12 != nullptr);
-
-	m_commandList->ClearRenderTargetView(colorBuffer12->GetRtvDescriptor().GetHandleCPU(), clearColor.GetPtr(), 0, nullptr);
+	m_commandList->ClearRenderTargetView(((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU(), clearColor.GetPtr(), 0, nullptr);
 }
 
 
@@ -389,12 +379,7 @@ void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer)
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
-
-	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
-	assert(colorBuffer12 != nullptr);
-
-	m_rtvs[0] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
+	m_rtvs[0] = ((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU();
 	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
@@ -411,13 +396,10 @@ void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer, const IDe
 
 	// TODO: Try this with GetPlatformObject()
 
-	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
-	assert(colorBuffer12 != nullptr);
-
 	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_rtvs[0] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
+	m_rtvs[0] = ((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU();
 	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
@@ -463,10 +445,7 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	uint32_t i = 0;
 	for (const auto& colorBuffer : colorBuffers)
 	{
-		const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
-		assert(colorBuffer12 != nullptr);
-
-		m_rtvs[i] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
+		m_rtvs[i] = ((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU();
 		m_rtvFormats[i] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 		++i;
 	}
@@ -490,10 +469,7 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	uint32_t i = 0;
 	for (const auto& colorBuffer : colorBuffers)
 	{
-		const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer;
-		assert(colorBuffer12 != nullptr);
-
-		m_rtvs[i] = colorBuffer12->GetRtvDescriptor().GetHandleCPU();
+		m_rtvs[i] = ((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU();
 		m_rtvFormats[i] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 		++i;
 	}
@@ -838,7 +814,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
 	assert(colorBuffer12 != nullptr);
 
-	auto descriptor = colorBuffer12->GetSrvDescriptor().GetHandleCPU();
+	auto descriptor = ((const Descriptor*)colorBuffer12->GetSrvDescriptor())->GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
@@ -887,7 +863,7 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	assert(colorBuffer12 != nullptr);
 
 	// TODO: Need a UAV index parameter
-	auto descriptor = colorBuffer12->GetUavDescriptor(0).GetHandleCPU();
+	auto descriptor = ((const Descriptor*)colorBuffer12->GetUavDescriptor(0))->GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }

@@ -29,11 +29,11 @@ class ColorBuffer : public IColorBuffer
 public:
 	explicit ColorBuffer(Device* device);
 
-	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
+	const IDescriptor* GetSrvDescriptor() const noexcept override { return &m_srvDescriptor; }
+	const IDescriptor* GetRtvDescriptor() const noexcept override { return &m_rtvDescriptor; }
+	const IDescriptor* GetUavDescriptor(uint32_t index = 0) const noexcept override;
 
-	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
-	const Descriptor& GetRtvDescriptor() const noexcept { return m_rtvDescriptor; }
-	const Descriptor& GetUavDescriptor(uint32_t index) const;
+	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
 
 protected:
 	wil::com_ptr<ID3D12Resource> m_resource;

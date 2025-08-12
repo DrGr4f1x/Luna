@@ -59,7 +59,7 @@ VkClearValue GetDepthStencilClearValue(float depth, uint32_t stencil)
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTarget)
 {
-	VkImageView imageView = renderTarget.GetRtvDescriptor().GetImageView();
+	VkImageView imageView = ((const Descriptor*)renderTarget.GetRtvDescriptor())->GetImageView();
 
 	VkRenderingAttachmentInfo info{
 		.sType			= VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -1102,16 +1102,12 @@ void CommandContextVK::SetResources(CommandListType type, ResourceSet& resourceS
 
 void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
-	assert(colorBufferVK != nullptr);
-
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
 
 	VkDescriptorImageInfo info{
-		.imageView		= colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageView		= ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
@@ -1194,16 +1190,12 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer.get();
-	assert(colorBufferVK != nullptr);
-
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
 
 	VkDescriptorImageInfo info{
-		.imageView = colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageView = ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
 		.imageLayout = VK_IMAGE_LAYOUT_GENERAL
 	};
 

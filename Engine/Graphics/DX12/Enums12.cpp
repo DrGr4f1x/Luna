@@ -416,7 +416,7 @@ D3D12_ROOT_SIGNATURE_FLAGS ShaderStageToRootSignatureFlags(ShaderStage shaderSta
 {
 	D3D12_ROOT_SIGNATURE_FLAGS flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
 
-	if (HasAnyFlag(shaderStage, ShaderStage::Vertex | ShaderStage::Geometry))
+	if (HasAnyFlag(shaderStage, ShaderStage::Vertex | ShaderStage::Geometry | ShaderStage::Hull))
 	{
 		flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	}

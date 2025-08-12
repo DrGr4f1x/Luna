@@ -12,9 +12,13 @@
 
 #include "ColorBufferVK.h"
 
-// TODO: Delete this file
 
 namespace Luna::VK
 {
+
+const IDescriptor* ColorBuffer::GetUavDescriptor(uint32_t index) const noexcept
+{
+	return &m_srvDescriptor;
+}
 
 } // namespace Luna::VK

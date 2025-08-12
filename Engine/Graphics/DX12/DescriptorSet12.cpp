@@ -102,13 +102,7 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 
 void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer.get();
-	assert(colorBuffer12 != nullptr);
-
-	const auto& descriptor = colorBuffer12->GetSrvDescriptor();
-	SetDescriptor(slot, descriptor.GetHandleCPU());
+	SetDescriptor(slot,((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetHandleCPU());
 }
 
 
@@ -133,7 +127,6 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 	if (m_isRootBuffer)
 	{
-		assert(slot == 0);
 		m_gpuAddress = gpuBuffer12->GetGpuAddress();
 	}
 	else
@@ -158,13 +151,7 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 
 void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const ColorBuffer* colorBuffer12 = (const ColorBuffer*)colorBuffer.get();
-	assert(colorBuffer12 != nullptr);
-
-	const auto& descriptor = colorBuffer12->GetUavDescriptor(uavIndex);
-	SetDescriptor(slot, descriptor.GetHandleCPU());
+	SetDescriptor(slot, ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetHandleCPU());
 }
 
 
@@ -188,7 +175,6 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 	if (m_isRootBuffer)
 	{
-		assert(slot == 0);
 		m_gpuAddress = gpuBuffer12->GetGpuAddress();
 	}
 	else
@@ -208,7 +194,6 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 	if (m_isRootBuffer)
 	{
-		assert(slot == 0);
 		m_gpuAddress = gpuBuffer12->GetGpuAddress();
 	}
 	else

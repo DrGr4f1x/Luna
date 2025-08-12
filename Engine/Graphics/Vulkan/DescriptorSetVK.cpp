@@ -51,11 +51,7 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 	assert(descriptorVK->GetDescriptorClass() == DescriptorClass::Buffer);
 	assert(m_rootParameter.parameterType == RootParameterType::RootCBV || m_rootParameter.parameterType == RootParameterType::Table);
 
-	if (m_isDynamicBuffer)
-	{
-		assert(slot == 0);
-	}
-	else
+	if (!m_isDynamicBuffer)
 	{
 		assert(m_rootParameter.GetDescriptorType(slot) == DescriptorType::ConstantBuffer);
 	}
@@ -108,13 +104,8 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 
 void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer.get();
-	assert(colorBufferVK != nullptr);
-
 	VkDescriptorImageInfo info{
-		.imageView		= colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageView		= ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
@@ -162,17 +153,7 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 
 void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer.get();
-	assert(gpuBufferVK != nullptr);
-
-	if (m_isDynamicBuffer)
-	{
-		assert(slot == 0);
-	}
-
-	const Descriptor* descriptor = (const Descriptor*)gpuBufferVK->GetSrvDescriptor();
+	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
 
 	VkBufferView texelBufferView = VK_NULL_HANDLE;
 	VkDescriptorBufferInfo info{};
@@ -194,7 +175,7 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		info.buffer = gpuBufferVK->GetBuffer();
+		info.buffer = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetBuffer();
 		info.offset = 0;
 		info.range = m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE;
 
@@ -233,13 +214,8 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 
 void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer.get();
-	assert(colorBufferVK != nullptr);
-
 	VkDescriptorImageInfo info{
-		.imageView		= colorBufferVK->GetSrvDescriptor().GetImageView(),
+		.imageView		= ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
 	};
 
@@ -270,17 +246,7 @@ void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 
 void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer.get();
-	assert(gpuBufferVK != nullptr);
-
-	if (m_isDynamicBuffer)
-	{
-		assert(slot == 0);
-	}
-
-	const Descriptor* descriptor = (const Descriptor*)gpuBufferVK->GetUavDescriptor();
+	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetUavDescriptor();
 
 	VkBufferView texelBufferView = VK_NULL_HANDLE;
 	VkDescriptorBufferInfo info{};
@@ -302,7 +268,7 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		info.buffer = gpuBufferVK->GetBuffer();
+		info.buffer = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetBuffer();
 		info.offset = 0;
 		info.range = m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE;
 
@@ -315,18 +281,8 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer.get();
-	assert(gpuBufferVK != nullptr);
-
-	if (m_isDynamicBuffer)
-	{
-		assert(slot == 0);
-	}
-
 	VkDescriptorBufferInfo info{
-		.buffer		= gpuBufferVK->GetBuffer(),
+		.buffer		= ((const Descriptor*)gpuBuffer->GetCbvDescriptor())->GetBuffer(),
 		.offset		= 0,
 		.range		= m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE
 	};
@@ -405,7 +361,6 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 	{
 		assert(descriptorVK->GetBuffer() != VK_NULL_HANDLE);
 		assert(descriptorVK->GetElementSize() != 0);
-		assert(slot == 0);
 
 		VkDescriptorBufferInfo info{
 			.buffer = descriptorVK->GetBuffer(),

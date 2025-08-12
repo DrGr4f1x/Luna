@@ -27,9 +27,11 @@ class ColorBuffer : public IColorBuffer
 	friend class Device;
 
 public:
+	const IDescriptor* GetSrvDescriptor() const noexcept override { return &m_srvDescriptor; }
+	const IDescriptor* GetRtvDescriptor() const noexcept override { return &m_rtvDescriptor; }
+	const IDescriptor* GetUavDescriptor(uint32_t index) const noexcept override;
+
 	VkImage GetImage() const noexcept { return m_image->Get(); }
-	const Descriptor& GetRtvDescriptor() const noexcept { return m_rtvDescriptor; }
-	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
 
 protected:
 	wil::com_ptr<CVkImage> m_image;

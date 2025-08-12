@@ -253,7 +253,7 @@ void DynamicUniformBufferApp::InitDescriptorSets()
 	m_vsCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
 	m_vsModelCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-	m_vsModelCbvDescriptorSet->SetCBV(0, m_vsModelConstantBuffer);
+	m_vsModelCbvDescriptorSet->SetCBV(1, m_vsModelConstantBuffer);
 }
 
 
