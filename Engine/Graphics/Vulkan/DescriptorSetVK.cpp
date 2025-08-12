@@ -125,15 +125,8 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 
 void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
-	assert(depthBufferVK != nullptr);
-
-	const auto& descriptor = depthSrv ? depthBufferVK->GetDescriptor(DepthStencilAspect::DepthReadOnly) : depthBufferVK->GetDescriptor(DepthStencilAspect::StencilReadOnly);
-
 	VkDescriptorImageInfo info{
-		.imageView		= descriptor.GetImageView(),
+		.imageView		= ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 

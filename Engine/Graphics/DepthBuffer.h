@@ -17,6 +17,10 @@
 namespace Luna
 {
 
+// Forward declarations
+class IDescriptor;
+
+
 struct DepthBufferDesc
 {
 	std::string name;
@@ -49,6 +53,9 @@ struct DepthBufferDesc
 class IDepthBuffer : public IPixelBuffer
 {
 public:
+	virtual const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept = 0;
+	virtual const IDescriptor* GetSrvDescriptor(bool depthSrv) const noexcept = 0;
+
 	float GetClearDepth() const { return m_clearDepth; }
 	uint8_t GetClearStencil() const { return m_clearStencil; }
 

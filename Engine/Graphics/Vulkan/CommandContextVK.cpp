@@ -77,7 +77,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTa
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	VkImageView imageView = depthTarget.GetDescriptor(depthStencilAspect).GetImageView();
+	VkImageView imageView = ((const Descriptor*)depthTarget.GetDsvDescriptor(depthStencilAspect))->GetImageView();
 
 	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
@@ -1119,18 +1119,12 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
-	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer.get();
-	assert(depthBufferVK != nullptr);
-
 	ParseRootSignature(type);
 
 	const bool graphicsPipe = type == CommandListType::Direct;
 
-	DepthStencilAspect aspect = depthSrv ? DepthStencilAspect::DepthReadOnly : DepthStencilAspect::StencilReadOnly;
-
 	VkDescriptorImageInfo info{
-		.imageView		= depthBufferVK->GetDescriptor(aspect).GetImageView(),
+		.imageView		= ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 

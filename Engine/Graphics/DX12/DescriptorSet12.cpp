@@ -108,13 +108,7 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 
 void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer.get();
-	assert(depthBuffer12 != nullptr);
-
-	const auto& descriptor = depthBuffer12->GetSrvDescriptor(depthSrv);
-	SetDescriptor(slot, descriptor.GetHandleCPU());
+	SetDescriptor(slot, ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU());
 }
 
 

@@ -16,14 +16,20 @@
 namespace Luna::VK
 {
 
-const Descriptor& DepthBuffer::GetDescriptor(DepthStencilAspect depthStencilAspect) const noexcept
+const IDescriptor* DepthBuffer::GetDsvDescriptor(DepthStencilAspect depthStencilAspect) const noexcept
 { 
 	switch (depthStencilAspect)
 	{
-	case DepthStencilAspect::DepthReadOnly:		return m_depthOnlyDescriptor;
-	case DepthStencilAspect::StencilReadOnly:	return m_stencilOnlyDescriptor;
-	default:									return m_depthStencilDescriptor;
+	case DepthStencilAspect::DepthReadOnly:		return &m_depthOnlyDescriptor;
+	case DepthStencilAspect::StencilReadOnly:	return &m_stencilOnlyDescriptor;
+	default:									return &m_depthStencilDescriptor;
 	}
+}
+
+
+const IDescriptor* DepthBuffer::GetSrvDescriptor(bool depthSrv) const noexcept
+{
+	return depthSrv ? &m_depthOnlyDescriptor : &m_stencilOnlyDescriptor;
 }
 
 } // namespace Luna::VK

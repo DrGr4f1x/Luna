@@ -339,12 +339,7 @@ void CommandContext12::ClearDepth(IDepthBuffer* depthBuffer)
 {
 	FlushResourceBarriers();
 
-	// TODO: Try this with GetPlatformObject()
-
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
-	assert(depthBuffer12 != nullptr);
-
-	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvDescriptor(DepthStencilAspect::ReadWrite).GetHandleCPU(), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(((const Descriptor*)depthBuffer->GetDsvDescriptor(DepthStencilAspect::ReadWrite))->GetHandleCPU(), D3D12_CLEAR_FLAG_DEPTH, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
@@ -352,12 +347,7 @@ void CommandContext12::ClearStencil(IDepthBuffer* depthBuffer)
 {
 	FlushResourceBarriers();
 
-	// TODO: Try this with GetPlatformObject()
-
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
-	assert(depthBuffer12 != nullptr);
-
-	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvDescriptor(DepthStencilAspect::ReadWrite).GetHandleCPU(), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(((const Descriptor*)depthBuffer->GetDsvDescriptor(DepthStencilAspect::ReadWrite))->GetHandleCPU(), D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
@@ -365,12 +355,7 @@ void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 {
 	FlushResourceBarriers();
 
-	// TODO: Try this with GetPlatformObject()
-
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer;
-	assert(depthBuffer12 != nullptr);
-
-	m_commandList->ClearDepthStencilView(depthBuffer12->GetDsvDescriptor(DepthStencilAspect::ReadWrite).GetHandleCPU(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
+	m_commandList->ClearDepthStencilView(((const Descriptor*)depthBuffer->GetDsvDescriptor(DepthStencilAspect::ReadWrite))->GetHandleCPU(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, depthBuffer->GetClearDepth(), depthBuffer->GetClearStencil(), 0, nullptr);
 }
 
 
@@ -394,16 +379,11 @@ void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer, const IDe
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
-
-	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
-	assert(depthBuffer12 != nullptr);
-
 	m_rtvs[0] = ((const Descriptor*)colorBuffer->GetRtvDescriptor())->GetHandleCPU();
 	m_rtvFormats[0] = FormatToDxgi(colorBuffer->GetFormat()).rtvFormat;
 	m_numRtvs = 1;
 
-	m_dsv = depthBuffer12->GetDsvDescriptor(depthStencilAspect).GetHandleCPU();
+	m_dsv = ((const Descriptor*)depthBuffer->GetDsvDescriptor(depthStencilAspect))->GetHandleCPU();
 	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -418,12 +398,7 @@ void CommandContext12::BeginRendering(const IDepthBuffer* depthBuffer, DepthSten
 	assert(!m_isRendering);
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
-
-	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
-	assert(depthBuffer12 != nullptr);
-
-	m_dsv = depthBuffer12->GetDsvDescriptor(depthStencilAspect).GetHandleCPU();
+	m_dsv = ((const Descriptor*)depthBuffer->GetDsvDescriptor(depthStencilAspect))->GetHandleCPU();
 	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -439,8 +414,6 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	assert(colorBuffers.size() <= 8);
 
 	ResetRenderTargets();
-
-	// TODO: Try this with GetPlatformObject()
 
 	uint32_t i = 0;
 	for (const auto& colorBuffer : colorBuffers)
@@ -464,8 +437,6 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
-
 	uint32_t i = 0;
 	for (const auto& colorBuffer : colorBuffers)
 	{
@@ -478,7 +449,7 @@ void CommandContext12::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer;
 	assert(depthBuffer12 != nullptr);
 
-	m_dsv = depthBuffer12->GetDsvDescriptor(depthStencilAspect).GetHandleCPU();
+	m_dsv = ((const Descriptor*)depthBuffer->GetDsvDescriptor(depthStencilAspect))->GetHandleCPU();
 	m_dsvFormat = FormatToDxgi(depthBuffer->GetFormat()).rtvFormat;
 	m_hasDsv = true;
 
@@ -822,11 +793,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
-	// TODO: Try this with GetPlatformObject()
-	DepthBuffer* depthBuffer12 = (DepthBuffer*)depthBuffer.get();
-	assert(depthBuffer12 != nullptr);
-
-	auto descriptor = depthBuffer12->GetSrvDescriptor(depthSrv).GetHandleCPU();
+	auto descriptor = ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU();
 
 	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }

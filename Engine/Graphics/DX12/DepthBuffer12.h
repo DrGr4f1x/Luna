@@ -29,9 +29,10 @@ class DepthBuffer : public IDepthBuffer
 public:
 	explicit DepthBuffer(Device* device);
 
+	const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept override;
+	const IDescriptor* GetSrvDescriptor(bool depthSrv) const noexcept override;
+
 	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
-	const Descriptor& GetDsvDescriptor(DepthStencilAspect depthStencilAspect) const noexcept;
-	const Descriptor& GetSrvDescriptor(bool depthSrv) const noexcept;
 
 protected:
 	wil::com_ptr<ID3D12Resource> m_resource;

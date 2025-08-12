@@ -26,8 +26,10 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
+	const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept override;
+	const IDescriptor* GetSrvDescriptor(bool depthSrv) const noexcept override;
+
 	VkImage GetImage() const noexcept { return m_image->Get(); }
-	const Descriptor& GetDescriptor(DepthStencilAspect depthStencilAspect) const noexcept;
 
 protected:
 	wil::com_ptr<CVkImage> m_image;
