@@ -167,6 +167,27 @@ struct RootParameter
 	{
 		return (parameterType == RootParameterType::Table && table[0].descriptorType == DescriptorType::Sampler);
 	}
+
+	DescriptorType GetDescriptorType(uint32_t slot)
+	{
+		// Search for the range containing slot, and return its descriptor type
+		uint32_t currentStartRegister = 0;
+		for (const auto& range : table)
+		{
+			if (range.startRegister != APPEND_REGISTER)
+			{
+				currentStartRegister = range.startRegister;
+			}
+
+			if (slot >= currentStartRegister && slot < (currentStartRegister + range.numDescriptors))
+			{
+				return range.descriptorType;
+			}
+
+			currentStartRegister += range.numDescriptors;
+		}
+		return DescriptorType::None;
+	}
 };
 
 using RootParameters = std::vector<RootParameter>;

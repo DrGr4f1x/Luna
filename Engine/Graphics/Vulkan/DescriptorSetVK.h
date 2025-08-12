@@ -27,6 +27,13 @@ class DescriptorSet : public IDescriptorSet
 	friend class Device;
 
 public:
+	DescriptorSet(Device* device, const RootParameter& rootParameter);
+
+	void SetSRV(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetUAV(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetCBV(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetSampler(uint32_t slot, const IDescriptor* descriptor) override;
+
 	void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
@@ -50,7 +57,14 @@ public:
 	bool IsDynamicBuffer() const { return m_isDynamicBuffer; }
 
 protected:
+	void UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet);
+	template<bool isSrv>
+	void SetSRVUAV(uint32_t slot, const IDescriptor* descriptor);
+
+protected:
 	Device* m_device{ nullptr };
+
+	RootParameter m_rootParameter;
 
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
 	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> m_writeDescriptorSets;

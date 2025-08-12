@@ -33,8 +33,11 @@ public:
 	void* Map() override;
 	void Unmap() override;
 
+	const IDescriptor* GetSrvDescriptor() const noexcept override { return &m_descriptor; }
+	const IDescriptor* GetUavDescriptor() const noexcept override { return &m_descriptor; }
+	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_descriptor; }
+
 	VkBuffer GetBuffer() const noexcept;
-	const Descriptor& GetDescriptor() const noexcept { return m_descriptor; }
 
 protected:
 	wil::com_ptr<CVkBuffer> m_buffer;

@@ -24,6 +24,82 @@
 namespace Luna::DX12
 {
 
+DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
+	: m_device{ device }
+	, m_rootParameter{ rootParameter }
+{}
+
+
+void DescriptorSet::SetSRV(uint32_t slot, const IDescriptor* descriptor)
+{
+	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
+
+	assert(!m_isSamplerTable);
+	assert(IsDescriptorTypeSRV(descriptor12->GetDescriptorType()));
+	assert(m_rootParameter.parameterType == RootParameterType::RootSRV || m_rootParameter.parameterType == RootParameterType::Table);
+	if (m_isRootBuffer)
+	{
+		m_gpuAddress = descriptor12->GetGpuAddress();
+	}
+	else if (m_rootParameter.parameterType == RootParameterType::Table)
+	{
+		assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+		UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+	}	
+}
+
+
+void DescriptorSet::SetUAV(uint32_t slot, const IDescriptor* descriptor)
+{
+	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
+
+	assert(!m_isSamplerTable);
+	assert(IsDescriptorTypeUAV(descriptor12->GetDescriptorType()));
+	assert(m_rootParameter.parameterType == RootParameterType::RootUAV || m_rootParameter.parameterType == RootParameterType::Table);
+	if (m_isRootBuffer)
+	{
+		m_gpuAddress = descriptor12->GetGpuAddress();
+	}
+	else if (m_rootParameter.parameterType == RootParameterType::Table)
+	{
+		assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+		UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+	}
+}
+
+
+void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
+{
+	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
+
+	assert(!m_isSamplerTable);
+	assert(descriptor12->GetDescriptorType() == DescriptorType::ConstantBuffer);
+	assert(m_rootParameter.parameterType == RootParameterType::RootCBV || m_rootParameter.parameterType == RootParameterType::Table);
+	if (m_isRootBuffer)
+	{
+		m_gpuAddress = descriptor12->GetGpuAddress();
+	}
+	else if (m_rootParameter.parameterType == RootParameterType::Table)
+	{
+		assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+		UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+	}
+}
+
+
+void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
+{
+	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
+
+	assert(m_isSamplerTable);
+	assert(descriptor12->GetDescriptorType() == DescriptorType::Sampler);
+	assert(m_rootParameter.parameterType == RootParameterType::Table);
+	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+	
+	UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+}
+
+
 void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
@@ -62,8 +138,8 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		const auto& descriptor = gpuBuffer12->GetSrvDescriptor();
-		SetDescriptor(slot, descriptor.GetHandleCPU());
+		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetSrvDescriptor())->GetHandleCPU();
+		SetDescriptor(slot, cpuHandle);
 	}
 }
 
@@ -117,8 +193,8 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		const auto& descriptor = gpuBuffer12->GetUavDescriptor();
-		SetDescriptor(slot, descriptor.GetHandleCPU());
+		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetUavDescriptor())->GetHandleCPU();
+		SetDescriptor(slot, cpuHandle);
 	}
 }
 
@@ -137,8 +213,8 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		const auto& descriptor = gpuBuffer12->GetCbvDescriptor();
-		SetDescriptor(slot, descriptor.GetHandleCPU());
+		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
+		SetDescriptor(slot, cpuHandle);
 	}
 }
 
@@ -228,6 +304,22 @@ void DescriptorSet::SetDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE des
 		m_descriptors[slot] = descriptor;
 		m_dirtyBits |= (1 << slot);
 	}
+}
+
+
+void DescriptorSet::UpdateDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
+{
+	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = m_isSamplerTable
+		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	ID3D12Device* d3d12Device = m_device->GetD3D12Device();
+
+	uint32_t descriptorSize = d3d12Device->GetDescriptorHandleIncrementSize(heapType);
+
+	DescriptorHandle offsetHandle = m_descriptorHandle + slot * descriptorSize;
+
+	d3d12Device->CopyDescriptorsSimple(1, offsetHandle.GetCpuHandle(), descriptor, heapType);
 }
 
 } // namespace Luna::DX12

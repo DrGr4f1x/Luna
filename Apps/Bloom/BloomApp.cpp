@@ -408,21 +408,21 @@ void BloomApp::InitConstantBuffers()
 void BloomApp::InitDescriptorSets()
 {
 	m_sceneCbvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
-	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer);
+	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer->GetCbvDescriptor());
 
 	m_skyBoxCbvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(0);
-	m_skyBoxCbvDescriptorSet->SetCBV(0, m_skyboxConstantBuffer);
+	m_skyBoxCbvDescriptorSet->SetCBV(0, m_skyboxConstantBuffer->GetCbvDescriptor());
 
 	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
-	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture);
+	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture->GetDescriptor());
 
 	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(0);
 	m_blurHorizDescriptorSet->SetSRV(0, m_offscreenColorBuffer[1]);
-	m_blurHorizDescriptorSet->SetCBV(1, m_blurHorizConstantBuffer);
+	m_blurHorizDescriptorSet->SetCBV(1, m_blurHorizConstantBuffer->GetCbvDescriptor());
 
 	m_blurVertDescriptorSet = m_blurRootSignature->CreateDescriptorSet(0);
 	m_blurVertDescriptorSet->SetSRV(0, m_offscreenColorBuffer[0]);
-	m_blurVertDescriptorSet->SetCBV(1, m_blurVertConstantBuffer);
+	m_blurVertDescriptorSet->SetCBV(1, m_blurVertConstantBuffer->GetCbvDescriptor());
 }
 
 

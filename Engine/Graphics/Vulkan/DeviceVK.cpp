@@ -182,8 +182,8 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = image;
-	colorBuffer->m_rtvDescriptor.SetImageView(imageViewRtv.get());
-	colorBuffer->m_srvDescriptor.SetImageView(imageViewSrv.get());
+	colorBuffer->m_rtvDescriptor.SetImageView(image.get(), imageViewRtv.get());
+	colorBuffer->m_srvDescriptor.SetImageView(image.get(), imageViewSrv.get());
 
 	return colorBuffer;
 }
@@ -269,9 +269,9 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
 	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
 	depthBuffer->m_image = image;
-	depthBuffer->m_depthStencilDescriptor.SetImageView(imageViewDepthStencil.get());
-	depthBuffer->m_depthOnlyDescriptor.SetImageView(imageViewDepthOnly.get());
-	depthBuffer->m_stencilOnlyDescriptor.SetImageView(imageViewStencilOnly.get());
+	depthBuffer->m_depthStencilDescriptor.SetImageView(image.get(), imageViewDepthStencil.get());
+	depthBuffer->m_depthOnlyDescriptor.SetImageView(image.get(), imageViewDepthOnly.get());
+	depthBuffer->m_stencilOnlyDescriptor.SetImageView(image.get(), imageViewStencilOnly.get());
 
 	return depthBuffer;
 }
@@ -332,7 +332,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
 	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
 	gpuBuffer->m_buffer = buffer;
-	gpuBuffer->m_descriptor.SetBufferView(bufferView.get());
+	gpuBuffer->m_descriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize);
 	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
 	if (gpuBufferDesc.initialData)
@@ -922,9 +922,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 	// Allocate descriptor set from pool
 	VkDescriptorSet vkDescriptorSet = pool->AllocateDescriptorSet();
 
-	auto descriptorSet = std::make_shared<DescriptorSet>();
-
-	descriptorSet->m_device = this;
+	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
 	descriptorSet->m_descriptorSet = vkDescriptorSet;
 	descriptorSet->m_numDescriptors = descriptorSetDesc.numDescriptors;
 	descriptorSet->m_isDynamicBuffer = descriptorSetDesc.isDynamicBuffer;
@@ -1079,7 +1077,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	};
 	auto imageView = CreateImageView(imageViewDesc);
 
-	textureVK->m_descriptor.SetImageView(imageView.get());
+	textureVK->m_descriptor.SetImageView(textureVK->m_image.get(), imageView.get());
 
 	// Copy initial data
 	TexturePtr temp = texture;
@@ -1146,8 +1144,8 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = swapChainImage;
-	colorBuffer->m_rtvDescriptor.SetImageView(imageViewRtv.get());
-	colorBuffer->m_srvDescriptor.SetImageView(imageViewSrv.get());
+	colorBuffer->m_rtvDescriptor.SetImageView(swapChainImage, imageViewRtv.get());
+	colorBuffer->m_srvDescriptor.SetImageView(swapChainImage, imageViewSrv.get());
 
 	return colorBuffer;
 }

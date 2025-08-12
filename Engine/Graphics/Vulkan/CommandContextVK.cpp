@@ -1155,7 +1155,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	const bool graphicsPipe = type == CommandListType::Direct;
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetDescriptor().GetBufferView(), graphicsPipe);
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, ((const Descriptor*)gpuBufferVK->GetSrvDescriptor())->GetBufferView(), graphicsPipe);
 	}
 	else
 	{
@@ -1182,7 +1182,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	const bool graphicsPipe = type == CommandListType::Direct;
 
 	VkDescriptorImageInfo info{
-		.imageView		= textureVK->GetDescriptor().GetImageView(),
+		.imageView		= ((const Descriptor*)textureVK->GetDescriptor())->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
@@ -1232,7 +1232,7 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	const bool graphicsPipe = type == CommandListType::Direct;
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
-		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, gpuBufferVK->GetDescriptor().GetBufferView(), graphicsPipe);
+		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, ((const Descriptor*)gpuBufferVK->GetUavDescriptor())->GetBufferView(), graphicsPipe);
 	}
 	else
 	{

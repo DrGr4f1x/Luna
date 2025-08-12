@@ -862,9 +862,9 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	auto descriptor = gpuBuffer12->GetSrvDescriptor().GetHandleCPU();
+	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetSrvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 
@@ -906,9 +906,9 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	auto descriptor = gpuBuffer12->GetUavDescriptor().GetHandleCPU();
+	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetUavDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 
@@ -918,9 +918,9 @@ void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	auto descriptor = gpuBuffer12->GetCbvDescriptor().GetHandleCPU();
+	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 

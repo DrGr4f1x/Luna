@@ -274,6 +274,22 @@ enum class DescriptorType : uint8_t
 };
 
 
+inline bool IsDescriptorTypeSRV(DescriptorType type)
+{
+	using enum DescriptorType;
+
+	return type == TextureSRV || type == TypedBufferSRV || type == StructuredBufferSRV || type == RawBufferSRV;
+}
+
+
+inline bool IsDescriptorTypeUAV(DescriptorType type)
+{
+	using enum DescriptorType;
+
+	return type == TextureUAV || type == TypedBufferUAV || type == StructuredBufferUAV || type == RawBufferUAV || type == SamplerFeedbackTextureUAV;
+}
+
+
 enum class DescriptorRangeFlags : uint8_t
 {
 	None,

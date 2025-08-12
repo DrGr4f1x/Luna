@@ -1109,7 +1109,7 @@ QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 
 DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
 {
-	auto descriptorSet = std::make_shared<DescriptorSet>();
+	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
 
 	descriptorSet->m_device = this;
 	for (uint32_t i = 0; i < MaxDescriptorsPerTable; ++i)

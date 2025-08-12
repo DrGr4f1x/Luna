@@ -16,25 +16,47 @@
 namespace Luna::VK
 {
 
-Descriptor::~Descriptor()
-{}
-
-
-void Descriptor::SetImageView(CVkImageView* imageView)
+VkImage Descriptor::GetImage() const
 {
-	m_imageView = imageView;
+	if (m_image)
+	{
+		return m_image->Get();
+	}
+	return VK_NULL_HANDLE;
 }
 
 
-void Descriptor::SetBufferView(CVkBufferView* bufferView)
+VkBuffer Descriptor::GetBuffer() const
 {
+	if (m_buffer)
+	{
+		return m_buffer->Get();
+	}
+	return VK_NULL_HANDLE;
+}
+
+
+void Descriptor::SetImageView(CVkImage* image, CVkImageView* imageView)
+{
+	m_image = image;
+	m_imageView = imageView;
+	m_descriptorClass = DescriptorClass::Image;
+}
+
+
+void Descriptor::SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize)
+{
+	m_buffer = buffer;
 	m_bufferView = bufferView;
+	m_elementSize = elementSize;
+	m_descriptorClass = DescriptorClass::Buffer;
 }
 
 
 void Descriptor::SetSampler(CVkSampler* sampler)
 {
 	m_sampler = sampler;
+	m_descriptorClass = DescriptorClass::Sampler;
 }
 
 } // namespace Luna::VK

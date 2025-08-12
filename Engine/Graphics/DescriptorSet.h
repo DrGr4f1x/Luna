@@ -16,6 +16,7 @@ namespace Luna
 // Forward declarations
 class IColorBuffer;
 class IDepthBuffer;
+class IDescriptor;
 class IGpuBuffer;
 class ISampler;
 class TexturePtr;
@@ -30,6 +31,11 @@ class IDescriptorSet
 {
 public:
 	virtual ~IDescriptorSet() = default;
+
+	virtual void SetSRV(uint32_t slot, const IDescriptor* descriptor) = 0;
+	virtual void SetUAV(uint32_t slot, const IDescriptor* descriptor) = 0;
+	virtual void SetCBV(uint32_t slot, const IDescriptor* descriptor) = 0;
+	virtual void SetSampler(uint32_t slot, const IDescriptor* descriptor) = 0;
 
 	virtual void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) = 0;
 	virtual void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) = 0;

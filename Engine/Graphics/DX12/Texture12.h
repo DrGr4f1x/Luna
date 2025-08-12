@@ -31,6 +31,8 @@ public:
 
 	bool IsValid() const noexcept override { return m_resource != nullptr; }
 
+	const IDescriptor* GetDescriptor() const override { return &m_srvDescriptor; }
+
 	ID3D12Resource* GetResource() const noexcept { return m_resource.get(); }
 	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
 

@@ -29,8 +29,10 @@ class Texture : public ITexture
 public:
 	bool IsValid() const override { return m_image != nullptr; }
 
+	const IDescriptor* GetDescriptor() const override { return &m_descriptor; }
+
 	VkImage GetImage() const { return m_image->Get(); }
-	const Descriptor& GetDescriptor() const { return m_descriptor; }
+	const Descriptor& GetSrvDescriptor() const { return m_descriptor; }
 
 protected:
 	Device* m_device{ nullptr };

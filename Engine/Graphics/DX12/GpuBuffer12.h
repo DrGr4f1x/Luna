@@ -38,9 +38,9 @@ public:
 	ID3D12Resource* GetResource() const noexcept { return m_allocation->GetResource(); }
 	D3D12MA::Allocation* GetAllocation() const noexcept { return m_allocation.get(); }
 
-	const Descriptor& GetSrvDescriptor() const noexcept { return m_srvDescriptor; }
-	const Descriptor& GetUavDescriptor() const noexcept { return m_uavDescriptor; }
-	const Descriptor& GetCbvDescriptor() const noexcept { return m_cbvDescriptor; }
+	const IDescriptor* GetSrvDescriptor() const noexcept override { return &m_srvDescriptor; }
+	const IDescriptor* GetUavDescriptor() const noexcept override { return &m_uavDescriptor; }
+	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_cbvDescriptor; }
 
 	uint64_t GetGpuAddress() const noexcept;
 

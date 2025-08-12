@@ -35,10 +35,11 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 
 	const uint32_t numDescriptors = rootParam.GetNumDescriptors();
 	DescriptorSetDesc descriptorSetDesc{
-		.descriptorHandle = isRootBuffer ? DescriptorHandle{} : AllocateUserDescriptor(heapType, numDescriptors),
-		.numDescriptors = numDescriptors,
-		.isSamplerTable = isSamplerTable,
-		.isRootBuffer = isRootBuffer
+		.descriptorHandle	= isRootBuffer ? DescriptorHandle{} : AllocateUserDescriptor(heapType, numDescriptors),
+		.rootParameter		= rootParam,
+		.numDescriptors		= numDescriptors,
+		.isSamplerTable		= isSamplerTable,
+		.isRootBuffer		= isRootBuffer
 	};
 
 	return m_device->CreateDescriptorSet(descriptorSetDesc);

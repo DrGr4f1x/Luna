@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\DescriptorSet.h"
+#include "Graphics\RootSignature.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\DescriptorAllocator12.h"
 
@@ -28,6 +29,13 @@ class DescriptorSet : public IDescriptorSet
 	friend class Device;
 
 public:
+	DescriptorSet(Device* device, const RootParameter& rootParameter);
+
+	void SetSRV(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetUAV(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetCBV(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetSampler(uint32_t slot, const IDescriptor* descriptor) override;
+
 	void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
@@ -53,9 +61,12 @@ public:
 
 protected:
 	void SetDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
+	void UpdateDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
 protected:
 	Device* m_device{ nullptr };
+
+	RootParameter m_rootParameter;
 
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, MaxDescriptorsPerTable> m_descriptors;
 	DescriptorHandle m_descriptorHandle;

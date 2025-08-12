@@ -17,6 +17,10 @@
 namespace Luna
 {
 
+// Forward declarations
+class IDescriptor;
+
+
 struct GpuBufferDesc
 {
 	std::string name;
@@ -53,6 +57,10 @@ public:
 
 	virtual void* Map() = 0;
 	virtual void Unmap() = 0;
+
+	virtual const IDescriptor* GetSrvDescriptor() const noexcept = 0;
+	virtual const IDescriptor* GetUavDescriptor() const noexcept = 0;
+	virtual const IDescriptor* GetCbvDescriptor() const noexcept = 0;
 
 protected:
 	Format m_format{ Format::Unknown };

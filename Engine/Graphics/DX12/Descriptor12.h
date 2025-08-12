@@ -41,9 +41,12 @@ class Descriptor : public IDescriptor
 public:
 	~Descriptor() override;
 
+	DescriptorType GetDescriptorType() const noexcept { return m_type; }
+
 	void SetDevice(Device* device) noexcept { m_device = device; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetHandleCPU() const noexcept { return m_cpuHandle; }
+	uint64_t GetGpuAddress() const noexcept { return m_gpuAddress; }
 
 	void CreateConstantBufferView(const D3D12_CONSTANT_BUFFER_VIEW_DESC& desc);
 	void CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc);
@@ -61,8 +64,10 @@ private:
 
 private:
 	Device* m_device{ nullptr };
+	DescriptorType m_type{ DescriptorType::None };
 	DescriptorHandle2 m_handle{};
 	D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle{ .ptr = D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+	uint64_t m_gpuAddress{ D3D12_GPU_VIRTUAL_ADDRESS_NULL };
 };
 
 } // namespace Luna::DX12

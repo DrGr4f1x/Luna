@@ -23,6 +23,7 @@ namespace Luna::DX12
 struct DescriptorSetDesc
 {
 	DescriptorHandle descriptorHandle;
+	RootParameter rootParameter;
 	uint32_t numDescriptors{ 0 };
 	bool isSamplerTable{ false };
 	bool isRootBuffer{ false };

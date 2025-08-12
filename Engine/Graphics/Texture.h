@@ -17,6 +17,7 @@ namespace Luna
 {
 
 // Forward declarations
+class IDescriptor;
 class IDevice;
 class TextureManager;
 class TexturePtr;
@@ -79,6 +80,8 @@ public:
 	virtual bool IsValid() const = 0;
 	bool IsLoading() const { return m_isLoading; }
 	void WaitForLoad() const;
+
+	virtual const IDescriptor* GetDescriptor() const = 0;
 
 	void SetData(std::byte* data, size_t dataSize);
 	std::byte* GetData() { return m_data.get(); }

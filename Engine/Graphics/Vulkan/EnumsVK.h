@@ -63,6 +63,16 @@ enum class TextureSubresourceViewType : uint8_t
 };
 
 
+enum class DescriptorClass : uint8_t
+{
+	None,
+	Buffer,
+	Image,
+	Sampler,
+	RayTracingAccelStruct
+};
+
+
 struct VkTextureFilterMapping
 {
 	TextureFilter engineFilter;
