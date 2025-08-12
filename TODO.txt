@@ -40,6 +40,8 @@ TODO:
 -- Figure out device lost in vulkan multisampling app
 -- IndirectDraw app - support multi-draw indirect
 -- Directly create DescriptorSets without needing RootSignature
+-- Fix DynamicUniformBuffer in Vulkan
+-- Fix GeometryShader for DX12
 
 DONE:
 -- Handles and pools for:

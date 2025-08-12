@@ -103,7 +103,6 @@ void ComputeParticlesApp::Render()
 	}
 
 	// Render particles
-	context.TransitionResource(m_particleBuffer, ResourceState::UnorderedAccess);
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());

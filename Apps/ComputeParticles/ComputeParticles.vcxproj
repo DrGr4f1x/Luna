@@ -149,6 +149,8 @@
     </ClCompile>
     <Link>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(ProjectDir)..\..\Engine\Bin\$(Configuration);$(ProjectDir)..\..\External\assimp\lib\Debug;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Engine.lib;assimp-vc143-mtd.lib;advapi32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)
@@ -164,6 +166,8 @@ copy $(ProjectDir)..\..\External\assimp\bin\Debug\assimp-vc143-mtd.dll $(OutDir)
     </ClCompile>
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(ProjectDir)..\..\Engine\Bin\$(Configuration);$(ProjectDir)..\..\External\assimp\lib\Release;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Engine.lib;assimp-vc143-mt.lib;advapi32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)
@@ -179,6 +183,8 @@ copy $(ProjectDir)..\..\External\assimp\bin\Release\assimp-vc143-mt.dll $(OutDir
     </ClCompile>
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(ProjectDir)..\..\Engine\Bin\$(Configuration);$(ProjectDir)..\..\External\assimp\lib\RelWithDebInfo;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Engine.lib;assimp-vc143-mt.lib;advapi32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)
