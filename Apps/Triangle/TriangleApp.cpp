@@ -231,7 +231,7 @@ void TriangleApp::InitPipelineState()
 void TriangleApp::InitDescriptorSet()
 {
 	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer->GetCbvDescriptor());
 }
 
 
