@@ -200,13 +200,7 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const Sampler* sampler12 = (const Sampler*)sampler.get();
-	assert(sampler12 != nullptr);
-
-	const auto& descriptor = sampler12->GetDescriptor();
-	SetDescriptor(slot, descriptor.GetHandleCPU());
+	SetDescriptor(slot, ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU());
 }
 
 

@@ -12,7 +12,6 @@
 
 #include "Graphics\Sampler.h"
 #include "Graphics\DX12\Descriptor12.h"
-#include "Graphics\DX12\DirectXCommon.h"
 
 
 namespace Luna::DX12
@@ -29,7 +28,7 @@ class Sampler : public ISampler
 public:
 	Sampler(Device* device);
 
-	const Descriptor& GetDescriptor() const { return m_samplerDescriptor; }
+	const IDescriptor* GetDescriptor() const noexcept override { return &m_samplerDescriptor; }
 
 protected:
 	Descriptor m_samplerDescriptor;

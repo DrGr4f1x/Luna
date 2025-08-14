@@ -26,8 +26,9 @@ class Sampler : public ISampler
 	friend class Device;
 
 public:
+	const IDescriptor* GetDescriptor() const noexcept override { return &m_descriptor; }
+
 	VkSampler GetSampler() const { return m_descriptor.GetSampler(); }
-	const Descriptor& GetDescriptor() const noexcept { return m_descriptor; }
 
 protected:
 	Descriptor m_descriptor;

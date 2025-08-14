@@ -15,6 +15,10 @@
 namespace Luna
 {
 
+// Forward declarations
+class IDescriptor;
+
+
 struct SamplerDesc
 {
 	TextureFilter filter{ TextureFilter::Anisotropic };
@@ -47,6 +51,9 @@ class ISampler
 {
 public:
 	virtual ~ISampler() = default;
+
+	virtual const IDescriptor* GetDescriptor() const noexcept = 0;
+
 };
 
 using SamplerPtr = std::shared_ptr<ISampler>;

@@ -296,13 +296,8 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const Sampler* samplerVK = (const Sampler*)sampler.get();
-	assert(samplerVK != nullptr);
-
 	VkDescriptorImageInfo info{
-		.sampler		= samplerVK->GetDescriptor().GetSampler(),
+		.sampler		= ((const Descriptor*)sampler->GetDescriptor())->GetSampler(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
