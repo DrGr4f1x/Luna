@@ -49,8 +49,6 @@ public:
 
 	void SetDynamicOffset(uint32_t offset) override;
 
-	void UpdateGpuDescriptors() override {}
-
 	bool HasDescriptors() const;
 	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
 	uint32_t GetDynamicOffset() const { return m_dynamicOffset; }

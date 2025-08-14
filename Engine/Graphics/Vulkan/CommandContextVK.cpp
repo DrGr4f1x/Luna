@@ -1549,8 +1549,6 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		return;
 	}
 
-	descriptorSet->UpdateGpuDescriptors();
-
 	VkDescriptorSet vkDescriptorSet = descriptorSetVK->GetDescriptorSet();
 	if (vkDescriptorSet == VK_NULL_HANDLE)
 	{

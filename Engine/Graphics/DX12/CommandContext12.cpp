@@ -1200,9 +1200,6 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 
 	BindUserDescriptorHeaps();
 
-	// Copy descriptors
-	descriptorSet12->UpdateGpuDescriptors();
-
 	auto gpuDescriptor = descriptorSet12->GetGpuDescriptorHandle();
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{

@@ -51,8 +51,6 @@ public:
 
 	void SetDynamicOffset(uint32_t offset) override;
 
-	void UpdateGpuDescriptors() override;
-
 	bool HasBindableDescriptors() const;
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle() const;
 	uint64_t GetGpuAddress() const;
@@ -60,7 +58,6 @@ public:
 	uint64_t GetGpuAddressWithOffset() const;
 
 protected:
-	void SetDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 	void UpdateDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
 
 protected:
@@ -72,7 +69,6 @@ protected:
 	DescriptorHandle m_descriptorHandle;
 	uint64_t m_gpuAddress{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
 	uint32_t m_numDescriptors{ 0 };
-	uint32_t m_dirtyBits{ 0 };
 	uint32_t m_dynamicOffset{ 0 };
 
 	bool m_isSamplerTable{ false };

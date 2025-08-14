@@ -102,13 +102,13 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 
 void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
-	SetDescriptor(slot,((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetHandleCPU());
+	UpdateDescriptor(slot,((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetHandleCPU());
 }
 
 
 void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	SetDescriptor(slot, ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU());
+	UpdateDescriptor(slot, ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU());
 }
 
 
@@ -125,37 +125,26 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetSrvDescriptor())->GetHandleCPU();
-		SetDescriptor(slot, cpuHandle);
+		auto cpuHandle = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetHandleCPU();
+		UpdateDescriptor(slot, cpuHandle);
 	}
 }
 
 
 void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const Texture* texture12 = (const Texture*)texture.Get();
-	assert(texture12 != nullptr);
-
-	const auto& descriptor = texture12->GetSrvDescriptor();
-	SetDescriptor(slot, descriptor.GetHandleCPU());
+	UpdateDescriptor(slot, ((const Descriptor*)texture->GetDescriptor())->GetHandleCPU());
 }
 
 
 void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
-	SetDescriptor(slot, ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetHandleCPU());
+	UpdateDescriptor(slot, ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetHandleCPU());
 }
 
 
 void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
-	const DepthBuffer* depthBuffer12 = (const DepthBuffer*)depthBuffer.get();
-	assert(depthBuffer12 != nullptr);
-
 	assert_msg(false, "Depth UAVs not yet supported");
 }
 
@@ -173,8 +162,8 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	}
 	else
 	{
-		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetUavDescriptor())->GetHandleCPU();
-		SetDescriptor(slot, cpuHandle);
+		auto cpuHandle = ((const Descriptor*)gpuBuffer->GetUavDescriptor())->GetHandleCPU();
+		UpdateDescriptor(slot, cpuHandle);
 	}
 }
 
@@ -193,49 +182,20 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	else
 	{
 		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
-		SetDescriptor(slot, cpuHandle);
+		UpdateDescriptor(slot, cpuHandle);
 	}
 }
 
 
 void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 {
-	SetDescriptor(slot, ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU());
+	UpdateDescriptor(slot, ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU());
 }
 
 
 void DescriptorSet::SetDynamicOffset(uint32_t offset)
 {
 	m_dynamicOffset = offset;
-}
-
-
-void DescriptorSet::UpdateGpuDescriptors()
-{
-	if (m_dirtyBits == 0 || m_numDescriptors == 0)
-		return;
-
-	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = m_isSamplerTable
-		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
-		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-	ID3D12Device* d3d12Device = m_device->GetD3D12Device();
-
-	uint32_t descriptorSize = d3d12Device->GetDescriptorHandleIncrementSize(heapType);
-
-	unsigned long setBit{ 0 };
-	uint32_t paramIndex{ 0 };
-	while (_BitScanForward(&setBit, m_dirtyBits))
-	{
-		DescriptorHandle offsetHandle = m_descriptorHandle + paramIndex * descriptorSize;
-		m_dirtyBits &= ~(1 << setBit);
-
-		d3d12Device->CopyDescriptorsSimple(1, offsetHandle.GetCpuHandle(), m_descriptors[paramIndex], heapType);
-
-		++paramIndex;
-	}
-
-	assert(m_dirtyBits == 0);
 }
 
 
@@ -266,17 +226,6 @@ uint64_t DescriptorSet::GetDynamicOffset() const
 uint64_t DescriptorSet::GetGpuAddressWithOffset() const
 {
 	return m_gpuAddress + m_dynamicOffset;
-}
-
-
-void DescriptorSet::SetDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE descriptor)
-{
-	assert(slot < (uint32_t)m_numDescriptors);
-	if (m_descriptors[slot].ptr != descriptor.ptr)
-	{
-		m_descriptors[slot] = descriptor;
-		m_dirtyBits |= (1 << slot);
-	}
 }
 
 

@@ -51,8 +51,6 @@ public:
 	virtual void SetSampler(uint32_t slot, SamplerPtr sampler) = 0;
 
 	virtual void SetDynamicOffset(uint32_t offset) = 0;
-
-	virtual void UpdateGpuDescriptors() = 0;
 };
 
 using DescriptorSetPtr = std::shared_ptr<IDescriptorSet>;
