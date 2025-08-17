@@ -34,6 +34,8 @@ public:
 	void SetCBV(uint32_t slot, const IDescriptor* descriptor) override;
 	void SetSampler(uint32_t slot, const IDescriptor* descriptor) override;
 
+	void SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors) override;
+
 	void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
@@ -59,13 +61,18 @@ protected:
 	template<bool isSrv>
 	void SetSRVUAV(uint32_t slot, const IDescriptor* descriptor);
 
+	void SetDescriptors_Internal(uint32_t slot, std::span<const IDescriptor*> descriptors);
+	void WriteSamplers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
+	void WriteBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
+	void WriteTextures(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
+	void WriteTypedBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
+
 protected:
 	Device* m_device{ nullptr };
 
 	RootParameter m_rootParameter;
 
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
-	std::array<VkWriteDescriptorSet, MaxDescriptorsPerTable> m_writeDescriptorSets;
 	uint32_t m_numDescriptors{ 0 };
 	uint32_t m_dynamicOffset{ 0 };
 	bool m_isDynamicBuffer{ false };

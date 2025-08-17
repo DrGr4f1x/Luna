@@ -69,7 +69,7 @@ public:
 			.startRegister		= startRegister,
 			.numDescriptors		= numDescriptors,
 			.registerSpace		= registerSpace,
-			.flags				= flags
+			.flags				= m_flags
 		};
 	}
 
@@ -187,6 +187,29 @@ struct RootParameter
 			currentStartRegister += range.numDescriptors;
 		}
 		return DescriptorType::None;
+	}
+
+	uint32_t GetRangeIndex(uint32_t slot)
+	{
+		// Search for the range containing slot, and return its descriptor type
+		uint32_t currentStartRegister = 0;
+		uint32_t rangeIndex = 0;
+		for (const auto& range : table)
+		{
+			if (range.startRegister != APPEND_REGISTER)
+			{
+				currentStartRegister = range.startRegister;
+			}
+
+			if (slot >= currentStartRegister && slot < (currentStartRegister + range.numDescriptors))
+			{
+				return rangeIndex;
+			}
+
+			currentStartRegister += range.numDescriptors;
+			++rangeIndex;
+		}
+		return ~0u;
 	}
 };
 

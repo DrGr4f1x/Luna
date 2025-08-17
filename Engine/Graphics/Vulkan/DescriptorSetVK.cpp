@@ -102,6 +102,12 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 }
 
 
+void DescriptorSet::SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors)
+{
+	SetDescriptors_Internal(slot, descriptors);
+}
+
+
 void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
 	VkDescriptorImageInfo info{
@@ -429,6 +435,149 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 			UpdateDescriptorSet(writeDescriptorSet);
 		}
 	}
+}
+
+
+void DescriptorSet::SetDescriptors_Internal(uint32_t slot, std::span<const IDescriptor*> descriptors)
+{
+	uint32_t rangeIndex = m_rootParameter.GetRangeIndex(slot);
+	assert(rangeIndex != ~0u);
+	const auto& range = m_rootParameter.table[rangeIndex];
+
+	// TODO: Relax this requirement so that we can set a subset of a bindless array
+	assert(range.numDescriptors == descriptors.size());
+
+	// Allocate scratch memory
+	size_t scratchSize = 0;
+	unique_ptr<std::byte[]> scratchMemory;
+	switch (range.descriptorType)
+	{
+	case DescriptorType::ConstantBuffer:
+	case DescriptorType::StructuredBufferSRV:
+	case DescriptorType::StructuredBufferUAV:
+	case DescriptorType::RawBufferSRV:
+	case DescriptorType::RawBufferUAV:
+		scratchSize = sizeof(VkDescriptorBufferInfo) * descriptors.size();
+		scratchMemory.reset(new std::byte[scratchSize]);
+		break;
+
+	case DescriptorType::TextureSRV:
+	case DescriptorType::TextureUAV:
+	case DescriptorType::Sampler:
+		scratchSize = sizeof(VkDescriptorImageInfo) * descriptors.size();
+		scratchMemory.reset(new std::byte[scratchSize]);
+		break;
+
+	case DescriptorType::TypedBufferSRV:
+	case DescriptorType::TypedBufferUAV:
+		scratchSize = sizeof(VkBufferView) * descriptors.size();
+		scratchMemory.reset(new std::byte[scratchSize]);
+		break;
+
+	default:
+		assert(false);
+		break;
+	}
+
+	
+
+	VkWriteDescriptorSet writeDescriptorSet{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet				= m_descriptorSet,
+		.dstBinding			= range.startRegister,
+		.dstArrayElement	= 0,
+		.descriptorCount	= range.numDescriptors,
+		.descriptorType		= DescriptorTypeToVulkan(range.descriptorType)
+	};
+
+	std::byte* data = scratchMemory.get();
+
+	switch (range.descriptorType)
+	{
+	case DescriptorType::Sampler:
+		WriteSamplers(writeDescriptorSet, data, descriptors);
+		break;
+
+	case DescriptorType::ConstantBuffer:
+	case DescriptorType::StructuredBufferSRV:
+	case DescriptorType::StructuredBufferUAV:
+	case DescriptorType::RawBufferSRV:
+	case DescriptorType::RawBufferUAV:
+		WriteBuffers(writeDescriptorSet, data, descriptors);
+		break;
+
+	case DescriptorType::TextureSRV:
+	case DescriptorType::TextureUAV:
+		WriteTextures(writeDescriptorSet, data, descriptors);
+		break;
+
+	case DescriptorType::TypedBufferSRV:
+	case DescriptorType::TypedBufferUAV:
+		WriteTypedBuffers(writeDescriptorSet, data, descriptors);
+		break;
+	}
+
+	UpdateDescriptorSet(writeDescriptorSet);
+}
+
+
+void DescriptorSet::WriteSamplers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors)
+{
+	VkDescriptorImageInfo* imageInfos = (VkDescriptorImageInfo*)scratchData;
+
+	for (size_t i = 0; i < descriptors.size(); ++i)
+	{
+		imageInfos[i].imageView = VK_NULL_HANDLE;
+		imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfos[i].sampler = ((const Descriptor*)descriptors[i])->GetSampler();
+	}
+
+	writeDescriptorSet.pImageInfo = imageInfos;
+}
+
+
+void DescriptorSet::WriteBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors)
+{
+	VkDescriptorBufferInfo* bufferInfos = (VkDescriptorBufferInfo*)scratchData;
+
+	for (size_t i = 0; i < descriptors.size(); ++i)
+	{
+		const Descriptor* descriptorVK = (const Descriptor*)descriptors[i];
+
+		bufferInfos[i].buffer = descriptorVK->GetBuffer();
+		bufferInfos[i].offset = 0;
+		bufferInfos[i].range = m_isDynamicBuffer ? descriptorVK->GetElementSize() : VK_WHOLE_SIZE;
+	}
+
+	writeDescriptorSet.pBufferInfo = bufferInfos;
+}
+
+
+void DescriptorSet::WriteTextures(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors)
+{
+	VkDescriptorImageInfo* imageInfos = (VkDescriptorImageInfo*)scratchData;
+
+	for (size_t i = 0; i < descriptors.size(); ++i)
+	{
+		imageInfos[i].imageView = ((const Descriptor*)descriptors[i])->GetImageView();;
+		imageInfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfos[i].sampler = VK_NULL_HANDLE;
+	}
+
+	writeDescriptorSet.pImageInfo = imageInfos;
+}
+
+
+void DescriptorSet::WriteTypedBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors)
+{
+	VkBufferView* bufferViews = (VkBufferView*)scratchData;
+
+	for (size_t i = 0; i < descriptors.size(); ++i)
+	{
+		bufferViews[i] = ((const Descriptor*)descriptors[i])->GetBufferView();
+	}
+
+	writeDescriptorSet.pTexelBufferView = bufferViews;
 }
 
 } // namespace Luna::VK

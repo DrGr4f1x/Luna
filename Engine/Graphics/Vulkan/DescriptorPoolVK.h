@@ -70,6 +70,11 @@ private:
 	// Whether to allow descriptor sets to be freed
 	const bool m_allowFreeDescriptorSets{ false };
 
+	// Whether to allocate update-after-bind descriptors
+	bool m_allocateUpdateAfterBindDescriptors{ false };
+
+	uint32_t m_numVariableDescriptors{ 0 };
+
 	// Descriptor pool size
 	std::vector<VkDescriptorPoolSize> m_poolSizes;
 

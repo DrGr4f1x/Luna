@@ -139,6 +139,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IndirectDraw", "Apps\Indire
 		{C547DFBA-C609-49CD-BF64-7C7C954F8DCF} = {C547DFBA-C609-49CD-BF64-7C7C954F8DCF}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DescriptorIndexing", "Apps\DescriptorIndexing\DescriptorIndexing.vcxproj", "{317E7E09-9C6E-4E71-B993-27973A4F2B1B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -308,6 +310,12 @@ Global
 		{31BB30B8-6B59-4849-93E4-A590EA8A48E8}.Profile|x64.Build.0 = Profile|x64
 		{31BB30B8-6B59-4849-93E4-A590EA8A48E8}.Release|x64.ActiveCfg = Release|x64
 		{31BB30B8-6B59-4849-93E4-A590EA8A48E8}.Release|x64.Build.0 = Release|x64
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B}.Debug|x64.ActiveCfg = Debug|x64
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B}.Debug|x64.Build.0 = Debug|x64
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B}.Profile|x64.ActiveCfg = Profile|x64
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B}.Profile|x64.Build.0 = Profile|x64
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B}.Release|x64.ActiveCfg = Release|x64
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -339,6 +347,7 @@ Global
 		{B9D9C2F7-6916-4922-823F-BCE3B7952105} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{0B914653-915C-41F2-A0C9-4569706172D2} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{31BB30B8-6B59-4849-93E4-A590EA8A48E8} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
+		{317E7E09-9C6E-4E71-B993-27973A4F2B1B} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CDA0266F-9938-4577-9717-5AEE6F9785A1}

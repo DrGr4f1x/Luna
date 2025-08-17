@@ -100,6 +100,27 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 }
 
 
+void DescriptorSet::SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors)
+{
+	assert(!m_isSamplerTable);
+	assert(m_rootParameter.parameterType == RootParameterType::Table);
+
+	uint32_t rangeIndex = m_rootParameter.GetRangeIndex(slot);
+	assert(rangeIndex != ~0u);
+	const auto& range = m_rootParameter.table[rangeIndex];
+	assert(HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray));
+
+	// TODO: Relax this requirement so that we can set a subset of a bindless array
+	assert(descriptors.size() == range.numDescriptors);
+
+	for (size_t i = 0; i < descriptors.size(); ++i)
+	{
+		const Descriptor* descriptor = (const Descriptor*)descriptors[i];
+		UpdateDescriptor(slot + (uint32_t)i, descriptor->GetHandleCPU());
+	}
+}
+
+
 void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 {
 	UpdateDescriptor(slot,((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetHandleCPU());

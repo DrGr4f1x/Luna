@@ -37,6 +37,8 @@ public:
 	virtual void SetCBV(uint32_t slot, const IDescriptor* descriptor) = 0;
 	virtual void SetSampler(uint32_t slot, const IDescriptor* descriptor) = 0;
 
+	virtual void SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors) = 0;
+
 	virtual void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) = 0;
 	virtual void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) = 0;
 	virtual void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;

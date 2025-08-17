@@ -39,10 +39,19 @@ VkDescriptorSet DescriptorPool::AllocateDescriptorSet()
 	// Increment allocated set count for the current pool
 	++m_allocatedSetsPerPool[m_poolIndex];
 
+	VkDescriptorSetVariableDescriptorCountAllocateInfo variableDescriptorCountInfo{
+		.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
+		.descriptorSetCount		= 1,
+		.pDescriptorCounts		= &m_numVariableDescriptors
+	};
+
+	const bool hasVariableDescriptors = m_numVariableDescriptors > 0;
+
 	VkDescriptorSetLayout vkDescriptorSetLayout = m_layout->Get();
 
 	VkDescriptorSetAllocateInfo allocInfo{
 		.sType					= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.pNext					= hasVariableDescriptors ? &variableDescriptorCountInfo : nullptr,
 		.descriptorPool			= m_pools[m_poolIndex]->Get(),
 		.descriptorSetCount		= 1,
 		.pSetLayouts			= &vkDescriptorSetLayout
@@ -136,6 +145,15 @@ void DescriptorPool::ParseRootParameter(const RootParameter& rootParam)
 		for (const auto& range : rootParam.table)
 		{
 			descriptorTypeCounts[DescriptorTypeToVulkan(range.descriptorType)] += range.numDescriptors;
+			if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
+			{
+				m_allocateUpdateAfterBindDescriptors = true;
+			}
+
+			if (HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray))
+			{
+				m_numVariableDescriptors += range.numDescriptors;
+			}
 		}
 	}
 
@@ -162,6 +180,8 @@ uint32_t DescriptorPool::FindAvailablePool(uint32_t searchIndex)
 		VkDescriptorPoolCreateFlags flags{};
 		if (m_allowFreeDescriptorSets)
 			flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		if (m_allocateUpdateAfterBindDescriptors)
+			flags |= VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
 		VkDescriptorPoolCreateInfo createInfo
 		{
