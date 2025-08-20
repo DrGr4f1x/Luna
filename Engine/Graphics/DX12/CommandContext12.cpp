@@ -1153,7 +1153,14 @@ void CommandContext12::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 
 	// copy data to the intermediate upload heap and then schedule a copy from the upload heap to the destination buffer
 	DynAlloc mem = ReserveUploadMemory(numBytes);
-	SIMDMemCopy(mem.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
+	if (Math::IsAligned(mem.dataPtr, 16) && Math::IsAligned(bufferData, 16))
+	{
+		SIMDMemCopy(mem.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
+	}
+	else
+	{
+		memcpy(mem.dataPtr, bufferData, numBytes);
+	}
 	ID3D12Resource* stagingBuffer = reinterpret_cast<ID3D12Resource*>(mem.resource);
 
 	// Schedule a GPU data copy from the staging buffer to the destination buffer

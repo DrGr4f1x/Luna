@@ -211,6 +211,21 @@ struct RootParameter
 		}
 		return ~0u;
 	}
+
+	uint32_t GetRangeStartRegister(uint32_t rangeIndex)
+	{
+		uint32_t currentStartRegister = 0;
+		for (uint32_t i = 0; i < rangeIndex; ++i)
+		{
+			const auto& range = table[i];
+			if (range.startRegister != APPEND_REGISTER)
+			{
+				currentStartRegister = range.startRegister;
+			}
+			currentStartRegister += range.numDescriptors;
+		}
+		return currentStartRegister;
+	}
 };
 
 using RootParameters = std::vector<RootParameter>;

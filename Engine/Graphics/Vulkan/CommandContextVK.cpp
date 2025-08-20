@@ -1486,7 +1486,14 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 {
 	DynAlloc dynAlloc = ReserveUploadMemory(numBytes);
 
-	SIMDMemCopy(dynAlloc.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
+	if (Math::IsAligned(dynAlloc.dataPtr, 16) && Math::IsAligned(bufferData, 16))
+	{
+		SIMDMemCopy(dynAlloc.dataPtr, bufferData, Math::DivideByMultiple(numBytes, 16));
+	}
+	else
+	{
+		memcpy(dynAlloc.dataPtr, bufferData, numBytes);
+	}
 
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);

@@ -33,7 +33,7 @@ static const Vector3 s_boxCorners[] =
 };
 
 
-BoundingBox BoundingBoxUnion(const vector<BoundingBox>& boxes) noexcept
+BoundingBox BoundingBoxUnion(span<BoundingBox> boxes) noexcept
 {
 	float maxF = numeric_limits<float>::max();
 	Vector3 minExtents(maxF, maxF, maxF);

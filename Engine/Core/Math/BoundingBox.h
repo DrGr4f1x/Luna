@@ -47,7 +47,7 @@ inline BoundingBox BoundingBoxFromMinMax(Vector3 minExtents, Vector3 maxExtents)
 }
 
 
-BoundingBox BoundingBoxUnion(const std::vector<BoundingBox>& boxes) noexcept;
+BoundingBox BoundingBoxUnion(std::span<BoundingBox> boxes) noexcept;
 BoundingBox operator*(Matrix4 mat, BoundingBox box) noexcept;
 
 } // namespace Math

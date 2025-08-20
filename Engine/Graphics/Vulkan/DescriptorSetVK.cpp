@@ -479,12 +479,10 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t slot, std::span<const IDesc
 		break;
 	}
 
-	
-
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= range.startRegister,
+		.dstBinding			= m_rootParameter.GetRangeStartRegister(rangeIndex),
 		.dstArrayElement	= 0,
 		.descriptorCount	= range.numDescriptors,
 		.descriptorType		= DescriptorTypeToVulkan(range.descriptorType)
