@@ -69,7 +69,7 @@ struct RasterizerStateDesc
 	CullMode cullMode{ CullMode::Back };
 	FillMode fillMode{ FillMode::Solid };
 	bool frontCounterClockwise{ false };
-	int depthBias{ 0 };
+	float depthBias{ 0.0f };
 	float slopeScaledDepthBias{ 0.0f };
 	float depthBiasClamp{ 0.0f };
 	bool depthClipEnable{ true };
@@ -82,7 +82,7 @@ struct RasterizerStateDesc
 	constexpr RasterizerStateDesc& SetCullMode(CullMode value) noexcept { cullMode = value; return *this; }
 	constexpr RasterizerStateDesc& SetFillMode(FillMode value) noexcept { fillMode = value; return *this; }
 	constexpr RasterizerStateDesc& SetFrontCounterClockwise(bool value) noexcept { frontCounterClockwise = value; return *this; }
-	constexpr RasterizerStateDesc& SetDepthBias(int value) noexcept { depthBias = value; return *this; }
+	constexpr RasterizerStateDesc& SetDepthBias(float value) noexcept { depthBias = value; return *this; }
 	constexpr RasterizerStateDesc& SetSlopeScaledDepthBias(float value) noexcept { slopeScaledDepthBias = value; return *this; }
 	constexpr RasterizerStateDesc& SetDepthBiasClamp(float value) noexcept { depthBiasClamp = value; return *this; }
 	constexpr RasterizerStateDesc& SetDepthClipEnable(bool value) noexcept { depthClipEnable = value; return *this; }

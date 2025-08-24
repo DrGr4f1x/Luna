@@ -105,7 +105,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTar
 		.imageLayout	= imageLayout,
 		.resolveMode	= VK_RESOLVE_MODE_NONE,
 		.loadOp			= VK_ATTACHMENT_LOAD_OP_LOAD,
-		.storeOp		= VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.storeOp		= VK_ATTACHMENT_STORE_OP_STORE,
 		.clearValue		= GetDepthStencilClearValue(depthTarget.GetClearDepth(), depthTarget.GetClearStencil())
 	};
 

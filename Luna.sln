@@ -147,6 +147,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DynamicIndexing", "Apps\DynamicIndexing\DynamicIndexing.vcxproj", "{21C26184-F44D-4CDA-B3D1-AFAB99C460B6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShadowMapping", "Apps\ShadowMapping\ShadowMapping.vcxproj", "{C66BBE87-5785-4F20-BDE1-E7763F6F6508}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -328,6 +330,12 @@ Global
 		{21C26184-F44D-4CDA-B3D1-AFAB99C460B6}.Profile|x64.Build.0 = Profile|x64
 		{21C26184-F44D-4CDA-B3D1-AFAB99C460B6}.Release|x64.ActiveCfg = Release|x64
 		{21C26184-F44D-4CDA-B3D1-AFAB99C460B6}.Release|x64.Build.0 = Release|x64
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508}.Debug|x64.ActiveCfg = Debug|x64
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508}.Debug|x64.Build.0 = Debug|x64
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508}.Profile|x64.ActiveCfg = Profile|x64
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508}.Profile|x64.Build.0 = Profile|x64
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508}.Release|x64.ActiveCfg = Release|x64
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -363,6 +371,7 @@ Global
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{94D80527-1C7C-42FE-898E-48D5A4C975BF} = {A5AC2980-D9E7-4318-A481-6B1C89D83DFB}
 		{21C26184-F44D-4CDA-B3D1-AFAB99C460B6} = {94D80527-1C7C-42FE-898E-48D5A4C975BF}
+		{C66BBE87-5785-4F20-BDE1-E7763F6F6508} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CDA0266F-9938-4577-9717-5AEE6F9785A1}

@@ -39,8 +39,8 @@ TODO:
 -- Figure out device lost in vulkan multisampling app
 -- IndirectDraw app - support multi-draw indirect
 -- Directly create DescriptorSets without needing RootSignature
--- Fix DynamicUniformBuffer in Vulkan
--- Fix TerrainTessellation for DX12
+-- ShaderCompiler - figure out how to handle shader permutations.  Need this for compiling in/out PCF in ShadowMapping.
+-- Support DX12 pipeline state streams (will need this for mesh shaders anyway)
 
 DONE:
 -- Handles and pools for:
@@ -85,6 +85,8 @@ DONE:
 -- Do a StaticSampler pass over all apps
 -- Implement a way to allocate individual DescriptorSets from a RootSignature, so that per-frame data (etc) can be set at a lower cadence than every draw.
 -- Fix GeometryShader for DX12
+-- Fix TerrainTessellation for DX12
+-- Fix DynamicUniformBuffer in Vulkan
 
 
 WON'T DO:

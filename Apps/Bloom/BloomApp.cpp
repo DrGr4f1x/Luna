@@ -323,7 +323,7 @@ void BloomApp::InitPipelines()
 		.blendState			= CommonStates::BlendDisable(),
 		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
 		.rasterizerState	= CommonStates::RasterizerTwoSided(),
-		.rtvFormats			= { GetColorFormat()},
+		.rtvFormats			= { GetColorFormat() },
 		.dsvFormat			= GetDepthFormat(),
 		.topology			= PrimitiveTopology::TriangleList,
 		.vertexShader		= { .shaderFile = "PhongPassVS" },
