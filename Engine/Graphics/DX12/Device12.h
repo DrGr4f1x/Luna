@@ -20,6 +20,11 @@
 namespace Luna::DX12
 {
 
+// Forward declarations
+struct DeviceCaps;
+struct GraphicsPipelineContext;
+
+
 struct DescriptorSetDesc
 {
 	DescriptorHandle descriptorHandle;
@@ -63,6 +68,10 @@ public:
 
 	ID3D12Device* GetD3D12Device() { return m_device.get(); }
 
+	// Caps
+	void ReadCaps();
+	const DeviceCaps* GetCaps() const;
+
 	// CPU descriptors
 	DescriptorHandle2 AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
 	void FreeDescriptorHandle(const DescriptorHandle2& handle);
@@ -72,9 +81,17 @@ protected:
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
+	template <class TPipelineStream>
+	GraphicsPipelinePtr CreateGraphicsPipelineStream(TPipelineStream& pipelineStream, size_t hashCode, const GraphicsPipelineDesc& pipelineDesc);
+
 protected:
 	wil::com_ptr<ID3D12Device> m_device;
+	wil::com_ptr<ID3D12Device2> m_device2;
 	wil::com_ptr<D3D12MA::Allocator> m_allocator;
+
+	// DirectX caps
+	std::unique_ptr<DeviceCaps> m_caps;
+	std::string m_deviceName;
 
 	// CPU descriptors
 	std::array<std::mutex, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_freeDescriptorMutexes;

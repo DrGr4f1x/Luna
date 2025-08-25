@@ -136,7 +136,6 @@ private:
 	void CreateCommandSignatures();
 
 	void InstallDebugCallback();
-	void ReadCaps();
 
 	void UpdateColorSpace();
 
@@ -163,8 +162,6 @@ private:
 	wil::com_ptr<D3D12MA::Allocator> m_d3d12maAllocator;
 	DWORD m_callbackCookie{ 0 };
 
-	// DirectX caps
-	std::unique_ptr<DeviceCaps> m_caps;
 	std::string m_deviceName;
 
 	// DirectX limits

@@ -115,6 +115,7 @@
     <ClCompile Include="Graphics\DX12\Formats12.cpp" />
     <ClCompile Include="Graphics\DX12\GpuBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
+    <ClCompile Include="Graphics\DX12\PipelineStateUtil12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\Sampler12.cpp" />
@@ -239,6 +240,7 @@
     <ClInclude Include="Graphics\DX12\GpuBuffer12.h" />
     <ClInclude Include="Graphics\DX12\LinearAllocator12.h" />
     <ClInclude Include="Graphics\DX12\PipelineState12.h" />
+    <ClInclude Include="Graphics\DX12\PipelineStateUtil12.h" />
     <ClInclude Include="Graphics\DX12\QueryHeap12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />

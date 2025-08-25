@@ -647,7 +647,7 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 		.cullMode					= CullModeToVulkan(rasterizerState.cullMode),
 		.frontFace					= rasterizerState.frontCounterClockwise ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE,
 		.depthBiasEnable			= (rasterizerState.depthBias != 0 || rasterizerState.slopeScaledDepthBias != 0.0f) ? VK_TRUE : VK_FALSE,
-		.depthBiasConstantFactor	= *reinterpret_cast<const float*>(&rasterizerState.depthBias),
+		.depthBiasConstantFactor	= rasterizerState.depthBias,
 		.depthBiasClamp				= rasterizerState.depthBiasClamp,
 		.depthBiasSlopeFactor		= rasterizerState.slopeScaledDepthBias,
 		.lineWidth					= 1.0f
@@ -671,15 +671,15 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 		.depthTestEnable		= depthStencilState.depthEnable ? VK_TRUE : VK_FALSE,
 		.depthWriteEnable		= depthStencilState.depthWriteMask == DepthWrite::All ? VK_TRUE : VK_FALSE,
 		.depthCompareOp			= ComparisonFuncToVulkan(depthStencilState.depthFunc),
-		.depthBoundsTestEnable	= VK_FALSE,
+		.depthBoundsTestEnable	= depthStencilState.depthBoundsTestEnable ? VK_TRUE : VK_FALSE,
 		.stencilTestEnable		= depthStencilState.stencilEnable ? VK_TRUE : VK_FALSE,
 		.front = {
 			.failOp			= StencilOpToVulkan(depthStencilState.frontFace.stencilFailOp),
 			.passOp			= StencilOpToVulkan(depthStencilState.frontFace.stencilPassOp),
 			.depthFailOp	= StencilOpToVulkan(depthStencilState.frontFace.stencilDepthFailOp),
 			.compareOp		= ComparisonFuncToVulkan(depthStencilState.frontFace.stencilFunc),
-			.compareMask	= depthStencilState.stencilReadMask,
-			.writeMask		= depthStencilState.stencilWriteMask,
+			.compareMask	= depthStencilState.frontFace.stencilReadMask,
+			.writeMask		= depthStencilState.frontFace.stencilWriteMask,
 			.reference		= 0
 		},
 		.back = {
@@ -687,8 +687,8 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 			.passOp			= StencilOpToVulkan(depthStencilState.backFace.stencilPassOp),
 			.depthFailOp	= StencilOpToVulkan(depthStencilState.backFace.stencilDepthFailOp),
 			.compareOp		= ComparisonFuncToVulkan(depthStencilState.backFace.stencilFunc),
-			.compareMask	= depthStencilState.stencilReadMask,
-			.writeMask		= depthStencilState.stencilWriteMask,
+			.compareMask	= depthStencilState.backFace.stencilReadMask,
+			.writeMask		= depthStencilState.backFace.stencilWriteMask,
 			.reference		= 0
 		},
 		.minDepthBounds = 0.0f,

@@ -12,6 +12,8 @@
 
 #include "Graphics\Shader.h"
 
+#include "Graphics\PipelineState.h"
+
 using namespace Microsoft::WRL;
 
 
@@ -23,5 +25,8 @@ struct ShaderDescExt
 	std::unique_ptr<std::byte[]> byteCode;
 	size_t byteCodeSize{ 0 };
 };
+
+
+Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry);
 
 } // namespace Luna::DX12

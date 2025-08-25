@@ -357,9 +357,6 @@ void DeviceManager::CreateDeviceResources()
 
 	// Create command signatures
 	CreateCommandSignatures();
-
-	m_caps = make_unique<DeviceCaps>();
-	ReadCaps();
 }
 
 
@@ -756,6 +753,8 @@ void DeviceManager::CreateDevice()
 
 	m_device = std::make_unique<Device>(m_dxDevice.get(), m_d3d12maAllocator.get());
 
+	m_device->ReadCaps();
+
 	m_textureManager = std::make_unique<TextureManager>(m_device.get());
 
 	// TODO: Create descriptor allocators
@@ -959,22 +958,6 @@ void DeviceManager::InstallDebugCallback()
 #endif
 		m_dxInfoQueue->PushStorageFilter(&newFilter);
 		m_dxInfoQueue->RegisterMessageCallback(DebugMessageCallback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &m_callbackCookie);
-	}
-}
-
-
-void DeviceManager::ReadCaps()
-{
-	const D3D_FEATURE_LEVEL minFeatureLevel{ D3D_FEATURE_LEVEL_12_0 };
-	const D3D_SHADER_MODEL maxShaderModel{ D3D_SHADER_MODEL_6_8 };
-
-	m_caps->ReadFullCaps(m_dxDevice.get(), minFeatureLevel, maxShaderModel);
-
-	// TODO
-	//if (g_graphicsDeviceOptions.logDeviceFeatures)
-	if (false)
-	{
-		m_caps->LogCaps();
 	}
 }
 

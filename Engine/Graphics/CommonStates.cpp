@@ -348,8 +348,8 @@ const DepthStencilStateDesc& CommonStates::DepthStateDisabled()
 		depthStencilStateDesc.depthWriteMask = DepthWrite::Zero;
 		depthStencilStateDesc.depthFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.stencilEnable = false;
-		depthStencilStateDesc.stencilReadMask = 0xFF;
-		depthStencilStateDesc.stencilWriteMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilReadMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilWriteMask = 0xFF;
 		depthStencilStateDesc.frontFace.stencilFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.frontFace.stencilPassOp = StencilOp::Keep;
 		depthStencilStateDesc.frontFace.stencilFailOp = StencilOp::Keep;
@@ -374,8 +374,8 @@ const DepthStencilStateDesc& CommonStates::DepthStateReadWrite()
 		depthStencilStateDesc.depthWriteMask = DepthWrite::All;
 		depthStencilStateDesc.depthFunc = ComparisonFunc::GreaterEqual;
 		depthStencilStateDesc.stencilEnable = false;
-		depthStencilStateDesc.stencilReadMask = 0xFF;
-		depthStencilStateDesc.stencilWriteMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilReadMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilWriteMask = 0xFF;
 		depthStencilStateDesc.frontFace.stencilFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.frontFace.stencilPassOp = StencilOp::Keep;
 		depthStencilStateDesc.frontFace.stencilFailOp = StencilOp::Keep;
@@ -400,8 +400,8 @@ const DepthStencilStateDesc& CommonStates::DepthStateReadWriteReversed()
 		depthStencilStateDesc.depthWriteMask = DepthWrite::All;
 		depthStencilStateDesc.depthFunc = ComparisonFunc::LessEqual;
 		depthStencilStateDesc.stencilEnable = false;
-		depthStencilStateDesc.stencilReadMask = 0xFF;
-		depthStencilStateDesc.stencilWriteMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilReadMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilWriteMask = 0xFF;
 		depthStencilStateDesc.frontFace.stencilFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.frontFace.stencilPassOp = StencilOp::Keep;
 		depthStencilStateDesc.frontFace.stencilFailOp = StencilOp::Keep;
@@ -426,8 +426,8 @@ const DepthStencilStateDesc& CommonStates::DepthStateReadOnly()
 		depthStencilStateDesc.depthWriteMask = DepthWrite::Zero;
 		depthStencilStateDesc.depthFunc = ComparisonFunc::GreaterEqual;
 		depthStencilStateDesc.stencilEnable = false;
-		depthStencilStateDesc.stencilReadMask = 0xFF;
-		depthStencilStateDesc.stencilWriteMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilReadMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilWriteMask = 0xFF;
 		depthStencilStateDesc.frontFace.stencilFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.frontFace.stencilPassOp = StencilOp::Keep;
 		depthStencilStateDesc.frontFace.stencilFailOp = StencilOp::Keep;
@@ -452,8 +452,8 @@ const DepthStencilStateDesc& CommonStates::DepthStateReadOnlyReversed()
 		depthStencilStateDesc.depthWriteMask = DepthWrite::Zero;
 		depthStencilStateDesc.depthFunc = ComparisonFunc::Less;
 		depthStencilStateDesc.stencilEnable = false;
-		depthStencilStateDesc.stencilReadMask = 0xFF;
-		depthStencilStateDesc.stencilWriteMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilReadMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilWriteMask = 0xFF;
 		depthStencilStateDesc.frontFace.stencilFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.frontFace.stencilPassOp = StencilOp::Keep;
 		depthStencilStateDesc.frontFace.stencilFailOp = StencilOp::Keep;
@@ -478,8 +478,8 @@ const DepthStencilStateDesc& CommonStates::DepthStateTestEqual()
 		depthStencilStateDesc.depthWriteMask = DepthWrite::Zero;
 		depthStencilStateDesc.depthFunc = ComparisonFunc::Equal;
 		depthStencilStateDesc.stencilEnable = false;
-		depthStencilStateDesc.stencilReadMask = 0xFF;
-		depthStencilStateDesc.stencilWriteMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilReadMask = 0xFF;
+		depthStencilStateDesc.frontFace.stencilWriteMask = 0xFF;
 		depthStencilStateDesc.frontFace.stencilFunc = ComparisonFunc::Always;
 		depthStencilStateDesc.frontFace.stencilPassOp = StencilOp::Keep;
 		depthStencilStateDesc.frontFace.stencilFailOp = StencilOp::Keep;

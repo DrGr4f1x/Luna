@@ -100,11 +100,15 @@ struct StencilOpDesc
 	StencilOp stencilDepthFailOp{ StencilOp::Keep };
 	StencilOp stencilPassOp{ StencilOp::Keep };
 	ComparisonFunc stencilFunc{ ComparisonFunc::Always };
+	uint8_t stencilReadMask{ 0xFF };
+	uint8_t stencilWriteMask{ 0xFF };
 
 	constexpr StencilOpDesc& SetStencilFailOp(StencilOp value) noexcept { stencilFailOp = value; return *this; }
 	constexpr StencilOpDesc& SetStencilDepthFailOp(StencilOp value) noexcept { stencilDepthFailOp = value; return *this; }
 	constexpr StencilOpDesc& SetStencilPassOp(StencilOp value) noexcept { stencilPassOp = value; return *this; }
 	constexpr StencilOpDesc& SetStencilFunc(ComparisonFunc value) noexcept { stencilFunc = value; return *this; }
+	constexpr StencilOpDesc& SetStencilReadMask(uint8_t value) noexcept { stencilReadMask = value; return *this; }
+	constexpr StencilOpDesc& SetStencilWriteMask(uint8_t value) noexcept { stencilWriteMask = value; return *this; }
 };
 
 
@@ -114,19 +118,17 @@ struct DepthStencilStateDesc
 	DepthWrite depthWriteMask{ DepthWrite::All };
 	ComparisonFunc depthFunc{ ComparisonFunc::Less };
 	bool stencilEnable{ false };
-	uint8_t stencilReadMask{ 0xFF };
-	uint8_t stencilWriteMask{ 0xFF };
 	StencilOpDesc frontFace{};
 	StencilOpDesc backFace{};
+	bool depthBoundsTestEnable{ false };
 
 	constexpr DepthStencilStateDesc& SetDepthEnable(bool value) noexcept { depthEnable = value; return *this; }
 	constexpr DepthStencilStateDesc& SetDepthWriteMask(DepthWrite value) noexcept { depthWriteMask = value; return *this; }
 	constexpr DepthStencilStateDesc& SetDepthFunc(ComparisonFunc value) noexcept { depthFunc = value; return *this; }
 	constexpr DepthStencilStateDesc& SetStencilEnable(bool value) noexcept { stencilEnable = value; return *this; }
-	constexpr DepthStencilStateDesc& SetStencilReadMask(uint8_t value) noexcept { stencilReadMask = value; return *this; }
-	constexpr DepthStencilStateDesc& SetStencilWriteMask(uint8_t value) noexcept { stencilWriteMask = value; return *this; }
 	DepthStencilStateDesc& SetFrontFace(StencilOpDesc value) noexcept { frontFace = value; return *this; }
 	DepthStencilStateDesc& SetBackFace(StencilOpDesc value) noexcept { backFace = value; return *this; }
+	constexpr DepthStencilStateDesc& SetDepthBoundsTestEnable(bool value) noexcept { depthBoundsTestEnable = value; return *this; }
 };
 
 

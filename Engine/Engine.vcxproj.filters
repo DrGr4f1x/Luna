@@ -257,6 +257,9 @@
     <ClCompile Include="Graphics\DX12\Sampler12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\PipelineStateUtil12.cpp">
+      <Filter>Graphics\DX12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -657,6 +660,9 @@
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DescriptorVK.h">
       <Filter>Graphics\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\PipelineStateUtil12.h">
+      <Filter>Graphics\DX12</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
