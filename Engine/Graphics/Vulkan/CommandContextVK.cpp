@@ -975,6 +975,12 @@ void CommandContextVK::SetPrimitiveTopology(PrimitiveTopology topology)
 }
 
 
+void CommandContextVK::SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor)
+{
+	vkCmdSetDepthBias(m_commandBuffer, depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
+}
+
+
 void CommandContextVK::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
 	vkCmdPushConstants(

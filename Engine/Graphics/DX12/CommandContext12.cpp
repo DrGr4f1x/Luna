@@ -138,6 +138,17 @@ void CommandContext12::Initialize()
 		&m_drawIndirectSignature,
 		&m_drawIndexedIndirectSignature,
 		&m_dispatchIndirectSignature);
+
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList1));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList2));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList3));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList4));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList5));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList6));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList7));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList8));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList9));
+	m_commandList->QueryInterface(IID_PPV_ARGS(&m_commandList10));
 }
 
 
@@ -623,6 +634,15 @@ void CommandContext12::SetPrimitiveTopology(PrimitiveTopology topology)
 	{
 		m_commandList->IASetPrimitiveTopology(newTopology);
 		m_primitiveTopology = newTopology;
+	}
+}
+
+
+void CommandContext12::SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor)
+{
+	if (m_commandList9)
+	{
+		m_commandList9->RSSetDepthBias(depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
 	}
 }
 

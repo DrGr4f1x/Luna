@@ -119,6 +119,7 @@ public:
 	void SetStencilRef(uint32_t stencilRef) override;
 	void SetBlendFactor(Color blendFactor) override;
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
+	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) override;
 
 	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
 	void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) override;

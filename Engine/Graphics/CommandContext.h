@@ -106,6 +106,7 @@ public:
 	virtual void SetStencilRef(uint32_t stencilRef) = 0;
 	virtual void SetBlendFactor(Color blendFactor) = 0;
 	virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
+	virtual void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) = 0;
 
 	virtual void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
 	virtual void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) = 0;
@@ -251,6 +252,7 @@ public:
 	void SetStencilRef(uint32_t stencilRef);
 	void SetBlendFactor(Color blendFactor);
 	void SetPrimitiveTopology(PrimitiveTopology topology);
+	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor);
 
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
@@ -607,6 +609,12 @@ inline void GraphicsContext::SetBlendFactor(Color blendFactor)
 inline void GraphicsContext::SetPrimitiveTopology(PrimitiveTopology topology)
 {
 	m_contextImpl->SetPrimitiveTopology(topology);
+}
+
+
+inline void GraphicsContext::SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor)
+{
+	m_contextImpl->SetDepthBias(depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
 }
 
 

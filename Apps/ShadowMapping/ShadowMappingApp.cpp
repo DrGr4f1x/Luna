@@ -85,10 +85,10 @@ void ShadowMappingApp::Render()
 
 		context.SetViewportAndScissor(0u, 0u, m_shadowMapSize, m_shadowMapSize);
 
-		// TODO: Set depth bias here
-
 		context.SetRootSignature(m_shadowDepthRootSignature);
 		context.SetGraphicsPipeline(m_shadowDepthPipeline);
+
+		context.SetDepthBias(1.25f, 0.0f, 1.75f);
 
 		context.SetDescriptors(0, m_shadowDepthDescriptorSet);
 

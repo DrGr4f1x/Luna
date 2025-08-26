@@ -93,6 +93,7 @@ public:
 	void SetStencilRef(uint32_t stencilRef) override;
 	void SetBlendFactor(Color blendFactor) override;
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
+	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) override;
 
 	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
 	void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) override;
@@ -161,6 +162,17 @@ private:
 	CommandListType m_commandListType;
 
 	ID3D12GraphicsCommandList* m_commandList{ nullptr };
+	ID3D12GraphicsCommandList1* m_commandList1{ nullptr };
+	ID3D12GraphicsCommandList2* m_commandList2{ nullptr };
+	ID3D12GraphicsCommandList3* m_commandList3{ nullptr };
+	ID3D12GraphicsCommandList4* m_commandList4{ nullptr };
+	ID3D12GraphicsCommandList5* m_commandList5{ nullptr };
+	ID3D12GraphicsCommandList6* m_commandList6{ nullptr };
+	ID3D12GraphicsCommandList7* m_commandList7{ nullptr };
+	ID3D12GraphicsCommandList8* m_commandList8{ nullptr };
+	ID3D12GraphicsCommandList9* m_commandList9{ nullptr };
+	ID3D12GraphicsCommandList10* m_commandList10{ nullptr };
+
 	ID3D12CommandAllocator* m_currentAllocator{ nullptr };
 
 	ID3D12RootSignature* m_graphicsRootSignature{ nullptr };
