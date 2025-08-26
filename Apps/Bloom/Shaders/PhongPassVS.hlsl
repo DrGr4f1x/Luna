@@ -10,11 +10,12 @@
 
 struct VSInput
 {
-    float4 pos : POSITION;
-    float2 uv : TEXCOORD;
-    float3 color : COLOR;
+    float3 pos : POSITION;
     float3 normal : NORMAL;
+    float4 color : COLOR;
+    float2 uv : TEXCOORD;
 };
+
 
 struct VSOutput
 {
@@ -26,6 +27,7 @@ struct VSOutput
     float3 lightVec : TEXCOORD2;
 };
 
+
 [[vk::binding(0)]]
 cbuffer VSConstants : register(b0)
 {
@@ -34,18 +36,20 @@ cbuffer VSConstants : register(b0)
     float4x4 modelMatrix;
 };
 
+
 VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
 
-    output.color = input.color;
+    output.color = input.color.xyz;
     output.uv = input.uv;
 
     float4x4 modelToProjection = mul(projectionMatrix, mul(viewMatrix, modelMatrix));
-    output.pos = mul(modelToProjection, input.pos);
+    output.pos = mul(modelToProjection, float4(input.pos, 1.0));
 
     float3 lightPos = float3(-5.0f, 5.0f, 0.0f);
-    float4 pos = mul(viewMatrix, mul(modelMatrix, input.pos));
+    
+    float4 pos = mul(viewMatrix, mul(modelMatrix, float4(input.pos, 1.0)));
 
     output.normal = mul((float3x3) viewMatrix, mul((float3x3) modelMatrix, input.normal));
     output.lightVec = lightPos - pos.xyz;

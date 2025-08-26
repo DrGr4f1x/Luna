@@ -292,47 +292,59 @@ void BloomApp::InitRootSignatures()
 
 void BloomApp::InitPipelines()
 {
-	auto vertexLayout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
+	{
+		auto vertexLayout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
 
-	VertexStreamDesc vertexStreamDesc{
-		.inputSlot				= 0,
-		.stride					= vertexLayout.GetSizeInBytes(),
-		.inputClassification	= InputClassification::PerVertexData
-	};
+		VertexStreamDesc vertexStreamDesc{
+			.inputSlot				= 0,
+			.stride					= vertexLayout.GetSizeInBytes(),
+			.inputClassification	= InputClassification::PerVertexData
+		};
 
-	// Color pass pipeline
-	GraphicsPipelineDesc colorPassPipelineDesc{
-		.name				= "Color Pass Graphics PSO",
-		.blendState			= CommonStates::BlendDisable(),
-		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
-		.rasterizerState	= CommonStates::RasterizerTwoSided(),
-		.rtvFormats			= { Format::RGBA8_UNorm },
-		.dsvFormat			= GetDepthFormat(),
-		.topology			= PrimitiveTopology::TriangleList,
-		.vertexShader		= { .shaderFile = "ColorPassVS" },
-		.pixelShader		= { .shaderFile = "ColorPassPS" },
-		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= vertexLayout.GetElements(),
-		.rootSignature		= m_sceneRootSignature
-	};
-	m_colorPassPipeline = CreateGraphicsPipeline(colorPassPipelineDesc);
+		// Color pass pipeline
+		GraphicsPipelineDesc colorPassPipelineDesc{
+			.name				= "Color Pass Graphics PSO",
+			.blendState			= CommonStates::BlendDisable(),
+			.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
+			.rasterizerState	= CommonStates::RasterizerTwoSided(),
+			.rtvFormats			= { Format::RGBA8_UNorm },
+			.dsvFormat			= GetDepthFormat(),
+			.topology			= PrimitiveTopology::TriangleList,
+			.vertexShader		= { .shaderFile = "ColorPassVS" },
+			.pixelShader		= { .shaderFile = "ColorPassPS" },
+			.vertexStreams		= { vertexStreamDesc },
+			.vertexElements		= vertexLayout.GetElements(),
+			.rootSignature		= m_sceneRootSignature
+		};
+		m_colorPassPipeline = CreateGraphicsPipeline(colorPassPipelineDesc);
+	}
 
-	// Phong pass pipeline
-	GraphicsPipelineDesc phongPassPipelineDesc{
-		.name				= "Phong Pass Graphics PSO",
-		.blendState			= CommonStates::BlendDisable(),
-		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
-		.rasterizerState	= CommonStates::RasterizerTwoSided(),
-		.rtvFormats			= { GetColorFormat() },
-		.dsvFormat			= GetDepthFormat(),
-		.topology			= PrimitiveTopology::TriangleList,
-		.vertexShader		= { .shaderFile = "PhongPassVS" },
-		.pixelShader		= { .shaderFile = "PhongPassPS" },
-		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= vertexLayout.GetElements(),
-		.rootSignature		= m_sceneRootSignature
-	};
-	m_phongPassPipeline = CreateGraphicsPipeline(phongPassPipelineDesc);
+	{
+		auto vertexLayout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
+
+		VertexStreamDesc vertexStreamDesc{
+			.inputSlot				= 0,
+			.stride					= vertexLayout.GetSizeInBytes(),
+			.inputClassification	= InputClassification::PerVertexData
+		};
+
+		// Phong pass pipeline
+		GraphicsPipelineDesc phongPassPipelineDesc{
+			.name				= "Phong Pass Graphics PSO",
+			.blendState			= CommonStates::BlendDisable(),
+			.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
+			.rasterizerState	= CommonStates::RasterizerTwoSided(),
+			.rtvFormats			= { GetColorFormat() },
+			.dsvFormat			= GetDepthFormat(),
+			.topology			= PrimitiveTopology::TriangleList,
+			.vertexShader		= { .shaderFile = "PhongPassVS" },
+			.pixelShader		= { .shaderFile = "PhongPassPS" },
+			.vertexStreams		= { vertexStreamDesc },
+			.vertexElements		= vertexLayout.GetElements(),
+			.rootSignature		= m_sceneRootSignature
+		};
+		m_phongPassPipeline = CreateGraphicsPipeline(phongPassPipelineDesc);
+	}
 
 	// Vertical blur pipeline
 	GraphicsPipelineDesc verticalBlurPipelineDesc{
@@ -365,21 +377,31 @@ void BloomApp::InitPipelines()
 	m_blurHorizPipeline = CreateGraphicsPipeline(horizontalBlurPipelineDesc);
 
 	// Skybox pipeline
-	GraphicsPipelineDesc skyboxPipelineDesc{
-		.name				= "Skybox Graphics PSO",
-		.blendState			= CommonStates::BlendDisable(),
-		.depthStencilState	= CommonStates::DepthStateDisabled(),
-		.rasterizerState	= CommonStates::RasterizerTwoSided(),
-		.rtvFormats			= { GetColorFormat()},
-		.dsvFormat			= GetDepthFormat(),
-		.topology			= PrimitiveTopology::TriangleList,
-		.vertexShader		= { .shaderFile = "SkyboxVS" },
-		.pixelShader		= { .shaderFile = "SkyboxPS" },
-		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= vertexLayout.GetElements(),
-		.rootSignature		= m_skyboxRootSignature
-	};
-	m_skyboxPipeline = CreateGraphicsPipeline(skyboxPipelineDesc);
+	{
+		auto vertexLayout = VertexLayout<VertexComponent::Position>();
+
+		VertexStreamDesc vertexStreamDesc{
+			.inputSlot				= 0,
+			.stride					= vertexLayout.GetSizeInBytes(),
+			.inputClassification	= InputClassification::PerVertexData
+		};
+
+		GraphicsPipelineDesc skyboxPipelineDesc{
+			.name				= "Skybox Graphics PSO",
+			.blendState			= CommonStates::BlendDisable(),
+			.depthStencilState	= CommonStates::DepthStateDisabled(),
+			.rasterizerState	= CommonStates::RasterizerTwoSided(),
+			.rtvFormats			= { GetColorFormat()},
+			.dsvFormat			= GetDepthFormat(),
+			.topology			= PrimitiveTopology::TriangleList,
+			.vertexShader		= { .shaderFile = "SkyboxVS" },
+			.pixelShader		= { .shaderFile = "SkyboxPS" },
+			.vertexStreams		= { vertexStreamDesc },
+			.vertexElements		= vertexLayout.GetElements(),
+			.rootSignature		= m_skyboxRootSignature
+		};
+		m_skyboxPipeline = CreateGraphicsPipeline(skyboxPipelineDesc);
+	}
 }
 
 
@@ -431,7 +453,9 @@ void BloomApp::LoadAssets()
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
 	m_ufoModel = LoadModel("retroufo.gltf", layout, 1.0f);
 	m_ufoGlowModel = LoadModel("retroufo_glow.gltf", layout, 1.0f);
-	m_skyboxModel = LoadModel("cube.gltf", layout, 1.0f);
+
+	auto layoutSkybox = VertexLayout<VertexComponent::Position>();
+	m_skyboxModel = LoadModel("cube.gltf", layoutSkybox, 1.0f);
 	m_skyboxTexture = LoadTexture("cubemap_space.ktx");
 }
 
