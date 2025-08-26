@@ -77,11 +77,25 @@ CommandContext12::CommandContext12(CommandListType type)
 
 CommandContext12::~CommandContext12()
 {
-	if (m_commandList != nullptr)
-	{
-		m_commandList->Release();
-		m_commandList = nullptr;
-	}
+	auto ReleaseCommandList = [this](IUnknown* commandList)
+		{
+			if (commandList != nullptr)
+			{
+				commandList->Release();
+			}
+		};
+
+	ReleaseCommandList(m_commandList);
+	ReleaseCommandList(m_commandList1);
+	ReleaseCommandList(m_commandList2);
+	ReleaseCommandList(m_commandList3);
+	ReleaseCommandList(m_commandList4);
+	ReleaseCommandList(m_commandList5);
+	ReleaseCommandList(m_commandList6);
+	ReleaseCommandList(m_commandList7);
+	ReleaseCommandList(m_commandList8);
+	ReleaseCommandList(m_commandList9);
+	ReleaseCommandList(m_commandList10);
 }
 
 

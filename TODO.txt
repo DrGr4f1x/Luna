@@ -33,14 +33,12 @@ TODO:
 -- Sanity check resource recreation - all the logic for cached resources like pipeline states, shaders, textures etc.
 -- Improve error handling
 -- Mipmap generation
--- Look at normals in the BloomApp - Vulkan seems wrong.
 -- Standardize matrix handling in shaders.
 -- Auto-register and auto-update window size dependent resources?
 -- Figure out device lost in vulkan multisampling app
 -- IndirectDraw app - support multi-draw indirect
 -- Directly create DescriptorSets without needing RootSignature
 -- ShaderCompiler - figure out how to handle shader permutations.  Need this for compiling in/out PCF in ShadowMapping.
--- Support DX12 pipeline state streams (will need this for mesh shaders anyway)
 
 DONE:
 -- Handles and pools for:
@@ -87,6 +85,8 @@ DONE:
 -- Fix GeometryShader for DX12
 -- Fix TerrainTessellation for DX12
 -- Fix DynamicUniformBuffer in Vulkan
+-- Support DX12 pipeline state streams (will need this for mesh shaders anyway)
+-- Look at normals in the BloomApp - Vulkan seems wrong.
 
 
 WON'T DO:
