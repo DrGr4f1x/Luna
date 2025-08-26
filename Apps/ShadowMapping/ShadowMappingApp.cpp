@@ -239,7 +239,6 @@ void ShadowMappingApp::InitPipelines()
 			.dsvFormat			= Format::D16,
 			.topology			= PrimitiveTopology::TriangleList,
 			.vertexShader		= { .shaderFile = "ShadowDepthVS" },
-			//.pixelShader		= { .shaderFile = "ShadowDepthPS" },
 			.vertexStreams		= { vertexStreamDesc },
 			.vertexElements		= vertexLayout.GetElements(),
 			.rootSignature		= m_shadowDepthRootSignature
