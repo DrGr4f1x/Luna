@@ -26,6 +26,7 @@ struct DeviceManagerDesc;
 constexpr uint32_t MaxRootParameters = 16;
 constexpr uint32_t MaxDescriptorsPerTable = 32;
 
+constexpr uint32_t ROOT_SIGNATURE_DWORD_NUM = 64; // https://learn.microsoft.com/en-us/windows/win32/direct3d12/root-signature-limits
 
 // Functions
 bool IsDeveloperModeEnabled();

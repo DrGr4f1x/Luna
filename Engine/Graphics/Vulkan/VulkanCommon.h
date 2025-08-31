@@ -28,6 +28,9 @@
 
 #define VK_FLAGS_NONE 0
 
+#define VK_APPEND_PNEXT(desc) \
+	*tail = &desc; \
+	tail = &desc.pNext
 
 namespace Luna::VK
 {

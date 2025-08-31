@@ -103,9 +103,10 @@ void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo, VkSh
 }
 
 
-Device::Device(CVkDevice* device, CVmaAllocator* allocator)
+Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCaps& caps)
 	: m_device{ device }
 	, m_allocator{ allocator }
+	, m_caps{ caps }
 {
 	m_pipelineCache = CreatePipelineCache();
 

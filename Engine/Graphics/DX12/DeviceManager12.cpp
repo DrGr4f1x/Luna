@@ -16,7 +16,6 @@
 
 #include "CommandContext12.h"
 #include "Device12.h"
-#include "DeviceCaps12.h"
 #include "LinearAllocator12.h"
 #include "Queue12.h"
 #include "Shader12.h"
@@ -29,6 +28,104 @@ namespace Luna::DX12
 {
 
 DeviceManager* g_d3d12DeviceManager{ nullptr };
+
+// TODO: Move this elsewhere and reuse it in Device::FillCaps
+D3D_FEATURE_LEVEL GetHighestFeatureLevel(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel)
+{
+	const D3D_FEATURE_LEVEL featureLevels[]
+	{
+		D3D_FEATURE_LEVEL_12_2,
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0
+	};
+
+	D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevelCaps{};
+	featureLevelCaps.pFeatureLevelsRequested = featureLevels;
+	featureLevelCaps.NumFeatureLevels = _countof(featureLevels);
+
+	if (SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featureLevelCaps, sizeof(featureLevelCaps))))
+	{
+		return featureLevelCaps.MaxSupportedFeatureLevel;
+	}
+
+	return minFeatureLevel;
+}
+
+
+// TODO: Move this elsewhere and reuse it in Device::FillCaps
+D3D_SHADER_MODEL GetHighestShaderModel(ID3D12Device* device)
+{
+	const D3D_SHADER_MODEL shaderModels[]
+	{
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 612)
+		D3D_SHADER_MODEL_6_9,
+#endif
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+		D3D_SHADER_MODEL_6_8,
+#endif
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
+		D3D_SHADER_MODEL_6_7,
+#endif
+		D3D_SHADER_MODEL_6_6,
+		D3D_SHADER_MODEL_6_5,
+		D3D_SHADER_MODEL_6_4,
+		D3D_SHADER_MODEL_6_3,
+		D3D_SHADER_MODEL_6_2,
+		D3D_SHADER_MODEL_6_1,
+		D3D_SHADER_MODEL_6_0,
+	};
+
+	D3D12_FEATURE_DATA_SHADER_MODEL featureShaderModel{};
+	for (const auto shaderModel : shaderModels)
+	{
+		featureShaderModel.HighestShaderModel = shaderModel;
+		if (SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &featureShaderModel, sizeof(featureShaderModel))))
+		{
+			return featureShaderModel.HighestShaderModel;
+		}
+	}
+
+	return D3D_SHADER_MODEL_5_1;
+}
+
+struct DeviceBasicCaps
+{
+	D3D_FEATURE_LEVEL maxFeatureLevel{};
+	D3D_SHADER_MODEL maxShaderModel{};
+	D3D12_RESOURCE_BINDING_TIER resourceBindingTier{};
+	D3D12_RESOURCE_HEAP_TIER resourceHeapTier{};
+	uint32_t numDeviceNodes{ 0 };
+	bool bSupportsWaveOps{ false };
+	bool bSupportsAtomic64{ false };
+
+	void ReadBasicCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel);
+};
+
+
+void DeviceBasicCaps::ReadBasicCaps(ID3D12Device* device, D3D_FEATURE_LEVEL minFeatureLevel)
+{
+	maxFeatureLevel = GetHighestFeatureLevel(device, minFeatureLevel);
+	maxShaderModel = GetHighestShaderModel(device);
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS dx12Caps{};
+	device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &dx12Caps, sizeof(dx12Caps));
+	resourceBindingTier = dx12Caps.ResourceBindingTier;
+	resourceHeapTier = dx12Caps.ResourceHeapTier;
+
+	numDeviceNodes = device->GetNodeCount();
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS1 dx12Caps1{};
+	device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &dx12Caps1, sizeof(dx12Caps1));
+	bSupportsWaveOps = dx12Caps1.WaveOps == TRUE;
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 3)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS9 dx12Caps9{};
+	device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS9, &dx12Caps9, sizeof(dx12Caps9));
+	bSupportsAtomic64 = dx12Caps9.AtomicInt64OnTypedResourceSupported == TRUE;
+#endif
+}
 
 
 bool IsDirectXAgilitySDKAvailable()
@@ -43,9 +140,7 @@ bool TestCreateDevice(IDXGIAdapter* adapter, D3D_FEATURE_LEVEL minFeatureLevel, 
 	wil::com_ptr<ID3D12Device> device;
 	if (SUCCEEDED(D3D12CreateDevice(adapter, minFeatureLevel, IID_PPV_ARGS(&device))))
 	{
-		DeviceCaps testCaps;
-		testCaps.ReadBasicCaps(device.get(), minFeatureLevel);
-		deviceBasicCaps = testCaps.basicCaps;
+		deviceBasicCaps.ReadBasicCaps(device.get(), minFeatureLevel);
 
 		return true;
 	}
@@ -143,22 +238,6 @@ DeviceRLDOHelper::~DeviceRLDOHelper()
 }
 
 
-Limits::Limits()
-{
-	extern Luna::ILimits* g_limits;
-	assert(g_limits == nullptr);
-
-	g_limits = this;
-}
-
-
-Limits::~Limits()
-{
-	extern Luna::ILimits* g_limits;
-	g_limits = nullptr;
-}
-
-
 DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 	: m_desc{ desc }
 	, m_deviceRLDOHelper{ desc.enableValidation }
@@ -175,8 +254,6 @@ DeviceManager::DeviceManager(const DeviceManagerDesc& desc)
 
 	g_deviceManager = this;
 	g_d3d12DeviceManager = this;
-
-	m_limits = std::make_unique<Limits>();
 }
 
 
@@ -337,6 +414,7 @@ void DeviceManager::CreateDeviceResources()
 	m_queues[(uint32_t)QueueType::Compute] = make_unique<Queue>(m_dxDevice.get(), QueueType::Compute);
 	m_queues[(uint32_t)QueueType::Copy] = make_unique<Queue>(m_dxDevice.get(), QueueType::Copy);
 	m_bQueuesCreated = true;
+	GetQueue(QueueType::Graphics).GetCommandQueue()->GetTimestampFrequency(&m_timestampFrequency);
 
 	// Create a fence for tracking GPU execution progress
 	ThrowIfFailed(m_dxDevice->CreateFence(m_fenceValues[m_backBufferIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
@@ -753,7 +831,7 @@ void DeviceManager::CreateDevice()
 
 	m_device = std::make_unique<Device>(m_dxDevice.get(), m_d3d12maAllocator.get());
 
-	m_device->ReadCaps();
+	m_device->FillCaps(adapterInfos[chosenAdapterIdx]);
 
 	m_textureManager = std::make_unique<TextureManager>(m_device.get());
 

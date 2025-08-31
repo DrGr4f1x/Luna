@@ -12,7 +12,6 @@
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DeviceManager.h"
-#include "Graphics\Limits.h"
 #include "Graphics\Texture.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
@@ -23,7 +22,6 @@ namespace Luna::DX12
 {
 
 // Forward declarations
-struct DeviceCaps;
 class DescriptorAllocator;
 class Device;
 class Queue;
@@ -48,23 +46,6 @@ struct DeviceRLDOHelper
 	{}
 
 	~DeviceRLDOHelper();
-};
-
-
-class Limits : public ILimits
-{
-public:
-	Limits();
-	~Limits();
-
-	uint32_t ConstantBufferAlignment() const override { return D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT; }
-	uint32_t MaxTextureDimension1D() const override { return D3D12_REQ_TEXTURE1D_U_DIMENSION; }
-	uint32_t MaxTextureDimension2D() const override { return D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION; }
-	uint32_t MaxTextureDimension3D() const override { return D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION; }
-	uint32_t MaxTextureDimensionCube() const override { return D3D12_REQ_TEXTURECUBE_DIMENSION; }
-	uint32_t MaxTexture1DArrayElements() const override { return D3D12_REQ_TEXTURE1D_ARRAY_AXIS_DIMENSION; }
-	uint32_t MaxTexture2DArrayElements() const override { return D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION; }
-	uint32_t MaxTextureMipLevels() const override { return D3D12_REQ_MIP_LEVELS; }
 };
 
 
@@ -113,6 +94,9 @@ public:
 	uint64_t GetFrameNumber() const override { return m_frameNumber; }
 
 	IDevice* GetDevice() override;
+
+	// Queue timestamp frequency
+	uint64_t GetTimestampFrequency() const { return m_timestampFrequency; }
 
 	// Texture formats
 	uint8_t GetFormatPlaneCount(DXGI_FORMAT format);
@@ -164,9 +148,6 @@ private:
 
 	std::string m_deviceName;
 
-	// DirectX limits
-	std::unique_ptr<Limits> m_limits;
-
 	// DirectX device wrapper
 	std::unique_ptr<Device> m_device;
 
@@ -198,6 +179,7 @@ private:
 	// Queues
 	bool m_bQueuesCreated{ false };
 	std::array<std::unique_ptr<Queue>, (uint32_t)QueueType::Count> m_queues;
+	uint64_t m_timestampFrequency{ 0 };
 
 	// Command context handling
 	std::mutex m_contextAllocationMutex;

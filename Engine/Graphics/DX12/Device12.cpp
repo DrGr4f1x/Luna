@@ -19,7 +19,7 @@
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
 #include "DescriptorSet12.h"
-#include "DeviceCaps12.h"
+#include "DeviceManager12.h"
 #include "GpuBuffer12.h"
 #include "PipelineState12.h"
 #include "PipelineStateUtil12.h"
@@ -769,7 +769,7 @@ Luna::GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineD
 	FillGraphicsPipelineDesc(context, pipelineDesc);
 
 #if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 610)
-	if (m_caps->caps19.RasterizerDesc2Supported)
+	if (m_caps.features.rasterizerDesc2)
 	{
 		CD3DX12_PIPELINE_STATE_STREAM5 pipelineStream5{};
 		FillGraphicsPipelineStateStream5(pipelineStream5, context.stateDesc, pipelineDesc);
@@ -1112,20 +1112,482 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain,
 }
 
 
-void Device::ReadCaps()
+void Device::FillCaps(const AdapterInfo& adapterInfo)
 {
-	m_caps = make_unique<DeviceCaps>();
+	HRESULT hr{};
 
-	const D3D_FEATURE_LEVEL minFeatureLevel{ D3D_FEATURE_LEVEL_12_0 };
-	const D3D_SHADER_MODEL maxShaderModel{ D3D_SHADER_MODEL_6_8 };
+	m_caps.adapterInfo = adapterInfo;
+	m_caps.api = GraphicsApi::D3D12;
 
-	m_caps->ReadFullCaps(m_device.get(), minFeatureLevel, maxShaderModel);
-
-	// TODO
-	//if (g_graphicsDeviceOptions.logDeviceFeatures)
-	if (false)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS options{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof(options));
+	if (FAILED(hr))
 	{
-		m_caps->LogCaps();
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options) failed, result = {:#x}", hr);
+	}
+	m_caps.tiers.memory = options.ResourceHeapTier == D3D12_RESOURCE_HEAP_TIER_2 ? 1 : 0;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS1 options1{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS1, &options1, sizeof(options1));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options1) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &options2, sizeof(options2));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options2) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS3 options3{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS3, &options3, sizeof(options3));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options3) failed, result = {:#x}", hr);
+	}
+	m_caps.features.copyQueueTimestamp = options3.CopyQueueTimestampQueriesSupported;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS4 options4{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS4, &options4, sizeof(options4));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options4) failed, result = {:#x}", hr);
+	}
+
+	// Windows 10 1809 (build 17763)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options5) failed, result = {:#x}", hr);
+	}
+	m_caps.features.rayTracing = options5.RaytracingTier != 0;
+	m_caps.tiers.rayTracing = (uint8_t)(options5.RaytracingTier - D3D12_RAYTRACING_TIER_1_0 + 1);
+
+	// Windows 10 1903 (build 18362)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS6 options6{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS6, &options6, sizeof(options6));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options6) failed, result = {:#x}", hr);
+	}
+	m_caps.tiers.shadingRate = (uint8_t)options6.VariableShadingRateTier;
+	m_caps.other.shadingRateAttachmentTileSize = (uint8_t)options6.ShadingRateImageTileSize;
+	m_caps.features.additionalShadingRates = options6.AdditionalShadingRatesSupported;
+
+	// Windows 10 2004 (build 19041)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof(options7));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options7) failed, result = {:#x}", hr);
+	}
+	m_caps.features.meshShader = options7.MeshShaderTier >= D3D12_MESH_SHADER_TIER_1;
+
+#ifdef USE_AGILITY_SDK
+	// Windows 11 21H2 (build 22000)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS8 options8{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS8, &options8, sizeof(options8));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options8) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS9 options9{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS9, &options9, sizeof(options9));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options9) failed, result = {:#x}", hr);
+	}
+	m_caps.features.meshShaderPipelineStats = options9.MeshShaderPipelineStatsSupported;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS10 options10{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS10, &options10, sizeof(options10));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options10) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS11 options11{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS11, &options11, sizeof(options11));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options11) failed, result = {:#x}", hr);
+	}
+
+	// Windows 11 22H2 (build 22621)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS12 options12{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS12, &options12, sizeof(options12));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options12) failed, result = {:#x}", hr);
+	}
+	m_caps.features.enhancedBarriers = options12.EnhancedBarriersSupported;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS13 options13{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS13, &options13, sizeof(options13));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options13) failed, result = {:#x}", hr);
+	}
+	m_caps.memoryAlignment.uploadBufferTextureRow = options13.UnrestrictedBufferTextureCopyPitchSupported ? 1 : D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
+	m_caps.memoryAlignment.uploadBufferTextureSlice = options13.UnrestrictedBufferTextureCopyPitchSupported ? 1 : D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT;
+	m_caps.features.viewportOriginBottomLeft = options13.InvertedViewportHeightFlipsYSupported ? 1 : 0;
+
+	// Agility SDK
+	D3D12_FEATURE_DATA_D3D12_OPTIONS14 options14{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS14, &options14, sizeof(options14));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options14) failed, result = {:#x}", hr);
+	}
+	m_caps.features.independentFrontAndBackStencilReferenceAndMasks = options14.IndependentFrontAndBackStencilRefMaskSupported ? true : false;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS15 options15{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS15, &options15, sizeof(options15));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options15) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS16 options16{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS16, &options16, sizeof(options16));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options16) failed, result = {:#x}", hr);
+	}
+	m_caps.memory.deviceUploadHeapSize = options16.GPUUploadHeapSupported ? m_caps.adapterInfo.dedicatedVideoMemory : 0;
+	m_caps.features.dynamicDepthBias = options16.DynamicDepthBiasSupported;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS17 options17{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS17, &options17, sizeof(options17));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options17) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS18 options18{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS18, &options18, sizeof(options18));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options18) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS19 options19{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS19, &options19, sizeof(options19));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options19) failed, result = {:#x}", hr);
+	}
+	m_caps.features.rasterizerDesc2 = options19.RasterizerDesc2Supported;
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS20 options20{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS20, &options20, sizeof(options20));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options20) failed, result = {:#x}", hr);
+	}
+
+	D3D12_FEATURE_DATA_D3D12_OPTIONS21 options21{};
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &options21, sizeof(options21));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport(options21) failed, result = {:#x}", hr);
+	}
+#else
+	m_caps.memoryAlignment.uploadBufferTextureRow = D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
+	m_caps.memoryAlignment.uploadBufferTextureSlice = D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT;
+#endif
+
+	// Feature level
+	const std::array<D3D_FEATURE_LEVEL, 5> levelsList = 
+	{
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_2,
+	};
+
+	D3D12_FEATURE_DATA_FEATURE_LEVELS levels{};
+	levels.NumFeatureLevels = (uint32_t)levelsList.size();
+	levels.pFeatureLevelsRequested = levelsList.data();
+	hr = m_device->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &levels, sizeof(levels));
+	if (FAILED(hr))
+	{
+		LogWarning(LogDirectX) << format("ID3D12Device::CheckFeatureSupport((D3D12_FEATURE_FEATURE_LEVELS) failed, result = {:#x}", hr);
+	}
+
+	// Shader model
+#if (D3D12_SDK_VERSION >= 6)
+	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { (D3D_SHADER_MODEL)D3D_HIGHEST_SHADER_MODEL };
+#else
+	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { (D3D_SHADER_MODEL)0x69 };
+#endif
+	for (; shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_0; (*(uint32_t*)&shaderModel.HighestShaderModel)--) 
+	{
+		hr = m_device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel));
+		if (SUCCEEDED(hr))
+		{
+			break;
+		}
+	}
+	if (shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0)
+	{
+		shaderModel.HighestShaderModel = D3D_SHADER_MODEL_5_1;
+	}
+
+	m_caps.shaderModel = (uint8_t)((shaderModel.HighestShaderModel / 0xF) * 10 + (shaderModel.HighestShaderModel & 0xF));
+
+	// Viewport
+	m_caps.viewport.maxNum = D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE;
+	m_caps.viewport.boundsMin = D3D12_VIEWPORT_BOUNDS_MIN;
+	m_caps.viewport.boundsMax = D3D12_VIEWPORT_BOUNDS_MAX;
+
+	// Dimensions
+	m_caps.dimensions.attachmentMaxDim = D3D12_REQ_RENDER_TO_BUFFER_WINDOW_WIDTH;
+	m_caps.dimensions.attachmentLayerMaxNum = D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION;
+	m_caps.dimensions.texture1DMaxDim = D3D12_REQ_TEXTURE1D_U_DIMENSION;
+	m_caps.dimensions.texture2DMaxDim = D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION;
+	m_caps.dimensions.texture3DMaxDim = D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION;
+	m_caps.dimensions.textureCubeMaxDim = D3D12_REQ_TEXTURECUBE_DIMENSION;
+	m_caps.dimensions.textureLayerMaxNum = D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION;
+	m_caps.dimensions.typedBufferMaxDim = 1 << D3D12_REQ_BUFFER_RESOURCE_TEXEL_COUNT_2_TO_EXP;
+
+	// Precision
+	m_caps.precision.viewportBits = D3D12_SUBPIXEL_FRACTIONAL_BIT_COUNT;
+	m_caps.precision.subPixelBits = D3D12_SUBPIXEL_FRACTIONAL_BIT_COUNT;
+	m_caps.precision.subTexelBits = D3D12_SUBTEXEL_FRACTIONAL_BIT_COUNT;
+	m_caps.precision.mipmapBits = D3D12_MIP_LOD_FRACTIONAL_BIT_COUNT;
+
+	// Memory
+	m_caps.memory.allocationMaxNum = 0xFFFFFFFF;
+	m_caps.memory.samplerAllocationMaxNum = D3D12_REQ_SAMPLER_OBJECT_COUNT_PER_DEVICE;
+	m_caps.memory.constantBufferMaxRange = D3D12_REQ_IMMEDIATE_CONSTANT_BUFFER_ELEMENT_COUNT * 16;
+	m_caps.memory.storageBufferMaxRange = 1 << D3D12_REQ_BUFFER_RESOURCE_TEXEL_COUNT_2_TO_EXP;
+	m_caps.memory.bufferTextureGranularity = D3D12_SMALL_RESOURCE_PLACEMENT_ALIGNMENT;
+	m_caps.memory.bufferMaxSize = D3D12_REQ_RESOURCE_SIZE_IN_MEGABYTES_EXPRESSION_C_TERM * 1024ull * 1024ull;
+
+	// Memory alignment
+	m_caps.memoryAlignment.shaderBindingTable = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+	m_caps.memoryAlignment.bufferShaderResourceOffset = D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT;
+	m_caps.memoryAlignment.constantBufferOffset = D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT;
+	m_caps.memoryAlignment.scratchBufferOffset = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
+	m_caps.memoryAlignment.accelerationStructureOffset = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
+#if D3D12_HAS_OPACITY_MICROMAP
+	m_caps.memoryAlignment.micromapOffset = D3D12_RAYTRACING_OPACITY_MICROMAP_ARRAY_BYTE_ALIGNMENT;
+#endif
+
+	// Pipeline layout
+	m_caps.pipelineLayout.descriptorSetMaxNum = ROOT_SIGNATURE_DWORD_NUM / 1;
+	m_caps.pipelineLayout.rootConstantMaxSize = sizeof(uint32_t) * ROOT_SIGNATURE_DWORD_NUM / 1;
+	m_caps.pipelineLayout.rootDescriptorMaxNum = ROOT_SIGNATURE_DWORD_NUM / 2;
+
+	// Descriptor set
+	// https://learn.microsoft.com/en-us/windows/win32/direct3d12/hardware-support
+	if (options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_1) 
+	{
+		m_caps.descriptorSet.samplerMaxNum = 16;
+		m_caps.descriptorSet.constantBufferMaxNum = 14;
+		m_caps.descriptorSet.storageBufferMaxNum = levels.MaxSupportedFeatureLevel >= D3D_FEATURE_LEVEL_11_1 ? 64 : 8;
+		m_caps.descriptorSet.textureMaxNum = 128;
+	}
+	else if (options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_2) 
+	{
+		m_caps.descriptorSet.samplerMaxNum = 2048;
+		m_caps.descriptorSet.constantBufferMaxNum = 14;
+		m_caps.descriptorSet.storageBufferMaxNum = 64;
+		m_caps.descriptorSet.textureMaxNum = D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2;
+	}
+	else 
+	{
+		m_caps.descriptorSet.samplerMaxNum = 2048;
+		m_caps.descriptorSet.constantBufferMaxNum = D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2;
+		m_caps.descriptorSet.storageBufferMaxNum = D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2;
+		m_caps.descriptorSet.textureMaxNum = D3D12_MAX_SHADER_VISIBLE_DESCRIPTOR_HEAP_SIZE_TIER_2;
+	}
+	m_caps.descriptorSet.storageTextureMaxNum = m_caps.descriptorSet.storageBufferMaxNum;
+
+	m_caps.descriptorSet.updateAfterSet.samplerMaxNum = m_caps.descriptorSet.samplerMaxNum;
+	m_caps.descriptorSet.updateAfterSet.constantBufferMaxNum = m_caps.descriptorSet.constantBufferMaxNum;
+	m_caps.descriptorSet.updateAfterSet.storageBufferMaxNum = m_caps.descriptorSet.storageBufferMaxNum;
+	m_caps.descriptorSet.updateAfterSet.textureMaxNum = m_caps.descriptorSet.textureMaxNum;
+	m_caps.descriptorSet.updateAfterSet.storageTextureMaxNum = m_caps.descriptorSet.storageTextureMaxNum;
+
+	m_caps.shaderStage.descriptorSamplerMaxNum = m_caps.descriptorSet.samplerMaxNum;
+	m_caps.shaderStage.descriptorConstantBufferMaxNum = m_caps.descriptorSet.constantBufferMaxNum;
+	m_caps.shaderStage.descriptorStorageBufferMaxNum = m_caps.descriptorSet.storageBufferMaxNum;
+	m_caps.shaderStage.descriptorTextureMaxNum = m_caps.descriptorSet.textureMaxNum;
+	m_caps.shaderStage.descriptorStorageTextureMaxNum = m_caps.descriptorSet.storageTextureMaxNum;
+	m_caps.shaderStage.resourceMaxNum = m_caps.descriptorSet.textureMaxNum;
+
+	m_caps.shaderStage.updateAfterSet.descriptorSamplerMaxNum = m_caps.shaderStage.descriptorSamplerMaxNum;
+	m_caps.shaderStage.updateAfterSet.descriptorConstantBufferMaxNum = m_caps.shaderStage.descriptorConstantBufferMaxNum;
+	m_caps.shaderStage.updateAfterSet.descriptorStorageBufferMaxNum = m_caps.shaderStage.descriptorStorageBufferMaxNum;
+	m_caps.shaderStage.updateAfterSet.descriptorTextureMaxNum = m_caps.shaderStage.descriptorTextureMaxNum;
+	m_caps.shaderStage.updateAfterSet.descriptorStorageTextureMaxNum = m_caps.shaderStage.descriptorStorageTextureMaxNum;
+	m_caps.shaderStage.updateAfterSet.resourceMaxNum = m_caps.shaderStage.resourceMaxNum;
+
+	m_caps.shaderStage.vertex.attributeMaxNum = D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT;
+	m_caps.shaderStage.vertex.streamMaxNum = D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT;
+	m_caps.shaderStage.vertex.outputComponentMaxNum = D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT * 4;
+
+	m_caps.shaderStage.tesselationControl.generationMaxLevel = D3D12_HS_MAXTESSFACTOR_UPPER_BOUND;
+	m_caps.shaderStage.tesselationControl.patchPointMaxNum = D3D12_IA_PATCH_MAX_CONTROL_POINT_COUNT;
+	m_caps.shaderStage.tesselationControl.perVertexInputComponentMaxNum = D3D12_HS_CONTROL_POINT_PHASE_INPUT_REGISTER_COUNT * D3D12_HS_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.tesselationControl.perVertexOutputComponentMaxNum = D3D12_HS_CONTROL_POINT_PHASE_OUTPUT_REGISTER_COUNT * D3D12_HS_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.tesselationControl.perPatchOutputComponentMaxNum = D3D12_HS_OUTPUT_PATCH_CONSTANT_REGISTER_SCALAR_COMPONENTS;
+	m_caps.shaderStage.tesselationControl.totalOutputComponentMaxNum
+		= m_caps.shaderStage.tesselationControl.patchPointMaxNum * m_caps.shaderStage.tesselationControl.perVertexOutputComponentMaxNum
+		+ m_caps.shaderStage.tesselationControl.perPatchOutputComponentMaxNum;
+
+	m_caps.shaderStage.tesselationEvaluation.inputComponentMaxNum = D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COUNT * D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.tesselationEvaluation.outputComponentMaxNum = D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COUNT * D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COMPONENTS;
+
+	m_caps.shaderStage.geometry.invocationMaxNum = D3D12_GS_MAX_INSTANCE_COUNT;
+	m_caps.shaderStage.geometry.inputComponentMaxNum = D3D12_GS_INPUT_REGISTER_COUNT * D3D12_GS_INPUT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.geometry.outputComponentMaxNum = D3D12_GS_OUTPUT_REGISTER_COUNT * D3D12_GS_INPUT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.geometry.outputVertexMaxNum = D3D12_GS_MAX_OUTPUT_VERTEX_COUNT_ACROSS_INSTANCES;
+	m_caps.shaderStage.geometry.totalOutputComponentMaxNum = D3D12_REQ_GS_INVOCATION_32BIT_OUTPUT_COMPONENT_LIMIT;
+
+	m_caps.shaderStage.fragment.inputComponentMaxNum = D3D12_PS_INPUT_REGISTER_COUNT * D3D12_PS_INPUT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.fragment.attachmentMaxNum = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
+	m_caps.shaderStage.fragment.dualSourceAttachmentMaxNum = 1;
+
+	m_caps.shaderStage.compute.workGroupMaxNum[0] = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
+	m_caps.shaderStage.compute.workGroupMaxNum[1] = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
+	m_caps.shaderStage.compute.workGroupMaxNum[2] = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
+	m_caps.shaderStage.compute.workGroupMaxDim[0] = D3D12_CS_THREAD_GROUP_MAX_X;
+	m_caps.shaderStage.compute.workGroupMaxDim[1] = D3D12_CS_THREAD_GROUP_MAX_Y;
+	m_caps.shaderStage.compute.workGroupMaxDim[2] = D3D12_CS_THREAD_GROUP_MAX_Z;
+	m_caps.shaderStage.compute.workGroupInvocationMaxNum = D3D12_CS_THREAD_GROUP_MAX_THREADS_PER_GROUP;
+	m_caps.shaderStage.compute.sharedMemoryMaxSize = D3D12_CS_THREAD_LOCAL_TEMP_REGISTER_POOL;
+
+	m_caps.shaderStage.rayTracing.shaderGroupIdentifierSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+	m_caps.shaderStage.rayTracing.tableMaxStride = D3D12_RAYTRACING_MAX_SHADER_RECORD_STRIDE;
+	m_caps.shaderStage.rayTracing.recursionMaxDepth = D3D12_RAYTRACING_MAX_DECLARABLE_TRACE_RECURSION_DEPTH;
+
+	m_caps.shaderStage.meshControl.sharedMemoryMaxSize = 32 * 1024;
+	m_caps.shaderStage.meshControl.workGroupInvocationMaxNum = 128;
+	m_caps.shaderStage.meshControl.payloadMaxSize = 16 * 1024;
+
+	m_caps.shaderStage.meshEvaluation.outputVerticesMaxNum = 256;
+	m_caps.shaderStage.meshEvaluation.outputPrimitiveMaxNum = 256;
+	m_caps.shaderStage.meshEvaluation.outputComponentMaxNum = 128;
+	m_caps.shaderStage.meshEvaluation.sharedMemoryMaxSize = 28 * 1024;
+	m_caps.shaderStage.meshEvaluation.workGroupInvocationMaxNum = 128;
+
+	m_caps.wave.laneMinNum = options1.WaveLaneCountMin;
+	m_caps.wave.laneMaxNum = options1.WaveLaneCountMax;
+
+	m_caps.wave.derivativeOpsStages = ShaderStage::Pixel;
+	if (m_caps.shaderModel >= 66) 
+	{
+		m_caps.wave.derivativeOpsStages |= ShaderStage::Compute;
+#ifdef USE_AGILITY_SDK
+		if (options9.DerivativesInMeshAndAmplificationShadersSupported)
+		{
+			m_caps.wave.derivativeOpsStages |= ShaderStage::Amplification | ShaderStage::Mesh;
+		}
+#endif
+	}
+
+	if (m_caps.shaderModel >= 60 && options1.WaveOps) 
+	{
+		m_caps.wave.waveOpsStages = ShaderStage::All;
+		m_caps.wave.quadOpsStages = ShaderStage::Pixel | ShaderStage::Compute;
+	}
+
+	m_caps.other.timestampFrequencyHz = GetD3D12DeviceManager()->GetTimestampFrequency();
+#ifdef D3D12_HAS_OPACITY_MICROMAP
+	m_caps.other.micromapSubdivisionMaxLevel = D3D12_RAYTRACING_OPACITY_MICROMAP_OC1_MAX_SUBDIVISION_LEVEL;
+#endif
+	m_caps.other.drawIndirectMaxNum = (1ull << D3D12_REQ_DRAWINDEXED_INDEX_COUNT_2_TO_EXP) - 1;
+	m_caps.other.samplerLodBiasMax = D3D12_MIP_LOD_BIAS_MAX;
+	m_caps.other.samplerAnisotropyMax = D3D12_DEFAULT_MAX_ANISOTROPY;
+	m_caps.other.texelOffsetMin = D3D12_COMMONSHADER_TEXEL_OFFSET_MAX_NEGATIVE;
+	m_caps.other.texelOffsetMax = D3D12_COMMONSHADER_TEXEL_OFFSET_MAX_POSITIVE;
+	m_caps.other.texelGatherOffsetMin = D3D12_COMMONSHADER_TEXEL_OFFSET_MAX_NEGATIVE;
+	m_caps.other.texelGatherOffsetMax = D3D12_COMMONSHADER_TEXEL_OFFSET_MAX_POSITIVE;
+	m_caps.other.clipDistanceMaxNum = D3D12_CLIP_OR_CULL_DISTANCE_COUNT;
+	m_caps.other.cullDistanceMaxNum = D3D12_CLIP_OR_CULL_DISTANCE_COUNT;
+	m_caps.other.combinedClipAndCullDistanceMaxNum = D3D12_CLIP_OR_CULL_DISTANCE_COUNT;
+	m_caps.other.viewMaxNum = options3.ViewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED ? D3D12_MAX_VIEW_INSTANCE_COUNT : 1;
+
+	m_caps.tiers.conservativeRaster = (uint8_t)options.ConservativeRasterizationTier;
+	m_caps.tiers.sampleLocations = (uint8_t)options2.ProgrammableSamplePositionsTier;
+
+	if (options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3 && shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_6)
+	{
+		m_caps.tiers.bindless = 2;
+	}
+	else if (levels.MaxSupportedFeatureLevel >= D3D_FEATURE_LEVEL_12_0)
+	{
+		m_caps.tiers.bindless = 1;
+	}
+
+	if (options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3)
+	{
+		m_caps.tiers.resourceBinding = 2;
+	}
+	else if (options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_2)
+	{
+		m_caps.tiers.resourceBinding = 1;
+	}
+
+	m_caps.features.getMemoryDesc2 = true;
+	m_caps.features.swapChain = true; // TODO: HasOutput();
+	m_caps.features.lowLatency = false; // TODO HasNvExt();
+	m_caps.features.micromap = m_caps.tiers.rayTracing >= 3;
+
+	m_caps.features.textureFilterMinMax = levels.MaxSupportedFeatureLevel >= D3D_FEATURE_LEVEL_11_1 ? true : false;
+	m_caps.features.logicOp = options.OutputMergerLogicOp != 0;
+	m_caps.features.depthBoundsTest = options2.DepthBoundsTestSupported != 0;
+	m_caps.features.drawIndirectCount = true;
+	m_caps.features.lineSmoothing = true;
+	m_caps.features.regionResolve = true;
+	m_caps.features.flexibleMultiview = options3.ViewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED;
+	m_caps.features.layerBasedMultiview = options3.ViewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED;
+	m_caps.features.viewportBasedMultiview = options3.ViewInstancingTier != D3D12_VIEW_INSTANCING_TIER_NOT_SUPPORTED;
+	m_caps.features.waitableSwapChain = true; // TODO: swap chain version >= 2?
+	m_caps.features.pipelineStatistics = true;
+
+	bool isShaderAtomicsF16Supported = false;
+	bool isShaderAtomicsF32Supported = false;
+	// TODO:
+#if NRI_ENABLE_NVAPI
+	if (HasNvExt()) {
+		REPORT_ERROR_ON_BAD_NVAPI_STATUS(this, NvAPI_D3D12_IsNvShaderExtnOpCodeSupported(m_Device, NV_EXTN_OP_FP16_ATOMIC, &isShaderAtomicsF16Supported));
+		REPORT_ERROR_ON_BAD_NVAPI_STATUS(this, NvAPI_D3D12_IsNvShaderExtnOpCodeSupported(m_Device, NV_EXTN_OP_FP32_ATOMIC, &isShaderAtomicsF32Supported));
+	}
+#endif
+
+	m_caps.shaderFeatures.nativeI16 = options4.Native16BitShaderOpsSupported;
+	m_caps.shaderFeatures.nativeF16 = options4.Native16BitShaderOpsSupported;
+	m_caps.shaderFeatures.nativeI64 = options1.Int64ShaderOps;
+	m_caps.shaderFeatures.nativeF64 = options.DoublePrecisionFloatShaderOps;
+	m_caps.shaderFeatures.atomicsF16 = isShaderAtomicsF16Supported;
+	m_caps.shaderFeatures.atomicsF32 = isShaderAtomicsF32Supported;
+#ifdef USE_AGILITY_SDK
+	m_caps.shaderFeatures.atomicsI64 = m_caps.shaderFeatures.atomicsI64 || options9.AtomicInt64OnTypedResourceSupported || options9.AtomicInt64OnGroupSharedSupported || options11.AtomicInt64OnDescriptorHeapResourceSupported;
+#endif
+	m_caps.shaderFeatures.viewportIndex = options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation;
+	m_caps.shaderFeatures.layerIndex = options.VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation;
+	m_caps.shaderFeatures.rasterizedOrderedView = options.ROVsSupported;
+	m_caps.shaderFeatures.barycentric = options3.BarycentricsSupported;
+	m_caps.shaderFeatures.storageReadWithoutFormat = true; // All desktop GPUs support it since 2014
+	m_caps.shaderFeatures.storageWriteWithoutFormat = true;
+
+	if (m_caps.wave.waveOpsStages != ShaderStage::None) 
+	{
+		m_caps.shaderFeatures.waveQuery = true;
+		m_caps.shaderFeatures.waveVote = true;
+		m_caps.shaderFeatures.waveShuffle = true;
+		m_caps.shaderFeatures.waveArithmetic = true;
+		m_caps.shaderFeatures.waveReduction = true;
+		m_caps.shaderFeatures.waveQuad = true;
 	}
 }
 

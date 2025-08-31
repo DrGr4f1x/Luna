@@ -9,7 +9,6 @@ TODO:
 -- Handle authoritative window size in Application better
 -- EngineProfiling from MiniEngine
 -- How to do ClearUAV(IColorBuffer*) in Vulkan
--- Separate Front/Back stencil ref, both platforms
 -- Get rid of UserDescriptorHeap in DX12 - should ideally only bind one Heap of each type (CbvSrvUav and Sampler) per frame, for perf
 -- Refactor commandline parameters at Application level
 -- Look into DX12 Present one more time
@@ -39,6 +38,7 @@ TODO:
 -- IndirectDraw app - support multi-draw indirect
 -- Directly create DescriptorSets without needing RootSignature
 -- ShaderCompiler - figure out how to handle shader permutations.  Need this for compiling in/out PCF in ShadowMapping.
+-- Get rid of ExtensionManagerVK.h
 
 DONE:
 -- Handles and pools for:
@@ -87,6 +87,7 @@ DONE:
 -- Fix DynamicUniformBuffer in Vulkan
 -- Support DX12 pipeline state streams (will need this for mesh shaders anyway)
 -- Look at normals in the BloomApp - Vulkan seems wrong.
+-- Separate Front/Back stencil ref, both platforms
 
 
 WON'T DO:

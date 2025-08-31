@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\Device.h"
+#include "Graphics\DeviceCaps.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\Vulkan\DescriptorPoolVK.h"
 #include "Graphics\Vulkan\RootSignatureVK.h"
@@ -40,9 +41,9 @@ struct DescriptorSetDesc
 class Device : public IDevice
 {
 public:
-	Device(CVkDevice* device, CVmaAllocator* allocator);
+	Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCaps& caps);
 
-	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::Vulkan; }
+	const Luna::DeviceCaps& GetDeviceCaps() const override { return m_caps; }
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -88,6 +89,9 @@ protected:
 protected:
 	wil::com_ptr<CVkDevice> m_device;
 	wil::com_ptr<CVmaAllocator> m_allocator;
+
+	// Device caps
+	Luna::DeviceCaps m_caps{};
 
 	// Pipeline layout cache (RootSignature)
 	std::mutex m_pipelineLayoutMutex;

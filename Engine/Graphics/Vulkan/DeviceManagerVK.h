@@ -11,11 +11,9 @@
 #pragma once
 
 #include "Graphics\ColorBuffer.h"
+#include "Graphics\DeviceCaps.h"
 #include "Graphics\DeviceManager.h"
-#include "Graphics\Limits.h"
 #include "Graphics\Texture.h"
-#include "Graphics\Vulkan\DeviceCapsVK.h"
-#include "Graphics\Vulkan\ExtensionManagerVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 using namespace Microsoft::WRL;
@@ -29,24 +27,69 @@ class Device;
 class Queue;
 struct Semaphore;
 
-
-class Limits : public ILimits
+struct SupportedFeatures 
 {
-public:
-	explicit Limits(VkPhysicalDeviceLimits limits);
-	~Limits();
+	uint32_t descriptorIndexing : 1;
+	uint32_t deviceAddress : 1;
+	uint32_t swapChainMutableFormat : 1;
+	uint32_t presentId : 1;
+	uint32_t memoryPriority : 1;
+	uint32_t memoryBudget : 1;
+	uint32_t maintenance4 : 1;
+	uint32_t maintenance5 : 1;
+	uint32_t maintenance6 : 1;
+	uint32_t imageSlicedView : 1;
+	uint32_t customBorderColor : 1;
+	uint32_t robustness : 1;
+	uint32_t robustness2 : 1;
+	uint32_t pipelineRobustness : 1;
+	uint32_t swapChainMaintenance1 : 1;
+	uint32_t fifoLatestReady : 1;
+};
 
-	uint32_t ConstantBufferAlignment() const override { return (uint32_t)m_limits.minUniformBufferOffsetAlignment; }
-	uint32_t MaxTextureDimension1D() const override { return m_limits.maxImageDimension1D; }
-	uint32_t MaxTextureDimension2D() const override { return m_limits.maxImageDimension2D; }
-	uint32_t MaxTextureDimension3D() const override { return m_limits.maxImageDimension3D; }
-	uint32_t MaxTextureDimensionCube() const override { return m_limits.maxImageDimensionCube; }
-	uint32_t MaxTexture1DArrayElements() const override { return m_limits.maxImageArrayLayers; }
-	uint32_t MaxTexture2DArrayElements() const override { return m_limits.maxImageArrayLayers;; }
-	uint32_t MaxTextureMipLevels() const override { return 15; }
+static_assert(sizeof(SupportedFeatures) == sizeof(uint32_t), "4 bytes expected");
 
-protected:
-	VkPhysicalDeviceLimits m_limits;
+struct ExtensionFeatures
+{
+	VkPhysicalDeviceVulkan11Features features11{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES };
+	VkPhysicalDeviceVulkan12Features features12{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES };
+	VkPhysicalDeviceVulkan13Features features13{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES };
+	VkPhysicalDeviceVulkan14Features features14{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES };
+	VkPhysicalDeviceSynchronization2Features synchronization2features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES };
+	VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES };
+	VkPhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT };
+	VkPhysicalDeviceMaintenance4Features maintenance4Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES };
+	VkPhysicalDeviceImageRobustnessFeatures imageRobustnessFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES };
+	VkPhysicalDevicePresentIdFeaturesKHR presentIdFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR };
+	VkPhysicalDevicePresentWaitFeaturesKHR presentWaitFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR };
+	VkPhysicalDeviceMaintenance5FeaturesKHR maintenance5Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_5_FEATURES_KHR };
+	VkPhysicalDeviceMaintenance6FeaturesKHR maintenance6Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_6_FEATURES_KHR };
+	VkPhysicalDeviceMaintenance7FeaturesKHR maintenance7Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_7_FEATURES_KHR };
+	VkPhysicalDeviceMaintenance8FeaturesKHR maintenance8Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_8_FEATURES_KHR };
+	VkPhysicalDeviceMaintenance9FeaturesKHR maintenance9Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_9_FEATURES_KHR };
+	VkPhysicalDeviceFragmentShadingRateFeaturesKHR shadingRateFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR };
+	VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR };
+	VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
+	VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
+	VkPhysicalDeviceRayTracingPositionFetchFeaturesKHR rayTracingPositionFetchFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_POSITION_FETCH_FEATURES_KHR };
+	VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR rayTracingMaintenanceFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR };
+	VkPhysicalDeviceLineRasterizationFeaturesKHR lineRasterizationFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_FEATURES_KHR };
+	VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR fragmentShaderBarycentricFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR };
+	VkPhysicalDeviceShaderClockFeaturesKHR shaderClockFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR };
+	VkPhysicalDeviceComputeShaderDerivativesFeaturesKHR computeShaderDerivativesFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_KHR };
+	VkPhysicalDeviceOpacityMicromapFeaturesEXT micromapFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT };
+	VkPhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT };
+	VkPhysicalDeviceShaderAtomicFloatFeaturesEXT shaderAtomicFloatFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT };
+	VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT shaderAtomicFloat2Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT };
+	VkPhysicalDeviceMemoryPriorityFeaturesEXT memoryPriorityFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT };
+	VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT slicedViewFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_SLICED_VIEW_OF_3D_FEATURES_EXT };
+	VkPhysicalDeviceCustomBorderColorFeaturesEXT borderColorFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT };
+	VkPhysicalDeviceRobustness2FeaturesEXT robustness2Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT };
+	VkPhysicalDevicePipelineRobustnessFeaturesEXT pipelineRobustnessFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT };
+	VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT fragmentShaderInterlockFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT };
+	VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT swapchainMaintenance1Features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT };
+	VkPhysicalDevicePresentModeFifoLatestReadyFeaturesEXT presentModeFifoLatestReadyFeaturesEXT{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_MODE_FIFO_LATEST_READY_FEATURES_EXT };
+	VkPhysicalDeviceZeroInitializeDeviceMemoryFeaturesEXT zeroInitializeDeviceMemoryFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ZERO_INITIALIZE_DEVICE_MEMORY_FEATURES_EXT };
 };
 
 
@@ -95,12 +138,9 @@ public:
 	CVkDevice* GetVulkanDevice() const;
 	CVmaAllocator* GetAllocator() const;
 
-	// Extensions
-	bool IsDeviceExtensionEnabled(const std::string& extensionName) const;
-
 private:
-	void SetRequiredInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder);
-	void SetRequiredDeviceExtensions(vkb::PhysicalDevice& physicalDevice);
+	void EnableInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder);
+	void EnableDeviceExtensions();
 	void InstallDebugMessenger(vkb::InstanceBuilder& instanceBuilder);
 
 	void CreateSurface();
@@ -121,9 +161,12 @@ private:
 	bool m_bIsDeveloperModeEnabled{ false };
 	bool m_bIsRenderDocAvailable{ false };
 
-	ExtensionManager m_extensionManager;
 	VulkanVersionInfo m_versionInfo{};
-	DeviceCaps m_caps;
+	DeviceCaps m_caps{};
+	SupportedFeatures m_supportedFeatures{};
+	VkPhysicalDeviceMemoryProperties m_memoryProps{};
+	VkPhysicalDeviceFeatures2 m_features{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
+	ExtensionFeatures m_extFeatures{};
 	std::string m_deviceName;
 
 	// Vulkan instance objects owned by the DeviceManager
@@ -142,9 +185,6 @@ private:
 
 	// Device wrapper
 	std::unique_ptr<Device> m_device;
-
-	// Device limits
-	std::unique_ptr<Limits> m_limits;
 
 	// Texture manager
 	std::unique_ptr<TextureManager> m_textureManager;

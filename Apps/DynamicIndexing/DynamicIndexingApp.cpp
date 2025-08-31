@@ -16,7 +16,8 @@
 #include "FileSystem.h"
 #include "Graphics\CommandContext.h"
 #include "Graphics\CommonStates.h"
-#include "Graphics\Limits.h"
+#include "Graphics\Device.h"
+#include "Graphics\DeviceCaps.h"
 
 using namespace Luna;
 using namespace Math;
@@ -88,7 +89,7 @@ void DynamicIndexingApp::Render()
 		context.SetDescriptors(1, m_psDescriptorSet);
 		context.SetConstant(2, 0, i);
 
-		context.DrawIndexed(m_indexBuffer->GetElementCount(), 0, 0);
+		context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount(), 0, 0);
 	}
 
 	RenderUI(context);
@@ -191,7 +192,9 @@ void DynamicIndexingApp::InitPipeline()
 
 void DynamicIndexingApp::InitConstantBuffer()
 {
-	m_dynamicAlignment = AlignUp(sizeof(Matrix4), Limits::ConstantBufferAlignment());
+	const DeviceCaps& caps = GetDevice()->GetDeviceCaps();
+
+	m_dynamicAlignment = AlignUp(sizeof(Matrix4), caps.memoryAlignment.constantBufferOffset);
 
 	size_t allocSize = m_cityMaterialCount * m_dynamicAlignment;
 	modelViewProjectionMatrices = (Matrix4*)_aligned_malloc(allocSize, m_dynamicAlignment);

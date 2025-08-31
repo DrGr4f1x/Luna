@@ -39,9 +39,6 @@
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp">
-      <Filter>Graphics\DX12</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\DX12\Formats12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
@@ -78,13 +75,7 @@
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\ExtensionManagerVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\Vulkan\VersionVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp">
@@ -194,9 +185,6 @@
     <ClCompile Include="Graphics\Loaders\STBTextureLoader.cpp">
       <Filter>Graphics\Loaders</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Limits.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\UIOverlay.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -259,6 +247,12 @@
     </ClCompile>
     <ClCompile Include="Graphics\DX12\PipelineStateUtil12.cpp">
       <Filter>Graphics\DX12</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\GraphicsFeatures.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\DeviceCaps.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -357,9 +351,6 @@
     <ClInclude Include="Graphics\DX12\DirectXCommon.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\DX12\DeviceCaps12.h">
-      <Filter>Graphics\DX12</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\DX12\Formats12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
@@ -419,12 +410,6 @@
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\VersionVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h">
@@ -588,9 +573,6 @@
     <ClInclude Include="Graphics\Vulkan\SamplerVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Limits.h">
-      <Filter>Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\UIOverlay.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -663,6 +645,12 @@
     </ClInclude>
     <ClInclude Include="Graphics\DX12\PipelineStateUtil12.h">
       <Filter>Graphics\DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\GraphicsFeatures.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DeviceCaps.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

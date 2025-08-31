@@ -99,6 +99,7 @@
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
     <ClCompile Include="Graphics\CommonStates.cpp" />
+    <ClCompile Include="Graphics\DeviceCaps.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\Descriptor12.cpp" />
@@ -108,7 +109,6 @@
     <ClCompile Include="Graphics\DX12\CommandAllocatorPool12.cpp" />
     <ClCompile Include="Graphics\DX12\CommandContext12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorAllocator12.cpp" />
-    <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceManager12.cpp" />
     <ClCompile Include="Graphics\DX12\DirectXCommon.cpp" />
     <ClCompile Include="Graphics\DX12\Enums12.cpp" />
@@ -124,9 +124,9 @@
     <ClCompile Include="Graphics\Formats.cpp" />
     <ClCompile Include="Graphics\GpuBuffer.cpp" />
     <ClCompile Include="Graphics\GraphicsCommon.cpp" />
+    <ClCompile Include="Graphics\GraphicsFeatures.cpp" />
     <ClCompile Include="Graphics\Grid.cpp" />
     <ClCompile Include="Graphics\InputLayout.cpp" />
-    <ClCompile Include="Graphics\Limits.cpp" />
     <ClCompile Include="Graphics\Loaders\DDSTextureLoader.cpp" />
     <ClCompile Include="Graphics\Loaders\KTXTextureLoader.cpp" />
     <ClCompile Include="Graphics\Loaders\STBTextureLoader.cpp" />
@@ -148,10 +148,8 @@
     <ClCompile Include="Graphics\Vulkan\LinearAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandBufferPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\DeviceCapsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\EnumsVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\ExtensionManagerVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\FormatsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\QueueVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
@@ -221,6 +219,7 @@
     <ClInclude Include="Graphics\Descriptor.h" />
     <ClInclude Include="Graphics\DescriptorSet.h" />
     <ClInclude Include="Graphics\Device.h" />
+    <ClInclude Include="Graphics\DeviceCaps.h" />
     <ClInclude Include="Graphics\DeviceManager.h" />
     <ClInclude Include="Graphics\DX12\ColorBuffer12.h" />
     <ClInclude Include="Graphics\DX12\DepthBuffer12.h" />
@@ -231,7 +230,6 @@
     <ClInclude Include="Graphics\DX12\CommandAllocatorPool12.h" />
     <ClInclude Include="Graphics\DX12\CommandContext12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorAllocator12.h" />
-    <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />
     <ClInclude Include="Graphics\DX12\DeviceManager12.h" />
     <ClInclude Include="Graphics\DX12\DirectXCommon.h" />
     <ClInclude Include="Graphics\DX12\Enums12.h" />
@@ -253,8 +251,8 @@
     <ClInclude Include="Graphics\GpuBuffer.h" />
     <ClInclude Include="Graphics\GpuResource.h" />
     <ClInclude Include="Graphics\GraphicsCommon.h" />
+    <ClInclude Include="Graphics\GraphicsFeatures.h" />
     <ClInclude Include="Graphics\Grid.h" />
-    <ClInclude Include="Graphics\Limits.h" />
     <ClInclude Include="Graphics\InputLayout.h" />
     <ClInclude Include="Graphics\Loaders\dds.h" />
     <ClInclude Include="Graphics\Loaders\DDSTextureLoader.h" />
@@ -285,10 +283,8 @@
     <ClInclude Include="Graphics\Vulkan\PipelineStateVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandBufferPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\CommandContextVK.h" />
-    <ClInclude Include="Graphics\Vulkan\DeviceCapsVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\EnumsVK.h" />
-    <ClInclude Include="Graphics\Vulkan\ExtensionManagerVK.h" />
     <ClInclude Include="Graphics\Vulkan\FlagsVK.h" />
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueryHeapVK.h" />

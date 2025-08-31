@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\Device.h"
+#include "Graphics\DeviceCaps.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\Descriptor12.h"
 #include "Graphics\DX12\DescriptorAllocator12.h"
@@ -21,7 +22,6 @@ namespace Luna::DX12
 {
 
 // Forward declarations
-struct DeviceCaps;
 struct GraphicsPipelineContext;
 
 
@@ -40,7 +40,7 @@ class Device : public IDevice
 public:
 	Device(ID3D12Device* device, D3D12MA::Allocator* allocator);
 
-	GraphicsApi GetGraphicsApi() const override { return GraphicsApi::D3D12; }
+	const DeviceCaps& GetDeviceCaps() const override { return m_caps; }
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -69,8 +69,7 @@ public:
 	ID3D12Device* GetD3D12Device() { return m_device.get(); }
 
 	// Caps
-	void ReadCaps();
-	const DeviceCaps* GetCaps() const;
+	void FillCaps(const AdapterInfo& adapterInfo);
 
 	// CPU descriptors
 	DescriptorHandle2 AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE heapType);
@@ -89,9 +88,8 @@ protected:
 	wil::com_ptr<ID3D12Device2> m_device2;
 	wil::com_ptr<D3D12MA::Allocator> m_allocator;
 
-	// DirectX caps
-	std::unique_ptr<DeviceCaps> m_caps;
-	std::string m_deviceName;
+	// Device caps
+	DeviceCaps m_caps{};
 
 	// CPU descriptors
 	std::array<std::mutex, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES> m_freeDescriptorMutexes;

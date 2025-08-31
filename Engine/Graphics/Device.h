@@ -26,6 +26,10 @@
 namespace Luna
 {
 
+// Forward declarations
+struct DeviceCaps;
+
+
 class IDevice
 {
 	friend class TextureManager;
@@ -33,7 +37,7 @@ class IDevice
 public:
 	virtual ~IDevice() = default;
 
-	virtual GraphicsApi GetGraphicsApi() const = 0;
+	virtual const DeviceCaps& GetDeviceCaps() const = 0;
 
 	virtual ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
 	virtual DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;

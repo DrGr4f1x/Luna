@@ -14,7 +14,8 @@
 
 #include "Graphics\CommandContext.h"
 #include "Graphics\CommonStates.h"
-#include "Graphics\Limits.h"
+#include "Graphics\Device.h"
+#include "Graphics\DeviceCaps.h"
 
 using namespace Luna;
 using namespace Math;
@@ -182,9 +183,11 @@ void DynamicUniformBufferApp::InitPipeline()
 
 void DynamicUniformBufferApp::InitConstantBuffers()
 {
+	const DeviceCaps& caps = GetDevice()->GetDeviceCaps();
+
 	m_vsConstantBuffer = CreateConstantBuffer("VS Constant Buffer", 1, sizeof(VSConstants));
 
-	m_dynamicAlignment = AlignUp(sizeof(Matrix4), Limits::ConstantBufferAlignment());
+	m_dynamicAlignment = AlignUp(sizeof(Matrix4), caps.memoryAlignment.constantBufferOffset);
 
 	size_t allocSize = m_numCubes * m_dynamicAlignment;
 	m_vsModelConstants.modelMatrix = (Matrix4*)_aligned_malloc(allocSize, m_dynamicAlignment);

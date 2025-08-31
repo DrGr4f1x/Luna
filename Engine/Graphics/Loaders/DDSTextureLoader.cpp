@@ -13,7 +13,7 @@
 #include "DDSTextureLoader.h"
 
 #include "Graphics\Device.h"
-#include "Graphics\Limits.h"
+#include "Graphics\DeviceCaps.h"
 #include "Graphics\Texture.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "dds.h"
@@ -392,12 +392,14 @@ bool CreateTextureFromDDS(
 		return false;
 	}
 
+	const DeviceCaps& caps = device->GetDeviceCaps();
+
 	switch (dimension)
 	{
 	case TextureDimension::Texture1D:
 	case TextureDimension::Texture1D_Array:
-		if ((arraySize > Limits::MaxTexture1DArrayElements()) ||
-			(width > Limits::MaxTextureDimension1D()))
+		if ((arraySize > caps.dimensions.textureLayerMaxNum) ||
+			(width > caps.dimensions.texture1DMaxDim))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a 1D texture, but has invalid dimensions" <<  std::endl;
 			return false;
@@ -406,9 +408,9 @@ bool CreateTextureFromDDS(
 
 	case TextureDimension::Texture2D:
 	case TextureDimension::Texture2D_Array:
-		if ((arraySize > Limits::MaxTexture2DArrayElements()) ||
-			(width > Limits::MaxTextureDimension2D()) ||
-			(height > Limits::MaxTextureDimension2D()))
+		if ((arraySize > caps.dimensions.textureLayerMaxNum) ||
+			(width > caps.dimensions.texture2DMaxDim) ||
+			(height > caps.dimensions.texture2DMaxDim))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a 2D texture, but has invalid dimensions" << std::endl;
 			return false;
@@ -418,9 +420,9 @@ bool CreateTextureFromDDS(
 	case TextureDimension::TextureCube:
 	case TextureDimension::TextureCube_Array:
 		// This is the right bound because we set arraySize to (NumCubes*6) above
-		if ((arraySize > Limits::MaxTexture2DArrayElements()) ||
-			(width > Limits::MaxTextureDimensionCube()) ||
-			(height > Limits::MaxTextureDimensionCube()))
+		if ((arraySize > caps.dimensions.textureLayerMaxNum) ||
+			(width > caps.dimensions.textureCubeMaxDim) ||
+			(height > caps.dimensions.textureCubeMaxDim))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a cube-map texture, but has invalid dimensions" << std::endl;
 			return false;
@@ -429,9 +431,9 @@ bool CreateTextureFromDDS(
 
 	case TextureDimension::Texture3D:
 		if ((arraySize > 1) ||
-			(width > Limits::MaxTextureDimension3D()) ||
-			(height > Limits::MaxTextureDimension3D()) ||
-			(depth > Limits::MaxTextureDimension3D()))
+			(width > caps.dimensions.texture3DMaxDim) ||
+			(height > caps.dimensions.texture3DMaxDim) ||
+			(depth > caps.dimensions.texture3DMaxDim))
 		{
 			LogWarning(LogDDS) << "File " << textureName << " is a 3D texture, but has invalid dimensions" << std::endl;
 			return false;
