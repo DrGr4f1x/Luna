@@ -1434,17 +1434,17 @@ void Device::FillCaps(const AdapterInfo& adapterInfo)
 	m_caps.shaderStage.vertex.streamMaxNum = D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT;
 	m_caps.shaderStage.vertex.outputComponentMaxNum = D3D12_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT * 4;
 
-	m_caps.shaderStage.tesselationControl.generationMaxLevel = D3D12_HS_MAXTESSFACTOR_UPPER_BOUND;
-	m_caps.shaderStage.tesselationControl.patchPointMaxNum = D3D12_IA_PATCH_MAX_CONTROL_POINT_COUNT;
-	m_caps.shaderStage.tesselationControl.perVertexInputComponentMaxNum = D3D12_HS_CONTROL_POINT_PHASE_INPUT_REGISTER_COUNT * D3D12_HS_CONTROL_POINT_REGISTER_COMPONENTS;
-	m_caps.shaderStage.tesselationControl.perVertexOutputComponentMaxNum = D3D12_HS_CONTROL_POINT_PHASE_OUTPUT_REGISTER_COUNT * D3D12_HS_CONTROL_POINT_REGISTER_COMPONENTS;
-	m_caps.shaderStage.tesselationControl.perPatchOutputComponentMaxNum = D3D12_HS_OUTPUT_PATCH_CONSTANT_REGISTER_SCALAR_COMPONENTS;
-	m_caps.shaderStage.tesselationControl.totalOutputComponentMaxNum
-		= m_caps.shaderStage.tesselationControl.patchPointMaxNum * m_caps.shaderStage.tesselationControl.perVertexOutputComponentMaxNum
-		+ m_caps.shaderStage.tesselationControl.perPatchOutputComponentMaxNum;
+	m_caps.shaderStage.hull.generationMaxLevel = D3D12_HS_MAXTESSFACTOR_UPPER_BOUND;
+	m_caps.shaderStage.hull.patchPointMaxNum = D3D12_IA_PATCH_MAX_CONTROL_POINT_COUNT;
+	m_caps.shaderStage.hull.perVertexInputComponentMaxNum = D3D12_HS_CONTROL_POINT_PHASE_INPUT_REGISTER_COUNT * D3D12_HS_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.hull.perVertexOutputComponentMaxNum = D3D12_HS_CONTROL_POINT_PHASE_OUTPUT_REGISTER_COUNT * D3D12_HS_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.hull.perPatchOutputComponentMaxNum = D3D12_HS_OUTPUT_PATCH_CONSTANT_REGISTER_SCALAR_COMPONENTS;
+	m_caps.shaderStage.hull.totalOutputComponentMaxNum
+		= m_caps.shaderStage.hull.patchPointMaxNum * m_caps.shaderStage.hull.perVertexOutputComponentMaxNum
+		+ m_caps.shaderStage.hull.perPatchOutputComponentMaxNum;
 
-	m_caps.shaderStage.tesselationEvaluation.inputComponentMaxNum = D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COUNT * D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COMPONENTS;
-	m_caps.shaderStage.tesselationEvaluation.outputComponentMaxNum = D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COUNT * D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.domain.inputComponentMaxNum = D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COUNT * D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.domain.outputComponentMaxNum = D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COUNT * D3D12_DS_INPUT_CONTROL_POINT_REGISTER_COMPONENTS;
 
 	m_caps.shaderStage.geometry.invocationMaxNum = D3D12_GS_MAX_INSTANCE_COUNT;
 	m_caps.shaderStage.geometry.inputComponentMaxNum = D3D12_GS_INPUT_REGISTER_COUNT * D3D12_GS_INPUT_REGISTER_COMPONENTS;
@@ -1452,9 +1452,9 @@ void Device::FillCaps(const AdapterInfo& adapterInfo)
 	m_caps.shaderStage.geometry.outputVertexMaxNum = D3D12_GS_MAX_OUTPUT_VERTEX_COUNT_ACROSS_INSTANCES;
 	m_caps.shaderStage.geometry.totalOutputComponentMaxNum = D3D12_REQ_GS_INVOCATION_32BIT_OUTPUT_COMPONENT_LIMIT;
 
-	m_caps.shaderStage.fragment.inputComponentMaxNum = D3D12_PS_INPUT_REGISTER_COUNT * D3D12_PS_INPUT_REGISTER_COMPONENTS;
-	m_caps.shaderStage.fragment.attachmentMaxNum = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
-	m_caps.shaderStage.fragment.dualSourceAttachmentMaxNum = 1;
+	m_caps.shaderStage.pixel.inputComponentMaxNum = D3D12_PS_INPUT_REGISTER_COUNT * D3D12_PS_INPUT_REGISTER_COMPONENTS;
+	m_caps.shaderStage.pixel.attachmentMaxNum = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
+	m_caps.shaderStage.pixel.dualSourceAttachmentMaxNum = 1;
 
 	m_caps.shaderStage.compute.workGroupMaxNum[0] = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
 	m_caps.shaderStage.compute.workGroupMaxNum[1] = D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION;
@@ -1518,6 +1518,16 @@ void Device::FillCaps(const AdapterInfo& adapterInfo)
 
 	m_caps.tiers.conservativeRaster = (uint8_t)options.ConservativeRasterizationTier;
 	m_caps.tiers.sampleLocations = (uint8_t)options2.ProgrammableSamplePositionsTier;
+	m_caps.tiers.workGraphs = options21.WorkGraphsTier == D3D12_WORK_GRAPHS_TIER_1_0 ? 1 : 0;
+	switch (options21.ExecuteIndirectTier)
+	{
+	case D3D12_EXECUTE_INDIRECT_TIER_1_0:
+		m_caps.tiers.executeIndirect = 1;
+		break;
+	case D3D12_EXECUTE_INDIRECT_TIER_1_1:
+		m_caps.tiers.executeIndirect = 2;
+		break;
+	}
 
 	if (options.ResourceBindingTier == D3D12_RESOURCE_BINDING_TIER_3 && shaderModel.HighestShaderModel >= D3D_SHADER_MODEL_6_6)
 	{

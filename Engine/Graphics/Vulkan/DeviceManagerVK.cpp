@@ -307,6 +307,8 @@ void DeviceManager::CreateDeviceResources()
 	// Create logical device
 	CreateDevice();
 
+	m_device->GetDeviceCaps().LogCaps();
+
 	// Create queues
 	CreateQueue(QueueType::Graphics);
 	CreateQueue(QueueType::Compute);
@@ -1073,15 +1075,15 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.shaderStage.vertex.streamMaxNum = limits.maxVertexInputBindings;
 		m_caps.shaderStage.vertex.outputComponentMaxNum = limits.maxVertexOutputComponents;
 
-		m_caps.shaderStage.tesselationControl.generationMaxLevel = (float)limits.maxTessellationGenerationLevel;
-		m_caps.shaderStage.tesselationControl.patchPointMaxNum = limits.maxTessellationPatchSize;
-		m_caps.shaderStage.tesselationControl.perVertexInputComponentMaxNum = limits.maxTessellationControlPerVertexInputComponents;
-		m_caps.shaderStage.tesselationControl.perVertexOutputComponentMaxNum = limits.maxTessellationControlPerVertexOutputComponents;
-		m_caps.shaderStage.tesselationControl.perPatchOutputComponentMaxNum = limits.maxTessellationControlPerPatchOutputComponents;
-		m_caps.shaderStage.tesselationControl.totalOutputComponentMaxNum = limits.maxTessellationControlTotalOutputComponents;
+		m_caps.shaderStage.hull.generationMaxLevel = (float)limits.maxTessellationGenerationLevel;
+		m_caps.shaderStage.hull.patchPointMaxNum = limits.maxTessellationPatchSize;
+		m_caps.shaderStage.hull.perVertexInputComponentMaxNum = limits.maxTessellationControlPerVertexInputComponents;
+		m_caps.shaderStage.hull.perVertexOutputComponentMaxNum = limits.maxTessellationControlPerVertexOutputComponents;
+		m_caps.shaderStage.hull.perPatchOutputComponentMaxNum = limits.maxTessellationControlPerPatchOutputComponents;
+		m_caps.shaderStage.hull.totalOutputComponentMaxNum = limits.maxTessellationControlTotalOutputComponents;
 
-		m_caps.shaderStage.tesselationEvaluation.inputComponentMaxNum = limits.maxTessellationEvaluationInputComponents;
-		m_caps.shaderStage.tesselationEvaluation.outputComponentMaxNum = limits.maxTessellationEvaluationOutputComponents;
+		m_caps.shaderStage.domain.inputComponentMaxNum = limits.maxTessellationEvaluationInputComponents;
+		m_caps.shaderStage.domain.outputComponentMaxNum = limits.maxTessellationEvaluationOutputComponents;
 
 		m_caps.shaderStage.geometry.invocationMaxNum = limits.maxGeometryShaderInvocations;
 		m_caps.shaderStage.geometry.inputComponentMaxNum = limits.maxGeometryInputComponents;
@@ -1089,9 +1091,9 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.shaderStage.geometry.outputVertexMaxNum = limits.maxGeometryOutputVertices;
 		m_caps.shaderStage.geometry.totalOutputComponentMaxNum = limits.maxGeometryTotalOutputComponents;
 
-		m_caps.shaderStage.fragment.inputComponentMaxNum = limits.maxFragmentInputComponents;
-		m_caps.shaderStage.fragment.attachmentMaxNum = limits.maxFragmentOutputAttachments;
-		m_caps.shaderStage.fragment.dualSourceAttachmentMaxNum = limits.maxFragmentDualSrcAttachments;
+		m_caps.shaderStage.pixel.inputComponentMaxNum = limits.maxFragmentInputComponents;
+		m_caps.shaderStage.pixel.attachmentMaxNum = limits.maxFragmentOutputAttachments;
+		m_caps.shaderStage.pixel.dualSourceAttachmentMaxNum = limits.maxFragmentDualSrcAttachments;
 
 		m_caps.shaderStage.compute.workGroupMaxNum[0] = limits.maxComputeWorkGroupCount[0];
 		m_caps.shaderStage.compute.workGroupMaxNum[1] = limits.maxComputeWorkGroupCount[1];

@@ -27,8 +27,8 @@ struct DeviceCaps
 	struct
 	{
 		uint32_t maxNum;
-		uint16_t boundsMin;
-		uint16_t boundsMax;
+		int16_t boundsMin;
+		int16_t boundsMax;
 	} viewport;
 
 	// Dimensions
@@ -143,14 +143,14 @@ struct DeviceCaps
 			uint32_t perVertexOutputComponentMaxNum;
 			uint32_t perPatchOutputComponentMaxNum;
 			uint32_t totalOutputComponentMaxNum;
-		} tesselationControl;
+		} hull;
 
 		// Tessellation evaluation
 		struct 
 		{
 			uint32_t inputComponentMaxNum;
 			uint32_t outputComponentMaxNum;
-		} tesselationEvaluation;
+		} domain;
 
 		// Geometry
 		struct 
@@ -168,7 +168,7 @@ struct DeviceCaps
 			uint32_t inputComponentMaxNum;
 			uint32_t attachmentMaxNum;
 			uint32_t dualSourceAttachmentMaxNum;
-		} fragment;
+		} pixel;
 
 		// Compute
 		//  - a "dispatch" consists of "work groups" (aka "thread groups")
@@ -285,6 +285,14 @@ struct DeviceCaps
 		// https://learn.microsoft.com/en-us/windows/win32/api/d3d12/ne-d3d12-d3d12_resource_heap_tier
 		// 1 - a "Memory" can support resources from all 3 categories: buffers, attachments, all other textures
 		uint8_t memory;
+
+		// 1 - Work graphs tier 1.0 supported
+		uint8_t workGraphs;
+
+		// 1 - Execute indirect tier 1.0 supported
+		// 2 - Execute indirect tier 1.1 supported
+		uint8_t executeIndirect;
+
 	} tiers;
 
 	// Features
@@ -361,7 +369,7 @@ struct DeviceCaps
 		uint32_t waveQuad : 1; // QuadReadLaneAt, QuadReadAcrossX, QuadReadAcrossY, QuadReadAcrossDiagonal
 	} shaderFeatures;
 
-	void LogCaps();
+	void LogCaps() const;
 };
 
 } // namespace Luna

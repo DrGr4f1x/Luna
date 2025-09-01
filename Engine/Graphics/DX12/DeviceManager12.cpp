@@ -832,6 +832,7 @@ void DeviceManager::CreateDevice()
 	m_device = std::make_unique<Device>(m_dxDevice.get(), m_d3d12maAllocator.get());
 
 	m_device->FillCaps(adapterInfos[chosenAdapterIdx]);
+	m_device->GetDeviceCaps().LogCaps();
 
 	m_textureManager = std::make_unique<TextureManager>(m_device.get());
 
