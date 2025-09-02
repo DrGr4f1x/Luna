@@ -180,21 +180,6 @@ void FillGraphicsPipelineDesc(GraphicsPipelineContext& context, const GraphicsPi
 		context.stateDesc.Flags |= D3D12_PIPELINE_STATE_FLAG_DYNAMIC_DEPTH_BIAS;
 	}
 
-	// Depth-stencil state
-	const auto& depthStencilState = desc.depthStencilState;
-	context.stateDesc.DepthStencilState.DepthEnable = depthStencilState.depthEnable ? TRUE : FALSE;
-	context.stateDesc.DepthStencilState.DepthWriteMask = DepthWriteToDX12(depthStencilState.depthWriteMask);
-	context.stateDesc.DepthStencilState.DepthFunc = ComparisonFuncToDX12(depthStencilState.depthFunc);
-	context.stateDesc.DepthStencilState.StencilEnable = depthStencilState.stencilEnable ? TRUE : FALSE;
-	context.stateDesc.DepthStencilState.FrontFace.StencilFailOp = StencilOpToDX12(depthStencilState.frontFace.stencilFailOp);
-	context.stateDesc.DepthStencilState.FrontFace.StencilDepthFailOp = StencilOpToDX12(depthStencilState.frontFace.stencilDepthFailOp);
-	context.stateDesc.DepthStencilState.FrontFace.StencilPassOp = StencilOpToDX12(depthStencilState.frontFace.stencilPassOp);
-	context.stateDesc.DepthStencilState.FrontFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.frontFace.stencilFunc);
-	context.stateDesc.DepthStencilState.BackFace.StencilFailOp = StencilOpToDX12(depthStencilState.backFace.stencilFailOp);
-	context.stateDesc.DepthStencilState.BackFace.StencilDepthFailOp = StencilOpToDX12(depthStencilState.backFace.stencilDepthFailOp);
-	context.stateDesc.DepthStencilState.BackFace.StencilPassOp = StencilOpToDX12(depthStencilState.backFace.stencilPassOp);
-	context.stateDesc.DepthStencilState.BackFace.StencilFunc = ComparisonFuncToDX12(depthStencilState.backFace.stencilFunc);
-
 	// Primitive topology & primitive restart
 	context.stateDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(desc.topology);
 	context.stateDesc.IBStripCutValue = IndexBufferStripCutValueToDX12(desc.indexBufferStripCut);
@@ -335,6 +320,122 @@ void FillGraphicsPipelineStateStream4(CD3DX12_PIPELINE_STATE_STREAM4& stateStrea
 
 #if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 610)
 void FillGraphicsPipelineStateStream5(CD3DX12_PIPELINE_STATE_STREAM5& stateStream, const D3D12_GRAPHICS_PIPELINE_STATE_DESC& stateDesc, const GraphicsPipelineDesc& desc)
+{
+	stateStream = CD3DX12_PIPELINE_STATE_STREAM5(stateDesc);
+	FillRasterizerDesc2(stateStream.RasterizerState, desc.rasterizerState);
+	FillDepthStencilDesc2(stateStream.DepthStencilState, desc.depthStencilState);
+	// TODO: Support view instancing
+}
+#endif
+
+
+void FillMeshletPipelineDesc(MeshletPipelineContext& context, const MeshletPipelineDesc& desc)
+{
+	context.stateDesc = D3DX12_MESH_SHADER_PIPELINE_STATE_DESC{};
+
+	context.stateDesc.NodeMask = 1;
+	context.stateDesc.SampleMask = desc.sampleMask;
+
+	FillBlendDesc(context.stateDesc.BlendState, desc.blendState);
+	FillRasterizerDesc(context.stateDesc.RasterizerState, desc.rasterizerState);
+	FillDepthStencilDesc(context.stateDesc.DepthStencilState, desc.depthStencilState);
+
+	if (IsDepthBiasEnabled(context.stateDesc.RasterizerState))
+	{
+		context.stateDesc.Flags |= D3D12_PIPELINE_STATE_FLAG_DYNAMIC_DEPTH_BIAS;
+	}
+
+	// Primitive topology & primitive restart
+	context.stateDesc.PrimitiveTopologyType = PrimitiveTopologyToPrimitiveTopologyTypeDX12(desc.topology);
+
+	// Render target formats
+	const uint32_t numRtvs = (uint32_t)desc.rtvFormats.size();
+	const uint32_t maxRenderTargets = 8;
+	for (uint32_t i = 0; i < numRtvs; ++i)
+	{
+		context.stateDesc.RTVFormats[i] = FormatToDxgi(desc.rtvFormats[i]).rtvFormat;
+	}
+	for (uint32_t i = numRtvs; i < maxRenderTargets; ++i)
+	{
+		context.stateDesc.RTVFormats[i] = DXGI_FORMAT_UNKNOWN;
+	}
+	context.stateDesc.NumRenderTargets = numRtvs;
+	context.stateDesc.DSVFormat = GetDSVFormat(FormatToDxgi(desc.dsvFormat).resourceFormat);
+	context.stateDesc.SampleDesc.Count = desc.msaaCount;
+	context.stateDesc.SampleDesc.Quality = 0; // TODO Rework this to enable quality levels in DX12
+
+	// Shaders
+	if (desc.amplificationShader)
+	{
+		Shader* amplificationShader = LoadShader(ShaderType::Amplification, desc.amplificationShader);
+		assert(amplificationShader);
+		context.stateDesc.AS = CD3DX12_SHADER_BYTECODE(amplificationShader->GetByteCode(), amplificationShader->GetByteCodeSize());
+	}
+
+	if (desc.meshShader)
+	{
+		Shader* meshShader = LoadShader(ShaderType::Mesh, desc.meshShader);
+		assert(meshShader);
+		context.stateDesc.MS = CD3DX12_SHADER_BYTECODE(meshShader->GetByteCode(), meshShader->GetByteCodeSize());
+	}
+
+	if (desc.pixelShader)
+	{
+		Shader* pixelShader = LoadShader(ShaderType::Pixel, desc.pixelShader);
+		assert(pixelShader);
+		context.stateDesc.PS = CD3DX12_SHADER_BYTECODE(pixelShader->GetByteCode(), pixelShader->GetByteCodeSize());
+	}
+
+	// Get the root signature from the desc
+	auto rootSignature = (RootSignature*)desc.rootSignature.get();
+	if (rootSignature)
+	{
+		context.stateDesc.pRootSignature = rootSignature->GetRootSignature();
+	}
+	assert(context.stateDesc.pRootSignature != nullptr);
+
+	context.hashCode = Utility::HashState(&context.stateDesc);
+}
+
+
+void FillMeshletPipelineStateStream1(CD3DX12_PIPELINE_STATE_STREAM1& stateStream, const D3DX12_MESH_SHADER_PIPELINE_STATE_DESC& stateDesc, const MeshletPipelineDesc& desc)
+{
+	stateStream = CD3DX12_PIPELINE_STATE_STREAM1(stateDesc);
+	FillDepthStencilDesc1(stateStream.DepthStencilState, desc.depthStencilState);
+}
+
+
+void FillMeshletPipelineStateStream2(CD3DX12_PIPELINE_STATE_STREAM2& stateStream, const D3DX12_MESH_SHADER_PIPELINE_STATE_DESC& stateDesc, const MeshletPipelineDesc& desc)
+{
+	stateStream = CD3DX12_PIPELINE_STATE_STREAM2(stateDesc);
+	FillDepthStencilDesc1(stateStream.DepthStencilState, desc.depthStencilState);
+	// TODO: Support view instancing
+}
+
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+void FillMeshletPipelineStateStream3(CD3DX12_PIPELINE_STATE_STREAM3& stateStream, const D3DX12_MESH_SHADER_PIPELINE_STATE_DESC& stateDesc, const MeshletPipelineDesc& desc)
+{
+	stateStream = CD3DX12_PIPELINE_STATE_STREAM3(stateDesc);
+	FillDepthStencilDesc2(stateStream.DepthStencilState, desc.depthStencilState);
+	// TODO: Support view instancing
+}
+#endif
+
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 608)
+void FillMeshletPipelineStateStream4(CD3DX12_PIPELINE_STATE_STREAM4& stateStream, const D3DX12_MESH_SHADER_PIPELINE_STATE_DESC& stateDesc, const MeshletPipelineDesc& desc)
+{
+	stateStream = CD3DX12_PIPELINE_STATE_STREAM4(stateDesc);
+	FillRasterizerDesc1(stateStream.RasterizerState, desc.rasterizerState);
+	FillDepthStencilDesc2(stateStream.DepthStencilState, desc.depthStencilState);
+	// TODO: Support view instancing
+}
+#endif
+
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 610)
+void FillMeshletPipelineStateStream5(CD3DX12_PIPELINE_STATE_STREAM5& stateStream, const D3DX12_MESH_SHADER_PIPELINE_STATE_DESC& stateDesc, const MeshletPipelineDesc& desc)
 {
 	stateStream = CD3DX12_PIPELINE_STATE_STREAM5(stateDesc);
 	FillRasterizerDesc2(stateStream.RasterizerState, desc.rasterizerState);

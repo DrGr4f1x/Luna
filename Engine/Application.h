@@ -121,6 +121,7 @@ public:
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc);
+	MeshletPipelinePtr CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc);
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc);
 	TexturePtr CreateTexture1D(const TextureDesc& textureDesc);
 	TexturePtr CreateTexture2D(const TextureDesc& textureDesc);

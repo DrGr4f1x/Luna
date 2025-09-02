@@ -391,6 +391,12 @@ ComputePipelinePtr Application::CreateComputePipeline(const ComputePipelineDesc&
 }
 
 
+MeshletPipelinePtr Application::CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc)
+{
+	return m_deviceManager->GetDevice()->CreateMeshletPipeline(pipelineDesc);
+}
+
+
 QueryHeapPtr Application::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 {
 	return m_deviceManager->GetDevice()->CreateQueryHeap(queryHeapDesc);

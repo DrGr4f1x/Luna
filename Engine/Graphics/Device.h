@@ -47,6 +47,7 @@ public:
 
 	virtual GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
 	virtual ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) = 0;
+	virtual MeshletPipelinePtr CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc) = 0;
 
 	virtual QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) = 0;
 

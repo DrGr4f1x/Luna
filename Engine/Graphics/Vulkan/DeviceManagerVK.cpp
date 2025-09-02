@@ -12,8 +12,6 @@
 
 #include "DeviceManagerVK.h"
 
-#include "Graphics\GraphicsFeatures.h"
-
 #include "CommandContextVK.h"
 #include "DescriptorAllocatorVK.h"
 #include "DeviceVK.h"

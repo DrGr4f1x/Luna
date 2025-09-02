@@ -32,6 +32,12 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
+	void InitRootSignature();
+	void InitPipeline();
+	void InitDescriptorSet();
+
+	void UpdateConstantBuffer();
+
 protected:
 	struct Constants
 	{
@@ -44,6 +50,10 @@ protected:
 	Luna::GpuBufferPtr m_constantBuffer;
 
 	Luna::RootSignaturePtr m_rootSignature;
+	Luna::MeshletPipelinePtr m_meshletPipeline;
+	bool m_pipelineCreated{ false };
+
+	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };

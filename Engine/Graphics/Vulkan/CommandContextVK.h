@@ -113,6 +113,7 @@ public:
 	void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) override;
 	void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) override;
 	void SetComputePipeline(const IComputePipeline* computePipeline) override;
+	void SetMeshletPipeline(const IMeshletPipeline* meshletPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -155,6 +156,8 @@ public:
 		int32_t baseVertexLocation, uint32_t startInstanceLocation) override;
 	void DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 	void DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
+
+	void DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
 	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 

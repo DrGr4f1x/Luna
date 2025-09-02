@@ -604,6 +604,24 @@ void CommandContext12::SetComputePipeline(const IComputePipeline* computePipelin
 }
 
 
+void CommandContext12::SetMeshletPipeline(const IMeshletPipeline* meshletPipeline)
+{
+	// TODO: Try this with GetPlatformObject()
+	const MeshletPipeline* meshletPipeline12 = (const MeshletPipeline*)meshletPipeline;
+	assert(meshletPipeline12 != nullptr);
+
+	m_computePipelineState = nullptr;
+
+	ID3D12PipelineState* meshletPSO = meshletPipeline12->GetPipelineState();
+
+	if (m_graphicsPipelineState != meshletPSO)
+	{
+		m_commandList->SetPipelineState(meshletPSO);
+		m_graphicsPipelineState = meshletPSO;
+	}
+}
+
+
 void CommandContext12::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 { 
 	D3D12_VIEWPORT viewport{
@@ -1044,6 +1062,13 @@ void CommandContext12::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uin
 	m_dynamicViewDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
 	m_dynamicSamplerDescriptorHeap.CommitGraphicsRootDescriptorTables(m_commandList);
 	m_commandList->ExecuteIndirect(m_drawIndexedIndirectSignature, 1, argumentBuffer12->GetResource(), argumentBufferOffset, nullptr, 0);
+}
+
+
+void CommandContext12::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	assert(m_commandList6 != nullptr);
+	m_commandList6->DispatchMesh(groupCountX, groupCountY, groupCountZ);
 }
 
 

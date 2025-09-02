@@ -53,6 +53,7 @@ public:
 
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) override;
+	MeshletPipelinePtr CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc) override;
 
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
 

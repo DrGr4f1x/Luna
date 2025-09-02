@@ -50,6 +50,7 @@ public:
 
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) override;
+	MeshletPipelinePtr CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc) override;
 
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
 
@@ -83,6 +84,9 @@ protected:
 	template <class TPipelineStream>
 	GraphicsPipelinePtr CreateGraphicsPipelineStream(TPipelineStream& pipelineStream, size_t hashCode, const GraphicsPipelineDesc& pipelineDesc);
 
+	template <class TPipelineStream>
+	MeshletPipelinePtr CreateMeshletPipelineStream(TPipelineStream& pipelineStream, size_t hashCode, const MeshletPipelineDesc& pipelineDesc);
+
 protected:
 	wil::com_ptr<ID3D12Device> m_device;
 	wil::com_ptr<ID3D12Device2> m_device2;
@@ -108,6 +112,10 @@ protected:
 	// Compute pipeline state cache
 	std::mutex m_computePipelineStateMutex;
 	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_computePipelineStateHashMap;
+
+	// Meshlet pipeline state cache
+	std::mutex m_meshletPipelineStateMutex;
+	std::map<size_t, wil::com_ptr<ID3D12PipelineState>> m_meshletPipelineStateHashMap;
 
 	// Sampler state cache
 	std::mutex m_samplerMutex;

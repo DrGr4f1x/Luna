@@ -879,6 +879,49 @@ Luna::ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc
 }
 
 
+MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc)
+{
+	MeshletPipelineContext context{};
+	FillMeshletPipelineDesc(context, pipelineDesc);
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 610)
+	if (m_caps.features.rasterizerDesc2)
+	{
+		CD3DX12_PIPELINE_STATE_STREAM5 pipelineStream5{};
+		FillMeshletPipelineStateStream5(pipelineStream5, context.stateDesc, pipelineDesc);
+		return CreateMeshletPipelineStream<CD3DX12_PIPELINE_STATE_STREAM5>(pipelineStream5, context.hashCode, pipelineDesc);
+	}
+	else
+	{
+		CD3DX12_PIPELINE_STATE_STREAM4 pipelineStream4{};
+		FillMeshletPipelineStateStream4(pipelineStream4, context.stateDesc, pipelineDesc);
+		return CreateMeshletPipelineStream<CD3DX12_PIPELINE_STATE_STREAM4>(pipelineStream4, context.hashCode, pipelineDesc);
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 608)
+	{
+		CD3DX12_PIPELINE_STATE_STREAM4 pipelineStream4{};
+		FillMeshletPipelineStateStream4(pipelineStream4, context.stateDesc, pipelineDesc);
+		return CreateMeshletPipelineStream<CD3DX12_PIPELINE_STATE_STREAM4>(pipelineStream4, context.hashCode, pipelineDesc);
+	}
+#endif
+
+#if defined(D3D12_SDK_VERSION) && (D3D12_SDK_VERSION >= 606)
+	{
+		CD3DX12_PIPELINE_STATE_STREAM3 pipelineStream3{};
+		FillMeshletPipelineStateStream3(pipelineStream3, context.stateDesc, pipelineDesc);
+		return CreateMeshletPipelineStream<CD3DX12_PIPELINE_STATE_STREAM3>(pipelineStream3, context.hashCode, pipelineDesc);
+	}
+#endif
+
+
+	CD3DX12_PIPELINE_STATE_STREAM2 pipelineStream2{};
+	FillMeshletPipelineStateStream2(pipelineStream2, context.stateDesc, pipelineDesc);
+	return CreateMeshletPipelineStream<CD3DX12_PIPELINE_STATE_STREAM2>(pipelineStream2, context.hashCode, pipelineDesc);
+}
+
+
 QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 {
 	D3D12_QUERY_HEAP_DESC d3d12Desc{
@@ -1339,6 +1382,66 @@ GraphicsPipelinePtr Device::CreateGraphicsPipelineStream(TPipelineStream& pipeli
 	graphicsPipeline->m_pipelineState = pPipelineState;
 
 	return graphicsPipeline;
+}
+
+
+template <class TPipelineStream>
+MeshletPipelinePtr Device::CreateMeshletPipelineStream(TPipelineStream& pipelineStream, size_t hashCode, const MeshletPipelineDesc& pipelineDesc)
+{
+	// Find or create meshlet pipeline state object
+	ID3D12PipelineState** pipelineStateRef = nullptr;
+	bool firstCompile = false;
+	{
+		lock_guard<mutex> lock(m_meshletPipelineStateMutex);
+
+		auto iter = m_meshletPipelineStateHashMap.find(hashCode);
+
+		// Reserve space so the next inquiry will find that someone got here first.
+		if (iter == m_meshletPipelineStateHashMap.end())
+		{
+			pipelineStateRef = m_meshletPipelineStateHashMap[hashCode].addressof();
+			firstCompile = true;
+		}
+		else
+		{
+			pipelineStateRef = iter->second.addressof();
+		}
+	}
+
+	ID3D12PipelineState* pPipelineState = nullptr;
+
+	if (firstCompile)
+	{
+		wil::com_ptr<ID3DBlob> pOutBlob, pErrorBlob;
+
+		D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {};
+		pipelineStateStreamDesc.pPipelineStateSubobjectStream = &pipelineStream;
+		pipelineStateStreamDesc.SizeInBytes = sizeof(pipelineStream);
+
+		HRESULT res = m_device2->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pPipelineState));
+		ThrowIfFailed(res);
+
+		SetDebugName(pPipelineState, pipelineDesc.name);
+
+		m_meshletPipelineStateHashMap[hashCode].attach(pPipelineState);
+		assert(*pipelineStateRef == pPipelineState);
+	}
+	else
+	{
+		while (pipelineStateRef == nullptr)
+		{
+			this_thread::yield();
+		}
+		pPipelineState = *pipelineStateRef;
+	}
+
+	auto meshletPipeline = std::make_shared<MeshletPipeline>();
+
+	meshletPipeline->m_device = this;
+	meshletPipeline->m_desc = pipelineDesc;
+	meshletPipeline->m_pipelineState = pPipelineState;
+
+	return meshletPipeline;
 }
 
 

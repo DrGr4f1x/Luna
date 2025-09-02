@@ -8,16 +8,16 @@
 // Author:  David Elder
 //
 
-struct DummyPayLoad
+struct DummyPayload
 {
     uint dummyData;
 };
 
 // We don't use pay loads in this sample, but the fn call requires one
-groupshared DummyPayLoad dummyPayLoad;
+groupshared DummyPayload dummyPayload;
 
 [numthreads(1, 1, 1)]
 void main()
 {
-    DispatchMesh(3, 1, 1, dummyPayLoad);
+    DispatchMesh(3, 1, 1, dummyPayload);
 }

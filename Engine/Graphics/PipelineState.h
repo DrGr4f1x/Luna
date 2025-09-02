@@ -205,6 +205,45 @@ struct ComputePipelineDesc
 };
 
 
+struct MeshletPipelineDesc
+{
+	std::string name;
+
+	BlendStateDesc blendState;
+	DepthStencilStateDesc depthStencilState;
+	RasterizerStateDesc rasterizerState;
+
+	uint32_t sampleMask{ 0xFFFFFFFF };
+	std::vector<Format> rtvFormats;
+	Format dsvFormat;
+	uint32_t msaaCount{ 1 };
+	bool sampleRateShading{ false };
+
+	PrimitiveTopology topology;
+
+	ShaderNameAndEntry amplificationShader;
+	ShaderNameAndEntry meshShader;
+	ShaderNameAndEntry pixelShader;
+
+	RootSignaturePtr rootSignature;
+
+	MeshletPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
+	MeshletPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
+	MeshletPipelineDesc& SetDepthStencilState(const DepthStencilStateDesc& value) noexcept { depthStencilState = value; return *this; }
+	MeshletPipelineDesc& SetRasterizerState(const RasterizerStateDesc& value) noexcept { rasterizerState = value; return *this; }
+	constexpr MeshletPipelineDesc& SetSampleMask(uint32_t value) noexcept { sampleMask = value; return *this; }
+	MeshletPipelineDesc& SetRtvFormats(const std::vector<Format>& value) { rtvFormats = value; return *this; }
+	constexpr MeshletPipelineDesc& SetDsvFormat(Format value) noexcept { dsvFormat = value; return *this; }
+	constexpr MeshletPipelineDesc& SetMsaaCount(uint32_t value) noexcept { msaaCount = value; return *this; }
+	constexpr MeshletPipelineDesc& SetSampleRateShading(bool value) noexcept { sampleRateShading = value; return *this; }
+	constexpr MeshletPipelineDesc& SetTopology(PrimitiveTopology value) noexcept { topology = value; return *this; }
+	MeshletPipelineDesc& SetAmplificationShader(const std::string& value, const std::string& entry = "main") { amplificationShader.shaderFile = value; amplificationShader.entry = entry; return *this; }
+	MeshletPipelineDesc& SetMeshShader(const std::string& value, const std::string& entry = "main") { meshShader.shaderFile = value; meshShader.entry = entry; return *this; }
+	MeshletPipelineDesc& SetPixelShader(const std::string& value, const std::string& entry = "main") { pixelShader.shaderFile = value; pixelShader.entry = entry; return *this; }
+	MeshletPipelineDesc& SetRootSignature(RootSignaturePtr value) { rootSignature = value; return *this; }
+};
+
+
 class IGraphicsPipeline
 {
 public:
@@ -235,5 +274,22 @@ protected:
 };
 
 using ComputePipelinePtr = std::shared_ptr<IComputePipeline>;
+
+
+class IMeshletPipeline
+{
+public:
+	virtual ~IMeshletPipeline() = default;
+
+	IRootSignature* GetRootSignature() const { return m_rootSignature.get(); }
+
+	PrimitiveTopology GetPrimitiveTopology() const { return m_desc.topology; }
+
+protected:
+	RootSignaturePtr m_rootSignature;
+	MeshletPipelineDesc m_desc{};
+};
+
+using MeshletPipelinePtr = std::shared_ptr<IMeshletPipeline>;
 
 } // namespace

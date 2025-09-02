@@ -926,6 +926,24 @@ void CommandContextVK::SetComputePipeline(const IComputePipeline* computePipelin
 }
 
 
+void CommandContextVK::SetMeshletPipeline(const IMeshletPipeline* meshletPipeline)
+{
+	m_computePipelineLayout = VK_NULL_HANDLE;
+
+	// TODO: Try this with GetPlatformObject()
+	const MeshletPipeline* meshletPipelineVK = (const MeshletPipeline*)meshletPipeline;
+	assert(meshletPipelineVK != nullptr);
+
+	VkPipeline vkPipeline = meshletPipelineVK->GetPipelineState();
+
+	if (vkPipeline != m_graphicsPipeline)
+	{
+		m_graphicsPipeline = vkPipeline;
+		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
+	}
+}
+
+
 void CommandContextVK::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 {
 	VkViewport viewport{
@@ -1396,6 +1414,12 @@ void CommandContextVK::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uin
 		argumentBufferOffset,
 		1,
 		(uint32_t)argumentBuffer->GetElementSize());
+}
+
+
+void CommandContextVK::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	vkCmdDrawMeshTasksEXT(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
 }
 
 

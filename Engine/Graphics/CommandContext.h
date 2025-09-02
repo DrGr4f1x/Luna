@@ -26,6 +26,7 @@ class IGpuBuffer;
 class GraphicsContext;
 class IComputePipeline;
 class IGraphicsPipeline;
+class IMeshletPipeline;
 class IQueryHeap;
 class ResourceSet;
 class IRootSignature;
@@ -37,6 +38,7 @@ using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 using DescriptorSetPtr = std::shared_ptr<IDescriptorSet>;
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 using GraphicsPipelinePtr = std::shared_ptr<IGraphicsPipeline>;
+using MeshletPipelinePtr = std::shared_ptr<IMeshletPipeline>;
 using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 
@@ -99,6 +101,7 @@ public:
 	virtual void SetRootSignature(CommandListType type, const IRootSignature* rootSignature) = 0;
 	virtual void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) = 0;
 	virtual void SetComputePipeline(const IComputePipeline* computePipeline) = 0;
+	virtual void SetMeshletPipeline(const IMeshletPipeline* meshletPipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -143,6 +146,8 @@ public:
 	virtual void DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) = 0;
 	virtual void DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) = 0;
 	
+	virtual void DispatchMesh(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
+
 	virtual void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) = 0;
 
 	// Compute context
@@ -245,6 +250,7 @@ public:
 
 	void SetRootSignature(const RootSignaturePtr& rootSignature);
 	void SetGraphicsPipeline(const GraphicsPipelinePtr& graphicsPipeline);
+	void SetMeshletPipeline(const MeshletPipelinePtr& meshletPipeline);
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f);
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
@@ -292,6 +298,8 @@ public:
 	void DrawIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset = 0);
 	void DrawIndexedIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset = 0);
 	
+	void DispatchMesh(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
+
 	void Resolve(const ColorBufferPtr& srcBuffer, const ColorBufferPtr& destBuffer, Format format);
 };
 
@@ -575,6 +583,12 @@ inline void GraphicsContext::SetGraphicsPipeline(const GraphicsPipelinePtr& grap
 }
 
 
+inline void GraphicsContext::SetMeshletPipeline(const MeshletPipelinePtr& meshletPipeline)
+{
+	m_contextImpl->SetMeshletPipeline(meshletPipeline.get());
+}
+
+
 inline void GraphicsContext::SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth)
 {
 	m_contextImpl->SetViewport(x, y, w, h, minDepth, maxDepth);
@@ -797,6 +811,12 @@ inline void GraphicsContext::DrawIndirect(const GpuBufferPtr& argumentBuffer, ui
 inline void GraphicsContext::DrawIndexedIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset)
 {
 	m_contextImpl->DrawIndexedIndirect(argumentBuffer.get(), argumentBufferOffset);
+}
+
+
+inline void GraphicsContext::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+	m_contextImpl->DispatchMesh(groupCountX, groupCountY, groupCountZ);
 }
 
 

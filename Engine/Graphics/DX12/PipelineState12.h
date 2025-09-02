@@ -37,7 +37,21 @@ class ComputePipeline : public IComputePipeline
 {
 	friend class Device;
 
-public:ID3D12PipelineState* GetPipelineState() const { return m_pipelineState.get(); }
+public:
+	ID3D12PipelineState* GetPipelineState() const { return m_pipelineState.get(); }
+
+protected:
+	Device* m_device{ nullptr };
+	wil::com_ptr<ID3D12PipelineState> m_pipelineState;
+};
+
+
+class MeshletPipeline : public IMeshletPipeline
+{
+	friend class Device;
+
+public:
+	ID3D12PipelineState* GetPipelineState() const { return m_pipelineState.get(); }
 
 protected:
 	Device* m_device{ nullptr };

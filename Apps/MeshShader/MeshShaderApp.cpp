@@ -14,6 +14,8 @@
 
 #include "Graphics\CommandContext.h"
 #include "Graphics\CommonStates.h"
+#include "Graphics\Device.h"
+#include "Graphics\DeviceCaps.h"
 
 using namespace Luna;
 using namespace Math;
@@ -41,7 +43,10 @@ void MeshShaderApp::Configure()
 
 void MeshShaderApp::Startup()
 {
-	// Application initialization, after device creation
+	if (!GetDevice()->GetDeviceCaps().features.meshShader)
+	{
+		Utility::ExitFatal("Mesh shader support is required for this sample.", "Missing feature");
+	}
 }
 
 
@@ -53,25 +58,121 @@ void MeshShaderApp::Shutdown()
 
 void MeshShaderApp::Update()
 {
-	// Application update tick
-	// Set m_bIsRunning to false if your application wants to exit
+	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
+
+	UpdateConstantBuffer();
 }
 
 
 void MeshShaderApp::Render()
 {
-	// Application main render loop
-	Application::Render();
+	auto& context = GraphicsContext::Begin("Scene");
+
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
+	context.ClearColor(GetColorBuffer());
+	context.ClearDepth(GetDepthBuffer());
+
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
+
+	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+
+	context.SetRootSignature(m_rootSignature);
+	context.SetMeshletPipeline(m_meshletPipeline);
+
+	context.SetDescriptors(0, m_cbvDescriptorSet);
+
+	context.DispatchMesh(1, 1, 1);
+
+	RenderUI(context);
+
+	context.EndRendering();
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+
+	context.Finish();
 }
 
 
 void MeshShaderApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.SetPosition(Vector3(-2.0f, 0.0f, 4.0f));
+
+	m_controller.SetSpeedScale(0.025f);
+	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.RefreshFromCamera();
+	m_controller.SetOrbitTarget(Vector3(0.0f, 0.0f, 1.0f), Length(m_camera.GetPosition()), 0.25f);
+
+	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
+
+	InitRootSignature();
+	InitDescriptorSet();
 }
 
 
 void MeshShaderApp::CreateWindowSizeDependentResources()
 {
-	// Create any resources that depend on window size.  May be called when the window size changes.
+	if (!m_pipelineCreated)
+	{
+		InitPipeline();
+		m_pipelineCreated = true;
+	}
+
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+}
+
+
+void MeshShaderApp::InitRootSignature()
+{
+	RootSignatureDesc desc{
+		.name				= "Root Signature",
+		.rootParameters		= {
+			Table({ ConstantBuffer }, ShaderStage::Mesh)
+		}
+	};
+	m_rootSignature = CreateRootSignature(desc);
+}
+
+
+void MeshShaderApp::InitPipeline()
+{
+	MeshletPipelineDesc desc{
+		.name					= "Meshlet Pipeline",
+		.blendState				= CommonStates::BlendDisable(),
+		.depthStencilState		= CommonStates::DepthStateReadWriteReversed(),
+		.rasterizerState		= CommonStates::RasterizerTwoSided(),
+		.rtvFormats				= { GetColorFormat()},
+		.dsvFormat				= GetDepthFormat(),
+		.topology				= PrimitiveTopology::TriangleList,
+		.amplificationShader	= { .shaderFile = "MeshShaderAS" },
+		.meshShader				= { .shaderFile = "MeshShaderMS" },
+		.pixelShader			= { .shaderFile = "MeshShaderPS" },
+		.rootSignature			= m_rootSignature
+	};
+	m_meshletPipeline = CreateMeshletPipeline(desc);
+}
+
+
+void MeshShaderApp::InitDescriptorSet()
+{
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer->GetCbvDescriptor());
+}
+
+
+void MeshShaderApp::UpdateConstantBuffer()
+{
+	m_constants.projectionMatrix = m_camera.GetProjectionMatrix();
+	m_constants.viewMatrix = m_camera.GetViewMatrix();
+	m_constants.modelMatrix = Matrix4{ kIdentity };
+
+	m_constantBuffer->Update(sizeof(Constants), &m_constants);
 }

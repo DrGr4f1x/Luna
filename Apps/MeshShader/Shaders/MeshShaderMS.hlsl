@@ -26,9 +26,9 @@ struct VertexOutput
 
 static const float4 positions[3] =
 {
-    float4(0.0, -1.0, 0.0, 1.0),
-	float4(-1.0, 1.0, 0.0, 1.0),
-	float4(1.0, 1.0, 0.0, 1.0)
+    float4(0.0, 1.0, 0.0, 1.0),
+	float4(-1.0, -1.0, 0.0, 1.0),
+	float4(1.0, -1.0, 0.0, 1.0)
 };
 
 static const float4 colors[3] =
@@ -38,9 +38,14 @@ static const float4 colors[3] =
 	float4(1.0, 0.0, 0.0, 1.0)
 };
 
+struct DummyPayload
+{
+    uint dummyData;
+};
+
 [outputtopology("triangle")]
 [numthreads(1, 1, 1)]
-void main(out indices uint3 triangles[1], out vertices VertexOutput vertices[3], uint3 DispatchThreadID : SV_DispatchThreadID)
+void main(in payload DummyPayload payload, out indices uint3 triangles[1], out vertices VertexOutput vertices[3], uint3 DispatchThreadID : SV_DispatchThreadID)
 {
     float4x4 mvp = mul(projection, mul(view, model));
 
