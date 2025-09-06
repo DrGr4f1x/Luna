@@ -1487,7 +1487,7 @@ namespace ShaderCompiler
                         commandArgs += " -fspv-target-env=vulkan" + Options.VulkanVersion;
 
                         if (Options.VulkanMemoryLayout is not null)
-                            commandArgs += " -fvk-use" + Options.VulkanMemoryLayout + "-layout";
+                            commandArgs += " -fvk-use-" + Options.VulkanMemoryLayout + "-layout";
 
                         if (Options.SpirvExt is not null)
                         {

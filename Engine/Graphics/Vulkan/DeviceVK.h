@@ -85,6 +85,12 @@ protected:
 		const RootParameter& rootParameter,
 		size_t& hashCode);
 
+	void CreateEmptyDescriptorSetLayout(
+		VkDescriptorSetLayout* setLayout,
+		std::vector<DescriptorBindingDesc>& bindingDescs,
+		const RootParameter& rootParameter,
+		size_t& hashCode);
+
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
 protected:

@@ -49,6 +49,9 @@ struct VertexElementDesc
 };
 
 
+constexpr uint32_t APPEND_ALIGNED_ELEMENT = 0xFFFFFFFF;
+
+
 enum class VertexComponent
 {
 	None			= 0,

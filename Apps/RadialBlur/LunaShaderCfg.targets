@@ -46,7 +46,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd
 setlocal
-$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config %(Fullpath) --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --vulkanVersion 1.2 --verbose --define VK=1 --include $(ProjectDir)../../Engine/Graphics/Shaders/Common
+$(ProjectDir)../../Tools/ShaderCompiler/bin/Release/net8.0/ShaderCompiler.exe --config %(Fullpath) --out $(ProjectDir)Data/Shaders/SPIRV --platform SPIRV --binary --shaderModel 6_5 --vulkanVersion 1.2 --verbose --define VK=1 --vulkanMemoryLayout dx --include $(ProjectDir)../../Engine/Graphics/Shaders/Common
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone

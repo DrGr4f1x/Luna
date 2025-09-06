@@ -21,6 +21,8 @@
 namespace Math
 {
 
+// TODO: Implement CreateMerged() et al from DirectXCollision.h
+
 class BoundingSphere
 {
 public:

@@ -28,7 +28,7 @@ Texture2D g_txDiffuse : register(t0);
 [[vk::binding(1, 1)]]
 Texture2D g_txMats[] : register(t1);
 
-[[vk::binding(0, 2)]]
+[[vk::binding(0, 3)]]
 SamplerState g_sampler : register(s0);
 
 

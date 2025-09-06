@@ -370,12 +370,14 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	std::unordered_map<uint32_t, std::vector<DescriptorBindingDesc>> layoutBindingMap;
 	uint32_t pushConstantOffset{ 0 };
 
+	descriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
+
 	size_t hashCode = Utility::g_hashStart;
 
 	uint32_t rootParamIndex = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
-		std::vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
+		//std::vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
 		std::vector<DescriptorBindingDesc> layoutBindingDescs;
 
 		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
@@ -391,6 +393,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			vkPushConstantRange.size = rootParameter.num32BitConstants * 4;
 			vkPushConstantRange.stageFlags = shaderStageFlags;
 			pushConstantOffset += rootParameter.num32BitConstants * 4;
+
+			CreateEmptyDescriptorSetLayout(&setLayout, layoutBindingDescs, rootParameter, hashCode);
 
 			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
 		}
@@ -408,7 +412,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			vkDescriptorSetLayouts.push_back(setLayout);
 
 			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), setLayout);
-			descriptorSetLayouts.push_back(descriptorSetLayout);
+			descriptorSetLayouts[rootParamIndex] = descriptorSetLayout;
 
 			layoutBindingMap[rootParamIndex] = layoutBindingDescs;
 		}
@@ -598,12 +602,21 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	if (numElements > 0)
 	{
 		vertexAttributes.resize(numElements);
+		uint32_t curOffset = 0;
 		for (uint32_t i = 0; i < numElements; ++i)
 		{
 			vertexAttributes[i].binding = vertexElements[i].inputSlot;
 			vertexAttributes[i].location = i;
 			vertexAttributes[i].format = FormatToVulkan(vertexElements[i].format);
-			vertexAttributes[i].offset = vertexElements[i].alignedByteOffset;
+			if (vertexElements[i].alignedByteOffset == APPEND_ALIGNED_ELEMENT)
+			{
+				vertexAttributes[i].offset = curOffset;
+			}
+			else
+			{
+				vertexAttributes[i].offset = vertexElements[i].alignedByteOffset;
+			}
+			curOffset += BlockSize(vertexElements[i].format);
 		}
 	}
 
@@ -1457,6 +1470,24 @@ void Device::CreateDescriptorSetLayout(
 		.pBindings		= bindings.data()
 	};
 	
+	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, setLayout);
+}
+
+
+void Device::CreateEmptyDescriptorSetLayout(
+	VkDescriptorSetLayout* setLayout,
+	std::vector<DescriptorBindingDesc>& bindingDescs,
+	const RootParameter& rootParameter,
+	size_t& hashCode)
+{
+	VkDescriptorSetLayoutCreateInfo info{
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.pNext			= nullptr,
+		.flags			= 0,
+		.bindingCount	= 0,
+		.pBindings		= nullptr
+	};
+
 	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, setLayout);
 }
 
