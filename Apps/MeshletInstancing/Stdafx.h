@@ -65,4 +65,4 @@
 #include "LogSystem.h"
 
 // App name
-static const std::string s_appName{ "TEMPLATE" };
+static const std::string s_appName{ "MeshletInstancing" };

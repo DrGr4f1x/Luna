@@ -171,29 +171,24 @@ struct RootParameter
 	DescriptorType GetDescriptorType(uint32_t slot)
 	{
 		// Search for the range containing slot, and return its descriptor type
-		uint32_t currentStartRegister = 0;
+		uint32_t currentSlot = 0;
 		for (const auto& range : table)
 		{
-			if (range.startRegister != APPEND_REGISTER)
-			{
-				currentStartRegister = range.startRegister;
-			}
-
-			if (slot >= currentStartRegister && slot < (currentStartRegister + range.numDescriptors))
+			if (slot >= currentSlot && slot < (currentSlot + range.numDescriptors))
 			{
 				return range.descriptorType;
 			}
 
-			currentStartRegister += range.numDescriptors;
+			currentSlot += range.numDescriptors;
 		}
 		return DescriptorType::None;
 	}
 
-	uint32_t GetRangeIndex(uint32_t slot)
+	uint32_t GetRegisterForSlot(uint32_t slot)
 	{
-		// Search for the range containing slot, and return its descriptor type
+		// Search for the range containing slot, and the corresponding register
+		uint32_t currentSlot = 0;
 		uint32_t currentStartRegister = 0;
-		uint32_t rangeIndex = 0;
 		for (const auto& range : table)
 		{
 			if (range.startRegister != APPEND_REGISTER)
@@ -201,11 +196,37 @@ struct RootParameter
 				currentStartRegister = range.startRegister;
 			}
 
-			if (slot >= currentStartRegister && slot < (currentStartRegister + range.numDescriptors))
+			if (slot >= currentSlot && slot < (currentSlot + range.numDescriptors))
+			{
+				return currentStartRegister + (slot - currentSlot);
+			}
+
+			currentSlot += range.numDescriptors;
+			currentStartRegister += range.numDescriptors;
+		}
+
+		return ~0u;
+	}
+
+	uint32_t GetRangeIndex(uint32_t slot)
+	{
+		// Search for the range containing slot, and return its index
+		uint32_t rangeIndex = 0;
+		uint32_t currentSlot = 0;
+		uint32_t currentStartRegister = 0;
+		for (const auto& range : table)
+		{
+			if (range.startRegister != APPEND_REGISTER)
+			{
+				currentStartRegister = range.startRegister;
+			}
+
+			if (slot >= currentSlot && slot < (currentSlot + range.numDescriptors))
 			{
 				return rangeIndex;
 			}
 
+			currentSlot += range.numDescriptors;
 			currentStartRegister += range.numDescriptors;
 			++rangeIndex;
 		}

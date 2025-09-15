@@ -357,18 +357,18 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 		assert(descriptorVK->GetElementSize() != 0);
 
 		VkDescriptorBufferInfo info{
-			.buffer = descriptorVK->GetBuffer(),
-			.offset = 0,
-			.range = descriptorVK->GetElementSize()
+			.buffer		= descriptorVK->GetBuffer(),
+			.offset		= 0,
+			.range		= descriptorVK->GetElementSize()
 		};
 
 		VkWriteDescriptorSet writeDescriptorSet{
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet = m_descriptorSet,
-			.dstBinding = slot,
-			.dstArrayElement = 0,
-			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
+			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet				= m_descriptorSet,
+			.dstBinding			= slot,
+			.dstArrayElement	= 0,
+			.descriptorCount	= 1,
+			.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
 		};
 
 		UpdateDescriptorSet(writeDescriptorSet);
@@ -389,7 +389,7 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 			VkWriteDescriptorSet writeDescriptorSet{
 				.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet				= m_descriptorSet,
-				.dstBinding			= slot,
+				.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
 				.dstArrayElement	= 0,
 				.descriptorCount	= 1,
 				.descriptorType		= isSrv ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
@@ -407,7 +407,7 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 			VkWriteDescriptorSet writeDescriptorSet{
 				.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet				= m_descriptorSet,
-				.dstBinding			= slot,
+				.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
 				.dstArrayElement	= 0,
 				.descriptorCount	= 1,
 			};
