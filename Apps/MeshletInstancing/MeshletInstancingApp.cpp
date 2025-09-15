@@ -304,7 +304,7 @@ void MeshletInstancingApp::RegenerateInstances()
 		.resourceType = ResourceType::StructuredBuffer,
 		.memoryAccess = MemoryAccess::GpuRead,
 		.elementCount = m_instanceCount,
-		.elementSize = instanceBufferSize / m_instanceCount,
+		.elementSize = sizeof(Instance),
 		.initialData = instanceData
 	};
 	m_instanceBuffer = CreateGpuBuffer(desc);
