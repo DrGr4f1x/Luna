@@ -91,6 +91,18 @@ void MeshletInstancingApp::Update()
 }
 
 
+void MeshletInstancingApp::UpdateUI()
+{
+	if (m_uiOverlay->Header("Settings"))
+	{
+		if (m_uiOverlay->SliderInt("Instance Level", &m_instanceLevel, 0, m_maxInstanceLevel))
+		{
+			RegenerateInstances();
+		}
+	}
+}
+
+
 void MeshletInstancingApp::Render()
 {
 	auto& context = GraphicsContext::Begin("Scene");

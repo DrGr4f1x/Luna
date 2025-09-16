@@ -28,6 +28,7 @@ public:
 	void Shutdown() final;
 
 	void Update() final;
+	void UpdateUI() final;
 	void Render() final;
 
 protected:
