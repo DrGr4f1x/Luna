@@ -129,6 +129,8 @@ public:
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
 	void SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
 	void SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
 	void SetResources(CommandListType type, ResourceSet& resourceSet) override;
 

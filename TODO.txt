@@ -39,6 +39,7 @@ TODO:
 -- Directly create DescriptorSets without needing RootSignature
 -- ShaderCompiler - figure out how to handle shader permutations.  Need this for compiling in/out PCF in ShadowMapping.
 -- Get rid of ExtensionManagerVK.h
+-- Support push descriptors in Vulkan - use MeshletCullApp
 
 DONE:
 -- Handles and pools for:

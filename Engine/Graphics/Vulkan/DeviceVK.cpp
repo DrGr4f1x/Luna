@@ -488,7 +488,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 		staticSamplerDescriptorSet = AllocateDescriptorSet(vkDescriptorSetLayout);
 	}
-
 	
 	// Finally, create the VkPipelineLayout
 	CVkPipelineLayout** pipelineLayoutRef = nullptr;

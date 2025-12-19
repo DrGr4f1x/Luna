@@ -155,6 +155,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshletRender", "Apps\Meshl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshletInstancing", "Apps\MeshletInstancing\MeshletInstancing.vcxproj", "{2976AF93-059C-4E36-BF24-3B6D5472D621}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshletCull", "Apps\MeshletCull\MeshletCull.vcxproj", "{CC17D821-D752-4C6F-AA6F-A55C5D713934}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -360,6 +362,12 @@ Global
 		{2976AF93-059C-4E36-BF24-3B6D5472D621}.Profile|x64.Build.0 = Profile|x64
 		{2976AF93-059C-4E36-BF24-3B6D5472D621}.Release|x64.ActiveCfg = Release|x64
 		{2976AF93-059C-4E36-BF24-3B6D5472D621}.Release|x64.Build.0 = Release|x64
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934}.Debug|x64.ActiveCfg = Debug|x64
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934}.Debug|x64.Build.0 = Debug|x64
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934}.Profile|x64.ActiveCfg = Profile|x64
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934}.Profile|x64.Build.0 = Profile|x64
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934}.Release|x64.ActiveCfg = Release|x64
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -399,6 +407,7 @@ Global
 		{5211391F-7221-4085-ADBD-67ABF9CB1E3D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{C48C0411-36D3-40D4-8F91-54A85AED9640} = {94D80527-1C7C-42FE-898E-48D5A4C975BF}
 		{2976AF93-059C-4E36-BF24-3B6D5472D621} = {94D80527-1C7C-42FE-898E-48D5A4C975BF}
+		{CC17D821-D752-4C6F-AA6F-A55C5D713934} = {94D80527-1C7C-42FE-898E-48D5A4C975BF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CDA0266F-9938-4577-9717-5AEE6F9785A1}

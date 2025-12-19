@@ -17,6 +17,9 @@
     <None Include="Shaders\ScenePS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\SceneVS.hlsl" />
+    <None Include="Shaders\ShadowVisualizationPS.hlsl" />
+    <None Include="Shaders\ShadowVisualizationVS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -33,16 +36,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\SceneVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ShadowVisualizationPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ShadowVisualizationVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

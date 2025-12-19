@@ -62,10 +62,12 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 		.range		= m_isDynamicBuffer ? descriptorVK->GetElementSize() : VK_WHOLE_SIZE
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -88,10 +90,12 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -115,10 +119,12 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -136,10 +142,12 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -157,10 +165,12 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	VkBufferView texelBufferView = VK_NULL_HANDLE;
 	VkDescriptorBufferInfo info{};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
@@ -197,10 +207,12 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -218,10 +230,12 @@ void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t u
 		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
@@ -250,10 +264,12 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	VkBufferView texelBufferView = VK_NULL_HANDLE;
 	VkDescriptorBufferInfo info{};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
@@ -286,10 +302,12 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		.range		= m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -307,10 +325,12 @@ void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t startRegister = m_rootParameter.startRegister;
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= slot,
+		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -362,10 +382,12 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 			.range		= descriptorVK->GetElementSize()
 		};
 
+		const uint32_t startRegister = m_rootParameter.startRegister;
+
 		VkWriteDescriptorSet writeDescriptorSet{
 			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet				= m_descriptorSet,
-			.dstBinding			= slot,
+			.dstBinding			= slot + startRegister,
 			.dstArrayElement	= 0,
 			.descriptorCount	= 1,
 			.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC

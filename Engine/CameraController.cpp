@@ -125,8 +125,11 @@ void CameraController::UpdateWASD(InputSystem* inputSystem, float deltaTime, boo
 
 	if (!ignoreInput)
 	{
-		yaw = inputSystem->GetTimeCorrectedAnalogInput(AnalogInput::kAnalogRightStickX) * m_horizontalLookSensitivity * panScale;
-		pitch = inputSystem->GetTimeCorrectedAnalogInput(AnalogInput::kAnalogRightStickY) * m_verticalLookSensitivity * panScale;
+		if (m_allowRotation)
+		{
+			yaw = inputSystem->GetTimeCorrectedAnalogInput(AnalogInput::kAnalogRightStickX) * m_horizontalLookSensitivity * panScale;
+			pitch = inputSystem->GetTimeCorrectedAnalogInput(AnalogInput::kAnalogRightStickY) * m_verticalLookSensitivity * panScale;
+		}
 
 		forward = m_moveSpeed * speedScale * (
 			inputSystem->GetTimeCorrectedAnalogInput(AnalogInput::kAnalogLeftStickY) +
@@ -154,8 +157,11 @@ void CameraController::UpdateWASD(InputSystem* inputSystem, float deltaTime, boo
 		}
 
 		// don't apply momentum to mouse inputs
-		yaw += inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseX) * m_mouseSensitivityX;
-		pitch += inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseY) * m_mouseSensitivityY;
+		if (m_allowRotation)
+		{
+			yaw += inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseX) * m_mouseSensitivityX;
+			pitch += inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseY) * m_mouseSensitivityY;
+		}
 	}
 
 	m_currentPitch += pitch;

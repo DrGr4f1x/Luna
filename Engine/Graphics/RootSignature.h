@@ -273,7 +273,8 @@ inline RootConstantsBuilder RootConstants;
 class RootSrvUavCbvBuilder
 {
 public:
-	explicit RootSrvUavCbvBuilder(RootParameterType type) : m_type{type}
+	explicit RootSrvUavCbvBuilder(RootParameterType type)
+		: m_type{ type }
 	{}
 
 	RootParameter operator()(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)

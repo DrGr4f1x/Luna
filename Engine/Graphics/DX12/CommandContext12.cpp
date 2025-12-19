@@ -619,6 +619,7 @@ void CommandContext12::SetMeshletPipeline(const IMeshletPipeline* meshletPipelin
 		m_commandList->SetPipelineState(meshletPSO);
 		m_graphicsPipelineState = meshletPSO;
 	}
+	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_UNDEFINED);
 }
 
 
@@ -794,6 +795,52 @@ void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootInde
 	else
 	{
 		m_commandList->SetComputeRootConstantBufferView(rootIndex, gpuAddress);
+	}
+}
+
+
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+{
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+
+	FlushResourceBarriers();
+
+	// TODO: Try this with GetPlatformObject()
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
+	assert(gpuBuffer12 != nullptr);
+
+	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
+
+	if (type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRootShaderResourceView(rootIndex, gpuAddress);
+	}
+	else
+	{
+		m_commandList->SetComputeRootShaderResourceView(rootIndex, gpuAddress);
+	}
+}
+
+
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+{
+	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+
+	FlushResourceBarriers();
+
+	// TODO: Try this with GetPlatformObject()
+	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
+	assert(gpuBuffer12 != nullptr);
+
+	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
+
+	if (type == CommandListType::Direct)
+	{
+		m_commandList->SetGraphicsRootUnorderedAccessView(rootIndex, gpuAddress);
+	}
+	else
+	{
+		m_commandList->SetComputeRootUnorderedAccessView(rootIndex, gpuAddress);
 	}
 }
 

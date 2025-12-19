@@ -192,7 +192,7 @@ copy $(ProjectDir)..\..\External\assimp\bin\RelWithDebInfo\assimp-vc143-mt.dll $
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets" Condition="Exists('..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" />
     <Import Project="..\..\packages\glfw.3.4.0\build\native\glfw.targets" Condition="Exists('..\..\packages\glfw.3.4.0\build\native\glfw.targets')" />
-    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -200,7 +200,7 @@ copy $(ProjectDir)..\..\External\assimp\bin\RelWithDebInfo\assimp-vc143-mt.dll $
     </PropertyGroup>
     <Error Condition="!Exists('..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\WinPixEventRuntime.1.0.240308001\build\WinPixEventRuntime.targets'))" />
     <Error Condition="!Exists('..\..\packages\glfw.3.4.0\build\native\glfw.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\glfw.3.4.0\build\native\glfw.targets'))" />
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
   <Import Project="LunaShaderCfg.targets" />
 </Project>

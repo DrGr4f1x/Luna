@@ -117,7 +117,12 @@ public:
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
+	// TODO: Rename this to SetRootCBV
 	virtual void SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
+	// TOOD: Rename this to SetRootSRV
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
+	// TODO: Rename this to SetRootUAV
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
 	virtual void SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet) = 0;
 	virtual void SetResources(CommandListType type, ResourceSet& resourceSet) = 0;
 
@@ -268,6 +273,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
 	void SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+	void SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+	void SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
 	void SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
@@ -320,6 +327,8 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
 	void SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+	void SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+	void SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
 	void SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
@@ -680,6 +689,18 @@ inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, const GpuBuff
 }
 
 
+inline void GraphicsContext::SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetSRV(CommandListType::Direct, rootIndex, gpuBuffer.get());
+}
+
+
+inline void GraphicsContext::SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetUAV(CommandListType::Direct, rootIndex, gpuBuffer.get());
+}
+
+
 inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet)
 {
 	m_contextImpl->SetDescriptors(CommandListType::Direct, rootIndex, descriptorSet.get());
@@ -883,6 +904,18 @@ inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam 
 inline void ComputeContext::SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
 {
 	m_contextImpl->SetConstantBuffer(CommandListType::Compute, rootIndex, gpuBuffer.get());
+}
+
+
+inline void ComputeContext::SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetSRV(CommandListType::Compute, rootIndex, gpuBuffer.get());
+}
+
+
+inline void ComputeContext::SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+{
+	m_contextImpl->SetUAV(CommandListType::Compute, rootIndex, gpuBuffer.get());
 }
 
 

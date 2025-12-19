@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Stdafx.cpp" />
+    <ClCompile Include="MeshletCullApp.cpp" />
+    <ClCompile Include="MeshletModel.cpp" />
+    <ClCompile Include="FrustumVisualizer.cpp" />
+    <ClCompile Include="CullDataVisualizer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="MeshletCullApp.h" />
+    <ClInclude Include="Shaders\Shared.h">
+      <Filter>Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshletModel.h" />
+    <ClInclude Include="FrustumVisualizer.h" />
+    <ClInclude Include="CullDataVisualizer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <LunaShaderCfg Include="Shaders\shaders.cfg">
+      <Filter>Shaders</Filter>
+    </LunaShaderCfg>
+    <None Include="Shaders\MeshletCommon.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\MeshletUtils.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\VisualizerCommon.hlsli">
+      <Filter>Shaders\Visualizers</Filter>
+    </None>
+    <None Include="Shaders\BoundingSphereMS.hlsl">
+      <Filter>Shaders\Visualizers</Filter>
+    </None>
+    <None Include="Shaders\DebugDrawPS.hlsl">
+      <Filter>Shaders\Visualizers</Filter>
+    </None>
+    <None Include="Shaders\FrustumMS.hlsl">
+      <Filter>Shaders\Visualizers</Filter>
+    </None>
+    <None Include="Shaders\MeshletAS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\NormalConeMS.hlsl">
+      <Filter>Shaders\Visualizers</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b02a4703-6c91-41d6-b1b3-f9dd4c86077b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Visualizers">
+      <UniqueIdentifier>{7fad6ba4-f065-4c84-9eb3-c921db682dec}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\MeshletMS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\MeshletPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+</Project>

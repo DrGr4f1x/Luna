@@ -101,6 +101,8 @@ __forceinline Vector3 Normalize(Vector3 v) noexcept { return Vector3(XMVector3No
 __forceinline Vector4 Normalize(Vector4 v) noexcept { return Vector4(XMVector4Normalize(v)); }
 __forceinline Quaternion Normalize(Quaternion q) noexcept { return Quaternion(XMQuaternionNormalize(q)); }
 
+__forceinline Vector4 PlaneNormalize(Vector4 plane) noexcept { return Vector4(XMPlaneNormalize(plane)); }
+
 __forceinline Matrix3 Transpose(const Matrix3& mat) noexcept { return Matrix3(XMMatrixTranspose(mat)); }
 
 
@@ -118,6 +120,17 @@ __forceinline OrthogonalTransform Invert(const OrthogonalTransform& xform) noexc
 
 __forceinline Matrix4 Transpose(const Matrix4& mat) noexcept { return Matrix4(XMMatrixTranspose(mat)); }
 __forceinline Matrix4 Invert(const Matrix4& mat) noexcept { return Matrix4(XMMatrixInverse(nullptr, mat)); }
+
+__forceinline void Decompose(Vector4& scale, Vector4& rotation, Vector4& position, const Matrix4& matrix)
+{
+	XMVECTOR xmScale;
+	XMVECTOR xmRotation;
+	XMVECTOR xmPosition;
+	XMMatrixDecompose(&xmScale, &xmRotation, &xmPosition, matrix);
+	scale = Vector4(xmScale);
+	rotation = Vector4(xmRotation);
+	position = Vector4(xmPosition);
+}
 
 __forceinline Matrix4 OrthoInvert(const Matrix4& xform) noexcept
 {

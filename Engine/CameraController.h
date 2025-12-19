@@ -36,6 +36,7 @@ public:
 	void RefreshFromCamera();
 
 	void SetCameraMode(CameraMode mode);
+	void AllowCameraRotation(bool allowRotation) { m_allowRotation = allowRotation; }
 	void SetOrbitTarget(Math::Vector3 target, float zoom, float minDistance);
 
 	void SlowMovement(bool enable) noexcept { m_fineMovement = enable; }
@@ -87,6 +88,8 @@ private:
 	Math::Vector3 m_orbitTarget{ 0.0f, 0.0f, 0.0f };
 	float m_minDistance{ 0.0f };
 	float m_zoom{ 1.0f };
+
+	bool m_allowRotation{ true };
 };
 
 

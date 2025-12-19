@@ -16,7 +16,7 @@ using namespace std;
 
 
 #if USE_AGILITY_SDK
-extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 616; }
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 618; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
 #endif
 

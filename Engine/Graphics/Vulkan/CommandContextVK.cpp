@@ -1082,9 +1082,23 @@ void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootInde
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	ParseRootSignature(type);
+	const Descriptor* descriptorVK = (const Descriptor*)gpuBufferVK->GetCbvDescriptor();
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	//ParseRootSignature(type);
+
+	//const bool graphicsPipe = type == CommandListType::Direct;
+
+	//VkDescriptorBufferInfo info{
+	//	.buffer		= gpuBufferVK->GetBuffer(),
+	//	.offset		= 0,
+	//	.range		= VK_WHOLE_SIZE
+	//};
+
+	//m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, info, graphicsPipe);
+
+	//MarkDescriptorsDirty(type);
+
+	FlushResourceBarriers();
 
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBufferVK->GetBuffer(),
@@ -1092,9 +1106,86 @@ void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootInde
 		.range		= VK_WHOLE_SIZE
 	};
 
-	m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, info, graphicsPipe);
+	VkWriteDescriptorSet writeDescriptor{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding = 0,
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pBufferInfo = &info
+	};
 
-	MarkDescriptorsDirty(type);
+	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
+		VK_PIPELINE_BIND_POINT_GRAPHICS :
+		VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), rootIndex, 1, &writeDescriptor);
+}
+
+
+void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+{
+	// TODO: Try this with GetPlatformObject()
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
+
+	const Descriptor* descriptorVK = (const Descriptor*)gpuBufferVK->GetSrvDescriptor();
+
+	FlushResourceBarriers();
+
+	VkDescriptorBufferInfo info{
+		.buffer		= gpuBufferVK->GetBuffer(),
+		.offset		= 0,
+		.range		= VK_WHOLE_SIZE
+	};
+
+	VkWriteDescriptorSet writeDescriptor{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding			= 0,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		.pBufferInfo		= &info
+	};
+
+	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
+		VK_PIPELINE_BIND_POINT_GRAPHICS :
+		VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), rootIndex, 1, &writeDescriptor);
+}
+
+
+void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+{
+	// TODO: Try this with GetPlatformObject()
+	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+	assert(gpuBufferVK != nullptr);
+
+	const Descriptor* descriptorVK = (const Descriptor*)gpuBufferVK->GetUavDescriptor();
+
+	FlushResourceBarriers();
+
+	VkDescriptorBufferInfo info{
+		.buffer		= gpuBufferVK->GetBuffer(),
+		.offset		= 0,
+		.range	= VK_WHOLE_SIZE
+	};
+
+	VkWriteDescriptorSet writeDescriptor{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding			= 0,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		.pBufferInfo		= &info
+	};
+
+	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
+		VK_PIPELINE_BIND_POINT_GRAPHICS :
+		VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), rootIndex, 1, &writeDescriptor);
 }
 
 

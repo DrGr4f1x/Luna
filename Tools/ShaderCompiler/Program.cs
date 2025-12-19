@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.CommandLine;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -81,179 +82,300 @@ namespace ShaderCompiler
             Self = args[0];
 
             #region Required options
-            var platformOpt = new Option<string>("--platform", "DXBC, DXIL, or SPIRV").FromAmong("DXBC", "DXIL", "SPIRV");
-            platformOpt.IsRequired = true;
-            platformOpt.AddAlias("-p");
+            Option<string> platformOpt = new("--platform", "-p")
+            {
+                Description = "DXBC, DXIL, or SPIRV",
+                Required = true
+            };
+            platformOpt.AcceptOnlyFromAmong("DXBC", "DXIL", "SPIRV");
 
-            var configFileOpt = new Option<string>("--config", "Configuration file with the list of shaders to compile");
-            configFileOpt.IsRequired = true;
-            configFileOpt.AddAlias("-c");
+            Option<string> configFileOpt = new("--config", "-c")
+            {
+                Description = "Configuration file with the list of shaders to compile",
+                Required = true
+            };
 
-            var outputDirOpt = new Option<string>("--out", "Output directory");
-            outputDirOpt.IsRequired = true;
-            outputDirOpt.AddAlias("-o");
+            Option<string> outputDirOpt = new("--out", "-o")
+            {
+                Description = "Output directory",
+                Required = true
+            };
 
-            var binaryOpt = new Option<bool>("--binary", "Output binary files");
-            binaryOpt.AddAlias("-b");
+            Option<bool> binaryOpt = new("--binary", "-b")
+            {
+                Description = "Output binary files"
+            };
 
-            var headerOpt = new Option<bool>("--header", "Output header files");
-            headerOpt.AddAlias("-h");
+            Option<bool> headerOpt = new("--header", "-h")
+            {
+                Description = "Output header files"
+            };
 
-            var binaryBlobOpt = new Option<bool>("--binaryBlob", "Output binary blob files");
-            binaryBlobOpt.AddAlias("-B");
+            Option<bool> binaryBlobOpt = new("--binaryBlob", "-B")
+            {
+                Description = "Output binary blob files"
+            };
 
-            var headerBlobOpt = new Option<bool>("--headerBlob", "Output header blob files");
-            headerBlobOpt.AddAlias("-H");
+            Option<bool> headerBlobOpt = new("--headerBlob", "-H")
+            {
+                Description = "Output header blob files"
+            };
             #endregion
 
             #region Compiler options
-            var shaderModelOpt = new Option<string>("--shaderModel", "Shader model for DXIL/SPIRV");
-            shaderModelOpt.AddAlias("-m");
+            Option<string> shaderModelOpt = new("--shaderModel", "-m")
+            {
+                Description = "Shader model for DXIL/SPIRV"
+            };
 
-            var optimizationOpt = new Option<uint>("--optimization", "Optimization level 03 (default = 3, disabled = 0)");
-            optimizationOpt.AddAlias("-O");
+            Option<uint> optimizationOpt = new("--optimization", "-O")
+            {
+                Description = "Optimization level 03 (default = 3, disabled = 0)"
+            };
 
-            var warningsAreErrorsOpt = new Option<bool>("--WX", "Maps to '-WX' DXC/FXC option: warnings are errors");
-            var allResourcesBoundOpt = new Option<bool>("--allResourcesBound", "Maps to -all_resources_bound DXC/FXC option: all resources bound");
-            var pdbOpt = new Option<bool>("--PDB", "Output PDB files in 'out/PDB' folder");
-            var embedPDBOpt = new Option<bool>("--embedPDB", "Embed PDB with shader binary");
-            var stripReflectionOpt = new Option<bool>("--stripReflection", "Maps to '-Qstrip_reflect' DXC/FXC option: strip reflection information from a shader binary");
-            var matrixRowMajorOpt = new Option<bool>("--matrixRowMajor", "Maps to '-Zpr' DXC/FXC option: pack matrices in row-major order");
-            var hlsl2021Opt = new Option<bool>("--hlsl2021", "Maps to '-HV 2021' DXC option: enable HLSL 2021 standard");
-            var vulkanMemoryLayoutOpt = new Option<string>("--vulkanMemoryLayout", "Maps to '-fvk-use-<VALUE>-layout' DXC options: dx, gl, scalar");
+            Option<bool> warningsAreErrorsOpt = new("--WX")
+            {
+                Description = "Maps to '-WX' DXC/FXC option: warnings are errors"
+            };
 
-            var compilerOptionsOpt = new Option<string[]>("--compilerOptions", "Custom command line options for the compiler, separated by spaces");
-            compilerOptionsOpt.AddAlias("-X");
+            Option<bool> allResourcesBoundOpt = new("--allResourcesBound")
+            {
+                Description = "Maps to -all_resources_bound DXC/FXC option: all resources bound"
+            };
+
+            Option<bool> pdbOpt = new("--PDB")
+            {
+                Description = "Output PDB files in 'out/PDB' folder"
+            };
+
+            Option<bool> embedPDBOpt = new("--embedPDB")
+            {
+                Description = "Embed PDB with shader binary"
+            };
+
+            Option<bool> stripReflectionOpt = new("--stripReflection")
+            {
+                Description = "Maps to '-Qstrip_reflect' DXC/FXC option: strip reflection information from a shader binary"
+            };
+
+            Option<bool> matrixRowMajorOpt = new("--matrixRowMajor")
+            {
+                Description = "Maps to '-Zpr' DXC/FXC option: pack matrices in row-major order"
+            };
+
+            Option<bool> hlsl2021Opt = new("--hlsl2021")
+            {
+                Description = "Maps to '-HV 2021' DXC option: enable HLSL 2021 standard"
+            };
+
+            Option<string> vulkanMemoryLayoutOpt = new("--vulkanMemoryLayout")
+            {
+                Description = "Maps to '-fvk-use-<VALUE>-layout' DXC options: dx, gl, scalar"
+            };
+
+            Option<string[]> compilerOptionsOpt = new("--compilerOptions", "-X")
+            {
+                Description = "Custom command line options for the compiler, separated by spaces"
+            };
             #endregion
 
             #region Defines and includes
-            var includeOpt = new Option<string[]>("--include", "Include directory(s)");
-            includeOpt.AddAlias("-I");
+            Option<string[]> includeOpt = new("--include", "-I")
+            {
+                Description = "Include directory(s)"
+            };
 
-            var defineOpt = new Option<string[]>("--define", "Macro definition(s) in forms 'M=value' or 'M'");
-            defineOpt.AddAlias("-D");
+            Option<string[]> defineOpt = new("--define", "-D")
+            {
+                Description = "Macro definition(s) in forms 'M=value' or 'M'"
+            };
             #endregion
 
             #region Other options
-            var forceOpt = new Option<bool>("--force", "Treat all source files as modified");
-            forceOpt.AddAlias("-f");
+            Option<bool> forceOpt = new("--force", "-f")
+            {
+                Description = "Treat all source files as modified"
+            };
 
-            var sourceDirOpt = new Option<string>("--sourceDir", "Source code directory");
-            var compilerOpt = new Option<string>("--compiler", "Path to a DXC or FXC executable");
-            var relaxedIncludeOpt = new Option<string[]>("--relaxedInclude", "Include file(s) not invoking re-compilation");
-            var outputExtOpt = new Option<string>("--outputExt", "Extension for output files, default is one of .dxbc, .dxil, or .spirv");
-            var serialOpt = new Option<bool>("--serial", "Disable multi-threading");
-            var flattenOpt = new Option<bool>("--flatten", "Flatten source directory structure in the output directory");
-            var continueOnErrorOpt = new Option<bool>("--continue", "Continue compilation if an error occurred");
-            var verboseOpt = new Option<bool>("--verbose", "Print commands before they are executed");
-            var retryCountOpt = new Option<int>("--retryCount", "Retry count for compilation task sub-process failures");
+            Option<string> sourceDirOpt = new("--sourceDir")
+            {
+                Description = "Source code directory"
+            };
+
+            Option<string> compilerOpt = new("--compiler")
+            {
+                Description = "Path to a DXC or FXC executable"
+            };
+
+            Option<string[]> relaxedIncludeOpt = new("--relaxedInclude")
+            {
+                Description = "Include file(s) not invoking re-compilation"
+            };
+
+            Option<string> outputExtOpt = new("--outputExt")
+            {
+                Description = "Extension for output files, default is one of .dxbc, .dxil, or .spirv"
+            };
+
+            Option<bool> serialOpt = new("--serial")
+            {
+                Description = "Disable multi-threading"
+            };
+
+            Option<bool> flattenOpt = new("--flatten")
+            {
+                Description = "Flatten source directory structure in the output directory"
+            };
+
+            Option<bool> continueOnErrorOpt = new("--continue")
+            {
+                Description = "Continue compilation if an error occurred"
+            };
+
+            Option<bool> verboseOpt = new("--verbose")
+            {
+                Description = "Print commands before they are executed"
+            };
+
+            Option<int> retryCountOpt = new("--retryCount")
+            {
+                Description = "Retry count for compilation task sub-process failures"
+            };
             #endregion
 
             #region SPIRV options
-            var vulkanVersionOpt = new Option<string>("--vulkanVersion", "Vulkan environment version, maps t0 '-fspv-target-env' (default  = 1.3)");
-            var spirvExtOpt = new Option<string[]>("--spirvExt", "Maps to -fspv-extension' option: add SPIR-V extension permitted to use");
-            var sRegShiftOpt = new Option<int>("--sRegShift", "SPIRV: register shift for sampler (s#) resources");
-            var tRegShiftOpt = new Option<int>("--tRegShift", "SPIRV: register shift for texture (t#) resources");
-            var bRegShiftOpt = new Option<int>("--bRegShift", "SPIRV: register shift for constant (b#) resources");
-            var uRegShiftOpt = new Option<int>("--uRegShift", "SPIRV: register shift for UAV (u#) resources");
-            var noRegShiftsOpt = new Option<bool>("--noRegShifts", "Don't specify any register shifts for the compiler");
+            Option<string> vulkanVersionOpt = new("--vulkanVersion")
+            {
+                Description = "Vulkan environment version, maps t0 '-fspv-target-env' (default  = 1.3)"
+            };
+
+            Option<string[]> spirvExtOpt = new("--spirvExt")
+            {
+                Description = "Maps to -fspv-extension' option: add SPIR-V extension permitted to use"
+            };
+
+            Option<int> sRegShiftOpt = new("--sRegShift")
+            {
+                Description = "SPIRV: register shift for sampler (s#) resources"
+            };
+
+            Option<int> tRegShiftOpt = new("--tRegShift")
+            {
+                Description = "SPIRV: register shift for texture (t#) resources"
+            };
+
+            Option<int> bRegShiftOpt = new("--bRegShift")
+            {
+                Description = "SPIRV: register shift for constant (b#) resources"
+            };
+
+            Option<int> uRegShiftOpt = new("--uRegShift")
+            {
+                Description = "SPIRV: register shift for UAV (u#) resources"
+            };
+
+            Option<bool> noRegShiftsOpt = new("--noRegShifts")
+            {
+                Description = "Don't specify any register shifts for the compiler"
+            };
             #endregion
 
             // Setup root command
             var rootCommand = new RootCommand("ShaderCompiler");
-            rootCommand.AddOption(platformOpt);
-            rootCommand.AddOption(configFileOpt);
-            rootCommand.AddOption(outputDirOpt);
-            rootCommand.AddOption(binaryOpt);
-            rootCommand.AddOption(headerOpt);
-            rootCommand.AddOption(binaryBlobOpt);
-            rootCommand.AddOption(headerBlobOpt);
+            rootCommand.Options.Add(platformOpt);
+            rootCommand.Options.Add(configFileOpt);
+            rootCommand.Options.Add(outputDirOpt);
+            rootCommand.Options.Add(binaryOpt);
+            rootCommand.Options.Add(headerOpt);
+            rootCommand.Options.Add(binaryBlobOpt);
+            rootCommand.Options.Add(headerBlobOpt);
 
-            rootCommand.AddOption(shaderModelOpt);
-            rootCommand.AddOption(optimizationOpt);
-            rootCommand.AddOption(warningsAreErrorsOpt);
-            rootCommand.AddOption(allResourcesBoundOpt);
-            rootCommand.AddOption(pdbOpt);
-            rootCommand.AddOption(embedPDBOpt);
-            rootCommand.AddOption(stripReflectionOpt);
-            rootCommand.AddOption(matrixRowMajorOpt);
-            rootCommand.AddOption(hlsl2021Opt);
-            rootCommand.AddOption(vulkanMemoryLayoutOpt);
-            rootCommand.AddOption(compilerOptionsOpt);
+            rootCommand.Options.Add(shaderModelOpt);
+            rootCommand.Options.Add(optimizationOpt);
+            rootCommand.Options.Add(warningsAreErrorsOpt);
+            rootCommand.Options.Add(allResourcesBoundOpt);
+            rootCommand.Options.Add(pdbOpt);
+            rootCommand.Options.Add(embedPDBOpt);
+            rootCommand.Options.Add(stripReflectionOpt);
+            rootCommand.Options.Add(matrixRowMajorOpt);
+            rootCommand.Options.Add(hlsl2021Opt);
+            rootCommand.Options.Add(vulkanMemoryLayoutOpt);
+            rootCommand.Options.Add(compilerOptionsOpt);
 
-            rootCommand.AddOption(includeOpt);
-            rootCommand.AddOption(defineOpt);
+            rootCommand.Options.Add(includeOpt);
+            rootCommand.Options.Add(defineOpt);
 
-            rootCommand.AddOption(forceOpt);
-            rootCommand.AddOption(sourceDirOpt);
-            rootCommand.AddOption(compilerOpt);
-            rootCommand.AddOption(relaxedIncludeOpt);
-            rootCommand.AddOption(outputExtOpt);
-            rootCommand.AddOption(serialOpt);
-            rootCommand.AddOption(flattenOpt);
-            rootCommand.AddOption(continueOnErrorOpt);
-            rootCommand.AddOption(verboseOpt);
-            rootCommand.AddOption(retryCountOpt);
+            rootCommand.Options.Add(forceOpt);
+            rootCommand.Options.Add(sourceDirOpt);
+            rootCommand.Options.Add(compilerOpt);
+            rootCommand.Options.Add(relaxedIncludeOpt);
+            rootCommand.Options.Add(outputExtOpt);
+            rootCommand.Options.Add(serialOpt);
+            rootCommand.Options.Add(flattenOpt);
+            rootCommand.Options.Add(continueOnErrorOpt);
+            rootCommand.Options.Add(verboseOpt);
+            rootCommand.Options.Add(retryCountOpt);
 
-            rootCommand.AddOption(vulkanVersionOpt);
-            rootCommand.AddOption(spirvExtOpt);
-            rootCommand.AddOption(sRegShiftOpt);
-            rootCommand.AddOption(tRegShiftOpt);
-            rootCommand.AddOption(bRegShiftOpt);
-            rootCommand.AddOption(uRegShiftOpt);
-            rootCommand.AddOption(noRegShiftsOpt);
+            rootCommand.Options.Add(vulkanVersionOpt);
+            rootCommand.Options.Add(spirvExtOpt);
+            rootCommand.Options.Add(sRegShiftOpt);
+            rootCommand.Options.Add(tRegShiftOpt);
+            rootCommand.Options.Add(bRegShiftOpt);
+            rootCommand.Options.Add(uRegShiftOpt);
+            rootCommand.Options.Add(noRegShiftsOpt);
 
-            rootCommand.SetHandler(async (context) =>
+            rootCommand.SetAction(parseResult =>
             {
                 // Required options
-                PlatformName = context.ParseResult.GetValueForOption(platformOpt);
-                ConfigFile = context.ParseResult.GetValueForOption(configFileOpt);
-                OutputDir = context.ParseResult.GetValueForOption(outputDirOpt);
-                Binary = context.ParseResult.GetValueForOption(binaryOpt);
-                Header = context.ParseResult.GetValueForOption(headerOpt);
-                BinaryBlob = context.ParseResult.GetValueForOption(binaryBlobOpt);
-                HeaderBlob = context.ParseResult.GetValueForOption(headerBlobOpt);
+                PlatformName = parseResult.GetValue(platformOpt);
+                ConfigFile = parseResult.GetValue(configFileOpt);
+                OutputDir = parseResult.GetValue(outputDirOpt);
+                Binary = parseResult.GetValue(binaryOpt);
+                Header = parseResult.GetValue(headerOpt);
+                BinaryBlob = parseResult.GetValue(binaryBlobOpt);
+                HeaderBlob = parseResult.GetValue(headerBlobOpt);
 
                 // Compiler options
-                ShaderModel = context.ParseResult.GetValueForOption(shaderModelOpt);
-                OptimizationLevel = context.ParseResult.GetValueForOption(optimizationOpt);
-                WarningsAreErrors = context.ParseResult.GetValueForOption(warningsAreErrorsOpt);
-                AllResourcesBound = context.ParseResult.GetValueForOption(allResourcesBoundOpt);
-                PDB = context.ParseResult.GetValueForOption(pdbOpt);
-                EmbedPDB = context.ParseResult.GetValueForOption(embedPDBOpt);
-                StripReflection = context.ParseResult.GetValueForOption(stripReflectionOpt);
-                MatrixRowMajor = context.ParseResult.GetValueForOption(matrixRowMajorOpt);
-                Hlsl2021 = context.ParseResult.GetValueForOption(hlsl2021Opt);
-                VulkanMemoryLayout = context.ParseResult.GetValueForOption(vulkanMemoryLayoutOpt);
-                CompilerOptions = context.ParseResult.GetValueForOption(compilerOptionsOpt);
+                ShaderModel = parseResult.GetValue(shaderModelOpt);
+                OptimizationLevel = parseResult.GetValue(optimizationOpt);
+                WarningsAreErrors = parseResult.GetValue(warningsAreErrorsOpt);
+                AllResourcesBound = parseResult.GetValue(allResourcesBoundOpt);
+                PDB = parseResult.GetValue(pdbOpt);
+                EmbedPDB = parseResult.GetValue(embedPDBOpt);
+                StripReflection = parseResult.GetValue(stripReflectionOpt);
+                MatrixRowMajor = parseResult.GetValue(matrixRowMajorOpt);
+                Hlsl2021 = parseResult.GetValue(hlsl2021Opt);
+                VulkanMemoryLayout = parseResult.GetValue(vulkanMemoryLayoutOpt);
+                CompilerOptions = parseResult.GetValue(compilerOptionsOpt);
 
                 // Defines and includes
-                IncludeDirs = context.ParseResult.GetValueForOption(includeOpt);
-                Defines = context.ParseResult.GetValueForOption(defineOpt);
+                IncludeDirs = parseResult.GetValue(includeOpt);
+                Defines = parseResult.GetValue(defineOpt);
 
                 // Other options
-                Force = context.ParseResult.GetValueForOption(forceOpt);
-                SourceDir = context.ParseResult.GetValueForOption(sourceDirOpt);
-                Compiler = context.ParseResult.GetValueForOption(compilerOpt);
-                RelaxedIncludes = context.ParseResult.GetValueForOption(relaxedIncludeOpt);
-                OutputExt = context.ParseResult.GetValueForOption(outputExtOpt);
-                Serial = context.ParseResult.GetValueForOption(serialOpt);
-                Flatten = context.ParseResult.GetValueForOption(flattenOpt);
-                Continue = context.ParseResult.GetValueForOption(continueOnErrorOpt);
-                Verbose = context.ParseResult.GetValueForOption(verboseOpt);
-                RetryCount = context.ParseResult.GetValueForOption(retryCountOpt);
+                Force = parseResult.GetValue(forceOpt);
+                SourceDir = parseResult.GetValue(sourceDirOpt);
+                Compiler = parseResult.GetValue(compilerOpt);
+                RelaxedIncludes = parseResult.GetValue(relaxedIncludeOpt);
+                OutputExt = parseResult.GetValue(outputExtOpt);
+                Serial = parseResult.GetValue(serialOpt);
+                Flatten = parseResult.GetValue(flattenOpt);
+                Continue = parseResult.GetValue(continueOnErrorOpt);
+                Verbose = parseResult.GetValue(verboseOpt);
+                RetryCount = parseResult.GetValue(retryCountOpt);
 
                 // SPIRV options
-                VulkanVersion = context.ParseResult.GetValueForOption(vulkanVersionOpt);
-                SpirvExt = context.ParseResult.GetValueForOption(spirvExtOpt);
-                SRegShift = context.ParseResult.GetValueForOption(sRegShiftOpt);
-                TRegShift = context.ParseResult.GetValueForOption(tRegShiftOpt);
-                BRegShift = context.ParseResult.GetValueForOption(bRegShiftOpt);
-                URegShift = context.ParseResult.GetValueForOption(uRegShiftOpt);
-                NoRegShifts = context.ParseResult.GetValueForOption(noRegShiftsOpt);
+                VulkanVersion = parseResult.GetValue(vulkanVersionOpt);
+                SpirvExt = parseResult.GetValue(spirvExtOpt);
+                SRegShift = parseResult.GetValue(sRegShiftOpt);
+                TRegShift = parseResult.GetValue(tRegShiftOpt);
+                BRegShift = parseResult.GetValue(bRegShiftOpt);
+                URegShift = parseResult.GetValue(uRegShiftOpt);
+                NoRegShifts = parseResult.GetValue(noRegShiftsOpt);
             });
 
-            rootCommand.Invoke(args);
+            ParseResult parseResult = rootCommand.Parse(args);
+            parseResult.Invoke();
 
             return Validate();
         }
@@ -355,48 +477,62 @@ namespace ShaderCompiler
 
         public bool Parse(string[] args)
         {
-            var profileOpt = new Option<string>("--profile", "Shader profile");
-            profileOpt.AddAlias("-T");
+            Option<string> profileOpt = new("--profile", "-T")
+            {
+                Description = "Shader profile"
+            };
 
-            var entryPointOpt = new Option<string>("--entryPoint", "(Optional) entry point");
-            entryPointOpt.AddAlias("-E");
+            Option<string> entryPointOpt = new("--entryPoint", "-E")
+            {
+                Description = "(Optional) entry point"
+            };
 
-            var defineOpt = new Option<string[]>("--define", "(Optional) define(s) in forms 'M=value' or 'M'");
-            defineOpt.AddAlias("-D");
+            Option<string[]> defineOpt = new("--define", "-D")
+            {
+                Description = "(Optional) define(s) in forms 'M=value' or 'M'"
+            };
 
-            var outputOpt = new Option<string>("--output", "(Optional) output subdirectory");
-            outputOpt.AddAlias("-o");
+            Option<string> outputOpt = new("--output", "-o")
+            {
+                Description = "(Optional) output subdirectory"
+            };
 
-            var optimizationOpt = new Option<uint>("--optimization", "(Optional) optimization level");
-            optimizationOpt.AddAlias("-O");
-            optimizationOpt.SetDefaultValue(0xFFFFFFFF);
+            Option<uint> optimizationOpt = new("--optimization", "-O")
+            {
+                Description = "(Optional) optimization level",
+                DefaultValueFactory = _ => 0xFFFFFFFF
+            };
 
-            var outputSuffixOpt = new Option<string>("--outputSuffix", "(Optional) suffix to add before extension after filename");
+            Option<string> outputSuffixOpt = new("--outputSuffix")
+            {
+                Description = "(Optional) suffix to add before extension after filename"
+            };
 
             var command = new Command("ConfigLine");
-            command.AddOption(profileOpt);
-            command.AddOption(entryPointOpt);
-            command.AddOption(defineOpt);
-            command.AddOption(outputOpt);
-            command.AddOption(optimizationOpt);
-            command.AddOption(outputSuffixOpt);
+            command.Options.Add(profileOpt);
+            command.Options.Add(entryPointOpt);
+            command.Options.Add(defineOpt);
+            command.Options.Add(outputOpt);
+            command.Options.Add(optimizationOpt);
+            command.Options.Add(outputSuffixOpt);
 
             this.Source = args[0];
             string[] trimmedArgs = new string[args.Length - 1];
             Array.Copy(args, 1, trimmedArgs, 0, args.Length - 1);
 
-            command.SetHandler(async (context) =>
+            command.SetAction(parseResult =>
             {
                 // Required options
-                this.Profile = context.ParseResult.GetValueForOption(profileOpt);
-                this.Entry = context.ParseResult.GetValueForOption(entryPointOpt);
-                this.Defines = context.ParseResult.GetValueForOption(defineOpt);
-                this.OutputDir = context.ParseResult.GetValueForOption(outputOpt);
-                this.OptimizationLevel = context.ParseResult.GetValueForOption(optimizationOpt);
-                this.OutputSuffix = context.ParseResult.GetValueForOption(outputSuffixOpt);
+                this.Profile = parseResult.GetValue(profileOpt);
+                this.Entry = parseResult.GetValue(entryPointOpt);
+                this.Defines = parseResult.GetValue(defineOpt);
+                this.OutputDir = parseResult.GetValue(outputOpt);
+                this.OptimizationLevel = parseResult.GetValue(optimizationOpt);
+                this.OutputSuffix = parseResult.GetValue(outputSuffixOpt);
             });
 
-            command.Invoke(trimmedArgs);
+            ParseResult parseResult = command.Parse(trimmedArgs);
+            parseResult.Invoke();
 
             if (Profile is null)
             {

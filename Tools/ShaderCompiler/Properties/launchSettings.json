@@ -2,7 +2,8 @@
   "profiles": {
     "ShaderCompiler": {
       "commandName": "Project",
-      "commandLineArgs": "--config D:/Depot/Luna/Apps/Triangle/Shaders/shaders.cfg --out D:/Depot/Luna/Apps/Triangle/Data/Shaders/DXIL --platform DXIL --binary --shaderModel 6_5 --verbose --force"
+      "commandLineArgs": "--config shaders.cfg --out D:\\Depot\\Luna\\Engine\\..\\Apps\\Data\\Shaders\\DXIL --platform DXIL --binary --shaderModel 6_5 --verbose --define DX12=1 --include D:\\Depot\\Luna\\Engine\\Graphics\\Shaders\\Common\"",
+      "workingDirectory": "D:\\Depot\\Luna\\Apps\\MeshletCull"
     }
   }
 }

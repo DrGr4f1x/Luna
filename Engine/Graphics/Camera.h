@@ -78,6 +78,7 @@ class Camera : public BaseCamera
 {
 public:
 	void SetPerspectiveMatrix(float verticalFovRadians, float aspectHeightOverWidth, float nearZClip, float farZClip) noexcept;
+	void SetAspectRatio(float aspectHeightOverWidth) noexcept;
 
 	float GetFOV() const noexcept { return m_verticalFOV; }
 	float GetNearClip() const noexcept { return m_nearClip; }
@@ -193,6 +194,12 @@ inline void Camera::SetPerspectiveMatrix(float verticalFovRadians, float aspectH
 	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(verticalFovRadians, 1.0f / aspectHeightOverWidth, nearZClip, farZClip);
 	SetProjectionMatrix(Math::Matrix4(perspectiveMatrix));
 	Update(false);
+}
+
+
+inline void Camera::SetAspectRatio(float aspectHeightOverWidth) noexcept
+{
+	SetPerspectiveMatrix(m_verticalFOV, aspectHeightOverWidth, m_nearClip, m_farClip);
 }
 
 } // namespace Luna
