@@ -62,6 +62,12 @@ public:
 	__forceinline void SetW(Vector4 w) noexcept { m_mat.r[3] = w; }
 
 	__forceinline operator XMMATRIX() const noexcept { return m_mat; }
+	__forceinline operator XMFLOAT4X4() const noexcept
+	{
+		XMFLOAT4X4 ret;
+		XMStoreFloat4x4(&ret, m_mat);
+		return ret;
+	}
 
 	__forceinline Vector3 operator*(Vector3 vec) const noexcept { return Vector3(XMVector3Transform(vec, m_mat)); }
 	__forceinline Vector4 operator*(Vector4 vec) const noexcept { return Vector4(XMVector4Transform(vec, m_mat)); }

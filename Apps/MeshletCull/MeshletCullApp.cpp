@@ -490,14 +490,14 @@ void MeshletCullApp::UpdateConstantBuffer()
 	m_constants.SelectedIndex = m_selectedIndex;
 	m_constants.DrawMeshlets = m_drawMeshlets;
 
-	XMStoreFloat4x4(&m_constants.View, view);
-	XMStoreFloat4x4(&m_constants.ViewProj, proj * view);
-	XMStoreFloat3(&m_constants.ViewPosition, viewPosition);
-	XMStoreFloat3(&m_constants.CullViewPosition, cullPos);
+	m_constants.View = view;
+	m_constants.ViewProj = proj * view;
+	m_constants.ViewPosition = viewPosition;
+	m_constants.CullViewPosition = cullPos;
 
 	for (uint32_t i = 0; i < _countof(planes); ++i)
 	{
-		XMStoreFloat4(&m_constants.Planes[i], planes[i]);
+		m_constants.Planes[i] = planes[i];
 	}
 
 	m_constantBuffer->Update(sizeof(Constants), &m_constants);
@@ -519,9 +519,7 @@ void MeshletCullApp::UpdateConstantBuffer()
 		// auto& instance = *(reinterpret_cast<Instance*>(obj.InstanceData) + m_frameIndex);
 		// Add support for m_frameIndex
 		auto& instance = *(reinterpret_cast<Instance*>(obj.instanceData));
-		//XMStoreFloat4x4(&instance.World, XMMatrixTranspose(obj.worldMatrix));
-		//XMStoreFloat4x4(&instance.WorldInvTrans, XMMatrixTranspose(XMMatrixInverse(nullptr, XMMatrixTranspose(obj.worldMatrix))));
-		XMStoreFloat4x4(&instance.World, obj.worldMatrix);
+		instance.World = obj.worldMatrix;
 		XMStoreFloat4x4(&instance.WorldInvTrans, XMMatrixTranspose(XMMatrixInverse(nullptr, obj.worldMatrix)));
 		instance.Scale = XMVectorGetX(scale);
 		instance.Flags = obj.flags;

@@ -48,6 +48,12 @@ public:
 	static __forceinline Matrix3 MakeScale(Vector3 scale) noexcept { return Matrix3(XMMatrixScalingFromVector(scale)); }
 
 	__forceinline operator XMMATRIX() const noexcept { return (const XMMATRIX&)m_mat; }
+	__forceinline operator XMFLOAT3X3() const noexcept
+	{
+		XMFLOAT3X3 ret;
+		XMStoreFloat3x3(&ret, *this);
+		return ret;
+	}
 
 	__forceinline Vector3 operator*(Vector3 vec) const noexcept { return Vector3(XMVector3TransformNormal(vec, *this)); }
 	__forceinline Matrix3 operator*(const Matrix3& mat) const noexcept { return Matrix3(*this * mat.GetX(), *this * mat.GetY(), *this * mat.GetZ()); }

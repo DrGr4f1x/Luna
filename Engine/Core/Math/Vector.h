@@ -40,6 +40,18 @@ public:
 	__forceinline explicit Vector3(EZUnitVector) noexcept { m_vec = CreateZUnitVector(); }
 
 	__forceinline operator XMVECTOR() const noexcept { return m_vec; }
+	__forceinline operator XMFLOAT3() const noexcept 
+	{
+		XMFLOAT3 ret;
+		XMStoreFloat3(&ret, m_vec);
+		return ret;
+	}
+	__forceinline operator XMFLOAT4() const noexcept
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, m_vec);
+		return ret;
+	}
 
 	__forceinline Scalar GetX() const noexcept { return Scalar(XMVectorSplatX(m_vec)); }
 	__forceinline Scalar GetY() const noexcept { return Scalar(XMVectorSplatY(m_vec)); }
@@ -98,6 +110,18 @@ public:
 	__forceinline explicit Vector4(EWUnitVector) noexcept { m_vec = CreateWUnitVector(); }
 
 	__forceinline operator XMVECTOR() const noexcept { return m_vec; }
+	__forceinline operator XMFLOAT3() const noexcept
+	{
+		XMFLOAT3 ret;
+		XMStoreFloat3(&ret, m_vec);
+		return ret;
+	}
+	__forceinline operator XMFLOAT4() const noexcept
+	{
+		XMFLOAT4 ret;
+		XMStoreFloat4(&ret, m_vec);
+		return ret;
+	}
 
 	__forceinline Scalar GetX() const noexcept { return Scalar(XMVectorSplatX(m_vec)); }
 	__forceinline Scalar GetY() const noexcept { return Scalar(XMVectorSplatY(m_vec)); }
