@@ -90,7 +90,7 @@ void ShadowMappingApp::Render()
 
 		context.SetDepthBias(1.25f, 0.0f, 1.75f);
 
-		context.SetDescriptors(0, m_shadowDepthDescriptorSet);
+		context.SetRootCBV(0, m_shadowConstantBuffer);
 
 		// Render current scene
 		m_scenes[m_sceneIndex]->Render(context, true /* bPositionOnly */);
@@ -128,7 +128,7 @@ void ShadowMappingApp::Render()
 			context.SetRootSignature(m_sceneRootSignature);
 			context.SetGraphicsPipeline(m_scenePipeline);
 
-			context.SetDescriptors(0, m_sceneVsDescriptorSet);
+			context.SetRootCBV(0, m_sceneConstantBuffer);
 			context.SetDescriptors(1, m_scenePsDescriptorSet);
 
 			m_scenes[m_sceneIndex]->Render(context);
@@ -314,12 +314,6 @@ void ShadowMappingApp::InitConstantBuffers()
 
 void ShadowMappingApp::InitDescriptorSets()
 {
-	m_shadowDepthDescriptorSet = m_shadowDepthRootSignature->CreateDescriptorSet(0);
-	m_shadowDepthDescriptorSet->SetCBV(0, m_shadowConstantBuffer->GetCbvDescriptor());
-
-	m_sceneVsDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
-	m_sceneVsDescriptorSet->SetCBV(0, m_sceneConstantBuffer->GetCbvDescriptor());
-
 	m_scenePsDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1);
 	m_scenePsDescriptorSet->SetSRV(0, m_shadowMap->GetSrvDescriptor(true));
 

@@ -22,16 +22,13 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 {
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 
-	// Don't need descriptors for root constants
-	assert(rootParam.parameterType != RootParameterType::RootConstants);
-
-	const bool isDynamicBuffer = IsRootDescriptorType(rootParam.parameterType);
+	// Can only create descriptor sets for tables
+	assert(rootParam.parameterType == RootParameterType::Table);
 
 	DescriptorSetDesc descriptorSetDesc{
 		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex].get(),
 		.rootParameter			= rootParam,
-		.numDescriptors			= rootParam.GetNumDescriptors(),
-		.isDynamicBuffer		= isDynamicBuffer
+		.numDescriptors			= rootParam.GetNumDescriptors()
 	};
 
 	return m_device->CreateDescriptorSet(descriptorSetDesc);
@@ -44,6 +41,18 @@ const std::vector<DescriptorBindingDesc>& RootSignature::GetLayoutBindings(uint3
 	assert(it != m_layoutBindingMap.end());
 
 	return it->second;
+}
+
+
+uint32_t RootSignature::GetPushDescriptorBinding(uint32_t rootParamIndex) const noexcept
+{
+	auto it = m_pushDescriptorBindingMap.find(rootParamIndex);
+	if (it != m_pushDescriptorBindingMap.end())
+	{
+		return it->second;
+	}
+
+	return (uint32_t)-1;
 }
 
 } // namespace Luna::VK

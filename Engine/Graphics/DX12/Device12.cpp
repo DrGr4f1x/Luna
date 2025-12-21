@@ -953,7 +953,6 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 	descriptorSet->m_descriptorHandle = descriptorSetDesc.descriptorHandle;
 	descriptorSet->m_numDescriptors = descriptorSetDesc.numDescriptors;
 	descriptorSet->m_isSamplerTable = descriptorSetDesc.isSamplerTable;
-	descriptorSet->m_isRootBuffer = descriptorSetDesc.isRootBuffer;
 
 	return descriptorSet;
 }

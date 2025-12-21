@@ -93,7 +93,7 @@ void MultisamplingApp::Render()
 			context.SetIndexBuffer(mesh->indexBuffer);
 			context.SetVertexBuffer(0, mesh->vertexBuffer);
 
-			context.SetDescriptors(0, m_cbvDescriptorSet);
+			context.SetRootCBV(0, m_constantBuffer);
 			context.SetDescriptors(1, m_srvDescriptorSets[meshIndex]);
 
 			for (const auto& meshPart : mesh->meshParts)
@@ -258,9 +258,6 @@ void MultisamplingApp::InitDescriptorSets()
 
 		m_srvDescriptorSets.push_back(srvDescriptorSet);
 	}
-
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 

@@ -83,7 +83,6 @@ protected:
 	Luna::GpuBufferPtr m_indirectArgsBuffer;
 
 	// Descriptor sets
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	Luna::DescriptorSetPtr m_groundSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_plantsSrvDescriptorSet;
 

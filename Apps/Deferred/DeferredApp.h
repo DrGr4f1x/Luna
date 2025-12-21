@@ -98,7 +98,6 @@ protected:
 	Luna::GpuBufferPtr m_lightingConstantBuffer;
 
 	// Descriptor sets
-	Luna::DescriptorSetPtr m_gbufferCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_armorSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_floorSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_lightingCbvSrvDescriptorSet;

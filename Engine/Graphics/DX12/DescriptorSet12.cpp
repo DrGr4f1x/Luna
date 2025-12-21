@@ -37,15 +37,9 @@ void DescriptorSet::SetSRV(uint32_t slot, const IDescriptor* descriptor)
 	assert(!m_isSamplerTable);
 	assert(IsDescriptorTypeSRV(descriptor12->GetDescriptorType()));
 	assert(m_rootParameter.parameterType == RootParameterType::RootSRV || m_rootParameter.parameterType == RootParameterType::Table);
-	if (m_isRootBuffer)
-	{
-		m_gpuAddress = descriptor12->GetGpuAddress();
-	}
-	else if (m_rootParameter.parameterType == RootParameterType::Table)
-	{
-		assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
-		UpdateDescriptor(slot, descriptor12->GetHandleCPU());
-	}	
+	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+	
+	UpdateDescriptor(slot, descriptor12->GetHandleCPU());	
 }
 
 
@@ -55,16 +49,10 @@ void DescriptorSet::SetUAV(uint32_t slot, const IDescriptor* descriptor)
 
 	assert(!m_isSamplerTable);
 	assert(IsDescriptorTypeUAV(descriptor12->GetDescriptorType()));
-	assert(m_rootParameter.parameterType == RootParameterType::RootUAV || m_rootParameter.parameterType == RootParameterType::Table);
-	if (m_isRootBuffer)
-	{
-		m_gpuAddress = descriptor12->GetGpuAddress();
-	}
-	else if (m_rootParameter.parameterType == RootParameterType::Table)
-	{
-		assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
-		UpdateDescriptor(slot, descriptor12->GetHandleCPU());
-	}
+	assert(m_rootParameter.parameterType == RootParameterType::Table);
+	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+	
+	UpdateDescriptor(slot, descriptor12->GetHandleCPU());
 }
 
 
@@ -74,16 +62,10 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 
 	assert(!m_isSamplerTable);
 	assert(descriptor12->GetDescriptorType() == DescriptorType::ConstantBuffer);
-	assert(m_rootParameter.parameterType == RootParameterType::RootCBV || m_rootParameter.parameterType == RootParameterType::Table);
-	if (m_isRootBuffer)
-	{
-		m_gpuAddress = descriptor12->GetGpuAddress();
-	}
-	else if (m_rootParameter.parameterType == RootParameterType::Table)
-	{
-		assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
-		UpdateDescriptor(slot, descriptor12->GetHandleCPU());
-	}
+	assert(m_rootParameter.parameterType == RootParameterType::Table);
+	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
+
+	UpdateDescriptor(slot, descriptor12->GetHandleCPU());
 }
 
 
@@ -135,20 +117,11 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 
 void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	if (m_isRootBuffer)
-	{
-		m_gpuAddress = gpuBuffer12->GetGpuAddress();
-	}
-	else
-	{
-		auto cpuHandle = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetHandleCPU();
-		UpdateDescriptor(slot, cpuHandle);
-	}
+	auto cpuHandle = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetHandleCPU();
+	UpdateDescriptor(slot, cpuHandle);
 }
 
 
@@ -172,39 +145,21 @@ void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 
 void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	if (m_isRootBuffer)
-	{
-		m_gpuAddress = gpuBuffer12->GetGpuAddress();
-	}
-	else
-	{
-		auto cpuHandle = ((const Descriptor*)gpuBuffer->GetUavDescriptor())->GetHandleCPU();
-		UpdateDescriptor(slot, cpuHandle);
-	}
+	auto cpuHandle = ((const Descriptor*)gpuBuffer->GetUavDescriptor())->GetHandleCPU();
+	UpdateDescriptor(slot, cpuHandle);
 }
 
 
 void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
-	if (m_isRootBuffer)
-	{
-		m_gpuAddress = gpuBuffer12->GetGpuAddress();
-	}
-	else
-	{
-		auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
-		UpdateDescriptor(slot, cpuHandle);
-	}
+	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
+	UpdateDescriptor(slot, cpuHandle);
 }
 
 
@@ -214,15 +169,9 @@ void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 }
 
 
-void DescriptorSet::SetDynamicOffset(uint32_t offset)
-{
-	m_dynamicOffset = offset;
-}
-
-
 bool DescriptorSet::HasBindableDescriptors() const
 {
-	return m_isRootBuffer || !m_descriptors.empty();
+	return !m_descriptors.empty();
 }
 
 
@@ -238,15 +187,9 @@ uint64_t DescriptorSet::GetGpuAddress() const
 }
 
 
-uint64_t DescriptorSet::GetDynamicOffset() const
-{
-	return m_dynamicOffset;
-}
-
-
 uint64_t DescriptorSet::GetGpuAddressWithOffset() const
 {
-	return m_gpuAddress + m_dynamicOffset;
+	return m_gpuAddress;
 }
 
 

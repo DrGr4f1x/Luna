@@ -105,13 +105,6 @@ void ResourceSet::SetSampler(int param, int slot, SamplerPtr sampler)
 }
 
 
-void ResourceSet::SetDynamicOffset(int param, uint32_t offset)
-{
-	assert(param < (int)m_descriptorSets.size());
-	m_descriptorSets[param]->SetDynamicOffset(offset);
-}
-
-
 DescriptorSetPtr& ResourceSet::operator[](uint32_t index)
 {
 	assert(index < (int)m_descriptorSets.size());

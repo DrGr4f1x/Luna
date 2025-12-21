@@ -94,7 +94,7 @@ void InstancingApp::Render()
 		context.SetRootSignature(m_modelRootSignature);
 		context.SetGraphicsPipeline(m_planetPipeline);
 
-		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 		context.SetDescriptors(1, m_planetSrvDescriptorSet);
 
 		m_planetModel->Render(context);
@@ -104,7 +104,7 @@ void InstancingApp::Render()
 	{
 		context.SetGraphicsPipeline(m_rockPipeline);
 
-		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 		context.SetDescriptors(1, m_rockSrvDescriptorSet);
 
 		{
@@ -336,9 +336,6 @@ void InstancingApp::InitInstanceBuffer()
 
 void InstancingApp::InitDescriptorSets()
 {
-	m_cbvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
-
 	m_rockSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1);
 	m_rockSrvDescriptorSet->SetSRV(0, m_rockTexture);
 

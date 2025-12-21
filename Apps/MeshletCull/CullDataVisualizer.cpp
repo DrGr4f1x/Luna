@@ -39,7 +39,7 @@ void CullDataVisualizer::Render(GraphicsContext& context, const MeshletMesh& mes
 	//context.SetConstantBuffer(0, m_constantBuffer);
 	context.SetDescriptors(0, m_descriptorSet);
 	context.SetConstants(1, offset, count);
-	context.SetSRV(2, mesh.cullDataResource);
+	context.SetRootSRV(2, mesh.cullDataResource);
 
 	// Dispatch bounding sphere draw
 	context.SetMeshletPipeline(m_boundingSpherePipeline);

@@ -80,7 +80,6 @@ protected:
 	Luna::GpuBufferPtr m_radialBlurConstantBuffer;
 
 	// Descriptor sets
-	Luna::DescriptorSetPtr m_sceneCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_sceneSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_blurCbvSrvDescriptorSet;
 

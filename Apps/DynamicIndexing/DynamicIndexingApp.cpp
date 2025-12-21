@@ -84,8 +84,7 @@ void DynamicIndexingApp::Render()
 
 	for (uint32_t i = 0; i < m_cityMaterialCount; ++i)
 	{
-		m_vsDescriptorSet->SetDynamicOffset(i * (uint32_t)m_dynamicAlignment);
-		context.SetDescriptors(0, m_vsDescriptorSet);
+		context.SetRootCBV(0, m_constantBuffer, i * (uint32_t)m_dynamicAlignment);
 		context.SetDescriptors(1, m_psDescriptorSet);
 		context.SetConstant(2, 0, i);
 
@@ -205,9 +204,6 @@ void DynamicIndexingApp::InitConstantBuffer()
 
 void DynamicIndexingApp::InitDescriptorSets()
 {
-	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_vsDescriptorSet->SetCBV(0, m_constantBuffer->GetCbvDescriptor());
-
 	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_psDescriptorSet->SetSRV(0, m_diffuseTexture->GetDescriptor());
 

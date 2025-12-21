@@ -35,7 +35,6 @@ protected:
 	void InitPipeline();
 	void InitConstantBuffers();
 	void InitBox();
-	void InitDescriptorSets();
 
 	void UpdateConstantBuffers();
 
@@ -65,9 +64,6 @@ protected:
 
 	Luna::GpuBufferPtr m_vertexBuffer;
 	Luna::GpuBufferPtr m_indexBuffer;
-
-	Luna::DescriptorSetPtr m_vsCbvDescriptorSet;
-	Luna::DescriptorSetPtr m_vsModelCbvDescriptorSet;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 

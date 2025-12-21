@@ -33,8 +33,8 @@ void FrustumVisualizer::Render(GraphicsContext& context)
 	context.SetRootSignature(m_rootSignature);
 	
 	// TODO: support SetConstantBuffer, either with push descriptors or DynamicDescriptorHeap
-	//context.SetConstantBuffer(0, m_constantBuffer);
-	context.SetDescriptors(0, m_descriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
+	//context.SetDescriptors(0, m_descriptorSet);
 
 	context.SetMeshletPipeline(m_pipeline);
 
@@ -80,10 +80,10 @@ void FrustumVisualizer::CreateDeviceDependentResources(IDevice* device)
 	}
 
 	// Descriptor set
-	{
+	/*{
 		m_descriptorSet = m_rootSignature->CreateDescriptorSet(0);
 		m_descriptorSet->SetCBV(0, m_constantBuffer);
-	}
+	}*/
 }
 
 

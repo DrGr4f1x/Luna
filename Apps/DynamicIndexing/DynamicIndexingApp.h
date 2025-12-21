@@ -64,7 +64,6 @@ protected:
 
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	Luna::DescriptorSetPtr m_vsDescriptorSet;
 	Luna::DescriptorSetPtr m_psDescriptorSet;
 
 	Luna::TexturePtr m_diffuseTexture;

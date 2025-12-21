@@ -88,7 +88,7 @@ void PipelinesApp::Render()
 	context.SetScissor(0, 0, width, height);
 
 	context.SetRootSignature(m_rootSignature);
-	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 
 	// Left : solid color
 	{
@@ -138,7 +138,6 @@ void PipelinesApp::CreateDeviceDependentResources()
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(VSConstants));
 
 	LoadAssets();
-	InitDescriptorSet();
 
 	auto box = m_model->boundingBox;
 
@@ -221,13 +220,6 @@ void PipelinesApp::InitPipelines()
 	wireframePipelineDesc.SetPixelShader("WireframePS");
 
 	m_wireframePipeline = CreateGraphicsPipeline(wireframePipelineDesc);
-}
-
-
-void PipelinesApp::InitDescriptorSet()
-{
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 

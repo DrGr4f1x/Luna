@@ -34,7 +34,6 @@ struct DescriptorSetDesc
 	CVkDescriptorSetLayout* descriptorSetLayout{ nullptr };
 	RootParameter rootParameter{};
 	uint32_t numDescriptors{ 0 };
-	bool isDynamicBuffer{ false };
 };
 
 

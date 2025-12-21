@@ -49,12 +49,8 @@ public:
 
 	void SetSampler(uint32_t slot, SamplerPtr sampler) override;
 
-	void SetDynamicOffset(uint32_t offset) override;
-
 	bool HasDescriptors() const;
 	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
-	uint32_t GetDynamicOffset() const { return m_dynamicOffset; }
-	bool IsDynamicBuffer() const { return m_isDynamicBuffer; }
 
 protected:
 	void UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet);
@@ -74,8 +70,6 @@ protected:
 
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
 	uint32_t m_numDescriptors{ 0 };
-	uint32_t m_dynamicOffset{ 0 };
-	bool m_isDynamicBuffer{ false };
 };
 
 } // namespace Luna::VK

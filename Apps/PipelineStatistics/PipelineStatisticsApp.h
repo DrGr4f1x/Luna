@@ -36,7 +36,6 @@ protected:
 	void InitRootSignature();
 	void InitPipeline();
 	void InitQueryHeap();
-	void InitDescriptorSet();
 
 	void UpdateConstantBuffer();
 
@@ -69,8 +68,6 @@ protected:
 	Luna::GpuBufferPtr m_readbackBuffer;
 
 	Luna::PipelineStatistics m_statistics{};
-
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 
 	std::vector<Luna::ModelPtr> m_models;
 	std::vector<std::string> m_modelNames;

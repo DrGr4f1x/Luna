@@ -126,7 +126,7 @@ void ComputeClothApp::Render()
 		context.SetRootSignature(m_sphereRootSignature);
 		context.SetGraphicsPipeline(m_spherePipeline);
 
-		context.SetDescriptors(0, m_sphereCbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 
 		m_sphereModel->Render(context);
 	}
@@ -138,7 +138,7 @@ void ComputeClothApp::Render()
 		context.SetRootSignature(m_clothRootSignature);
 		context.SetGraphicsPipeline(m_clothPipeline);
 
-		context.SetDescriptors(0, m_clothCbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 		context.SetDescriptors(1, m_clothSrvDescriptorSet);
 
 		context.SetIndexBuffer(m_clothIndexBuffer);
@@ -423,12 +423,6 @@ void ComputeClothApp::InitCloth()
 
 void ComputeClothApp::InitDescriptorSets()
 {
-	m_sphereCbvDescriptorSet = m_sphereRootSignature->CreateDescriptorSet(0);
-	m_sphereCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
-
-	m_clothCbvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(0);
-	m_clothCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
-
 	m_clothSrvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(1);
 	m_clothSrvDescriptorSet->SetSRV(0, m_texture);
 

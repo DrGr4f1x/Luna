@@ -111,30 +111,35 @@ public:
 	virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
 	virtual void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) = 0;
 
+	// Root constants in DirectX, push constants in Vulkan
 	virtual void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
 	virtual void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) = 0;
 	virtual void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) = 0;
-	// TODO: Rename this to SetRootCBV
-	virtual void SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
-	// TOOD: Rename this to SetRootSRV
-	virtual void SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
-	// TODO: Rename this to SetRootUAV
-	virtual void SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) = 0;
+	
+	// Root CBV/SRV/UAV in DirectX, push descriptors in Vulkan
+	virtual void SetRootCBV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes) = 0;
+	virtual void SetRootSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes) = 0;
+	virtual void SetRootUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes) = 0;
+
+	// Descriptor tables
 	virtual void SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet) = 0;
 	virtual void SetResources(CommandListType type, ResourceSet& resourceSet) = 0;
 
+	// Dynamic SRVs, using the DynamicDescriptorHeap
 	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
 	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) = 0;
 	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
 	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) = 0;
 
+	// Dynamic UAVs, using the DynamicDescriptorHeap
 	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
 	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) = 0;
 	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
 
+	// Dynamic CBV, using the DynamicDescriptorHeap
 	virtual void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
 
 	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
@@ -265,6 +270,7 @@ public:
 	void SetPrimitiveTopology(PrimitiveTopology topology);
 	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor);
 
+	// Root constants in DirectX, push constants in Vulkan
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
 	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val);
@@ -272,21 +278,28 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
-	void SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
-	void SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
-	void SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+
+	// Root CBS/SRV/UAV in DirectX, push descriptors in Vulkan
+	void SetRootCBV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes = 0);
+	void SetRootSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes = 0);
+	void SetRootUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes = 0);
+
+	// Descriptor tables
 	void SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
+	// Dynamic SRVs, using the DynamicDescriptorHeap
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv = true);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture);
 
+	// Dynamic UAVs, using the DynamicDescriptorHeap
 	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
 	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer);
 	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 
+	// Dynamic CBVs, using the DynamicDescriptorHeap
 	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 
 	void SetIndexBuffer(const GpuBufferPtr& gpuBuffer);
@@ -319,6 +332,7 @@ public:
 	void SetRootSignature(const RootSignaturePtr& rootSignature);
 	void SetComputePipeline(const ComputePipelinePtr& computePipeline);
 
+	// Root constants in DirectX, push constants in Vulkan
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset);
 	void SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val);
@@ -326,21 +340,28 @@ public:
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z);
 	void SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w);
-	void SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
-	void SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
-	void SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer);
+
+	// Root CBV/SRV/UAV in DirectX, push descriptors in Vulkan
+	void SetRootCBV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes = 0);
+	void SetRootSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes = 0);
+	void SetRootUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes = 0);
+
+	// Descriptor tables
 	void SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet);
 	void SetResources(ResourceSet& resourceSet);
 
+	// Dynamic SRVs, using DynamicDescriptorHeap
 	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv = true);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture);
 
+	// Dynamic UAVs, using DynamicDescriptorHeap
 	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
 	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer);
 	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 
+	// Dynamic CBV, using DynamicDescriptorHeap
 	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
 
 	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
@@ -683,21 +704,21 @@ inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam
 }
 
 
-inline void GraphicsContext::SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetRootCBV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetConstantBuffer(CommandListType::Direct, rootIndex, gpuBuffer.get());
+	m_contextImpl->SetRootCBV(CommandListType::Direct, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetRootSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetSRV(CommandListType::Direct, rootIndex, gpuBuffer.get());
+	m_contextImpl->SetRootSRV(CommandListType::Direct, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetRootUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetUAV(CommandListType::Direct, rootIndex, gpuBuffer.get());
+	m_contextImpl->SetRootUAV(CommandListType::Direct, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
@@ -901,21 +922,21 @@ inline void ComputeContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam 
 }
 
 
-inline void ComputeContext::SetConstantBuffer(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetRootCBV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetConstantBuffer(CommandListType::Compute, rootIndex, gpuBuffer.get());
+	m_contextImpl->SetRootCBV(CommandListType::Compute, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
-inline void ComputeContext::SetSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetRootSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetSRV(CommandListType::Compute, rootIndex, gpuBuffer.get());
+	m_contextImpl->SetRootSRV(CommandListType::Compute, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
-inline void ComputeContext::SetUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetRootUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetUAV(CommandListType::Compute, rootIndex, gpuBuffer.get());
+	m_contextImpl->SetRootUAV(CommandListType::Compute, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 

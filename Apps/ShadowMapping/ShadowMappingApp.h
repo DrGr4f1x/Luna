@@ -77,8 +77,6 @@ protected:
 	Luna::GraphicsPipelinePtr m_shadowVisualizationPipeline;
 	bool m_pipelinesCreated{ false };
 
-	Luna::DescriptorSetPtr m_shadowDepthDescriptorSet;
-	Luna::DescriptorSetPtr m_sceneVsDescriptorSet;
 	Luna::DescriptorSetPtr m_scenePsDescriptorSet;
 	Luna::DescriptorSetPtr m_shadowVisualizationDescriptorSet;
 

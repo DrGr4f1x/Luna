@@ -1076,56 +1076,47 @@ void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DW
 }
 
 
-void CommandContextVK::SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const Descriptor* descriptorVK = (const Descriptor*)gpuBufferVK->GetCbvDescriptor();
-
-	//ParseRootSignature(type);
-
-	//const bool graphicsPipe = type == CommandListType::Direct;
-
-	//VkDescriptorBufferInfo info{
-	//	.buffer		= gpuBufferVK->GetBuffer(),
-	//	.offset		= 0,
-	//	.range		= VK_WHOLE_SIZE
-	//};
-
-	//m_dynamicDescriptorHeap->SetDescriptorBufferInfo(rootIndex, 0, info, graphicsPipe);
-
-	//MarkDescriptorsDirty(type);
+	const RootSignature* RootSignature = GetRootSignature(type);
 
 	FlushResourceBarriers();
 
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBufferVK->GetBuffer(),
-		.offset		= 0,
+		.offset		= offsetInBytes,
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const uint32_t binding = RootSignature->GetPushDescriptorBinding(rootIndex);
+	assert(binding != (uint32_t)-1);
+
 	VkWriteDescriptorSet writeDescriptor{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding = 0,
-		.dstArrayElement = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.pBufferInfo = &info
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding			= binding,
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pBufferInfo		= &info
 	};
 
 	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), rootIndex, 1, &writeDescriptor);
+	const uint32_t pushDescriptorSetIndex = RootSignature->GetPushDescriptorSetIndex();
+	assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
 }
 
 
-void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
@@ -1135,7 +1126,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, const IG
 
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBufferVK->GetBuffer(),
-		.offset		= 0,
+		.offset		= offsetInBytes,
 		.range		= VK_WHOLE_SIZE
 	};
 
@@ -1156,9 +1147,8 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, const IG
 }
 
 
-void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
@@ -1168,8 +1158,8 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, const IG
 
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBufferVK->GetBuffer(),
-		.offset		= 0,
-		.range	= VK_WHOLE_SIZE
+		.offset		= offsetInBytes,
+		.range		= VK_WHOLE_SIZE
 	};
 
 	VkWriteDescriptorSet writeDescriptor{
@@ -1683,9 +1673,6 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		return;
 	}
 
-	const uint32_t dynamicOffset = descriptorSetVK->GetDynamicOffset();
-	const bool isDynamicBuffer = descriptorSetVK->IsDynamicBuffer();
-
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,
 		(type == CommandListType::Direct) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
@@ -1693,8 +1680,8 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		rootIndex,
 		1,
 		&vkDescriptorSet,
-		isDynamicBuffer ? 1 : 0,
-		isDynamicBuffer ? &dynamicOffset : nullptr);
+		0,
+		nullptr);
 }
 
 
@@ -1835,6 +1822,19 @@ void CommandContextVK::ClearDirtyDescriptors(CommandListType type)
 	else
 	{
 		m_hasDirtyComputeDescriptors = false;
+	}
+}
+
+
+RootSignature* CommandContextVK::GetRootSignature(CommandListType type)
+{
+	if (type == CommandListType::Direct)
+	{
+		return (RootSignature*)m_graphicsRootSignature;
+	}
+	else
+	{
+		return (RootSignature*)m_computeRootSignature;
 	}
 }
 

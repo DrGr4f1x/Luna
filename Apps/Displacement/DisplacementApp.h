@@ -67,7 +67,6 @@ protected:
 	DSConstants m_dsConstants{};
 	Luna::GpuBufferPtr m_dsConstantBuffer;
 
-	Luna::DescriptorSetPtr m_hsCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_dsCbvSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_psSrvDescriptorSet;
 

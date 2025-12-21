@@ -95,8 +95,6 @@ protected:
 	Luna::GpuBufferPtr m_blurVertConstantBuffer;
 
 	// Descriptor sets
-	Luna::DescriptorSetPtr m_sceneCbvDescriptorSet;
-	Luna::DescriptorSetPtr m_skyBoxCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_skyBoxSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_blurHorizDescriptorSet;
 	Luna::DescriptorSetPtr m_blurVertDescriptorSet;

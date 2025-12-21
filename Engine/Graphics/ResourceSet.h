@@ -50,8 +50,6 @@ public:
 
 	void SetSampler(int param, int slot, SamplerPtr sampler);
 
-	void SetDynamicOffset(int param, uint32_t offset);
-
 	uint32_t GetNumDescriptorSets() const { return (uint32_t)m_descriptorSets.size(); }
 
 	DescriptorSetPtr& operator[](uint32_t index);

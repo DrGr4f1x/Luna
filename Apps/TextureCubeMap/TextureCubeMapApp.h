@@ -76,9 +76,7 @@ protected:
 	Luna::GpuBufferPtr m_vsModelConstantBuffer;
 	Luna::GpuBufferPtr m_psModelConstantBuffer;
 
-	Luna::DescriptorSetPtr m_skyBoxCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_skyBoxSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_modelCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_modelCbvSrvDescriptorSet;
 
 	Luna::TexturePtr m_skyboxTex;

@@ -105,7 +105,7 @@ void TextureArrayApp::Render()
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	// Bind descriptor sets
-	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 	context.SetDescriptors(1, m_srvDescriptorSet);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
@@ -233,10 +233,7 @@ void TextureArrayApp::InitConstantBuffer()
 
 void TextureArrayApp::InitDescriptorSets()
 {
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
 

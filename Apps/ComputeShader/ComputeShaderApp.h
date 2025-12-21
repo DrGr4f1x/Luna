@@ -67,9 +67,7 @@ protected:
 	bool m_pipelinesCreated{ false };
 
 	Luna::DescriptorSetPtr m_computeSrvUavDescriptorSet;
-	Luna::DescriptorSetPtr m_graphicsLeftCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_graphicsLeftSrvDescriptorSet;
-	Luna::DescriptorSetPtr m_graphicsRightCbvDescriptorSet;
 	Luna::DescriptorSetPtr m_graphicsRightSrvDescriptorSet;
 
 	Luna::ColorBufferPtr m_computeScratchBuffer;

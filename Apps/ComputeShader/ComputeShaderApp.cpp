@@ -148,7 +148,7 @@ void ComputeShaderApp::Render()
 	context.SetRootSignature(m_graphicsRootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
-	context.SetDescriptors(0, m_graphicsLeftCbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 	context.SetDescriptors(1, m_graphicsLeftSrvDescriptorSet);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
@@ -158,7 +158,7 @@ void ComputeShaderApp::Render()
 
 	context.SetViewportAndScissor(GetWindowWidth() / 2, 0u, GetWindowWidth() / 2, GetWindowHeight());
 
-	context.SetDescriptors(0, m_graphicsRightCbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 	context.SetDescriptors(1, m_graphicsRightSrvDescriptorSet);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
@@ -340,14 +340,8 @@ void ComputeShaderApp::InitDescriptorSets()
 	m_computeSrvUavDescriptorSet->SetSRV(0, m_texture);
 	m_computeSrvUavDescriptorSet->SetUAV(1, m_computeScratchBuffer);
 
-	m_graphicsLeftCbvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(0);
-	m_graphicsLeftCbvDescriptorSet->SetCBV(0, m_constantBuffer);
-
 	m_graphicsLeftSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
 	m_graphicsLeftSrvDescriptorSet->SetSRV(0, m_texture);
-
-	m_graphicsRightCbvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(0);
-	m_graphicsRightCbvDescriptorSet->SetCBV(0, m_constantBuffer);
 
 	m_graphicsRightSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
 	m_graphicsRightSrvDescriptorSet->SetSRV(0, m_computeScratchBuffer);

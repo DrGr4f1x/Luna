@@ -69,8 +69,6 @@ void UIOverlay::CreateWindowSizeDependentResources()
 		InitPipeline();
 		m_pipelineCreated = true;
 	}
-
-
 }
 
 
@@ -276,7 +274,7 @@ void UIOverlay::InitRootSignature()
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "UIOverlay Root Signature",
 		.rootParameters		= {
-			RootCBV(0, ShaderStage::Vertex),
+			Table({ ConstantBuffer }, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Pixel)
 		}

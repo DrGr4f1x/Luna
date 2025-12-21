@@ -103,7 +103,7 @@ void RadialBlurApp::Render()
 		context.SetGraphicsPipeline(m_colorPassPipeline);
 
 		// Bind descriptor sets
-		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
+		context.SetRootCBV(0, m_sceneConstantBuffer);
 		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
 
 		// Draw the model
@@ -132,7 +132,7 @@ void RadialBlurApp::Render()
 		context.SetGraphicsPipeline(m_phongPassPipeline);
 
 		// Bind descriptor sets
-		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
+		context.SetRootCBV(0, m_sceneConstantBuffer);
 		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
 
 		// Draw the model
@@ -298,12 +298,9 @@ void RadialBlurApp::InitRenderTargets()
 
 void RadialBlurApp::InitDescriptorSets()
 {
-	m_sceneCbvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
 	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1);
-	
 	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(0);
 
-	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer);
 	m_sceneSrvDescriptorSet->SetSRV(0, m_gradientTex);
 
 	m_blurCbvSrvDescriptorSet->SetSRV(0, m_offscreenColorBuffer);

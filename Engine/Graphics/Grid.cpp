@@ -37,7 +37,7 @@ void Grid::Render(GraphicsContext& context)
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_pipeline);
 
-	context.SetResources(m_resources);
+	context.SetRootCBV(0, m_constantBuffer);
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
 	context.SetIndexBuffer(m_indexBuffer);
@@ -54,8 +54,6 @@ void Grid::CreateDeviceDependentResources()
 	// Create constant buffer
 	m_constantBuffer = CreateConstantBuffer("Grid Constant Buffer", 1, sizeof(m_vsConstants));
 	m_vsConstants.viewProjectionMatrix = Math::Matrix4(Math::kIdentity);
-
-	InitResourceSet();
 }
 
 
@@ -187,13 +185,6 @@ void Grid::InitPipeline()
 	};
 
 	m_pipeline = m_application->CreateGraphicsPipeline(pipelineDesc);
-}
-
-
-void Grid::InitResourceSet()
-{
-	m_resources.Initialize(m_rootSignature);
-	m_resources.SetCBV(0, 0, m_constantBuffer);
 }
 
 } // namespace Luna

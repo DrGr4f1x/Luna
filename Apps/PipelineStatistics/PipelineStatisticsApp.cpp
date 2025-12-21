@@ -137,7 +137,7 @@ void PipelineStatisticsApp::Render()
 
 	context.SetGraphicsPipeline(m_pipeline);
 
-	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetRootCBV(0, m_vsConstantBuffer);
 
 	// Start the pipeline statistics query
 	context.BeginQuery(m_queryHeap, activeFrame);
@@ -200,7 +200,6 @@ void PipelineStatisticsApp::CreateDeviceDependentResources()
 
 	InitQueryHeap();
 	LoadAssets();
-	InitDescriptorSet();
 }
 
 
@@ -323,13 +322,6 @@ void PipelineStatisticsApp::InitQueryHeap()
 		.elementSize	= m_queryHeap->GetQuerySize()
 	};
 	m_readbackBuffer = CreateGpuBuffer(readbackBufferDesc);
-}
-
-
-void PipelineStatisticsApp::InitDescriptorSet()
-{
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 }
 
 

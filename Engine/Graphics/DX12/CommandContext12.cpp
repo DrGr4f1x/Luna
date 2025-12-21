@@ -776,7 +776,7 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 }
 
 
-void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetRootCBV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
@@ -786,7 +786,7 @@ void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootInde
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
-	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
+	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress() + offsetInBytes;
 
 	if (type == CommandListType::Direct)
 	{
@@ -799,7 +799,7 @@ void CommandContext12::SetConstantBuffer(CommandListType type, uint32_t rootInde
 }
 
 
-void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetRootSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
@@ -809,7 +809,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, const IG
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
-	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
+	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress() + offsetInBytes;
 
 	if (type == CommandListType::Direct)
 	{
@@ -822,7 +822,7 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, const IG
 }
 
 
-void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer)
+void CommandContext12::SetRootUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	assert(type == CommandListType::Direct || type == CommandListType::Compute);
 
@@ -832,7 +832,7 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, const IG
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
-	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress();
+	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress() + offsetInBytes;
 
 	if (type == CommandListType::Direct)
 	{

@@ -83,7 +83,7 @@ void IndirectDrawApp::Render()
 		context.SetRootSignature(m_skySphereRootSignature);
 		context.SetGraphicsPipeline(m_skySpherePipeline);
 
-		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 
 		m_skySphereModel->Render(context);
 	}
@@ -93,7 +93,7 @@ void IndirectDrawApp::Render()
 		context.SetRootSignature(m_groundRootSignature);
 		context.SetGraphicsPipeline(m_groundPipeline);
 
-		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 		context.SetDescriptors(1, m_groundSrvDescriptorSet);
 
 		m_groundModel->Render(context);
@@ -104,7 +104,7 @@ void IndirectDrawApp::Render()
 		context.SetRootSignature(m_plantsRootSignature);
 		context.SetGraphicsPipeline(m_plantsPipeline);
 		
-		context.SetDescriptors(0, m_cbvDescriptorSet);
+		context.SetRootCBV(0, m_vsConstantBuffer);
 		context.SetDescriptors(1, m_plantsSrvDescriptorSet);
 
 		// TODO: Support multi-draw
@@ -313,9 +313,6 @@ void IndirectDrawApp::InitPipelines()
 
 void IndirectDrawApp::InitDescriptorSets()
 {
-	m_cbvDescriptorSet = m_skySphereRootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
-
 	m_groundSrvDescriptorSet = m_groundRootSignature->CreateDescriptorSet(1);
 	m_groundSrvDescriptorSet->SetSRV(0, m_groundTexture);
 

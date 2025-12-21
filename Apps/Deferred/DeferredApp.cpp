@@ -93,7 +93,7 @@ void DeferredApp::Render()
 		context.SetGraphicsPipeline(m_gbufferPipeline);
 
 		// Render floor
-		context.SetDescriptors(0, m_gbufferCbvDescriptorSet);
+		context.SetRootCBV(0, m_gbufferConstantBuffer);
 		context.SetDescriptors(1, m_floorSrvDescriptorSet);
 		m_floorModel->Render(context);
 
@@ -305,9 +305,6 @@ void DeferredApp::InitConstantBuffers()
 
 void DeferredApp::InitDescriptorSets()
 {
-	m_gbufferCbvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(0);
-	m_gbufferCbvDescriptorSet->SetCBV(0, m_gbufferConstantBuffer);
-
 	m_armorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(1);
 	m_armorSrvDescriptorSet->SetSRV(0, m_armorColorTexture);
 	m_armorSrvDescriptorSet->SetSRV(1, m_armorNormalTexture);

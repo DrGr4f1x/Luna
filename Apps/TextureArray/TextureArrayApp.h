@@ -72,7 +72,6 @@ protected:
 	Luna::GpuBufferPtr m_indexBuffer;
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	Luna::DescriptorSetPtr m_srvDescriptorSet;
 
 	Luna::RootSignaturePtr m_rootSignature;

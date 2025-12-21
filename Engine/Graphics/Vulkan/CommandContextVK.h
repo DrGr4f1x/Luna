@@ -122,27 +122,35 @@ public:
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
 	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) override;
 
+	// Push constants
 	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
 	void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z) override;
 	void SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w) override;
-	void SetConstantBuffer(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
-	void SetUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer) override;
+
+	// Push descriptors
+	void SetRootCBV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes) override;
+	void SetRootSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes) override;
+	void SetRootUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes) override;
+
+	// Descriptor tables
 	void SetDescriptors(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet) override;
 	void SetResources(CommandListType type, ResourceSet& resourceSet) override;
 
+	// Dynamic SRVs, using DynamicDescriptorHeap
 	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
 	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) override;
 	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
 	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) override;
 
+	// Dynamic UAVs, using DynamicDescriptorHeap
 	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
 	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) override;
 	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
 
+	// Dynamic CBV, using DynamicDescriptorHeap
 	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
 
 	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
@@ -185,6 +193,8 @@ private:
 	void MarkDescriptorsDirty(CommandListType type);
 	bool HasDirtyDescriptors(CommandListType type);
 	void ClearDirtyDescriptors(CommandListType type);
+
+	RootSignature* GetRootSignature(CommandListType type);
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
 

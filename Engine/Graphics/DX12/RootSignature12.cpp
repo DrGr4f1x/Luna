@@ -22,8 +22,8 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 {
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 
-	// Don't need descriptors for root constants
-	assert(rootParam.parameterType != RootParameterType::RootConstants);
+	// Only create a descriptor set for tables
+	assert(rootParam.parameterType == RootParameterType::Table);
 
 	const bool isRootBuffer = IsRootDescriptorType(rootParam.parameterType);
 
@@ -38,8 +38,7 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 		.descriptorHandle	= isRootBuffer ? DescriptorHandle{} : AllocateUserDescriptor(heapType, numDescriptors),
 		.rootParameter		= rootParam,
 		.numDescriptors		= numDescriptors,
-		.isSamplerTable		= isSamplerTable,
-		.isRootBuffer		= isRootBuffer
+		.isSamplerTable		= isSamplerTable
 	};
 
 	return m_device->CreateDescriptorSet(descriptorSetDesc);

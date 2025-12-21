@@ -17,7 +17,7 @@ cbuffer VSConstants : register(b0)
     float4x4 viewMatrix;
 };
 
-[[vk::binding(1, 1)]]
+[[vk::binding(1, 0)]]
 cbuffer VSModelConstants : register(b1)
 {
     float4x4 modelMatrix;

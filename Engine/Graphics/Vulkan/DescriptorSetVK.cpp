@@ -49,17 +49,13 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 	const Descriptor* descriptorVK = (const Descriptor*)descriptor;
 
 	assert(descriptorVK->GetDescriptorClass() == DescriptorClass::Buffer);
-	assert(m_rootParameter.parameterType == RootParameterType::RootCBV || m_rootParameter.parameterType == RootParameterType::Table);
-
-	if (!m_isDynamicBuffer)
-	{
-		assert(m_rootParameter.GetDescriptorType(slot) == DescriptorType::ConstantBuffer);
-	}
+	assert(m_rootParameter.parameterType == RootParameterType::Table);
+	assert(m_rootParameter.GetDescriptorType(slot) == DescriptorType::ConstantBuffer);
 
 	VkDescriptorBufferInfo info{
 		.buffer		= descriptorVK->GetBuffer(),
 		.offset		= 0,
-		.range		= m_isDynamicBuffer ? descriptorVK->GetElementSize() : VK_WHOLE_SIZE
+		.range		= VK_WHOLE_SIZE
 	};
 
 	const uint32_t startRegister = m_rootParameter.startRegister;
@@ -70,7 +66,7 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 		.pBufferInfo		= &info
 	};
 
@@ -162,9 +158,6 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
 
-	VkBufferView texelBufferView = VK_NULL_HANDLE;
-	VkDescriptorBufferInfo info{};
-
 	const uint32_t startRegister = m_rootParameter.startRegister;
 
 	VkWriteDescriptorSet writeDescriptorSet{
@@ -173,21 +166,23 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 	};
+
+	VkBufferView texelBufferView = VK_NULL_HANDLE;
+	VkDescriptorBufferInfo info{};
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
 		texelBufferView = descriptor->GetBufferView();
-
 		writeDescriptorSet.pTexelBufferView = &texelBufferView;
 	}
 	else
 	{
 		info.buffer = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetBuffer();
 		info.offset = 0;
-		info.range = m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE;
-
+		info.range = VK_WHOLE_SIZE;
+		
 		writeDescriptorSet.pBufferInfo = &info;
 	}
 
@@ -197,8 +192,6 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 
 void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 {
-	// TODO: Try this with GetPlatformObject()
-
 	const Texture* textureVK = (const Texture*)texture.Get();
 	assert(textureVK != nullptr);
 
@@ -248,8 +241,6 @@ void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t u
 
 void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
-
 	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
 
@@ -261,9 +252,6 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 {
 	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetUavDescriptor();
 
-	VkBufferView texelBufferView = VK_NULL_HANDLE;
-	VkDescriptorBufferInfo info{};
-
 	const uint32_t startRegister = m_rootParameter.startRegister;
 
 	VkWriteDescriptorSet writeDescriptorSet{
@@ -272,21 +260,23 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 	};
+
+	VkBufferView texelBufferView = VK_NULL_HANDLE;
+	VkDescriptorBufferInfo info{};
 
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
 		texelBufferView = descriptor->GetBufferView();
-
 		writeDescriptorSet.pTexelBufferView = &texelBufferView;
 	}
 	else
 	{
 		info.buffer = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetBuffer();
 		info.offset = 0;
-		info.range = m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE;
-
+		info.range = VK_WHOLE_SIZE;
+		
 		writeDescriptorSet.pBufferInfo = &info;
 	}
 
@@ -299,7 +289,7 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 	VkDescriptorBufferInfo info{
 		.buffer		= ((const Descriptor*)gpuBuffer->GetCbvDescriptor())->GetBuffer(),
 		.offset		= 0,
-		.range		= m_isDynamicBuffer ? gpuBuffer->GetElementSize() : VK_WHOLE_SIZE
+		.range		= VK_WHOLE_SIZE
 	};
 
 	const uint32_t startRegister = m_rootParameter.startRegister;
@@ -310,7 +300,7 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		.dstBinding			= slot + startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 		.pBufferInfo		= &info
 	};
 
@@ -341,17 +331,9 @@ void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
 }
 
 
-void DescriptorSet::SetDynamicOffset(uint32_t offset)
-{
-	assert(m_isDynamicBuffer);
-
-	m_dynamicOffset = offset;
-}
-
-
 bool DescriptorSet::HasDescriptors() const
 {
-	return (m_numDescriptors != 0) || m_isDynamicBuffer;
+	return (m_numDescriptors != 0);
 }
 
 
@@ -371,91 +353,66 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptorVK = (const Descriptor*)descriptor;
 
-	if (IsRootDescriptorType(m_rootParameter.parameterType))
+	assert(m_rootParameter.parameterType == RootParameterType::Table);
+
+	DescriptorType descriptorType = m_rootParameter.GetDescriptorType(slot);
+	assert(IsDescriptorTypeSRV(descriptorType));
+
+	// Images (i.e. ColorBuffer, DepthBuffer, or Texture)
+	if (descriptorVK->GetDescriptorClass() == DescriptorClass::Image)
 	{
-		assert(descriptorVK->GetBuffer() != VK_NULL_HANDLE);
-		assert(descriptorVK->GetElementSize() != 0);
-
-		VkDescriptorBufferInfo info{
-			.buffer		= descriptorVK->GetBuffer(),
-			.offset		= 0,
-			.range		= descriptorVK->GetElementSize()
+		VkDescriptorImageInfo info{
+			.imageView		= descriptorVK->GetImageView(),
+			.imageLayout	= isSrv ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL
 		};
-
-		const uint32_t startRegister = m_rootParameter.startRegister;
 
 		VkWriteDescriptorSet writeDescriptorSet{
 			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet				= m_descriptorSet,
-			.dstBinding			= slot + startRegister,
+			.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
 			.dstArrayElement	= 0,
 			.descriptorCount	= 1,
-			.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC
+			.descriptorType		= isSrv ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+			.pImageInfo			= &info
 		};
 
 		UpdateDescriptorSet(writeDescriptorSet);
 	}
-	else
+	// Buffers (i.e. GpuBuffer)
+	else if (descriptorVK->GetDescriptorClass() == DescriptorClass::Buffer)
 	{
-		DescriptorType descriptorType = m_rootParameter.GetDescriptorType(slot);
-		assert(IsDescriptorTypeSRV(descriptorType));
+		VkBufferView texelBufferView = VK_NULL_HANDLE;
+		VkDescriptorBufferInfo info{};
 
-		// Images (i.e. ColorBuffer, DepthBuffer, or Texture)
-		if (descriptorVK->GetDescriptorClass() == DescriptorClass::Image)
+		VkWriteDescriptorSet writeDescriptorSet{
+			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet				= m_descriptorSet,
+			.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+			.dstArrayElement	= 0,
+			.descriptorCount	= 1,
+		};
+
+		// StructuredBuffers and RawBuffers use VkDescriptorBufferInfo
+		if (descriptorType == DescriptorType::StructuredBufferSRV || descriptorType == DescriptorType::StructuredBufferUAV ||
+			descriptorType == DescriptorType::RawBufferSRV || descriptorType == DescriptorType::RawBufferUAV)
 		{
-			VkDescriptorImageInfo info{
-				.imageView		= descriptorVK->GetImageView(),
-				.imageLayout	= isSrv ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_GENERAL
-			};
+			info.buffer = descriptorVK->GetBuffer();
+			info.offset = 0;
+			info.range = VK_WHOLE_SIZE;
 
-			VkWriteDescriptorSet writeDescriptorSet{
-				.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.dstSet				= m_descriptorSet,
-				.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
-				.dstArrayElement	= 0,
-				.descriptorCount	= 1,
-				.descriptorType		= isSrv ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-				.pImageInfo			= &info
-			};
-
-			UpdateDescriptorSet(writeDescriptorSet);
+			writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			writeDescriptorSet.pBufferInfo = &info;
 		}
-		// Buffers (i.e. GpuBuffer)
-		else if (descriptorVK->GetDescriptorClass() == DescriptorClass::Buffer)
+		// TypedBuffers use VkBufferView instead
+		else
 		{
-			VkBufferView texelBufferView = VK_NULL_HANDLE;
-			VkDescriptorBufferInfo info{};
+			texelBufferView = descriptorVK->GetBufferView();
 
-			VkWriteDescriptorSet writeDescriptorSet{
-				.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-				.dstSet				= m_descriptorSet,
-				.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
-				.dstArrayElement	= 0,
-				.descriptorCount	= 1,
-			};
-
-			// StructuredBuffers and RawBuffers use VkDescriptorBufferInfo
-			if (descriptorType == DescriptorType::StructuredBufferSRV || descriptorType == DescriptorType::StructuredBufferUAV ||
-				descriptorType == DescriptorType::RawBufferSRV || descriptorType == DescriptorType::RawBufferUAV)
-			{
-				info.buffer = descriptorVK->GetBuffer();
-				info.offset = 0;
-				info.range = m_isDynamicBuffer ? descriptorVK->GetElementSize() : VK_WHOLE_SIZE;
-
-				writeDescriptorSet.descriptorType = m_isDynamicBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				writeDescriptorSet.pBufferInfo = &info;
-			}
-			// TypedBuffers use VkBufferView instead
-			else
-			{
-				texelBufferView = descriptorVK->GetBufferView();
-
-				writeDescriptorSet.descriptorType = isSrv ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
-				writeDescriptorSet.pTexelBufferView = &texelBufferView;
-			}
-
-			UpdateDescriptorSet(writeDescriptorSet);
+			writeDescriptorSet.descriptorType = isSrv ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+			writeDescriptorSet.pTexelBufferView = &texelBufferView;
 		}
+
+		UpdateDescriptorSet(writeDescriptorSet);
 	}
 }
 
@@ -566,7 +523,7 @@ void DescriptorSet::WriteBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::
 
 		bufferInfos[i].buffer = descriptorVK->GetBuffer();
 		bufferInfos[i].offset = 0;
-		bufferInfos[i].range = m_isDynamicBuffer ? descriptorVK->GetElementSize() : VK_WHOLE_SIZE;
+		bufferInfos[i].range = VK_WHOLE_SIZE;
 	}
 
 	writeDescriptorSet.pBufferInfo = bufferInfos;

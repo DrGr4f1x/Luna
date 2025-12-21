@@ -31,7 +31,6 @@ struct DescriptorSetDesc
 	RootParameter rootParameter;
 	uint32_t numDescriptors{ 0 };
 	bool isSamplerTable{ false };
-	bool isRootBuffer{ false };
 };
 
 

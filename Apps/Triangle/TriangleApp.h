@@ -35,7 +35,6 @@ protected:
 private:
 	void InitRootSignature();
 	void InitPipelineState();
-	void InitDescriptorSet();
 
 	void UpdateConstantBuffer();
 
@@ -73,7 +72,4 @@ private:
 
 	// Pipeline state
 	Luna::GraphicsPipelinePtr m_graphicsPipeline;
-
-	// Descriptor sets
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 };

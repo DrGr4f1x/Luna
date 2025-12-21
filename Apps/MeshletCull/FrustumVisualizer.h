@@ -55,5 +55,5 @@ protected:
 	Constants m_constants;
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	Luna::DescriptorSetPtr m_descriptorSet;
+	//Luna::DescriptorSetPtr m_descriptorSet;
 };

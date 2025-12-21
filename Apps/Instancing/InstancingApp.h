@@ -72,7 +72,6 @@ protected:
 	Luna::ModelPtr m_rockModel;
 	Luna::ModelPtr m_planetModel;
 
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	Luna::DescriptorSetPtr m_rockSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_planetSrvDescriptorSet;
 

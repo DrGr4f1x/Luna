@@ -51,12 +51,9 @@ public:
 
 	void SetSampler(uint32_t slot, SamplerPtr sampler) override;
 
-	void SetDynamicOffset(uint32_t offset) override;
-
 	bool HasBindableDescriptors() const;
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGpuDescriptorHandle() const;
 	uint64_t GetGpuAddress() const;
-	uint64_t GetDynamicOffset() const;
 	uint64_t GetGpuAddressWithOffset() const;
 
 protected:
@@ -71,10 +68,8 @@ protected:
 	DescriptorHandle m_descriptorHandle;
 	uint64_t m_gpuAddress{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
 	uint32_t m_numDescriptors{ 0 };
-	uint32_t m_dynamicOffset{ 0 };
 
 	bool m_isSamplerTable{ false };
-	bool m_isRootBuffer{ false };
 };
 
 } // namespace Luna::DX12

@@ -43,6 +43,9 @@ public:
 	uint32_t GetStaticSamplerDescriptorSetIndex() const noexcept { return m_staticSamplerDescriptorSetIndex; }
 	VkDescriptorSet GetStaticSamplerDescriptorSet() const noexcept { return m_staticSamplerDescriptorSet; }
 
+	uint32_t GetPushDescriptorSetIndex() const noexcept { return m_pushDescriptorSetIndex; }
+	uint32_t GetPushDescriptorBinding(uint32_t rootParamIndex) const noexcept;
+
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
@@ -50,9 +53,14 @@ protected:
 	std::unordered_map<uint32_t, uint32_t> m_rootParameterIndexToDescriptorSetMap;
 	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> m_descriptorSetLayouts;
 
+	// Static samplers
 	std::vector<SamplerPtr> m_staticSamplers;
 	uint32_t m_staticSamplerDescriptorSetIndex{ 0 };
 	VkDescriptorSet m_staticSamplerDescriptorSet{ VK_NULL_HANDLE };
+
+	// Push descriptors
+	uint32_t m_pushDescriptorSetIndex{ (uint32_t)-1 };
+	std::unordered_map<uint32_t, uint32_t> m_pushDescriptorBindingMap;
 };
 
 } // namespace Luna::VK

@@ -88,7 +88,7 @@ void DirectConstantsApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_pipeline);
 
-	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 	context.SetConstantArray(1, 24, &m_lightConstants);
 
 	m_model->Render(context);
@@ -121,8 +121,6 @@ void DirectConstantsApp::CreateDeviceDependentResources()
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 
 	LoadAssets();
-
-	InitDescriptorSet();
 }
 
 
@@ -182,13 +180,6 @@ void DirectConstantsApp::InitPipeline()
 	};
 
 	m_pipeline = CreateGraphicsPipeline(pipelineDesc);
-}
-
-
-void DirectConstantsApp::InitDescriptorSet()
-{
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 

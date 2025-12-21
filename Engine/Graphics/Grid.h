@@ -42,7 +42,6 @@ protected:
 	void InitMesh();
 	void InitRootSignature();
 	void InitPipeline();
-	void InitResourceSet();
 
 protected:
 	Application* m_application{ nullptr };
@@ -74,8 +73,6 @@ protected:
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_pipeline;
 	bool m_pipelineCreated{ false };
-
-	Luna::ResourceSet m_resources;
 };
 
 } // namespace Luna

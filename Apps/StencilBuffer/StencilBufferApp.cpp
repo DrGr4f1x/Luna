@@ -83,7 +83,7 @@ void StencilBufferApp::Render()
 
 	context.SetRootSignature(m_rootSignature);
 
-	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 
 	context.SetStencilRef(1);
 
@@ -126,8 +126,6 @@ void StencilBufferApp::CreateDeviceDependentResources()
 	UpdateConstantBuffer();
 
 	LoadAssets();
-
-	InitDescriptorSet();
 
 	BoundingBox box = m_model->boundingBox;
 
@@ -237,13 +235,6 @@ void StencilBufferApp::InitPipelines()
 
 		m_outlinePipeline = CreateGraphicsPipeline(outlinePipelineDesc);
 	}
-}
-
-
-void StencilBufferApp::InitDescriptorSet()
-{
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 
 

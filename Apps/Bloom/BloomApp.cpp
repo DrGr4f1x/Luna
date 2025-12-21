@@ -98,7 +98,7 @@ void BloomApp::Render()
 			context.SetRootSignature(m_sceneRootSignature);
 			context.SetGraphicsPipeline(m_colorPassPipeline);
 
-			context.SetDescriptors(0, m_sceneCbvDescriptorSet);
+			context.SetRootCBV(0, m_sceneConstantBuffer);
 
 			// Render UFO model
 			m_ufoGlowModel->Render(context);
@@ -151,7 +151,7 @@ void BloomApp::Render()
 		context.SetRootSignature(m_skyboxRootSignature);
 		context.SetGraphicsPipeline(m_skyboxPipeline);
 
-		context.SetDescriptors(0, m_skyBoxCbvDescriptorSet);
+		context.SetRootCBV(0, m_skyboxConstantBuffer);
 		context.SetDescriptors(1, m_skyBoxSrvDescriptorSet);
 
 		// Render skybox model
@@ -165,7 +165,7 @@ void BloomApp::Render()
 		context.SetRootSignature(m_sceneRootSignature);
 		context.SetGraphicsPipeline(m_phongPassPipeline);
 
-		context.SetDescriptors(0, m_sceneCbvDescriptorSet);
+		context.SetRootCBV(0, m_sceneConstantBuffer);
 
 		// Render UFO model
 		m_ufoGlowModel->Render(context);
@@ -281,7 +281,7 @@ void BloomApp::InitRootSignatures()
 	RootSignatureDesc skyboxRootSignatureDesc{
 		.name				= "Skybox Root Signature",
 		.rootParameters		= {
-			Table({ ConstantBuffer }, ShaderStage::Vertex),
+			RootCBV(0, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel)
 		},
 		.staticSamplers		= { StaticSampler(CommonStates::SamplerLinearClamp()) }
@@ -429,12 +429,6 @@ void BloomApp::InitConstantBuffers()
 
 void BloomApp::InitDescriptorSets()
 {
-	m_sceneCbvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(0);
-	m_sceneCbvDescriptorSet->SetCBV(0, m_sceneConstantBuffer->GetCbvDescriptor());
-
-	m_skyBoxCbvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(0);
-	m_skyBoxCbvDescriptorSet->SetCBV(0, m_skyboxConstantBuffer->GetCbvDescriptor());
-
 	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture->GetDescriptor());
 

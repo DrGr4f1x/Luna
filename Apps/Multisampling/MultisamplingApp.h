@@ -65,7 +65,6 @@ protected:
 	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
 	std::vector<Luna::DescriptorSetPtr> m_srvDescriptorSets;
 
 	Luna::RootSignaturePtr m_rootSignature;
