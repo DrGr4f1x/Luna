@@ -38,7 +38,6 @@ protected:
 
 	void InitRootSignature();
 	void InitPipeline();
-	void InitDescriptorSets();
 
 	void LoadModels();
 
@@ -67,11 +66,6 @@ protected:
 
 	Constants m_constants{};
 	Luna::GpuBufferPtr m_constantBuffer;
-
-	Luna::DescriptorSetPtr m_cbvDescriptorSet;
-	std::vector<Luna::DescriptorSetPtr> m_objectCbvDescriptorSets;
-	std::vector<std::vector<Luna::DescriptorSetPtr>> m_meshCbvDescriptorSets;
-	std::vector<std::vector<Luna::DescriptorSetPtr>> m_srvDescriptorSets;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 

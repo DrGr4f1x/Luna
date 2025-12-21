@@ -213,28 +213,22 @@ void MeshletCullApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetMeshletPipeline(m_meshletPipeline);
 
-	//context.SetConstantBuffer(0, m_constantBuffer);
-	context.SetDescriptors(0, m_cbvDescriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 
 	uint32_t i = 0;
 	for (auto& obj : m_objects)
 	{
-		//context.SetConstantBuffer(2, obj.instanceBuffer);
-		context.SetDescriptors(2, m_objectCbvDescriptorSets[i]);
+		context.SetRootCBV(2, obj.instanceBuffer);
 
 		uint32_t j = 0;
 		for (auto& mesh : obj.model)
 		{
-			// TODO: Support this, with push descriptors or DynamicDescriptorHead
-			//context.SetConstantBuffer(1, mesh.meshInfoResource);
-			//context.SetSRV(3, mesh.vertexResources[0]);
-			//context.SetSRV(4, mesh.meshletResource);
-			//context.SetSRV(5, mesh.uniqueVertexIndexResource);
-			//context.SetSRV(6, mesh.primitiveIndexResource);
-			//context.SetSRV(7, mesh.cullDataResource);
-
-			context.SetDescriptors(1, m_meshCbvDescriptorSets[i][j]);
-			context.SetDescriptors(3, m_srvDescriptorSets[i][j]);
+			context.SetRootCBV(1, mesh.meshInfoResource);
+			context.SetRootSRV(3, mesh.vertexResources[0]);
+			context.SetRootSRV(4, mesh.meshletResource);
+			context.SetRootSRV(5, mesh.uniqueVertexIndexResource);
+			context.SetRootSRV(6, mesh.primitiveIndexResource);
+			context.SetRootSRV(7, mesh.cullDataResource);
 
 			const uint32_t meshletCount = (uint32_t)mesh.meshlets.size();
 			context.DispatchMesh(DivideByMultiple(meshletCount, AS_GROUP_SIZE), 1, 1);
@@ -292,8 +286,6 @@ void MeshletCullApp::CreateDeviceDependentResources()
 
 	LoadModels();
 
-	InitDescriptorSets();
-
 	auto device = GetDevice();
 	m_frustumVisualizer.CreateDeviceDependentResources(device);
 	m_cullDataVisualizer.CreateDeviceDependentResources(device);
@@ -341,12 +333,12 @@ void MeshletCullApp::InitRootSignature()
 			RootCBV(0, stages),
 			RootCBV(1, stages),
 			RootCBV(2, stages),
-			//RootSRV(0, stages), // TODO: use push descriptors for these
-			//RootSRV(1, stages),
-			//RootSRV(2, stages),
-			//RootSRV(3, stages),
-			//RootSRV(4, stages)
-			Table({ StructuredBufferSRV, StructuredBufferSRV, RawBufferSRV, StructuredBufferSRV, StructuredBufferSRV }, stages)
+			RootSRV(3, stages),
+			RootSRV(4, stages),
+			RootSRV(5, stages),
+			RootSRV(6, stages),
+			RootSRV(7, stages)
+			//Table({ StructuredBufferSRV, StructuredBufferSRV, RawBufferSRV, StructuredBufferSRV, StructuredBufferSRV }, stages)
 		}
 	};
 	m_rootSignature = CreateRootSignature(desc);
@@ -369,47 +361,6 @@ void MeshletCullApp::InitPipeline()
 		.rootSignature			= m_rootSignature
 	};
 	m_meshletPipeline = CreateMeshletPipeline(desc);
-}
-
-
-void MeshletCullApp::InitDescriptorSets()
-{
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
-
-	m_objectCbvDescriptorSets.resize(m_objects.size());
-	m_meshCbvDescriptorSets.resize(m_objects.size());
-	m_srvDescriptorSets.resize(m_objects.size());
-
-	for (size_t i = 0; i < m_objects.size(); ++i)
-	{
-		const auto& obj = m_objects[i];
-
-		auto objectCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
-		objectCbvDescriptorSet->SetCBV(0, obj.instanceBuffer);
-		m_objectCbvDescriptorSets[i] = objectCbvDescriptorSet;
-		
-		m_meshCbvDescriptorSets[i].resize(obj.model.GetMeshCount());
-		m_srvDescriptorSets[i].resize(obj.model.GetMeshCount());
-
-		for (size_t j = 0; j < obj.model.GetMeshCount(); ++j)
-		{
-			const auto& mesh = obj.model.GetMesh((uint32_t)j);
-
-			auto meshCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-			meshCbvDescriptorSet->SetCBV(0, mesh.meshInfoResource);
-			m_meshCbvDescriptorSets[i][j] = meshCbvDescriptorSet;
-
-			auto srvDescriptorSet = m_rootSignature->CreateDescriptorSet(3);
-			srvDescriptorSet->SetSRV(0, mesh.vertexResources[0]);
-			srvDescriptorSet->SetSRV(1, mesh.meshletResource);
-			srvDescriptorSet->SetSRV(2, mesh.uniqueVertexIndexResource);
-			srvDescriptorSet->SetSRV(3, mesh.primitiveIndexResource);
-			srvDescriptorSet->SetSRV(4, mesh.cullDataResource);
-
-			m_srvDescriptorSets[i][j] = srvDescriptorSet;
-		}
-	}
 }
 
 

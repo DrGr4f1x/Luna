@@ -38,14 +38,13 @@ struct Options
 [[vk::push_constant]]
 ConstantBuffer<Options> Options : register(b1);
 
-[[vk::binding(0, 2)]]
-StructuredBuffer<CullData> MeshletCullData : register(t0);
+[[vk::binding(1, 0)]]
+StructuredBuffer<CullData> MeshletCullData : register(t1);
 
 
 //---------------------------------------------
 // Main
 
-[RootSignature("CBV(b0), RootConstants(b1, num32BitConstants=2), SRV(t0)")]
 [NumThreads(GROUP_SIZE, 1, 1)]
 [OutputTopology("triangle")]
 void main(

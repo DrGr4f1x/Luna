@@ -35,21 +35,21 @@ struct Payload
 
 [[vk::binding(0, 0)]]
 ConstantBuffer<Constants> Constants : register(b0);
-[[vk::binding(1, 1)]]
+[[vk::binding(1, 0)]]
 ConstantBuffer<MeshInfo> MeshInfo : register(b1);
-[[vk::binding(2, 2)]]
+[[vk::binding(2, 0)]]
 ConstantBuffer<Instance> Instance : register(b2);
 
-[[vk::binding(0, 3)]]
-StructuredBuffer<Vertex> Vertices : register(t0);
-[[vk::binding(1, 3)]]
-StructuredBuffer<Meshlet> Meshlets : register(t1);
-[[vk::binding(2, 3)]]
-ByteAddressBuffer UniqueVertexIndices : register(t2);
-[[vk::binding(3, 3)]]
-StructuredBuffer<uint> PrimitiveIndices : register(t3);
-[[vk::binding(4, 3)]]
-StructuredBuffer<CullData> MeshletCullData : register(t4);
+[[vk::binding(3, 0)]]
+StructuredBuffer<Vertex> Vertices : register(t3);
+[[vk::binding(4, 0)]]
+StructuredBuffer<Meshlet> Meshlets : register(t4);
+[[vk::binding(5, 0)]]
+ByteAddressBuffer UniqueVertexIndices : register(t5);
+[[vk::binding(6, 0)]]
+StructuredBuffer<uint> PrimitiveIndices : register(t6);
+[[vk::binding(7, 0)]]
+StructuredBuffer<CullData> MeshletCullData : register(t7);
 
 
 // Rotates a vector, v0, about an axis by some angle

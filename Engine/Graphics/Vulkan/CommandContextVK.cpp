@@ -1081,7 +1081,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const RootSignature* RootSignature = GetRootSignature(type);
+	const RootSignature* rootSignature = GetRootSignature(type);
 
 	FlushResourceBarriers();
 
@@ -1091,7 +1091,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 		.range		= VK_WHOLE_SIZE
 	};
 
-	const uint32_t binding = RootSignature->GetPushDescriptorBinding(rootIndex);
+	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
 	assert(binding != (uint32_t)-1);
 
 	VkWriteDescriptorSet writeDescriptor{
@@ -1107,9 +1107,8 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
-	const uint32_t pushDescriptorSetIndex = RootSignature->GetPushDescriptorSetIndex();
+	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
 	assert(pushDescriptorSetIndex != (uint32_t)-1);
-
 
 	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
 }
@@ -1120,7 +1119,7 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const Descriptor* descriptorVK = (const Descriptor*)gpuBufferVK->GetSrvDescriptor();
+	const RootSignature* rootSignature = GetRootSignature(type);
 
 	FlushResourceBarriers();
 
@@ -1130,9 +1129,12 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
+	assert(binding != (uint32_t)-1);
+
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= 0,
+		.dstBinding			= binding,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1143,7 +1145,10 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), rootIndex, 1, &writeDescriptor);
+	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
+	assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
 }
 
 
@@ -1152,7 +1157,7 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const Descriptor* descriptorVK = (const Descriptor*)gpuBufferVK->GetUavDescriptor();
+	const RootSignature* rootSignature = GetRootSignature(type);
 
 	FlushResourceBarriers();
 
@@ -1162,9 +1167,12 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
+	assert(binding != (uint32_t)-1);
+
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= 0,
+		.dstBinding			= binding,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1175,7 +1183,10 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), rootIndex, 1, &writeDescriptor);
+	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
+	assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
 }
 
 

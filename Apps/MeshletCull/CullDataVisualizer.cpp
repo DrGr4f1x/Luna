@@ -35,9 +35,7 @@ void CullDataVisualizer::Render(GraphicsContext& context, const MeshletMesh& mes
 	// Shared root signature between two shaders
 	context.SetRootSignature(m_rootSignature);
 	
-	// TODO: support SetConstantBuffer, either with push descriptors or DynamicDescriptorHeap
-	//context.SetConstantBuffer(0, m_constantBuffer);
-	context.SetDescriptors(0, m_descriptorSet);
+	context.SetRootCBV(0, m_constantBuffer);
 	context.SetConstants(1, offset, count);
 	context.SetRootSRV(2, mesh.cullDataResource);
 
@@ -81,7 +79,7 @@ void CullDataVisualizer::CreateDeviceDependentResources(IDevice* device)
 			.rootParameters		= {
 				RootCBV(0, ShaderStage::Mesh),
 				RootConstants(1, 2, ShaderStage::Mesh),
-				RootSRV(0, ShaderStage::Mesh)
+				RootSRV(1, ShaderStage::Mesh)
 			}
 		};
 		m_rootSignature = device->CreateRootSignature(desc);
@@ -97,12 +95,6 @@ void CullDataVisualizer::CreateDeviceDependentResources(IDevice* device)
 			.elementSize	= sizeof(Constants)
 		};
 		m_constantBuffer = device->CreateGpuBuffer(desc);
-	}
-
-	// Descriptor set
-	{
-		m_descriptorSet = m_rootSignature->CreateDescriptorSet(0);
-		m_descriptorSet->SetCBV(0, m_constantBuffer);
 	}
 }
 
@@ -140,6 +132,6 @@ void CullDataVisualizer::CreateWindowSizeDependentResources(IDevice* device)
 			.pixelShader		= { .shaderFile = "DebugDrawPS" },
 			.rootSignature		= m_rootSignature
 		};
-		m_boundingSpherePipeline = device->CreateMeshletPipeline(desc);
+		m_normalConePipeline = device->CreateMeshletPipeline(desc);
 	}
 }
