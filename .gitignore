@@ -404,7 +404,6 @@ FodyWeavers.xsd
 *.dxil
 *.spirv
 *.dxbc
-*.bin
 
 # PIX captures
 *.wpix
