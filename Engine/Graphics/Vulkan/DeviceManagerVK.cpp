@@ -837,7 +837,7 @@ void DeviceManager::EnableDeviceExtensions()
 
 	if (IsExtensionRequested(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME))
 	{
-		m_supportedFeatures.descriptorBuffers = true;
+		VK_APPEND_PNEXT(m_extFeatures.descriptorBufferFeatures);
 	}
 
 	vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice->Get(), &m_features);
@@ -857,6 +857,7 @@ void DeviceManager::EnableDeviceExtensions()
 	m_supportedFeatures.pipelineRobustness = m_extFeatures.pipelineRobustnessFeatures.pipelineRobustness;
 	m_supportedFeatures.swapChainMaintenance1 = m_extFeatures.swapchainMaintenance1Features.swapchainMaintenance1;
 	m_supportedFeatures.fifoLatestReady = m_extFeatures.presentModeFifoLatestReadyFeaturesEXT.presentModeFifoLatestReady;
+	m_supportedFeatures.descriptorBuffers = m_extFeatures.descriptorBufferFeatures.descriptorBuffer;
 
 	// Memory props
 	{ 
