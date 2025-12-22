@@ -633,6 +633,7 @@ void DeviceManager::EnableDeviceExtensions()
 	RequestExtension(VK_NVX_BINARY_IMPORT_EXTENSION_NAME);
 	RequestExtension(VK_NVX_IMAGE_VIEW_HANDLE_EXTENSION_NAME);
 	RequestExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+	RequestExtension(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME);
 
 	m_vkbPhysicalDevice.enable_extensions_if_present(requestedExtensions);
 
@@ -834,6 +835,11 @@ void DeviceManager::EnableDeviceExtensions()
 		m_supportedFeatures.memoryBudget = true;
 	}
 
+	if (IsExtensionRequested(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME))
+	{
+		m_supportedFeatures.descriptorBuffers = true;
+	}
+
 	vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice->Get(), &m_features);
 
 	m_supportedFeatures.descriptorIndexing = m_extFeatures.features12.descriptorIndexing;
@@ -984,6 +990,12 @@ void DeviceManager::EnableDeviceExtensions()
 			VK_APPEND_PNEXT(computeShaderDerivativesProps);
 		}
 
+		VkPhysicalDeviceDescriptorBufferPropertiesEXT descriptorBufferProps = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT };
+		if (IsExtensionRequested(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME))
+		{
+			VK_APPEND_PNEXT(descriptorBufferProps);
+		}
+
 		vkGetPhysicalDeviceProperties2(m_vkPhysicalDevice->Get(), &props);
 
 		const VkPhysicalDeviceLimits& limits = props.properties.limits;
@@ -1054,6 +1066,36 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.descriptorSet.updateAfterSet.storageBufferMaxNum = props12.maxDescriptorSetUpdateAfterBindStorageBuffers;
 		m_caps.descriptorSet.updateAfterSet.textureMaxNum = props12.maxDescriptorSetUpdateAfterBindSampledImages;
 		m_caps.descriptorSet.updateAfterSet.storageTextureMaxNum = props12.maxDescriptorSetUpdateAfterBindStorageImages;
+
+		m_caps.descriptorBuffer.combinedImageSamplerDescriptorSingleArray = descriptorBufferProps.combinedImageSamplerDescriptorSingleArray == VK_TRUE;
+		m_caps.descriptorBuffer.bufferlessPushDescriptors = descriptorBufferProps.bufferlessPushDescriptors == VK_TRUE;
+		m_caps.descriptorBuffer.allowSamplerImageViewPostSubmitCreation = descriptorBufferProps.allowSamplerImageViewPostSubmitCreation == VK_TRUE;
+		m_caps.descriptorBuffer.descriptorBufferOffsetAlignment = descriptorBufferProps.descriptorBufferOffsetAlignment;
+		m_caps.descriptorBuffer.maxDescriptorBufferBindings = descriptorBufferProps.maxDescriptorBufferBindings;
+		m_caps.descriptorBuffer.maxResourceDescriptorBufferBindings = descriptorBufferProps.maxResourceDescriptorBufferBindings;
+		m_caps.descriptorBuffer.maxSamplerDescriptorBufferBindings = descriptorBufferProps.maxSamplerDescriptorBufferBindings;
+		m_caps.descriptorBuffer.maxEmbeddedImmutableSamplerBindings = descriptorBufferProps.maxEmbeddedImmutableSamplerBindings;
+		m_caps.descriptorBuffer.maxEmbeddedImmutableSamplers = descriptorBufferProps.maxEmbeddedImmutableSamplers;
+		m_caps.descriptorBuffer.maxSamplerDescriptorBufferRange = descriptorBufferProps.maxSamplerDescriptorBufferRange;
+		m_caps.descriptorBuffer.maxResourceDescriptorBufferRange = descriptorBufferProps.maxResourceDescriptorBufferRange;
+		m_caps.descriptorBuffer.samplerDescriptorBufferAddressSpaceSize = descriptorBufferProps.samplerDescriptorBufferAddressSpaceSize;
+		m_caps.descriptorBuffer.resourceDescriptorBufferAddressSpaceSize = descriptorBufferProps.resourceDescriptorBufferAddressSpaceSize;
+		m_caps.descriptorBuffer.descriptorBufferAddressSpaceSize = descriptorBufferProps.descriptorBufferAddressSpaceSize;
+
+		m_caps.descriptorBuffer.descriptorSize.sampler = descriptorBufferProps.samplerDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.combinedImageSampler = descriptorBufferProps.combinedImageSamplerDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.sampledImage = descriptorBufferProps.sampledImageDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.storageImage = descriptorBufferProps.storageImageDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.uniformTexelBuffer = descriptorBufferProps.uniformTexelBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.robustUniformTexelBuffer = descriptorBufferProps.robustUniformTexelBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.storageTexelBuffer = descriptorBufferProps.storageTexelBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.robustStorageTexelBuffer = descriptorBufferProps.robustStorageTexelBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.uniformBuffer = descriptorBufferProps.uniformBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.robustUniformBuffer = descriptorBufferProps.robustUniformBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.storageBuffer = descriptorBufferProps.storageBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.robustStorageBuffer = descriptorBufferProps.robustStorageBufferDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.inputAttachment = descriptorBufferProps.inputAttachmentDescriptorSize;
+		m_caps.descriptorBuffer.descriptorSize.accelerationStructure = descriptorBufferProps.accelerationStructureDescriptorSize;
 
 		m_caps.shaderStage.descriptorSamplerMaxNum = limits.maxPerStageDescriptorSamplers;
 		m_caps.shaderStage.descriptorConstantBufferMaxNum = limits.maxPerStageDescriptorUniformBuffers;

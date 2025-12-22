@@ -105,6 +105,43 @@ struct DeviceCaps
 		} updateAfterSet;
 	} descriptorSet;
 
+	// Descriptor buffer
+	struct  
+	{
+		bool combinedImageSamplerDescriptorSingleArray;
+		bool bufferlessPushDescriptors;
+		bool allowSamplerImageViewPostSubmitCreation;
+		uint64_t descriptorBufferOffsetAlignment;
+		uint32_t maxDescriptorBufferBindings;
+		uint32_t maxResourceDescriptorBufferBindings;
+		uint32_t maxSamplerDescriptorBufferBindings;
+		uint32_t maxEmbeddedImmutableSamplerBindings;
+		uint32_t maxEmbeddedImmutableSamplers;
+		uint64_t maxSamplerDescriptorBufferRange;
+		uint64_t maxResourceDescriptorBufferRange;
+		uint64_t samplerDescriptorBufferAddressSpaceSize;
+		uint64_t resourceDescriptorBufferAddressSpaceSize;
+		uint64_t descriptorBufferAddressSpaceSize;
+
+		struct 
+		{
+			size_t sampler;
+			size_t combinedImageSampler;
+			size_t sampledImage;
+			size_t storageImage;
+			size_t uniformTexelBuffer;
+			size_t robustUniformTexelBuffer;
+			size_t storageTexelBuffer;
+			size_t robustStorageTexelBuffer;
+			size_t uniformBuffer;
+			size_t robustUniformBuffer;
+			size_t storageBuffer;
+			size_t robustStorageBuffer;
+			size_t inputAttachment;
+			size_t accelerationStructure;
+		} descriptorSize;
+	} descriptorBuffer;
+
 	// Shader stages
 	struct 
 	{

@@ -86,6 +86,39 @@ void DeviceCaps::LogCaps() const
 	LogInfo(LogGraphics) << format(formatStr2, "storageBufferMaxNum", descriptorSet.updateAfterSet.storageBufferMaxNum) << endl;
 	LogInfo(LogGraphics) << format(formatStr2, "textureMaxNum", descriptorSet.updateAfterSet.textureMaxNum) << endl;
 	LogInfo(LogGraphics) << format(formatStr2, "storageTextureMaxNum", descriptorSet.updateAfterSet.storageTextureMaxNum) << endl;
+
+	LogInfo(LogGraphics) << "  [Descriptor Buffer]" << endl;
+	LogInfo(LogGraphics) << format(formatStr, "combinedImageSamplerDescriptorSingleArray", descriptorBuffer.combinedImageSamplerDescriptorSingleArray) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "bufferlessPushDescriptors", descriptorBuffer.bufferlessPushDescriptors) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "allowSamplerImageViewPostSubmitCreation", descriptorBuffer.allowSamplerImageViewPostSubmitCreation) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "descriptorBufferOffsetAlignment", descriptorBuffer.descriptorBufferOffsetAlignment) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxDescriptorBufferBindings", descriptorBuffer.maxDescriptorBufferBindings) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxResourceDescriptorBufferBindings", descriptorBuffer.maxResourceDescriptorBufferBindings) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxSamplerDescriptorBufferBindings", descriptorBuffer.maxSamplerDescriptorBufferBindings) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxEmbeddedImmutableSamplerBindings", descriptorBuffer.maxEmbeddedImmutableSamplerBindings) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxEmbeddedImmutableSamplers", descriptorBuffer.maxEmbeddedImmutableSamplers) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxSamplerDescriptorBufferRange", descriptorBuffer.maxSamplerDescriptorBufferRange) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxResourceDescriptorBufferRange", descriptorBuffer.maxResourceDescriptorBufferRange) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "samplerDescriptorBufferAddressSpaceSize", descriptorBuffer.samplerDescriptorBufferAddressSpaceSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "resourceDescriptorBufferAddressSpaceSize", descriptorBuffer.resourceDescriptorBufferAddressSpaceSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "descriptorBufferAddressSpaceSize", descriptorBuffer.descriptorBufferAddressSpaceSize) << endl;
+	LogInfo(LogGraphics) << "    [Descriptor Size]" << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "sampler", descriptorBuffer.descriptorSize.sampler) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "combinedImageSampler", descriptorBuffer.descriptorSize.combinedImageSampler) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "sampledImage", descriptorBuffer.descriptorSize.sampledImage) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "storageImage", descriptorBuffer.descriptorSize.storageImage) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "uniformTexelBuffer", descriptorBuffer.descriptorSize.uniformTexelBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "robustUniformTexelBuffer", descriptorBuffer.descriptorSize.robustUniformTexelBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "storageTexelBuffer", descriptorBuffer.descriptorSize.storageTexelBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "robustStorageTexelBuffer", descriptorBuffer.descriptorSize.robustStorageTexelBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "uniformBuffer", descriptorBuffer.descriptorSize.uniformBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "robustUniformBuffer", descriptorBuffer.descriptorSize.robustUniformBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "storageBuffer", descriptorBuffer.descriptorSize.storageBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "robustStorageBuffer", descriptorBuffer.descriptorSize.robustStorageBuffer) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "inputAttachment", descriptorBuffer.descriptorSize.inputAttachment) << endl;
+	LogInfo(LogGraphics) << format(formatStr2, "accelerationStructure", descriptorBuffer.descriptorSize.accelerationStructure) << endl;
+
+
 	LogInfo(LogGraphics) << "  [Shader Stage]" << endl;
 	LogInfo(LogGraphics) << format(formatStr, "descriptorSamplerMaxNum", shaderStage.descriptorSamplerMaxNum) << endl;
 	LogInfo(LogGraphics) << format(formatStr, "descriptorConstantBufferMaxNum", shaderStage.descriptorConstantBufferMaxNum) << endl;

@@ -39,7 +39,7 @@ TODO:
 -- Directly create DescriptorSets without needing RootSignature
 -- ShaderCompiler - figure out how to handle shader permutations.  Need this for compiling in/out PCF in ShadowMapping.
 -- Get rid of ExtensionManagerVK.h
--- Support push descriptors in Vulkan - use MeshletCullApp
+-- Support register offsets for Vulkan shaders
 
 DONE:
 -- Handles and pools for:
@@ -89,6 +89,7 @@ DONE:
 -- Support DX12 pipeline state streams (will need this for mesh shaders anyway)
 -- Look at normals in the BloomApp - Vulkan seems wrong.
 -- Separate Front/Back stencil ref, both platforms
+-- Support push descriptors in Vulkan - use MeshletCullApp
 
 
 WON'T DO:
