@@ -365,11 +365,11 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	}
 
 	vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
-	vector<wil::com_ptr<CVkDescriptorSetLayout>> descriptorSetLayouts;
+	vector<DescriptorSetLayoutPtr> descriptorSetLayouts;
 	vector<VkPushConstantRange> vkPushConstantRanges;
-	unordered_map<uint32_t, vector<DescriptorBindingDesc>> layoutBindingMap;
 	uint32_t pushConstantOffset{ 0 };
 
+	vkDescriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
 	descriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
 
 	// Push descriptors
@@ -382,14 +382,11 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	uint32_t rootParamIndex = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
-		//std::vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
-		std::vector<DescriptorBindingDesc> layoutBindingDescs;
-
 		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
 
 		uint32_t offset = 0;
 
-		VkDescriptorSetLayout setLayout = VK_NULL_HANDLE;
+		DescriptorSetLayoutPtr descriptorSetLayout;
 
 		// Push constants
 		if (rootParameter.parameterType == RootParameterType::RootConstants)
@@ -400,9 +397,10 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			vkPushConstantRange.stageFlags = shaderStageFlags;
 			pushConstantOffset += rootParameter.num32BitConstants * 4;
 
-			CreateEmptyDescriptorSetLayout(&setLayout, layoutBindingDescs, rootParameter, hashCode);
-
 			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
+
+			vkDescriptorSetLayouts[rootParamIndex] = VK_NULL_HANDLE;
+			descriptorSetLayouts[rootParamIndex] = nullptr;
 		}
 		// Push descriptors
 		else if (IsRootDescriptorType(rootParameter.parameterType))
@@ -416,22 +414,18 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 			pushDescriptorBindingMap[rootParamIndex] = rootParameter.startRegister;
 
-			CreateEmptyDescriptorSetLayout(&setLayout, layoutBindingDescs, rootParameter, hashCode);
+			vkDescriptorSetLayouts[rootParamIndex] = VK_NULL_HANDLE;
+			descriptorSetLayouts[rootParamIndex] = nullptr;
 		}
 		// Regular descriptor sets
 		else if (rootParameter.parameterType == RootParameterType::Table)
 		{
-			CreateDescriptorSetLayout(&setLayout, layoutBindingDescs, rootParameter, hashCode);
-		}
+			descriptorSetLayout = CreateDescriptorSetLayout(rootParameter);
 
-		if (setLayout != VK_NULL_HANDLE)
-		{
-			vkDescriptorSetLayouts.push_back(setLayout);
+			hashCode = Utility::HashMerge(hashCode, descriptorSetLayout->GetHashCode());
 
-			wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), setLayout);
+			vkDescriptorSetLayouts[rootParamIndex] = descriptorSetLayout->GetDescriptorSetLayout()->Get();
 			descriptorSetLayouts[rootParamIndex] = descriptorSetLayout;
-
-			layoutBindingMap[rootParamIndex] = layoutBindingDescs;
 		}
 
 		++rootParamIndex;
@@ -457,8 +451,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			Sampler* samplerVK = (Sampler*)sampler.get();
 
 			vkSamplers.push_back(samplerVK->GetSampler());
-
-			//hashCode = Utility::HashState(&staticSamplerDesc.samplerDesc, 1, hashCode);
 		}
 
 		// Now, loop over the StaticSamplerDescs again to create the VkDescriptorSetLayoutBindings
@@ -500,7 +492,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 		staticSamplerDescriptorSetIndex = (uint32_t)descriptorSetLayouts.size();
 
-		wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
+		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
+		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
 		descriptorSetLayouts.push_back(descriptorSetLayout);
 
 		staticSamplerDescriptorSet = AllocateDescriptorSet(vkDescriptorSetLayout);
@@ -543,7 +536,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 		vkDescriptorSetLayouts[pushDescriptorSetIndex] = vkDescriptorSetLayout;
 
-		wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
+		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
+		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
 		descriptorSetLayouts[pushDescriptorSetIndex] = descriptorSetLayout;
 	}
 
@@ -602,7 +596,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	rootSignature->m_device = this;
 	rootSignature->m_desc = rootSignatureDesc;
 	rootSignature->m_pipelineLayout = pPipelineLayout;
-	rootSignature->m_layoutBindingMap = layoutBindingMap;
 	rootSignature->m_descriptorSetLayouts = descriptorSetLayouts;
 	rootSignature->m_staticSamplers = samplers;
 	rootSignature->m_staticSamplerDescriptorSetIndex = staticSamplerDescriptorSetIndex;
@@ -1391,25 +1384,16 @@ wil::com_ptr<CVkPipelineCache> Device::CreatePipelineCache() const
 }
 
 
-void Device::CreateDescriptorSetLayout(
-	VkDescriptorSetLayout* setLayout, 
-	std::vector<DescriptorBindingDesc>& bindingDescs,
-	const RootParameter& rootParameter,
-	size_t& hashCode)
+DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& rootParameter)
 {
+	assert(rootParameter.parameterType == RootParameterType::Table);
+
 	// Count descriptor bindings
 	uint32_t numBindings = 0;
-	if (IsRootDescriptorType(rootParameter.parameterType))
+	for (const auto& range : rootParameter.table)
 	{
-		numBindings = 1;
-	}
-	else if (rootParameter.parameterType == RootParameterType::Table)
-	{
-		for (const auto& range : rootParameter.table)
-		{
-			const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
-			numBindings += isArray ? 1 : range.numDescriptors;
-		}
+		const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
+		numBindings += isArray ? 1 : range.numDescriptors;
 	}
 
 	vector<VkDescriptorSetLayoutBinding> bindings;
@@ -1418,93 +1402,63 @@ void Device::CreateDescriptorSetLayout(
 	bindingFlags.reserve(numBindings);
 	bool allowUpdateAfterSet = false;
 
-	// Root descriptor
-	if (IsRootDescriptorType(rootParameter.parameterType))
+	size_t hashCode = Utility::g_hashStart;
+
+	uint32_t currentBinding = 0;
+
+	for (const auto& range : rootParameter.table)
 	{
-		VkDescriptorBindingFlags& bindFlags = bindingFlags.emplace_back();
-		bindFlags = 0;
+		const uint32_t baseBindingIndex = range.startRegister;
 
-		VkDescriptorSetLayoutBinding& descriptorBinding = bindings.emplace_back();
-		descriptorBinding = {};
-		descriptorBinding.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType);
-		descriptorBinding.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
-		descriptorBinding.binding = rootParameter.startRegister;
-		descriptorBinding.descriptorCount = 1;
-
-		hashCode = Utility::HashState(&descriptorBinding, 1, hashCode);
-
-		DescriptorBindingDesc& bindingDesc = bindingDescs.emplace_back();
-		bindingDesc.descriptorType = descriptorBinding.descriptorType;
-		bindingDesc.startSlot = rootParameter.startRegister;
-		bindingDesc.numDescriptors = 1;
-		bindingDesc.offset = 0; // TODO: What is offset supposed to be?
-	}
-	// Table
-	else if (rootParameter.parameterType == RootParameterType::Table)
-	{
-		uint32_t currentBinding = 0;
-
-		for (const auto& range : rootParameter.table)
+		VkDescriptorBindingFlags flags = 0;
+		if (HasFlag(range.flags, DescriptorRangeFlags::PartiallyBound))
 		{
-			const uint32_t baseBindingIndex = range.startRegister;
+			flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+		}
+		if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
+		{
+			flags |= VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+			allowUpdateAfterSet = true;
+		}
 
-			VkDescriptorBindingFlags flags = 0;
-			if (HasFlag(range.flags, DescriptorRangeFlags::PartiallyBound))
+		uint32_t numDescriptors = 1;
+		const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
+
+		if (isArray)
+		{
+			if (HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray))
 			{
-				flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+				flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
 			}
-			if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
-			{
-				flags |= VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-				allowUpdateAfterSet = true;
-			}
+		}
+		else
+		{
+			numDescriptors = range.numDescriptors;
+		}
 
-			uint32_t numDescriptors = 1;
-			const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
+		for (uint32_t j = 0; j < numDescriptors; ++j)
+		{
+			VkDescriptorBindingFlags& bindFlags = bindingFlags.emplace_back();
+			bindFlags = flags;
 
-			if (isArray)
+			VkDescriptorSetLayoutBinding& descriptorBinding = bindings.emplace_back();
+			descriptorBinding = {};
+			descriptorBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
+			descriptorBinding.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
+			descriptorBinding.descriptorCount = isArray ? range.numDescriptors : 1;
+
+			if (range.startRegister == APPEND_REGISTER)
 			{
-				if (HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray))
-				{
-					flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
-				}
+				descriptorBinding.binding = (currentBinding++) + j;
 			}
 			else
 			{
-				numDescriptors = range.numDescriptors;
+				descriptorBinding.binding = range.startRegister + j;
+				currentBinding = descriptorBinding.binding + 1;
 			}
 
-			for (uint32_t j = 0; j < numDescriptors; ++j)
-			{
-				VkDescriptorBindingFlags& bindFlags = bindingFlags.emplace_back();
-				bindFlags = flags;
-
-				VkDescriptorSetLayoutBinding& descriptorBinding = bindings.emplace_back();
-				descriptorBinding = {};
-				descriptorBinding.descriptorType = DescriptorTypeToVulkan(range.descriptorType);
-				descriptorBinding.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
-				descriptorBinding.descriptorCount = isArray ? range.numDescriptors : 1;
-
-				if (range.startRegister == APPEND_REGISTER)
-				{
-					descriptorBinding.binding = (currentBinding++) + j;
-				}
-				else
-				{
-					descriptorBinding.binding = range.startRegister + j;
-					currentBinding = descriptorBinding.binding + 1;
-				}
-
-				hashCode = Utility::HashState(&bindFlags, 1, hashCode);
-				hashCode = Utility::HashState(&descriptorBinding, 1, hashCode);
-
-				// TODO: Look into this, it might be wrong
-				DescriptorBindingDesc& bindingDesc = bindingDescs.emplace_back();
-				bindingDesc.descriptorType = descriptorBinding.descriptorType;
-				bindingDesc.startSlot = rootParameter.startRegister;
-				bindingDesc.numDescriptors = descriptorBinding.descriptorCount;
-				bindingDesc.offset = 0; // TODO: What is offset supposed to be?
-			}
+			hashCode = Utility::HashState(&bindFlags, 1, hashCode);
+			hashCode = Utility::HashState(&descriptorBinding, 1, hashCode);
 		}
 	}
 
@@ -1528,16 +1482,48 @@ void Device::CreateDescriptorSetLayout(
 		.pBindings		= bindings.data()
 	};
 	
-	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, setLayout);
+	hashCode = Utility::HashState(&info, 1, hashCode);
+
+	VkDescriptorSetLayout vkSetLayout = VK_NULL_HANDLE;
+	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &vkSetLayout);
+
+	wil::com_ptr<CVkDescriptorSetLayout> setLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkSetLayout);
+
+	auto descriptorSetLayout = std::make_shared<DescriptorSetLayout>();
+
+	descriptorSetLayout->m_device = this;
+	descriptorSetLayout->m_descriptorSetLayout = setLayout;
+	descriptorSetLayout->m_hashcode = hashCode;
+
+	// Descriptor buffer test
+	{
+		info.flags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+
+		VkDescriptorSetLayout setLayout2 = VK_NULL_HANDLE;
+		vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &setLayout2);
+
+		VkDeviceSize layoutSize{ 0 };
+		vkGetDescriptorSetLayoutSizeEXT(*m_device, setLayout2, &layoutSize);
+		LogInfo(LogVulkan) << "Set layout size: " << layoutSize << " [num bindings: " << bindings.size() << "]" << endl;
+
+		for (const auto& binding : bindings)
+		{
+			VkDeviceSize offset{ 0 };
+			vkGetDescriptorSetLayoutBindingOffsetEXT(*m_device, setLayout2, binding.binding, &offset);
+			LogInfo(LogVulkan) << "  Binding: " << binding.binding << " offset: " << offset << endl;
+		}
+
+		vkDestroyDescriptorSetLayout(*m_device, setLayout2, nullptr);
+	}
+
+	return descriptorSetLayout;;
 }
 
 
-void Device::CreateEmptyDescriptorSetLayout(
-	VkDescriptorSetLayout* setLayout,
-	std::vector<DescriptorBindingDesc>& bindingDescs,
-	const RootParameter& rootParameter,
-	size_t& hashCode)
+DescriptorSetLayoutPtr Device::CreateEmptyDescriptorSetLayout(const RootParameter& rootParameter)
 {
+	size_t hashCode = Utility::g_hashStart;
+
 	VkDescriptorSetLayoutCreateInfo info{
 		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 		.pNext			= nullptr,
@@ -1546,7 +1532,20 @@ void Device::CreateEmptyDescriptorSetLayout(
 		.pBindings		= nullptr
 	};
 
-	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, setLayout);
+	hashCode = Utility::HashState(&info, 1, hashCode);
+
+	VkDescriptorSetLayout vkSetLayout = VK_NULL_HANDLE;
+	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &vkSetLayout);
+
+	wil::com_ptr<CVkDescriptorSetLayout> setLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkSetLayout);
+
+	auto descriptorSetLayout = std::make_shared<DescriptorSetLayout>();
+
+	descriptorSetLayout->m_device = this;
+	descriptorSetLayout->m_descriptorSetLayout = setLayout;
+	descriptorSetLayout->m_hashcode = hashCode;
+
+	return descriptorSetLayout;
 }
 
 

@@ -14,6 +14,7 @@
 #include "Graphics\DeviceCaps.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\Vulkan\DescriptorPoolVK.h"
+#include "Graphics\Vulkan\DescriptorSetLayoutVK.h"
 #include "Graphics\Vulkan\RootSignatureVK.h"
 
 
@@ -78,17 +79,9 @@ protected:
 	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);
 	wil::com_ptr<CVkPipelineCache> CreatePipelineCache() const;
 
-	void CreateDescriptorSetLayout(
-		VkDescriptorSetLayout* setLayout,
-		std::vector<DescriptorBindingDesc>& bindingDescs,
-		const RootParameter& rootParameter,
-		size_t& hashCode);
+	DescriptorSetLayoutPtr CreateDescriptorSetLayout(const RootParameter& rootParameter);
 
-	void CreateEmptyDescriptorSetLayout(
-		VkDescriptorSetLayout* setLayout,
-		std::vector<DescriptorBindingDesc>& bindingDescs,
-		const RootParameter& rootParameter,
-		size_t& hashCode);
+	DescriptorSetLayoutPtr CreateEmptyDescriptorSetLayout(const RootParameter& rootParameter);
 
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 

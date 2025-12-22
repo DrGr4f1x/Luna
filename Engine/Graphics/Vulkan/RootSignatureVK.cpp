@@ -26,7 +26,7 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 	assert(rootParam.parameterType == RootParameterType::Table);
 
 	DescriptorSetDesc descriptorSetDesc{
-		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex].get(),
+		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex]->GetDescriptorSetLayout().get(),
 		.rootParameter			= rootParam,
 		.numDescriptors			= rootParam.GetNumDescriptors()
 	};
@@ -35,12 +35,13 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 }
 
 
-const std::vector<DescriptorBindingDesc>& RootSignature::GetLayoutBindings(uint32_t rootParamIndex) const
+DescriptorSetLayout* RootSignature::GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept
 {
-	const auto it = m_layoutBindingMap.find(rootParamIndex);
-	assert(it != m_layoutBindingMap.end());
-
-	return it->second;
+	if (rootParamIndex < m_descriptorSetLayouts.size())
+	{
+		return m_descriptorSetLayouts[rootParamIndex].get();
+	}
+	return nullptr;
 }
 
 

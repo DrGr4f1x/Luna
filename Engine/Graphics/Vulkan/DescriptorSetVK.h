@@ -19,6 +19,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
+class DescriptorBindingTemplate;
 class Device;
 
 
@@ -52,6 +53,8 @@ public:
 	bool HasDescriptors() const;
 	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
 
+	const DescriptorBindingTemplate* GetBindingTemplate() const { return m_template; }
+
 protected:
 	void UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet);
 	template<bool isSrv>
@@ -70,6 +73,8 @@ protected:
 
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
 	uint32_t m_numDescriptors{ 0 };
+
+	DescriptorBindingTemplate* m_template{ nullptr };
 };
 
 } // namespace Luna::VK

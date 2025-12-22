@@ -11,22 +11,13 @@
 #pragma once
 
 #include "Graphics\RootSignature.h"
-#include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\Vulkan\DescriptorSetLayoutVK.h"
 
 namespace Luna::VK
 {
 
 // Forward declarations
 class Device;
-
-
-struct DescriptorBindingDesc
-{
-	VkDescriptorType descriptorType;
-	uint32_t startSlot{ 0 };
-	uint32_t numDescriptors{ 1 };
-	uint32_t offset{ 0 };
-};
 
 
 class RootSignature : public IRootSignature
@@ -37,8 +28,7 @@ public:
 	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
 
 	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
-	CVkDescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept { return m_descriptorSetLayouts[rootParamIndex].get(); }
-	const std::vector<DescriptorBindingDesc>& GetLayoutBindings(uint32_t rootParamIndex) const;
+	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;
 
 	uint32_t GetStaticSamplerDescriptorSetIndex() const noexcept { return m_staticSamplerDescriptorSetIndex; }
 	VkDescriptorSet GetStaticSamplerDescriptorSet() const noexcept { return m_staticSamplerDescriptorSet; }
@@ -49,9 +39,8 @@ public:
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
-	std::unordered_map<uint32_t, std::vector<DescriptorBindingDesc>> m_layoutBindingMap;
 	std::unordered_map<uint32_t, uint32_t> m_rootParameterIndexToDescriptorSetMap;
-	std::vector<wil::com_ptr<CVkDescriptorSetLayout>> m_descriptorSetLayouts;
+	std::vector<DescriptorSetLayoutPtr> m_descriptorSetLayouts;
 
 	// Static samplers
 	std::vector<SamplerPtr> m_staticSamplers;

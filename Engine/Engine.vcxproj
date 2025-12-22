@@ -140,6 +140,7 @@
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetLayoutVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DeviceVK.cpp" />
@@ -274,6 +275,7 @@
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorPoolVK.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetLayoutVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DeviceVK.h" />

@@ -76,41 +76,41 @@ void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootS
 {
 	ScopedEvent event("ParseRootSignature");
 
-	Reset();
+	//Reset();
 
-	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
-	const auto& rootSignatureDesc = rootSignature.GetDesc();
+	//const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
+	//const auto& rootSignatureDesc = rootSignature.GetDesc();
 
-	// Get the pipeline layout
-	m_pipelineLayout[pipeIndex] = rootSignature.GetPipelineLayout();
+	//// Get the pipeline layout
+	//m_pipelineLayout[pipeIndex] = rootSignature.GetPipelineLayout();
 
-	// Get the descriptor set layout for each root parameter and, if valid, set a bit in the
-	// m_activeDescriptorSetMap.  The only root parameter type that does not have a descriptor set layout
-	// is RootConstants (aka push constants).
-	const uint32_t numParams = rootSignature.GetNumRootParameters();
-	for (uint32_t rootParamIndex = 0; rootParamIndex < numParams; ++rootParamIndex)
-	{
-		// Get layout
-		auto layout = rootSignature.GetDescriptorSetLayout(rootParamIndex);
+	//// Get the descriptor set layout for each root parameter and, if valid, set a bit in the
+	//// m_activeDescriptorSetMap.  The only root parameter type that does not have a descriptor set layout
+	//// is RootConstants (aka push constants).
+	//const uint32_t numParams = rootSignature.GetNumRootParameters();
+	//for (uint32_t rootParamIndex = 0; rootParamIndex < numParams; ++rootParamIndex)
+	//{
+	//	// Get layout
+	//	auto layout = rootSignature.GetDescriptorSetLayout(rootParamIndex);
 
-		// Allocate descriptor set
-		auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParamIndex];
-		const auto& rootParameter = rootSignatureDesc.rootParameters[rootParamIndex];
-		auto pool = FindOrCreateDescriptorPoolCache(layout, rootParameter);
-		descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
+	//	// Allocate descriptor set
+	//	auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParamIndex];
+	//	const auto& rootParameter = rootSignatureDesc.rootParameters[rootParamIndex];
+	//	auto pool = FindOrCreateDescriptorPoolCache(layout, rootParameter);
+	//	descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
 
-		// Process descriptor bindings
-		ScopedEvent event("Process descriptor bindings");
+	//	// Process descriptor bindings
+	//	ScopedEvent event("Process descriptor bindings");
 
-		const auto& bindings = rootSignature.GetLayoutBindings(rootParamIndex);
-		for (const auto& binding : bindings)
-		{
-			for (uint32_t bindingIndex = 0; bindingIndex < binding.numDescriptors; ++bindingIndex)
-			{
-				descriptorCache.SetDescriptorBinding(bindingIndex + binding.startSlot, binding.descriptorType, binding.offset);
-			}
-		}
-	}
+	//	/*const auto& bindings = rootSignature.GetLayoutBindings(rootParamIndex);
+	//	for (const auto& binding : bindings)
+	//	{
+	//		for (uint32_t bindingIndex = 0; bindingIndex < binding.numDescriptors; ++bindingIndex)
+	//		{
+	//			descriptorCache.SetDescriptorBinding(bindingIndex + binding.startSlot, binding.descriptorType, binding.offset);
+	//		}
+	//	}*/
+	//}
 }
 
 
