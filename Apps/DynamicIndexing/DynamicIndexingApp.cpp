@@ -205,7 +205,7 @@ void DynamicIndexingApp::InitConstantBuffer()
 void DynamicIndexingApp::InitDescriptorSets()
 {
 	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
-	m_psDescriptorSet->SetSRV(0, m_diffuseTexture->GetDescriptor());
+	m_psDescriptorSet->SetSRV(0, m_diffuseTexture);
 
 	vector<const IDescriptor*> bindlessDescriptors;
 	bindlessDescriptors.resize(m_cityMaterialCount);

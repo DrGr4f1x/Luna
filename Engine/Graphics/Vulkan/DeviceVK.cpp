@@ -399,8 +399,9 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
 
-			vkDescriptorSetLayouts[rootParamIndex] = VK_NULL_HANDLE;
-			descriptorSetLayouts[rootParamIndex] = nullptr;
+			auto emptySetLayout = GetOrCreateEmptyDescriptorSetLayout();
+			vkDescriptorSetLayouts[rootParamIndex] = emptySetLayout->GetDescriptorSetLayout()->Get();
+			descriptorSetLayouts[rootParamIndex] = emptySetLayout;
 		}
 		// Push descriptors
 		else if (IsRootDescriptorType(rootParameter.parameterType))
@@ -414,8 +415,9 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 			pushDescriptorBindingMap[rootParamIndex] = rootParameter.startRegister;
 
-			vkDescriptorSetLayouts[rootParamIndex] = VK_NULL_HANDLE;
-			descriptorSetLayouts[rootParamIndex] = nullptr;
+			auto emptySetLayout = GetOrCreateEmptyDescriptorSetLayout();
+			vkDescriptorSetLayouts[rootParamIndex] = emptySetLayout->GetDescriptorSetLayout()->Get();
+			descriptorSetLayouts[rootParamIndex] = emptySetLayout;
 		}
 		// Regular descriptor sets
 		else if (rootParameter.parameterType == RootParameterType::Table)
@@ -1520,7 +1522,8 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 
 	// Descriptor buffer test
 	{
-		info.flags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+		info.pNext = nullptr;
+		info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
 
 		VkDescriptorSetLayout setLayout2 = VK_NULL_HANDLE;
 		vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &setLayout2);
@@ -1529,17 +1532,58 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 		vkGetDescriptorSetLayoutSizeEXT(*m_device, setLayout2, &layoutSize);
 		LogInfo(LogVulkan) << "Set layout size: " << layoutSize << " [num bindings: " << bindings.size() << "]" << endl;
 
+		// TODO: Cache these
+		auto bindingTemplate = make_shared<DescriptorBindingTemplate>();
+
 		for (const auto& binding : bindings)
 		{
 			VkDeviceSize offset{ 0 };
 			vkGetDescriptorSetLayoutBindingOffsetEXT(*m_device, setLayout2, binding.binding, &offset);
 			LogInfo(LogVulkan) << "  Binding: " << binding.binding << " offset: " << offset << endl;
+
+			bindingTemplate->m_bindingInfoMap[binding.binding] = { offset, binding.descriptorType };
 		}
 
 		vkDestroyDescriptorSetLayout(*m_device, setLayout2, nullptr);
+
+		descriptorSetLayout->m_layoutSize = layoutSize;
+		descriptorSetLayout->m_bindingTemplate = bindingTemplate;
 	}
 
-	return descriptorSetLayout;;
+	return descriptorSetLayout;
+}
+
+
+DescriptorSetLayoutPtr Device::GetOrCreateEmptyDescriptorSetLayout()
+{
+	lock_guard lock(m_emptyDescriptorSetLayoutMutex);
+
+	if (!m_emptyDescriptorSetLayout)
+	{
+		VkDescriptorSetLayoutCreateInfo info{
+			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.pNext			= nullptr,
+			.flags			= 0,
+			.bindingCount	= 0,
+			.pBindings		= nullptr
+		};
+
+		size_t hashCode = Utility::g_hashStart;
+		hashCode = Utility::HashState(&info, 1, hashCode);
+
+		VkDescriptorSetLayout vkSetLayout = VK_NULL_HANDLE;
+		vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &vkSetLayout);
+
+		wil::com_ptr<CVkDescriptorSetLayout> setLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkSetLayout);
+
+		m_emptyDescriptorSetLayout = std::make_shared<DescriptorSetLayout>();
+
+		m_emptyDescriptorSetLayout->m_device = this;
+		m_emptyDescriptorSetLayout->m_descriptorSetLayout = setLayout;
+		m_emptyDescriptorSetLayout->m_hashcode = hashCode;
+	}
+
+	return m_emptyDescriptorSetLayout;
 }
 
 

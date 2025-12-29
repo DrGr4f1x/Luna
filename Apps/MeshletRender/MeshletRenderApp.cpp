@@ -195,10 +195,10 @@ void MeshletRenderApp::InitDescriptorSets()
 		const auto& mesh = m_model.GetMesh(i);
 
 		m_srvDescriptorSets[i] = m_rootSignature->CreateDescriptorSet(2);
-		m_srvDescriptorSets[i]->SetSRV(0, mesh.vertexResources[0]->GetSrvDescriptor());
-		m_srvDescriptorSets[i]->SetSRV(1, mesh.meshletResource->GetSrvDescriptor());
-		m_srvDescriptorSets[i]->SetSRV(2, mesh.uniqueVertexIndexResource->GetSrvDescriptor());
-		m_srvDescriptorSets[i]->SetSRV(3, mesh.primitiveIndexResource->GetSrvDescriptor());
+		m_srvDescriptorSets[i]->SetSRV(0, mesh.vertexResources[0]);
+		m_srvDescriptorSets[i]->SetSRV(1, mesh.meshletResource);
+		m_srvDescriptorSets[i]->SetSRV(2, mesh.uniqueVertexIndexResource);
+		m_srvDescriptorSets[i]->SetSRV(3, mesh.primitiveIndexResource);
 	}
 }
 

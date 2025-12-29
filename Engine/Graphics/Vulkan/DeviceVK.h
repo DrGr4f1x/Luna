@@ -81,6 +81,8 @@ protected:
 
 	DescriptorSetLayoutPtr CreateDescriptorSetLayout(const RootParameter& rootParameter);
 
+	DescriptorSetLayoutPtr GetOrCreateEmptyDescriptorSetLayout();
+
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
 	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes);
@@ -110,6 +112,10 @@ protected:
 	// Sampler state cache
 	std::mutex m_samplerMutex;
 	std::unordered_map<size_t, wil::com_ptr<CVkSampler>> m_samplerMap;
+
+	// Empty descriptor set layout, for gaps in pipeline layouts
+	std::mutex m_emptyDescriptorSetLayoutMutex;
+	DescriptorSetLayoutPtr m_emptyDescriptorSetLayout;
 };
 
 

@@ -16,10 +16,11 @@
 namespace Luna::VK
 {
 
-size_t DescriptorBindingTemplate::GetOffset(uint32_t bindingIndex) const noexcept
+BindingInfo DescriptorBindingTemplate::GetBindingInfo(uint32_t bindingIndex) const noexcept
 {
-	assert(bindingIndex < m_offsets.size());
-	return m_offsets[bindingIndex];
+	auto res = m_bindingInfoMap.find(bindingIndex);
+	assert(res != m_bindingInfoMap.end());
+	return res->second;
 }
 
 
