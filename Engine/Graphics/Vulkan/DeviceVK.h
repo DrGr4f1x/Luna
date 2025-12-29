@@ -81,9 +81,9 @@ protected:
 
 	DescriptorSetLayoutPtr CreateDescriptorSetLayout(const RootParameter& rootParameter);
 
-	DescriptorSetLayoutPtr CreateEmptyDescriptorSetLayout(const RootParameter& rootParameter);
-
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
+
+	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

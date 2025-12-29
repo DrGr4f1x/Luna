@@ -35,6 +35,12 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 }
 
 
+Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet2(uint32_t rootParamIndex) const
+{
+	return CreateDescriptorSet(rootParamIndex);
+}
+
+
 DescriptorSetLayout* RootSignature::GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept
 {
 	if (rootParamIndex < m_descriptorSetLayouts.size())

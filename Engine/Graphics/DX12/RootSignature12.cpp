@@ -44,4 +44,9 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 	return m_device->CreateDescriptorSet(descriptorSetDesc);
 }
 
+Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet2(uint32_t rootParamIndex) const
+{
+	return CreateDescriptorSet(rootParamIndex);
+}
+
 } // namespace Luna::DX12

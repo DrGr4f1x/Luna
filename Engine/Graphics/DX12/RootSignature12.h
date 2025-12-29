@@ -27,6 +27,7 @@ class RootSignature : public IRootSignature
 
 public:
 	Luna::DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
+	Luna::DescriptorSetPtr CreateDescriptorSet2(uint32_t rootParamIndex) const override;
 
 	ID3D12RootSignature* GetRootSignature() const noexcept { return m_rootSignature.get(); }
 	uint32_t GetDescriptorTableBitmap() const noexcept { return m_descriptorTableBitmap; }

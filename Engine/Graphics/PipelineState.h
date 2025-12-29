@@ -169,6 +169,8 @@ struct GraphicsPipelineDesc
 
 	RootSignaturePtr rootSignature;
 
+	bool descriptorBuffers{ false };
+
 	GraphicsPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
 	GraphicsPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
 	GraphicsPipelineDesc& SetDepthStencilState(const DepthStencilStateDesc& value) noexcept { depthStencilState = value; return *this; }
@@ -188,6 +190,7 @@ struct GraphicsPipelineDesc
 	GraphicsPipelineDesc& SetVertexStreams(const std::vector<VertexStreamDesc>& value) { vertexStreams = value; return *this; }
 	GraphicsPipelineDesc& SetVertexElements(const std::vector<VertexElementDesc>& value) { vertexElements = value; return *this; }
 	GraphicsPipelineDesc& SetRootSignature(RootSignaturePtr value) { rootSignature = value; return *this; }
+	GraphicsPipelineDesc& SetDescriptorBuffers(bool value) noexcept { descriptorBuffers = value; return *this; }
 };
 
 
@@ -199,9 +202,12 @@ struct ComputePipelineDesc
 
 	RootSignaturePtr rootSignature;
 
+	bool descriptorBuffers{ false };
+
 	ComputePipelineDesc& SetName(const std::string& value) { name = value; return *this; }
 	ComputePipelineDesc& SetVertexShader(const std::string& value, const std::string& entry = "main") { computeShader.shaderFile = value; computeShader.entry = entry; return *this; }
 	ComputePipelineDesc& SetRootSignature(RootSignaturePtr value) { rootSignature = value; return *this; }
+	ComputePipelineDesc& SetDescriptorBuffers(bool value) noexcept { descriptorBuffers = value; return *this; }
 };
 
 
@@ -227,6 +233,8 @@ struct MeshletPipelineDesc
 
 	RootSignaturePtr rootSignature;
 
+	bool descriptorBuffers{ false };
+
 	MeshletPipelineDesc& SetName(const std::string& value) { name = value; return *this; }
 	MeshletPipelineDesc& SetBlendState(const BlendStateDesc& value) noexcept { blendState = value; return *this; }
 	MeshletPipelineDesc& SetDepthStencilState(const DepthStencilStateDesc& value) noexcept { depthStencilState = value; return *this; }
@@ -241,6 +249,7 @@ struct MeshletPipelineDesc
 	MeshletPipelineDesc& SetMeshShader(const std::string& value, const std::string& entry = "main") { meshShader.shaderFile = value; meshShader.entry = entry; return *this; }
 	MeshletPipelineDesc& SetPixelShader(const std::string& value, const std::string& entry = "main") { pixelShader.shaderFile = value; pixelShader.entry = entry; return *this; }
 	MeshletPipelineDesc& SetRootSignature(RootSignaturePtr value) { rootSignature = value; return *this; }
+	MeshletPipelineDesc& SetDescriptorBuffers(bool value) noexcept { descriptorBuffers = value; return *this; }
 };
 
 

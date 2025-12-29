@@ -26,6 +26,7 @@ class RootSignature : public IRootSignature
 
 public:
 	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
+	DescriptorSetPtr CreateDescriptorSet2(uint32_t rootParamIndex) const override;
 
 	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
 	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;

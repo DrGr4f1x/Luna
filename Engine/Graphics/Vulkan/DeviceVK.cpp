@@ -728,9 +728,17 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
+	// Flags
+	VkPipelineCreateFlags flags{};
+	if (pipelineDesc.descriptorBuffers)
+	{
+		flags |= VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+	}
+
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.pNext					= &dynamicRenderingInfo,
+		.flags					= flags,
 		.stageCount				= (uint32_t)shaderStages.size(),
 		.pStages				= shaderStages.data(),
 		.pVertexInputState		= &vertexInputInfo,
@@ -783,10 +791,17 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
+	// Flags
+	VkPipelineCreateFlags flags{};
+	if (pipelineDesc.descriptorBuffers)
+	{
+		flags |= VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+	}
+
 	VkComputePipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
 		.pNext					= nullptr,
-		.flags					= 0,
+		.flags					= flags,
 		.stage					= shaderStage,
 		.layout					= rootSignature->GetPipelineLayout(),
 		.basePipelineHandle		= VK_NULL_HANDLE,
@@ -871,9 +886,17 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
+	// Flags
+	VkPipelineCreateFlags flags{};
+	if (pipelineDesc.descriptorBuffers)
+	{
+		flags |= VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+	}
+
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.pNext					= &dynamicRenderingInfo,
+		.flags					= flags,
 		.stageCount				= (uint32_t)shaderStages.size(),
 		.pStages				= shaderStages.data(),
 		.pVertexInputState		= nullptr,
@@ -1520,35 +1543,6 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 }
 
 
-DescriptorSetLayoutPtr Device::CreateEmptyDescriptorSetLayout(const RootParameter& rootParameter)
-{
-	size_t hashCode = Utility::g_hashStart;
-
-	VkDescriptorSetLayoutCreateInfo info{
-		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.pNext			= nullptr,
-		.flags			= 0,
-		.bindingCount	= 0,
-		.pBindings		= nullptr
-	};
-
-	hashCode = Utility::HashState(&info, 1, hashCode);
-
-	VkDescriptorSetLayout vkSetLayout = VK_NULL_HANDLE;
-	vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &vkSetLayout);
-
-	wil::com_ptr<CVkDescriptorSetLayout> setLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkSetLayout);
-
-	auto descriptorSetLayout = std::make_shared<DescriptorSetLayout>();
-
-	descriptorSetLayout->m_device = this;
-	descriptorSetLayout->m_descriptorSetLayout = setLayout;
-	descriptorSetLayout->m_hashcode = hashCode;
-
-	return descriptorSetLayout;
-}
-
-
 TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc)
 {
 	const size_t height = dimension == TextureDimension::Texture1D ? 1 : textureDesc.height;
@@ -1585,6 +1579,38 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 	InitializeTexture(texture.Get(), texInit);
 
 	return texture;
+}
+
+
+wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes)
+{
+	VkBufferUsageFlags extraFlags = type == DescriptorBufferType::Resource ?
+		VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT :
+		VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
+	extraFlags |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+		
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size	= sizeInBytes,
+		.usage	= extraFlags
+	};
+
+	VmaAllocationCreateInfo allocCreateInfo{};
+	const MemoryAccess memoryAccess = MemoryAccess::CpuMapped | MemoryAccess::GpuRead;
+	allocCreateInfo.flags = GetMemoryFlags(memoryAccess);
+	allocCreateInfo.usage = GetMemoryUsage(memoryAccess);
+
+	VkBuffer vkBuffer{ VK_NULL_HANDLE };
+	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
+
+	auto res = vmaCreateBuffer(*m_allocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+	assert(res == VK_SUCCESS);
+
+	SetDebugName(*m_device, vkBuffer, "Descriptor Buffer");
+
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation);
+
+	return buffer;
 }
 
 
