@@ -11,9 +11,9 @@
 #include "Common.hlsli"
 
 
-Texture2D textureColor : register(t0 VK_DESCRIPTOR_SET(1));
-Texture2D textureNormalMap : register(t1 VK_DESCRIPTOR_SET(1));
-SamplerState samplerLinear : register(s0 VK_DESCRIPTOR_SET(2));
+Texture2D textureColor : BINDING(t0, 1);
+Texture2D textureNormalMap : BINDING(t1, 1);
+SamplerState samplerLinear : BINDING(s0, 2);
 
 
 struct VSOutput

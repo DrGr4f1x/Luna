@@ -19,8 +19,8 @@ struct PSInput
 };
 
 
-Texture1D gradientTex : register(t0 VK_DESCRIPTOR_SET(1));
-SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(2));
+Texture1D gradientTex : BINDING(t0, 1);
+SamplerState linearSampler : BINDING(s0, 2);
 
 
 float4 main(PSInput input) : SV_TARGET

@@ -27,7 +27,7 @@ struct VSOutput
 };
 
 
-cbuffer cb0 : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer cb0 : BINDING(b0, 0)
 {
     float4x4 modelViewProjectionMatrix;
 };

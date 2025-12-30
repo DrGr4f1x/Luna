@@ -20,11 +20,11 @@ struct PSInput
 };
 
 
-TextureCube texCube : register(t0 VK_DESCRIPTOR_SET(1));
-SamplerState samplerLinear : register(s0 VK_DESCRIPTOR_SET(2));
+TextureCube texCube : BINDING(t0, 1);
+SamplerState samplerLinear : BINDING(s0, 2);
 
 
-cbuffer PSConstants : register(b0 VK_DESCRIPTOR_SET(1))
+cbuffer PSConstants : BINDING(b0, 1)
 {
     float lodBias;
 };

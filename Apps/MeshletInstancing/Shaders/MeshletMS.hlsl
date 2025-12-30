@@ -53,7 +53,7 @@ struct VertexOut
 };
 
 
-ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
+ConstantBuffer<Constants> Globals : BINDING(b0, 0);
 
 
 struct DrawMeshParams
@@ -100,11 +100,11 @@ uint GetMeshletOffset()
 }
 
 
-StructuredBuffer<Vertex> Vertices : register(t0 VK_DESCRIPTOR_SET(2));
-StructuredBuffer<Meshlet> Meshlets : register(t1 VK_DESCRIPTOR_SET(2));
-ByteAddressBuffer UniqueVertexIndices : register(t2 VK_DESCRIPTOR_SET(2));
-StructuredBuffer<uint> PrimitiveIndices : register(t3 VK_DESCRIPTOR_SET(2));
-StructuredBuffer<Instance> Instances : register(t4 VK_DESCRIPTOR_SET(3));
+StructuredBuffer<Vertex> Vertices : BINDING(t0, 2);
+StructuredBuffer<Meshlet> Meshlets : BINDING(t1, 2);
+ByteAddressBuffer UniqueVertexIndices : BINDING(t2, 2);
+StructuredBuffer<uint> PrimitiveIndices : BINDING(t3, 2);
+StructuredBuffer<Instance> Instances : BINDING(t4, 3);
 
 
 /////

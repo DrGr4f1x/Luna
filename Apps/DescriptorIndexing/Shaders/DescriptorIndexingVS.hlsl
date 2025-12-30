@@ -19,7 +19,7 @@ struct VSInput
 };
 
 
-cbuffer matrices : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer matrices : BINDING(b0, 0)
 {
     float4x4 projection;
     float4x4 view;

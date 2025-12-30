@@ -17,11 +17,11 @@ struct PSInput
 };
 
 
-Texture2D colorTex : register(t0 VK_DESCRIPTOR_SET(0));
-SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(1));
+Texture2D colorTex : BINDING(t0, 0);
+SamplerState linearSampler : BINDING(s0, 1);
 
 
-cbuffer PSConstants : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer PSConstants : BINDING(b0, 0)
 {
     float radialBlurScale;
     float radialBlurStrength;

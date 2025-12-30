@@ -24,6 +24,8 @@
 
 #define VK_DESCRIPTOR_SET(dset) ,space##dset
 
+#define BINDING(reg, set) register(reg VK_DESCRIPTOR_SET(set))
+
 #else // DX12
 
 // Macro wrapping [[vk::binding(x)]] and [[vk::binding(x,y)]]
@@ -39,5 +41,7 @@
 #define VK_PUSH_CONSTANT
 
 #define VK_DESCRIPTOR_SET(dset)
+
+#define BINDING(reg, set) register(reg)
 
 #endif // VK

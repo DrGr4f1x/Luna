@@ -11,8 +11,8 @@
 #include "Common.hlsli"
 
 
-Texture2D textureColor : register(t0 VK_DESCRIPTOR_SET(1));
-SamplerState samplerColor : register(s0 VK_DESCRIPTOR_SET(2));
+Texture2D textureColor : BINDING(t0, 1);
+SamplerState samplerColor : BINDING(s0, 2);
 
 
 struct PSInput

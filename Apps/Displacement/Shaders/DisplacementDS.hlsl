@@ -40,7 +40,7 @@ struct DSOutput
 };
 
 
-cbuffer DSConstants : register(b0 VK_DESCRIPTOR_SET(1))
+cbuffer DSConstants : BINDING(b0, 1)
 {
     float4x4 projectionMatrix;
     float4x4 modelMatrix;
@@ -49,8 +49,8 @@ cbuffer DSConstants : register(b0 VK_DESCRIPTOR_SET(1))
     float tessStrength;
 };
 
-Texture2D displacementMap : register(t0 VK_DESCRIPTOR_SET(1));
-SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(3));
+Texture2D displacementMap : BINDING(t0, 1);
+SamplerState linearSampler : BINDING(s0, 3);
 
 
 [domain("tri")]

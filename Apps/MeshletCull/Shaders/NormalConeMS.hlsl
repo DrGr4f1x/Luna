@@ -17,7 +17,7 @@
 
 
 // Resource bindings
-cbuffer Constants : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer Constants : BINDING(b0, 0)
 {
     float4x4 World;
     float4x4 ViewProj;
@@ -39,7 +39,7 @@ struct Options
 ConstantBuffer<Options> Options : register(b1);
 
 
-StructuredBuffer<CullData> MeshletCullData : register(t1 VK_DESCRIPTOR_SET(0));
+StructuredBuffer<CullData> MeshletCullData : BINDING(t1, 0);
 
 
 [NumThreads(GROUP_SIZE, 1, 1)]

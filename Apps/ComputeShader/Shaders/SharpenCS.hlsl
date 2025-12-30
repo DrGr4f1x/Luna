@@ -11,8 +11,8 @@
 #include "Common.hlsli"
 
 
-Texture2D inputTex : register(t0 VK_DESCRIPTOR_SET(0));
-RWTexture2D<float4> outputTex : register(u0 VK_DESCRIPTOR_SET(0));
+Texture2D inputTex : BINDING(t0, 0);
+RWTexture2D<float4> outputTex : BINDING(u0, 0);
 
 
 float Convolve(float kernel[9], float data[9], float denom, float offset)

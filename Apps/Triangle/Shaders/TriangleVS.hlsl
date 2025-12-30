@@ -10,7 +10,8 @@
 
 #include "Common.hlsli"
 
-cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
+
+cbuffer VSConstants : BINDING(b0, 0)
 {
     float4x4 viewProjectionMatrix;
     float4x4 modelMatrix;

@@ -27,7 +27,7 @@ struct GSOutput
 };
 
 
-cbuffer GSConstants : register(b0 VK_DESCRIPTOR_SET(1))
+cbuffer GSConstants : BINDING(b0, 1)
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;

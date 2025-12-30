@@ -52,15 +52,15 @@ struct Meshlet
 };
 
 
-ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
+ConstantBuffer<Constants> Globals : BINDING(b0, 0);
 [[vk::push_constant]]
 ConstantBuffer<MeshInfo> MeshInfo : register(b1);
 
 
-StructuredBuffer<Vertex> Vertices : register(t0 VK_DESCRIPTOR_SET(2));
-StructuredBuffer<Meshlet> Meshlets : register(t1 VK_DESCRIPTOR_SET(2));
-ByteAddressBuffer UniqueVertexIndices : register(t2 VK_DESCRIPTOR_SET(2));
-StructuredBuffer<uint> PrimitiveIndices : register(t3 VK_DESCRIPTOR_SET(2));
+StructuredBuffer<Vertex> Vertices : BINDING(t0, 2);
+StructuredBuffer<Meshlet> Meshlets : BINDING(t1, 2);
+ByteAddressBuffer UniqueVertexIndices : BINDING(t2, 2);
+StructuredBuffer<uint> PrimitiveIndices : BINDING(t3, 2);
 
 
 /////

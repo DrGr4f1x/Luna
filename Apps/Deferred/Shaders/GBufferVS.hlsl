@@ -21,7 +21,7 @@ struct VSInput
 };
 
 
-cbuffer ubo : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer ubo : BINDING(b0, 0)
 {
     float4x4 projection;
     float4x4 model;

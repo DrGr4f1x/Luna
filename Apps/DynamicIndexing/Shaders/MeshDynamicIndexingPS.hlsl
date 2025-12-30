@@ -28,9 +28,9 @@ struct MaterialConstants
 ConstantBuffer<MaterialConstants> materialConstants : register(b0);
 
 
-Texture2D g_txDiffuse : register(t0 VK_DESCRIPTOR_SET(1));
-Texture2D g_txMats[] : register(t1 VK_DESCRIPTOR_SET(1));
-SamplerState g_sampler : register(s0 VK_DESCRIPTOR_SET(3));
+Texture2D g_txDiffuse : BINDING(t0, 1);
+Texture2D g_txMats[] : BINDING(t1, 1);
+SamplerState g_sampler : BINDING(s0, 3);
 
 
 float4 main(PSInput input) : SV_TARGET

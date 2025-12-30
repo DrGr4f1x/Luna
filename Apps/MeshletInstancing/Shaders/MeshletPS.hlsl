@@ -28,7 +28,7 @@ struct PSInput
 };
 
 
-ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
+ConstantBuffer<Constants> Globals : BINDING(b0, 0);
 
 
 float4 main(PSInput input) : SV_TARGET

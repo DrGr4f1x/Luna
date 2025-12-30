@@ -21,11 +21,11 @@ struct Particle
 };
 
 
-StructuredBuffer<Particle> particleIn : register(t0 VK_DESCRIPTOR_SET(0));
-RWStructuredBuffer<Particle> particleOut : register(u0 VK_DESCRIPTOR_SET(0));
+StructuredBuffer<Particle> particleIn : BINDING(t0, 0);
+RWStructuredBuffer<Particle> particleOut : BINDING(u0, 0);
 
 
-cbuffer CSConstants : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer CSConstants : BINDING(b0, 0)
 {
     float deltaT;
     float particleMass;

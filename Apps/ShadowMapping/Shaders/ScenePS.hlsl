@@ -10,8 +10,8 @@
 
 #include "Common.hlsli"
 
-Texture2D shadowMapTexture : register(t0 VK_DESCRIPTOR_SET(1));
-SamplerState shadowMapSampler : register(s0 VK_DESCRIPTOR_SET(2));
+Texture2D shadowMapTexture : BINDING(t0, 1);
+SamplerState shadowMapSampler : BINDING(s0, 2);
 
 
 struct PSInput

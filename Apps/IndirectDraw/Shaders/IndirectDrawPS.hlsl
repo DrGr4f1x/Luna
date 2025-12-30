@@ -11,8 +11,8 @@
 #include "Common.hlsli"
 
 
-Texture2DArray textureArray : register(t0 VK_DESCRIPTOR_SET(1));
-SamplerState samplerArray : register(s0 VK_DESCRIPTOR_SET(2));
+Texture2DArray textureArray : BINDING(t0, 1);
+SamplerState samplerArray : BINDING(s0, 2);
 
 
 struct PSInput

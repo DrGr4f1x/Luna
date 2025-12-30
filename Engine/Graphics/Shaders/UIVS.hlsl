@@ -10,6 +10,7 @@
 
 #include "Common.hlsli"
 
+
 struct VSInput
 {
     float2 pos : POSITION;
@@ -26,7 +27,7 @@ struct VSOutput
 };
 
 
-cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer VSConstants : BINDING(b0, 0)
 {
     float4x4 projectionMatrix;
 }

@@ -11,10 +11,10 @@
 #include "Common.hlsli"
 
 
-Texture2D texturePosition : register(t0 VK_DESCRIPTOR_SET(0));
-Texture2D textureNormal : register(t1 VK_DESCRIPTOR_SET(0));
-Texture2D textureAlbedo : register(t2 VK_DESCRIPTOR_SET(0));
-SamplerState samplerLinear : register(s0 VK_DESCRIPTOR_SET(1));
+Texture2D texturePosition : BINDING(t0, 0);
+Texture2D textureNormal : BINDING(t1, 0);
+Texture2D textureAlbedo : BINDING(t2, 0);
+SamplerState samplerLinear : BINDING(s0, 1);
 
 
 struct Light
@@ -24,7 +24,7 @@ struct Light
 };
 
 
-cbuffer ubo : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer ubo : BINDING(b0, 0)
 {
     Light lights[6];
     float4 viewPos;

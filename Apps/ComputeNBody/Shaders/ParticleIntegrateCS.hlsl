@@ -18,7 +18,7 @@ struct Particle
 };
 
 
-cbuffer CSConstants : register(b0 VK_DESCRIPTOR_SET(0))
+cbuffer CSConstants : BINDING(b0, 0)
 {
     float deltaT;
     float destX;
@@ -27,7 +27,7 @@ cbuffer CSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 };
 
 
-RWStructuredBuffer<Particle> particles : register(u0 VK_DESCRIPTOR_SET(0));
+RWStructuredBuffer<Particle> particles : BINDING(u0, 0);
 
 
 [numthreads(256, 1, 1)]
