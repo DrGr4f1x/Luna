@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 struct PSInput
 {
     float4 position : SV_Position;
@@ -18,10 +20,10 @@ struct PSInput
     float3 viewVec : TEXCOORD2;
 };
 
-[[vk::binding(0, 1)]]
-Texture2D colorTex : register(t0);
-[[vk::binding(0, 2)]]
-SamplerState linearSampler : register(s0);
+
+Texture2D colorTex : register(t0 VK_DESCRIPTOR_SET(1));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(2));
+
 
 float4 main(PSInput input) : SV_TARGET
 {

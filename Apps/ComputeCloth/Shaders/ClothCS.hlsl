@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct Particle
 {
     float4 pos;
@@ -18,15 +21,11 @@ struct Particle
 };
 
 
-[[vk::binding(0, 0)]]
-StructuredBuffer<Particle> particleIn : register(t0);
-
-[[vk::binding(1, 0)]]
-RWStructuredBuffer<Particle> particleOut : register(u0);
+StructuredBuffer<Particle> particleIn : register(t0 VK_DESCRIPTOR_SET(0));
+RWStructuredBuffer<Particle> particleOut : register(u0 VK_DESCRIPTOR_SET(0));
 
 
-[[vk::binding(2, 0)]]
-cbuffer CSConstants : register(b0)
+cbuffer CSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float deltaT;
     float particleMass;

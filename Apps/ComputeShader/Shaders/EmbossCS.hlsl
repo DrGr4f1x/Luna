@@ -8,10 +8,11 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 0)]]
-Texture2D inputTex : register(t0);
-[[vk::binding(1, 0)]]
-RWTexture2D<float4> outputTex : register(u1);
+#include "Common.hlsli"
+
+
+Texture2D inputTex : register(t0 VK_DESCRIPTOR_SET(0));
+RWTexture2D<float4> outputTex : register(u0 VK_DESCRIPTOR_SET(0));
 
 
 float Convolve(float kernel[9], float data[9], float denom, float offset)

@@ -265,7 +265,7 @@ void ComputeShaderApp::InitRootSignatures()
 	auto computeDesc = RootSignatureDesc{
 		.name			= "Compute Root Signature",
 		.rootParameters = {
-			Table({ TextureSRV, TextureUAV(1) }, ShaderStage::Compute),
+			Table({ TextureSRV, TextureUAV }, ShaderStage::Compute),
 		}
 	};
 
@@ -338,7 +338,7 @@ void ComputeShaderApp::InitDescriptorSets()
 {
 	m_computeSrvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
 	m_computeSrvUavDescriptorSet->SetSRV(0, m_texture);
-	m_computeSrvUavDescriptorSet->SetUAV(1, m_computeScratchBuffer);
+	m_computeSrvUavDescriptorSet->SetUAV(0, m_computeScratchBuffer);
 
 	m_graphicsLeftSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
 	m_graphicsLeftSrvDescriptorSet->SetSRV(0, m_texture);

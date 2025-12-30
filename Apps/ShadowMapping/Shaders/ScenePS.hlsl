@@ -8,10 +8,10 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 1)]]
-Texture2D shadowMapTexture : register(t0);
-[[vk::binding(0, 2)]]
-SamplerState shadowMapSampler : register(s0);
+#include "Common.hlsli"
+
+Texture2D shadowMapTexture : register(t0 VK_DESCRIPTOR_SET(1));
+SamplerState shadowMapSampler : register(s0 VK_DESCRIPTOR_SET(2));
 
 
 struct PSInput

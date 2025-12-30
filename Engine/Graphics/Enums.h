@@ -290,6 +290,42 @@ inline bool IsDescriptorTypeUAV(DescriptorType type)
 }
 
 
+enum class DescriptorRegisterType : uint8_t
+{
+	CBV,
+	SRV,
+	UAV,
+	Sampler
+};
+
+
+inline DescriptorRegisterType GetDescriptorRegisterType(DescriptorType descriptorType)
+{
+	switch (descriptorType)
+	{
+	case DescriptorType::TextureSRV:
+	case DescriptorType::TypedBufferSRV:
+	case DescriptorType::StructuredBufferSRV:
+	case DescriptorType::RawBufferSRV:
+	case DescriptorType::RayTracingAccelStruct:
+		return DescriptorRegisterType::SRV;
+
+	case DescriptorType::TextureUAV:
+	case DescriptorType::TypedBufferUAV:
+	case DescriptorType::StructuredBufferUAV:
+	case DescriptorType::RawBufferUAV:
+	case DescriptorType::SamplerFeedbackTextureUAV:
+		return DescriptorRegisterType::UAV;
+
+	case DescriptorType::Sampler:
+		return DescriptorRegisterType::Sampler;
+
+	default:
+		return DescriptorRegisterType::CBV;
+	}
+}
+
+
 enum class DescriptorRangeFlags : uint8_t
 {
 	None,

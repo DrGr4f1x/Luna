@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct Particle
 {
     float2 pos;
@@ -15,15 +18,16 @@ struct Particle
     float4 gradientPos;
 };
 
-[[vk::binding(0, 0)]]
-StructuredBuffer<Particle> particles : register(t0);
 
-[[vk::binding(1, 0)]]
-cbuffer VSConstants : register(b0)
+StructuredBuffer<Particle> particles : register(t0 VK_DESCRIPTOR_SET(0));
+
+
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float2 invTargetSize;
     float pointSize;
 };
+
 
 struct VSOutput
 {
@@ -31,6 +35,7 @@ struct VSOutput
     float2 uv : TEXCOORD0;
     float gradientU : TEXCOORD1;
 };
+
 
 VSOutput main(uint vertId : SV_VertexID)
 {

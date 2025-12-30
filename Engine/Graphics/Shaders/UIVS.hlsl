@@ -26,8 +26,7 @@ struct VSOutput
 };
 
 
-VK_BINDING(0, 0)
-cbuffer VSConstants : register(b0)
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projectionMatrix;
 }

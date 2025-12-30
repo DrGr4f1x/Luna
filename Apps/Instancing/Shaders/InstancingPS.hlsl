@@ -8,11 +8,11 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 1)]] 
-Texture2DArray texArray : register(t0);
+#include "Common.hlsli"
 
-[[vk::binding(0, 2)]] 
-SamplerState linearSampler : register(s0);
+
+Texture2DArray texArray : register(t0 VK_DESCRIPTOR_SET(1));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(2));
 
 
 struct PSInput

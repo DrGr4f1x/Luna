@@ -380,6 +380,7 @@ void Texture3dApp::InitDescriptorSets()
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
 
+
 void Texture3dApp::UpdateConstantBuffer()
 {
 	Matrix4 modelMatrix = Matrix4(kIdentity);

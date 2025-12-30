@@ -22,6 +22,8 @@
 // Macro wrapping [[vk::push_constant]]
 #define VK_PUSH_CONSTANT [[vk::push_constant]]
 
+#define VK_DESCRIPTOR_SET(dset) ,space##dset
+
 #else // DX12
 
 // Macro wrapping [[vk::binding(x)]] and [[vk::binding(x,y)]]
@@ -35,5 +37,7 @@
 
 // Macro wrapping [[vk::push_constant]]
 #define VK_PUSH_CONSTANT
+
+#define VK_DESCRIPTOR_SET(dset)
 
 #endif // VK

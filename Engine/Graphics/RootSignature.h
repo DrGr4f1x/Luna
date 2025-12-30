@@ -32,6 +32,11 @@ struct DescriptorRange
 	uint32_t registerSpace{ 0 };
 	DescriptorRangeFlags flags{ DescriptorRangeFlags::None };
 
+	bool ContainsRegister(uint32_t registerIndex) const noexcept
+	{
+		return (registerIndex >= startRegister) && (registerIndex < (startRegister + numDescriptors));
+	}
+
 	constexpr DescriptorRange& SetDescriptorType(DescriptorType value) noexcept { descriptorType = value; return *this; }
 	constexpr DescriptorRange& SetStartRegister(uint32_t value) noexcept { startRegister = value; return *this; }
 	constexpr DescriptorRange& SetNumDescriptors(uint32_t value) noexcept { numDescriptors = value; return *this; }
@@ -168,84 +173,21 @@ struct RootParameter
 		return (parameterType == RootParameterType::Table && table[0].descriptorType == DescriptorType::Sampler);
 	}
 
-	DescriptorType GetDescriptorType(uint32_t slot)
+	uint32_t FindMatchingRangeIndex(DescriptorRegisterType registerType, uint32_t registerIndex) const noexcept
 	{
-		// Search for the range containing slot, and return its descriptor type
-		uint32_t currentSlot = 0;
-		for (const auto& range : table)
-		{
-			if (slot >= currentSlot && slot < (currentSlot + range.numDescriptors))
-			{
-				return range.descriptorType;
-			}
+		uint32_t rangeIndex = ~0u;
 
-			currentSlot += range.numDescriptors;
-		}
-		return DescriptorType::None;
-	}
-
-	uint32_t GetRegisterForSlot(uint32_t slot)
-	{
-		// Search for the range containing slot, and the corresponding register
-		uint32_t currentSlot = 0;
-		uint32_t currentStartRegister = 0;
-		for (const auto& range : table)
-		{
-			if (range.startRegister != APPEND_REGISTER)
-			{
-				currentStartRegister = range.startRegister;
-			}
-
-			if (slot >= currentSlot && slot < (currentSlot + range.numDescriptors))
-			{
-				return currentStartRegister + (slot - currentSlot);
-			}
-
-			currentSlot += range.numDescriptors;
-			currentStartRegister += range.numDescriptors;
-		}
-
-		return ~0u;
-	}
-
-	uint32_t GetRangeIndex(uint32_t slot)
-	{
-		// Search for the range containing slot, and return its index
-		uint32_t rangeIndex = 0;
-		uint32_t currentSlot = 0;
-		uint32_t currentStartRegister = 0;
-		for (const auto& range : table)
-		{
-			if (range.startRegister != APPEND_REGISTER)
-			{
-				currentStartRegister = range.startRegister;
-			}
-
-			if (slot >= currentSlot && slot < (currentSlot + range.numDescriptors))
-			{
-				return rangeIndex;
-			}
-
-			currentSlot += range.numDescriptors;
-			currentStartRegister += range.numDescriptors;
-			++rangeIndex;
-		}
-		return ~0u;
-	}
-
-	uint32_t GetRangeStartRegister(uint32_t rangeIndex)
-	{
-		uint32_t currentStartRegister = 0;
-		for (uint32_t i = 0; i < rangeIndex; ++i)
+		for (uint32_t i = 0; i < (uint32_t)table.size(); ++i)
 		{
 			const auto& range = table[i];
-			if (range.startRegister != APPEND_REGISTER)
+			if (registerType == GetDescriptorRegisterType(range.descriptorType) && range.ContainsRegister(registerIndex))
 			{
-				currentStartRegister = range.startRegister;
+				rangeIndex = i;
+				break;
 			}
-			currentStartRegister += range.numDescriptors;
 		}
-		return currentStartRegister;
+
+		return rangeIndex;
 	}
 };
 
@@ -301,6 +243,23 @@ class RootTableBuilder
 public:
 	RootParameter operator()(std::vector<DescriptorRange> ranges, ShaderStage shaderVisibility = ShaderStage::All)
 	{
+		uint32_t currentRegister[] = { 0, 0, 0, 0 };
+		for (uint32_t i = 0; i < (uint32_t)ranges.size(); ++i)
+		{
+			auto& range = ranges[i];
+			const uint32_t regIndex = (uint32_t)GetDescriptorRegisterType(range.descriptorType);
+
+			if (range.startRegister == APPEND_REGISTER)
+			{
+				range.startRegister = currentRegister[regIndex];
+				currentRegister[regIndex] += range.numDescriptors;
+			}
+			else
+			{
+				currentRegister[regIndex] = range.startRegister + range.numDescriptors;
+			}
+		}
+
 		return RootParameter{
 			.shaderVisibility	= shaderVisibility,
 			.parameterType		= RootParameterType::Table,

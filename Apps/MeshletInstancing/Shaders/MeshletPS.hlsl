@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 
 struct Constants
 {
@@ -26,8 +28,7 @@ struct PSInput
 };
 
 
-[[vk::binding(0, 0)]]
-ConstantBuffer<Constants> Globals : register(b0);
+ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
 
 
 float4 main(PSInput input) : SV_TARGET

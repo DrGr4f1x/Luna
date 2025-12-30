@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"'
+
+
 struct Constants
 {
     float4x4 World;
@@ -16,17 +19,20 @@ struct Constants
     uint DrawMeshlets;
 };
 
+
 struct MeshInfo
 {
     uint IndexBytes;
     uint MeshletOffset;
 };
 
+
 struct Vertex
 {
     float3 Position;
     float3 Normal;
 };
+
 
 struct VertexOut
 {
@@ -36,6 +42,7 @@ struct VertexOut
     uint MeshletIndex : COLOR0;
 };
 
+
 struct Meshlet
 {
     uint VertCount;
@@ -44,19 +51,16 @@ struct Meshlet
     uint PrimOffset;
 };
 
-[[vk::binding(0, 0)]]
-ConstantBuffer<Constants> Globals : register(b0);
+
+ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
 [[vk::push_constant]]
 ConstantBuffer<MeshInfo> MeshInfo : register(b1);
 
-[[vk::binding(0, 2)]]
-StructuredBuffer<Vertex> Vertices : register(t0);
-[[vk::binding(1, 2)]]
-StructuredBuffer<Meshlet> Meshlets : register(t1);
-[[vk::binding(2, 2)]]
-ByteAddressBuffer UniqueVertexIndices : register(t2);
-[[vk::binding(3, 2)]]
-StructuredBuffer<uint> PrimitiveIndices : register(t3);
+
+StructuredBuffer<Vertex> Vertices : register(t0 VK_DESCRIPTOR_SET(2));
+StructuredBuffer<Meshlet> Meshlets : register(t1 VK_DESCRIPTOR_SET(2));
+ByteAddressBuffer UniqueVertexIndices : register(t2 VK_DESCRIPTOR_SET(2));
+StructuredBuffer<uint> PrimitiveIndices : register(t3 VK_DESCRIPTOR_SET(2));
 
 
 /////

@@ -255,8 +255,9 @@ void TextureCubeMapApp::InitDescriptorSets()
 
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTex);
 	m_modelCbvSrvDescriptorSet->SetCBV(0, m_psModelConstantBuffer);
-	m_modelCbvSrvDescriptorSet->SetSRV(1, m_skyboxTex);
+	m_modelCbvSrvDescriptorSet->SetSRV(0, m_skyboxTex);
 }
+
 
 void TextureCubeMapApp::UpdateConstantBuffers()
 {

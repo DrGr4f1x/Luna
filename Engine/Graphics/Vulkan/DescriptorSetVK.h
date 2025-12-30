@@ -30,25 +30,25 @@ class DescriptorSet : public IDescriptorSet
 public:
 	DescriptorSet(Device* device, const RootParameter& rootParameter);
 
-	void SetSRV(uint32_t slot, const IDescriptor* descriptor) override;
-	void SetUAV(uint32_t slot, const IDescriptor* descriptor) override;
-	void SetCBV(uint32_t slot, const IDescriptor* descriptor) override;
-	void SetSampler(uint32_t slot, const IDescriptor* descriptor) override;
+	void SetSRV(uint32_t srvRegister, const IDescriptor* descriptor) override;
+	void SetUAV(uint32_t uavRegister, const IDescriptor* descriptor) override;
+	void SetCBV(uint32_t cbvRegister, const IDescriptor* descriptor) override;
+	void SetSampler(uint32_t samplerRegister, const IDescriptor* descriptor) override;
 
-	void SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors) override;
+	void SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors) override;
 
-	void SetSRV(uint32_t slot, ColorBufferPtr colorBuffer) override;
-	void SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
-	void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
-	void SetSRV(uint32_t slot, TexturePtr texture) override;
+	void SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer) override;
+	void SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
+	void SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer) override;
+	void SetSRV(uint32_t srvRegister, TexturePtr texture) override;
 
-	void SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0) override;
-	void SetUAV(uint32_t slot, DepthBufferPtr depthBuffer) override;
-	void SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
+	void SetUAV(uint32_t uavRegister, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0) override;
+	void SetUAV(uint32_t uavRegister, DepthBufferPtr depthBuffer) override;
+	void SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer) override;
 
-	void SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer) override;
+	void SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer) override;
 
-	void SetSampler(uint32_t slot, SamplerPtr sampler) override;
+	void SetSampler(uint32_t samplerRegister, SamplerPtr sampler) override;
 
 	bool HasDescriptors() const;
 	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
@@ -58,9 +58,10 @@ public:
 protected:
 	void UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet);
 	template<bool isSrv>
-	void SetSRVUAV(uint32_t slot, const IDescriptor* descriptor);
+	void SetSRVUAV(uint32_t srvUavRegister, const IDescriptor* descriptor);
 
-	void SetDescriptors_Internal(uint32_t slot, std::span<const IDescriptor*> descriptors);
+	template <DescriptorRegisterType registerType>
+	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
 	void WriteSamplers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
 	void WriteBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
 	void WriteTextures(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);

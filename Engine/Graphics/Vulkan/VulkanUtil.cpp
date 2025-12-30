@@ -173,4 +173,103 @@ SemaphorePtr CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, u
 	return nullptr;
 }
 
+// TODO: make these configurable
+constexpr uint32_t s_tRegShift = 0;
+constexpr uint32_t s_sRegShift = 128;
+constexpr uint32_t s_bRegShift = 256;
+constexpr uint32_t s_uRegShift = 384;
+
+
+uint32_t GetRegisterShift(DescriptorType descriptorType)
+{
+	switch (descriptorType)
+	{
+	case DescriptorType::ConstantBuffer:
+		return s_bRegShift;
+	case DescriptorType::TextureSRV:
+		return s_tRegShift;
+	case DescriptorType::TextureUAV:
+		return s_uRegShift;
+	case DescriptorType::TypedBufferSRV:
+		return s_tRegShift;
+	case DescriptorType::TypedBufferUAV:
+		return s_uRegShift;
+	case DescriptorType::StructuredBufferSRV:
+		return s_tRegShift;
+	case DescriptorType::StructuredBufferUAV:
+		return s_uRegShift;
+	case DescriptorType::RawBufferSRV:
+		return s_tRegShift;
+	case DescriptorType::RawBufferUAV:
+		return s_uRegShift;
+	case DescriptorType::Sampler:
+		return s_sRegShift;
+	case DescriptorType::RayTracingAccelStruct:
+		return s_tRegShift;
+	case DescriptorType::PushConstants:
+		return s_bRegShift;
+	case DescriptorType::SamplerFeedbackTextureUAV:
+		return s_uRegShift;
+	default:
+		return 0;
+	}
+}
+
+uint32_t GetRegisterShift(RootParameterType rootParameterType)
+{
+	switch (rootParameterType)
+	{
+	case RootParameterType::RootConstants:
+		return s_bRegShift;
+	case RootParameterType::RootCBV:
+		return s_bRegShift;
+	case RootParameterType::RootSRV:
+		return s_tRegShift;
+	case RootParameterType::RootUAV:
+		return s_uRegShift;
+	default:
+		return 0;
+	}
+}
+
+uint32_t GetRegisterClass(DescriptorType descriptorType)
+{
+	switch (descriptorType)
+	{
+	case DescriptorType::ConstantBuffer:
+		return 2;
+	case DescriptorType::TextureSRV:
+		return 0;
+	case DescriptorType::TextureUAV:
+		return 3;
+	case DescriptorType::TypedBufferSRV:
+		return 0;
+	case DescriptorType::TypedBufferUAV:
+		return 3;
+	case DescriptorType::StructuredBufferSRV:
+		return 0;
+	case DescriptorType::StructuredBufferUAV:
+		return 3;
+	case DescriptorType::RawBufferSRV:
+		return 0;
+	case DescriptorType::RawBufferUAV:
+		return 3;
+	case DescriptorType::Sampler:
+		return 1;
+	case DescriptorType::RayTracingAccelStruct:
+		return 0;
+	case DescriptorType::PushConstants:
+		return 2;
+	case DescriptorType::SamplerFeedbackTextureUAV:
+		return 3;
+	default:
+		return 0;
+	}
+}
+
+uint32_t GetRegisterShiftSRV() { return s_tRegShift; }
+uint32_t GetRegisterShiftCBV() { return s_bRegShift; }
+uint32_t GetRegisterShiftUAV() { return s_uRegShift; }
+uint32_t GetRegisterShiftSampler() { return s_sRegShift; }
+
 } // namespace Luna::VK

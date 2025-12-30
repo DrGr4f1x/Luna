@@ -224,7 +224,7 @@ void DisplacementApp::InitDescriptorSets()
 {
 	m_dsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_dsCbvSrvDescriptorSet->SetCBV(0, m_dsConstantBuffer);
-	m_dsCbvSrvDescriptorSet->SetSRV(1, m_texture);
+	m_dsCbvSrvDescriptorSet->SetSRV(0, m_texture);
 
 	m_psSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
 	m_psSrvDescriptorSet->SetSRV(0, m_texture);

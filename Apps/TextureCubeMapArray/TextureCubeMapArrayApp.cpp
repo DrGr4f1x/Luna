@@ -144,7 +144,7 @@ void TextureCubeMapArrayApp::Render()
 
 void TextureCubeMapArrayApp::CreateDeviceDependentResources()
 {
-	InitRootSignatures();
+	InitRootSignature();
 	
 	// Constant buffers
 	m_vsSkyboxConstantBuffer = CreateConstantBuffer("VS Skybox Constant Buffer", 1, sizeof(VSConstants));
@@ -174,7 +174,7 @@ void TextureCubeMapArrayApp::CreateWindowSizeDependentResources()
 }
 
 
-void TextureCubeMapArrayApp::InitRootSignatures()
+void TextureCubeMapArrayApp::InitRootSignature()
 {
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Signature",
@@ -242,8 +242,9 @@ void TextureCubeMapArrayApp::InitDescriptorSet()
 	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 
 	m_psCbvSrvDescriptorSet->SetCBV(0, m_psConstantBuffer);
-	m_psCbvSrvDescriptorSet->SetSRV(1, m_skyboxTex);
+	m_psCbvSrvDescriptorSet->SetSRV(0, m_skyboxTex);
 }
+
 
 void TextureCubeMapArrayApp::UpdateConstantBuffers()
 {

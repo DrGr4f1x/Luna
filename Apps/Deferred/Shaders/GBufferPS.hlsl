@@ -8,13 +8,12 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 1)]]
-Texture2D textureColor : register(t0);
-[[vk::binding(1, 1)]]
-Texture2D textureNormalMap : register(t1);
+#include "Common.hlsli"
 
-[[vk::binding(0, 2)]]
-SamplerState samplerLinear : register(s0);
+
+Texture2D textureColor : register(t0 VK_DESCRIPTOR_SET(1));
+Texture2D textureNormalMap : register(t1 VK_DESCRIPTOR_SET(1));
+SamplerState samplerLinear : register(s0 VK_DESCRIPTOR_SET(2));
 
 
 struct VSOutput

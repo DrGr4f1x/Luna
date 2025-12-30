@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 struct PSInput
 {
     float4 pos : SV_Position;
@@ -16,14 +18,9 @@ struct PSInput
 };
 
 
-[[vk::binding(0, 2)]]
-Texture2D colorTex : register(t0);
-
-[[vk::binding(1, 2)]]
-Texture1D gradientTex : register(t1);
-
-[[vk::binding(0, 3)]]
-SamplerState linearSampler : register(s0);
+Texture2D colorTex : register(t0 VK_DESCRIPTOR_SET(2));
+Texture1D gradientTex : register(t1 VK_DESCRIPTOR_SET(2));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(3));
 
 
 float4 main(PSInput input) : SV_Target

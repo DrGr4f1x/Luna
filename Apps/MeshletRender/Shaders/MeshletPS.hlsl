@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct Constants
 {
     float4x4 World;
@@ -26,8 +29,7 @@ struct VertexOut
 };
 
 
-[[vk::binding(0, 0)]]
-ConstantBuffer<Constants> Globals : register(b0);
+ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
 
 
 float4 main(VertexOut input) : SV_TARGET

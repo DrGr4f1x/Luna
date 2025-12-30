@@ -33,7 +33,7 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
-	void InitRootSignatures();
+	void InitRootSignature();
 	void InitPipelines();
 	void InitDescriptorSet();
 

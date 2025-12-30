@@ -32,25 +32,24 @@ DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
 {}
 
 
-void DescriptorSet::SetSRV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetSRV(uint32_t srvRegister, const IDescriptor* descriptor)
 {
-	SetSRVUAV<true>(slot, descriptor);
+	SetSRVUAV<true>(srvRegister, descriptor);
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetUAV(uint32_t uavRegister, const IDescriptor* descriptor)
 {
-	SetSRVUAV<false>(slot, descriptor);
+	SetSRVUAV<false>(uavRegister, descriptor);
 }
 
 
-void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetCBV(uint32_t cbvRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptorVK = (const Descriptor*)descriptor;
 
 	assert(descriptorVK->GetDescriptorClass() == DescriptorClass::Buffer);
 	assert(m_rootParameter.parameterType == RootParameterType::Table);
-	assert(m_rootParameter.GetDescriptorType(slot) == DescriptorType::ConstantBuffer);
 
 	VkDescriptorBufferInfo info{
 		.buffer		= descriptorVK->GetBuffer(),
@@ -58,10 +57,12 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const uint32_t regShift = GetRegisterShiftCBV();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + cbvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -72,22 +73,23 @@ void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
 }
 
 
-void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetSampler(uint32_t samplerRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptorVK = (const Descriptor*)descriptor;
 
 	assert(descriptorVK->GetDescriptorClass() == DescriptorClass::Sampler);
-	assert(m_rootParameter.GetDescriptorType(slot) == DescriptorType::Sampler);
 
 	VkDescriptorImageInfo info{
 		.sampler		= descriptorVK->GetSampler(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t regShift = GetRegisterShiftSampler();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + samplerRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -98,23 +100,25 @@ void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
 }
 
 
-void DescriptorSet::SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors)
+void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
 {
-	SetDescriptors_Internal(slot, descriptors);
+	SetDescriptors_Internal<DescriptorRegisterType::SRV>(srvRegister, descriptors);
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
+void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
 	VkDescriptorImageInfo info{
 		.imageView		= ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t regShift = GetRegisterShiftSRV();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + srvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -125,17 +129,19 @@ void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
+void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	VkDescriptorImageInfo info{
 		.imageView		= ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t regShift = GetRegisterShiftSRV();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + srvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -146,14 +152,16 @@ void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depth
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
+void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 {
 	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
+
+	const uint32_t regShift = GetRegisterShiftSRV();
 
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + srvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
@@ -180,7 +188,7 @@ void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
+void DescriptorSet::SetSRV(uint32_t srvRegister, TexturePtr texture)
 {
 	const Texture* textureVK = (const Texture*)texture.Get();
 	assert(textureVK != nullptr);
@@ -190,10 +198,12 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t regShift = GetRegisterShiftSRV();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + srvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
@@ -204,17 +214,19 @@ void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
+void DescriptorSet::SetUAV(uint32_t uavRegister, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
 	VkDescriptorImageInfo info{
 		.imageView		= ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
 	};
 
+	const uint32_t regShift = GetRegisterShiftUAV();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + uavRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
@@ -225,7 +237,7 @@ void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t u
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
+void DescriptorSet::SetUAV(uint32_t uavRegister, DepthBufferPtr depthBuffer)
 {
 	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
 	assert(depthBufferVK != nullptr);
@@ -234,14 +246,16 @@ void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
+void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 {
 	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetUavDescriptor();
+
+	const uint32_t regShift = GetRegisterShiftUAV();
 
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + uavRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
@@ -268,7 +282,7 @@ void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
 }
 
 
-void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
+void DescriptorSet::SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer)
 {
 	VkDescriptorBufferInfo info{
 		.buffer		= ((const Descriptor*)gpuBuffer->GetCbvDescriptor())->GetBuffer(),
@@ -276,10 +290,12 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const uint32_t regShift = GetRegisterShiftCBV();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + cbvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -290,17 +306,19 @@ void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
 }
 
 
-void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
+void DescriptorSet::SetSampler(uint32_t samplerRegister, SamplerPtr sampler)
 {
 	VkDescriptorImageInfo info{
 		.sampler		= ((const Descriptor*)sampler->GetDescriptor())->GetSampler(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	const uint32_t regShift = GetRegisterShiftSampler();
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+		.dstBinding			= regShift + samplerRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -329,14 +347,18 @@ void DescriptorSet::UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescrip
 
 
 template<bool isSrv>
-void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetSRVUAV(uint32_t srvUavRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptorVK = (const Descriptor*)descriptor;
 
 	assert(m_rootParameter.parameterType == RootParameterType::Table);
 
-	DescriptorType descriptorType = m_rootParameter.GetDescriptorType(slot);
-	assert(IsDescriptorTypeSRV(descriptorType));
+	const uint32_t regShift = isSrv ? GetRegisterShiftSRV() : GetRegisterShiftUAV();
+
+	const DescriptorRegisterType registerType = isSrv ? DescriptorRegisterType::SRV : DescriptorRegisterType::UAV;
+	const uint32_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(registerType, srvUavRegister);
+	assert(rangeIndex != ~0u);
+	const DescriptorType descriptorType = m_rootParameter.table[rangeIndex].descriptorType;
 
 	// Images (i.e. ColorBuffer, DepthBuffer, or Texture)
 	if (descriptorVK->GetDescriptorClass() == DescriptorClass::Image)
@@ -349,7 +371,7 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 		VkWriteDescriptorSet writeDescriptorSet{
 			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet				= m_descriptorSet,
-			.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+			.dstBinding			= regShift + srvUavRegister,
 			.dstArrayElement	= 0,
 			.descriptorCount	= 1,
 			.descriptorType		= isSrv ? VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
@@ -367,7 +389,7 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 		VkWriteDescriptorSet writeDescriptorSet{
 			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet				= m_descriptorSet,
-			.dstBinding			= m_rootParameter.GetRegisterForSlot(slot),
+			.dstBinding			= regShift + srvUavRegister,
 			.dstArrayElement	= 0,
 			.descriptorCount	= 1,
 		};
@@ -397,9 +419,11 @@ void DescriptorSet::SetSRVUAV(uint32_t slot, const IDescriptor* descriptor)
 }
 
 
-void DescriptorSet::SetDescriptors_Internal(uint32_t slot, std::span<const IDescriptor*> descriptors)
+template <DescriptorRegisterType registerType>
+void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors)
 {
-	uint32_t rangeIndex = m_rootParameter.GetRangeIndex(slot);
+	const uint32_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(registerType, descriptorRegister);
+	
 	assert(rangeIndex != ~0u);
 	const auto& range = m_rootParameter.table[rangeIndex];
 
@@ -438,10 +462,12 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t slot, std::span<const IDesc
 		break;
 	}
 
+	const uint32_t regShift = GetRegisterShift(range.descriptorType);
+
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstSet				= m_descriptorSet,
-		.dstBinding			= m_rootParameter.GetRangeStartRegister(rangeIndex),
+		.dstBinding			= regShift + range.startRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= range.numDescriptors,
 		.descriptorType		= DescriptorTypeToVulkan(range.descriptorType)

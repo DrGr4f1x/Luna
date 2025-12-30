@@ -319,10 +319,10 @@ void ShadowMappingApp::InitDescriptorSets()
 
 	m_shadowVisualizationDescriptorSet = m_shadowVisualizationRootSignature->CreateDescriptorSet(0);
 	m_shadowVisualizationDescriptorSet->SetSRV(0, m_shadowMap->GetSrvDescriptor(true));
-	m_shadowVisualizationDescriptorSet->SetCBV(1, m_sceneConstantBuffer->GetCbvDescriptor());
+	m_shadowVisualizationDescriptorSet->SetCBV(0, m_sceneConstantBuffer->GetCbvDescriptor());
 }
 
-
+ 
 void ShadowMappingApp::LoadAssets()
 {
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();

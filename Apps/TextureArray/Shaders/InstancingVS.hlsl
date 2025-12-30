@@ -32,11 +32,12 @@ struct InstanceData
 };
 
 
-cbuffer VSConstants : register(b0)
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 viewProjectionMatrix;
     InstanceData instance[8];
 }
+
 
 VSOutput main(VSInput input)
 {

@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 struct VSInput
 {
     float3 position : POSITION;
@@ -15,6 +17,7 @@ struct VSInput
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
 };
+
 
 struct VSOutput
 {
@@ -26,13 +29,14 @@ struct VSOutput
     float3 viewVec : TEXCOORD2;
 };
 
-[[vk::binding(0)]]
-cbuffer VSConstants : register(b0)
+
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projectionMatrix;
     float4x4 modelMatrix;
     float4 lightPos;
 };
+
 
 VSOutput main(VSInput input)
 {

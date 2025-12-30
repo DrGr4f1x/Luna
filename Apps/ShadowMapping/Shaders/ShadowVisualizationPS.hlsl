@@ -8,13 +8,13 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 0)]]
-Texture2D textureColor : register(t0);
-[[vk::binding(0, 1)]]
-SamplerState samplerColor : register(s0);
+#include "Common.hlsli"
 
-[[vk::binding(1, 0)]]
-cbuffer ubo : register(b0)
+Texture2D textureColor : register(t0 VK_DESCRIPTOR_SET(0));
+SamplerState samplerColor : register(s0 VK_DESCRIPTOR_SET(1));
+
+
+cbuffer ubo : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projection;
     float4x4 view;

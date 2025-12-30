@@ -476,6 +476,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 				currentBinding = vkBinding.binding + 1;
 			}
 
+			vkBinding.binding += GetRegisterShift(DescriptorType::Sampler);
+
 			vkLayoutBindings.push_back(vkBinding);
 
 			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
@@ -513,8 +515,10 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			uint32_t rootIndex = rootParameterPair.first;
 			const auto& rootParameter = rootParameterPair.second;
 
+			const uint32_t regShift = GetRegisterShift(rootParameter.parameterType);
+
 			VkDescriptorSetLayoutBinding vkBinding{
-				.binding				= rootParameter.startRegister,
+				.binding				= regShift + rootParameter.startRegister,
 				.descriptorType			= RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
 				.descriptorCount		= 1,
 				.stageFlags				= ShaderStageToVulkan(rootParameter.shaderVisibility),
@@ -1429,7 +1433,7 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 
 	size_t hashCode = Utility::g_hashStart;
 
-	uint32_t currentBinding = 0;
+	uint32_t currentBinding[] = { 0, 0, 0, 0 };
 
 	for (const auto& range : rootParameter.table)
 	{
@@ -1461,6 +1465,8 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 			numDescriptors = range.numDescriptors;
 		}
 
+		uint32_t currentBindingIndex = GetRegisterClass(range.descriptorType);
+
 		for (uint32_t j = 0; j < numDescriptors; ++j)
 		{
 			VkDescriptorBindingFlags& bindFlags = bindingFlags.emplace_back();
@@ -1474,13 +1480,15 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 
 			if (range.startRegister == APPEND_REGISTER)
 			{
-				descriptorBinding.binding = (currentBinding++) + j;
+				descriptorBinding.binding = (currentBinding[currentBindingIndex]++) + j;
 			}
 			else
 			{
 				descriptorBinding.binding = range.startRegister + j;
-				currentBinding = descriptorBinding.binding + 1;
+				currentBinding[currentBindingIndex] = descriptorBinding.binding + 1;
 			}
+
+			descriptorBinding.binding += GetRegisterShift(range.descriptorType);
 
 			hashCode = Utility::HashState(&bindFlags, 1, hashCode);
 			hashCode = Utility::HashState(&descriptorBinding, 1, hashCode);

@@ -30,142 +30,166 @@ DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
 {}
 
 
-void DescriptorSet::SetSRV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetSRV(uint32_t srvRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
 
 	assert(!m_isSamplerTable);
 	assert(IsDescriptorTypeSRV(descriptor12->GetDescriptorType()));
 	assert(m_rootParameter.parameterType == RootParameterType::RootSRV || m_rootParameter.parameterType == RootParameterType::Table);
-	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
 	
-	UpdateDescriptor(slot, descriptor12->GetHandleCPU());	
+	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);
+
+	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());	
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetUAV(uint32_t uavRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
 
 	assert(!m_isSamplerTable);
 	assert(IsDescriptorTypeUAV(descriptor12->GetDescriptorType()));
 	assert(m_rootParameter.parameterType == RootParameterType::Table);
-	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
 	
-	UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+	const uint32_t descriptorSlot = GetUavOffset(uavRegister);
+
+	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetCBV(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetCBV(uint32_t cbvRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
 
 	assert(!m_isSamplerTable);
 	assert(descriptor12->GetDescriptorType() == DescriptorType::ConstantBuffer);
 	assert(m_rootParameter.parameterType == RootParameterType::Table);
-	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
 
-	UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+	const uint32_t descriptorSlot = GetCbvOffset(cbvRegister);
+
+	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetSampler(uint32_t slot, const IDescriptor* descriptor)
+void DescriptorSet::SetSampler(uint32_t samplerRegister, const IDescriptor* descriptor)
 {
 	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
 
 	assert(m_isSamplerTable);
 	assert(descriptor12->GetDescriptorType() == DescriptorType::Sampler);
 	assert(m_rootParameter.parameterType == RootParameterType::Table);
-	assert(m_rootParameter.GetDescriptorType(slot) == descriptor12->GetDescriptorType());
 	
-	UpdateDescriptor(slot, descriptor12->GetHandleCPU());
+	const uint32_t descriptorSlot = GetSamplerOffset(samplerRegister);
+
+	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetBindlessSRVs(uint32_t slot, std::span<const IDescriptor*> descriptors)
+void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
 {
 	assert(!m_isSamplerTable);
 	assert(m_rootParameter.parameterType == RootParameterType::Table);
 
-	uint32_t rangeIndex = m_rootParameter.GetRangeIndex(slot);
-	assert(rangeIndex != ~0u);
-	const auto& range = m_rootParameter.table[rangeIndex];
-	assert(HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray));
+	// TODO: Add some safety checks here
 
-	// TODO: Relax this requirement so that we can set a subset of a bindless array
-	assert(descriptors.size() == range.numDescriptors);
+	const uint32_t srvOffset = GetSrvOffset(srvRegister);
 
 	for (size_t i = 0; i < descriptors.size(); ++i)
 	{
 		const Descriptor* descriptor = (const Descriptor*)descriptors[i];
-		UpdateDescriptor(slot + (uint32_t)i, descriptor->GetHandleCPU());
+
+		const uint32_t descriptorSlot = srvOffset + (uint32_t)i;
+
+		UpdateDescriptor(descriptorSlot, descriptor->GetHandleCPU());
 	}
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, ColorBufferPtr colorBuffer)
+void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
-	UpdateDescriptor(slot,((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetHandleCPU());
+	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);
+
+	UpdateDescriptor(descriptorSlot, ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, DepthBufferPtr depthBuffer, bool depthSrv)
+void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	UpdateDescriptor(slot, ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU());
+	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);
+
+	UpdateDescriptor(descriptorSlot, ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer)
+void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 {
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer->GetSrvDescriptor())->GetHandleCPU();
-	UpdateDescriptor(slot, cpuHandle);
+
+	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);
+
+	UpdateDescriptor(descriptorSlot, cpuHandle);
 }
 
 
-void DescriptorSet::SetSRV(uint32_t slot, TexturePtr texture)
+void DescriptorSet::SetSRV(uint32_t srvRegister, TexturePtr texture)
 {
-	UpdateDescriptor(slot, ((const Descriptor*)texture->GetDescriptor())->GetHandleCPU());
+	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);
+
+	UpdateDescriptor(descriptorSlot, ((const Descriptor*)texture->GetDescriptor())->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex)
+void DescriptorSet::SetUAV(uint32_t uavRegister, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
-	UpdateDescriptor(slot, ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetHandleCPU());
+	const uint32_t descriptorSlot = GetUavOffset(uavRegister);
+
+	UpdateDescriptor(descriptorSlot, ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetHandleCPU());
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, DepthBufferPtr depthBuffer)
+void DescriptorSet::SetUAV(uint32_t uavRegister, DepthBufferPtr depthBuffer)
 {
 	assert_msg(false, "Depth UAVs not yet supported");
+
+	const uint32_t descriptorSlot = GetUavOffset(uavRegister);
 }
 
 
-void DescriptorSet::SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer)
+void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 {
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer->GetUavDescriptor())->GetHandleCPU();
-	UpdateDescriptor(slot, cpuHandle);
+
+	const uint32_t descriptorSlot = GetUavOffset(uavRegister);
+
+	UpdateDescriptor(descriptorSlot, cpuHandle);
 }
 
 
-void DescriptorSet::SetCBV(uint32_t slot, GpuBufferPtr gpuBuffer)
+void DescriptorSet::SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer)
 {
 	const GpuBuffer* gpuBuffer12 = (const GpuBuffer*)gpuBuffer.get();
 	assert(gpuBuffer12 != nullptr);
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
-	UpdateDescriptor(slot, cpuHandle);
+
+	const uint32_t descriptorSlot = GetCbvOffset(cbvRegister);
+
+	UpdateDescriptor(descriptorSlot, cpuHandle);
 }
 
 
-void DescriptorSet::SetSampler(uint32_t slot, SamplerPtr sampler)
+void DescriptorSet::SetSampler(uint32_t samplerRegister, SamplerPtr sampler)
 {
-	UpdateDescriptor(slot, ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU());
+	const uint32_t descriptorSlot = GetSamplerOffset(samplerRegister);
+
+	UpdateDescriptor(descriptorSlot, ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU());
 }
 
 
@@ -206,6 +230,30 @@ void DescriptorSet::UpdateDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE 
 	DescriptorHandle offsetHandle = m_descriptorHandle + slot * descriptorSize;
 
 	d3d12Device->CopyDescriptorsSimple(1, offsetHandle.GetCpuHandle(), descriptor, heapType);
+}
+
+
+uint32_t DescriptorSet::GetSrvOffset(uint32_t srvRegister) const
+{
+	auto ret = m_srvOffsets.find(srvRegister);
+	assert(ret != m_srvOffsets.end());
+	return ret->second;
+}
+
+
+uint32_t DescriptorSet::GetCbvOffset(uint32_t cbvRegister) const
+{
+	auto ret = m_cbvOffsets.find(cbvRegister);
+	assert(ret != m_cbvOffsets.end());
+	return ret->second;
+}
+
+
+uint32_t DescriptorSet::GetUavOffset(uint32_t uavRegister) const
+{
+	auto ret = m_uavOffsets.find(uavRegister);
+	assert(ret != m_uavOffsets.end());
+	return ret->second;
 }
 
 } // namespace Luna::DX12

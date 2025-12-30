@@ -323,5 +323,5 @@ void MeshletInstancingApp::RegenerateInstances()
 
 	_aligned_free(instanceData);
 
-	m_instanceDescriptorSet->SetSRV(0, m_instanceBuffer);
+	m_instanceDescriptorSet->SetSRV(4, m_instanceBuffer);
 }

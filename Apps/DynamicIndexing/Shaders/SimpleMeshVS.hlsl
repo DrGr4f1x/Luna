@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct VSInput
 {
     float3 position     : POSITION;
@@ -16,6 +19,7 @@ struct VSInput
     float3 tangent      : TANGENT;
 };
 
+
 struct VSOutput
 {
     float4 position     : SV_POSITION;
@@ -23,8 +27,7 @@ struct VSOutput
 };
 
 
-[[vk::binding(0, 0)]]
-cbuffer cb0 : register(b0)
+cbuffer cb0 : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 modelViewProjectionMatrix;
 };

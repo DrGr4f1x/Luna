@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 struct VSInput
 {
     float3 pos : POSITION;
@@ -26,7 +28,7 @@ struct VSOutput
 };
 
 
-cbuffer VSConstants
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;

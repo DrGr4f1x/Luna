@@ -8,6 +8,7 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
 #include "VisualizerCommon.hlsli"
 
 
@@ -56,7 +57,7 @@ float3 IntersectPlanes(float4 p0, float4 p1, float4 p2)
 
 
 // Resource bindings
-cbuffer Globals : register(b0)
+cbuffer Globals : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 viewProj;
     float4 planes[6];

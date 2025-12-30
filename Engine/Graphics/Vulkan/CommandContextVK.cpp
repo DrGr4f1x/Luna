@@ -1096,7 +1096,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding,
+		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootCBV),
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -1134,7 +1134,7 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding,
+		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootSRV),
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -1172,7 +1172,7 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding,
+		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootUAV),
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
 		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,

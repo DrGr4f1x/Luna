@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct VSInput
 {
     float3 pos      : POSITION;
@@ -17,8 +20,8 @@ struct VSInput
     float2 uv       : TEXCOORD;
 };
 
-[[vk::binding(0, 0)]]
-cbuffer ubo : register(b0)
+
+cbuffer ubo : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projection;
     float4x4 model;

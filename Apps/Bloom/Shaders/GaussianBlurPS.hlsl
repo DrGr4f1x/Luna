@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct PSInput
 {
     float4 pos : SV_Position;
@@ -15,14 +18,11 @@ struct PSInput
 };
 
 
-[[vk::binding(0)]]
-Texture2D colorTex : register(t0);
-[[vk::binding(0, 1)]]
-SamplerState linearSampler : register(s0);
+Texture2D colorTex : register(t0 VK_DESCRIPTOR_SET(0));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(1));
 
 
-[[vk::binding(1)]]
-cbuffer PSConstants : register(b0)
+cbuffer PSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float blurScale;
     float blurStrength;

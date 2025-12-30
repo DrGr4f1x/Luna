@@ -8,18 +8,21 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
 #include "VisualizerCommon.hlsli"
 #include "MeshletUtils.hlsli"
 
+
 #define GROUP_SIZE 128
+
 
 // Base count of 127 works --- 128 breaks NVIDIA GPU, not sure why.
 // Worked before 450.82 driver update.
 #define BASE_COUNT GROUP_SIZE - 1 
 
+
 // Resource bindings
-[[vk::binding(0, 0)]]
-cbuffer Globals : register(b0)
+cbuffer Globals : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 World;
     float4x4 ViewProj;
@@ -29,17 +32,19 @@ cbuffer Globals : register(b0)
     float Scale;
 };
 
+
 struct Options
 {
     uint MeshletOffset;
     uint MeshletCount;
 };
 
+
 [[vk::push_constant]]
 ConstantBuffer<Options> Options : register(b1);
 
-[[vk::binding(1, 0)]]
-StructuredBuffer<CullData> MeshletCullData : register(t1);
+
+StructuredBuffer<CullData> MeshletCullData : register(t1 VK_DESCRIPTOR_SET(0));
 
 
 //---------------------------------------------

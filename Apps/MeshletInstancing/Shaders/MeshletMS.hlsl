@@ -8,6 +8,7 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
 #include "Shared.h"
 
 
@@ -26,6 +27,7 @@ struct Vertex
     float3 Normal;
 };
 
+
 struct Meshlet
 {
     uint VertCount;
@@ -34,11 +36,13 @@ struct Meshlet
     uint PrimOffset;
 };
 
+
 struct Instance
 {
     float4x4 World;
     float4x4 WorldInvTranspose;
 };
+
 
 struct VertexOut
 {
@@ -48,8 +52,9 @@ struct VertexOut
     uint MeshletIndex : COLOR0;
 };
 
-[[vk::binding(0, 0)]]
-ConstantBuffer<Constants> Globals : register(b0);
+
+ConstantBuffer<Constants> Globals : register(b0 VK_DESCRIPTOR_SET(0));
+
 
 struct DrawMeshParams
 {
@@ -60,40 +65,46 @@ struct DrawMeshParams
     uint MeshletOffset;
 };
 
+
 [[vk::push_constant]]
 ConstantBuffer<DrawMeshParams> DrawParams : register(b1); // Root parameter 1
+
 
 uint GetInstanceCount()
 {
     return DrawParams.InstanceCount;
 }
+
+
 uint GetInstanceOffset()
 {
     return DrawParams.InstanceOffset;
 }
+
+
 uint GetIndexBytes()
 {
     return DrawParams.IndexBytes;
 }
+
+
 uint GetMeshletCount()
 {
     return DrawParams.MeshletCount;
 }
+
+
 uint GetMeshletOffset()
 {
     return DrawParams.MeshletOffset;
 }
 
-[[vk::binding(0, 2)]]
-StructuredBuffer<Vertex> Vertices : register(t0);
-[[vk::binding(1, 2)]]
-StructuredBuffer<Meshlet> Meshlets : register(t1);
-[[vk::binding(2, 2)]]
-ByteAddressBuffer UniqueVertexIndices : register(t2);
-[[vk::binding(3, 2)]]
-StructuredBuffer<uint> PrimitiveIndices : register(t3);
-[[vk::binding(4, 3)]]
-StructuredBuffer<Instance> Instances : register(t4);
+
+StructuredBuffer<Vertex> Vertices : register(t0 VK_DESCRIPTOR_SET(2));
+StructuredBuffer<Meshlet> Meshlets : register(t1 VK_DESCRIPTOR_SET(2));
+ByteAddressBuffer UniqueVertexIndices : register(t2 VK_DESCRIPTOR_SET(2));
+StructuredBuffer<uint> PrimitiveIndices : register(t3 VK_DESCRIPTOR_SET(2));
+StructuredBuffer<Instance> Instances : register(t4 VK_DESCRIPTOR_SET(3));
 
 
 /////

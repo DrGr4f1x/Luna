@@ -249,11 +249,11 @@ void ComputeParticlesApp::InitDescriptorSets()
 {
 	m_computeUavCbvDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
 	m_computeUavCbvDescriptorSet->SetUAV(0, m_particleBuffer);
-	m_computeUavCbvDescriptorSet->SetCBV(1, m_csConstantBuffer);
+	m_computeUavCbvDescriptorSet->SetCBV(0, m_csConstantBuffer);
 
 	m_graphicsSrvCbvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(0);
 	m_graphicsSrvCbvDescriptorSet->SetSRV(0, m_particleBuffer);
-	m_graphicsSrvCbvDescriptorSet->SetCBV(1, m_vsConstantBuffer);
+	m_graphicsSrvCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
 	m_graphicsSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1);
 	m_graphicsSrvDescriptorSet->SetSRV(0, m_colorTexture);

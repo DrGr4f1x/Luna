@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct PSInput
 {
     float4 position     : SV_POSITION;
@@ -20,16 +23,14 @@ struct MaterialConstants
     uint matIndex; // Dynamically set index for looking up from g_txMats[].
 };
 
+
 [[vk::push_constant]]
-ConstantBuffer<MaterialConstants> materialConstants : register(b0, space0);
+ConstantBuffer<MaterialConstants> materialConstants : register(b0);
 
-[[vk::binding(0, 1)]]
-Texture2D g_txDiffuse : register(t0);
-[[vk::binding(1, 1)]]
-Texture2D g_txMats[] : register(t1);
 
-[[vk::binding(0, 3)]]
-SamplerState g_sampler : register(s0);
+Texture2D g_txDiffuse : register(t0 VK_DESCRIPTOR_SET(1));
+Texture2D g_txMats[] : register(t1 VK_DESCRIPTOR_SET(1));
+SamplerState g_sampler : register(s0 VK_DESCRIPTOR_SET(3));
 
 
 float4 main(PSInput input) : SV_TARGET

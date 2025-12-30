@@ -317,7 +317,7 @@ void DeferredApp::InitDescriptorSets()
 	m_lightingCbvSrvDescriptorSet->SetSRV(0, m_positionBuffer);
 	m_lightingCbvSrvDescriptorSet->SetSRV(1, m_normalBuffer);
 	m_lightingCbvSrvDescriptorSet->SetSRV(2, m_albedoBuffer);
-	m_lightingCbvSrvDescriptorSet->SetCBV(3, m_lightingConstantBuffer);
+	m_lightingCbvSrvDescriptorSet->SetCBV(0, m_lightingConstantBuffer);
 }
 
 

@@ -8,24 +8,26 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 struct PSInput
 {
     float4 position : SV_Position;
     float2 texcoord : TEXCOORD0;
 };
 
-[[vk::binding(0)]]
-Texture2D colorTex : register(t0);
-[[vk::binding(0,1)]]
-SamplerState linearSampler : register(s0);
 
-[[vk::binding(1,0)]]
-cbuffer PSConstants : register(b0)
+Texture2D colorTex : register(t0 VK_DESCRIPTOR_SET(0));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(1));
+
+
+cbuffer PSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float radialBlurScale;
     float radialBlurStrength;
     float2 radialOrigin;
 };
+
 
 float4 main(PSInput input) : SV_TARGET
 {

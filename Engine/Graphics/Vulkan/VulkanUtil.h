@@ -101,4 +101,12 @@ wil::com_ptr<CVkFence> CreateFence(CVkDevice* device, bool bSignalled);
 
 std::shared_ptr<struct Semaphore> CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, uint64_t initialValue);
 
+uint32_t GetRegisterShift(DescriptorType descriptorType);
+uint32_t GetRegisterShift(RootParameterType rootParameterType);
+uint32_t GetRegisterClass(DescriptorType descriptorType);
+uint32_t GetRegisterShiftSRV();
+uint32_t GetRegisterShiftCBV();
+uint32_t GetRegisterShiftUAV();
+uint32_t GetRegisterShiftSampler();
+
 }

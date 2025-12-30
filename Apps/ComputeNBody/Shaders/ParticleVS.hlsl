@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct Particle
 {
     float4 pos;
@@ -23,8 +26,7 @@ struct VSOutput
 };
 
 
-[[vk::binding(0, 0)]]
-cbuffer VSConstants : register(b0)
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;
@@ -33,8 +35,7 @@ cbuffer VSConstants : register(b0)
 };
 
 
-[[vk::binding(1, 0)]]
-StructuredBuffer<Particle> particles : register(t0);
+StructuredBuffer<Particle> particles : register(t0 VK_DESCRIPTOR_SET(0));
 
 
 VSOutput main(uint id : SV_VertexID)

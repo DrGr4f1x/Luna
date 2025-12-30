@@ -10,18 +10,19 @@
 
 #include "Common.hlsli"
 
-[[vk::binding(0, 0)]]
-cbuffer VSConstants : register(b0)
+
+cbuffer VSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projectionMatrix;
     float4x4 viewMatrix;
 };
 
-[[vk::binding(1, 0)]]
-cbuffer VSModelConstants : register(b1)
+
+cbuffer VSModelConstants : register(b1 VK_DESCRIPTOR_SET(0))
 {
     float4x4 modelMatrix;
 };
+
 
 struct VSInput
 {

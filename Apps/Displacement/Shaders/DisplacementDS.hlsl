@@ -8,8 +8,12 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 #define INPUT_PATCH_SIZE 3
 #define OUTPUT_PATCH_SIZE 3
+
 
 struct DSConstantInput
 {
@@ -36,8 +40,7 @@ struct DSOutput
 };
 
 
-[[vk::binding(0, 1)]]
-cbuffer DSConstants : register(b0)
+cbuffer DSConstants : register(b0 VK_DESCRIPTOR_SET(1))
 {
     float4x4 projectionMatrix;
     float4x4 modelMatrix;
@@ -46,10 +49,9 @@ cbuffer DSConstants : register(b0)
     float tessStrength;
 };
 
-[[vk::binding(1, 1)]]
-Texture2D displacementMap : register(t0);
-[[vk::binding(0, 3)]]
-SamplerState linearSampler : register(s0);
+Texture2D displacementMap : register(t0 VK_DESCRIPTOR_SET(1));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(3));
+
 
 [domain("tri")]
 DSOutput main(DSConstantInput constInput, float3 triCoords : SV_DomainLocation, const OutputPatch<DSInput, OUTPUT_PATCH_SIZE> patch)

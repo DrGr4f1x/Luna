@@ -304,7 +304,7 @@ void RadialBlurApp::InitDescriptorSets()
 	m_sceneSrvDescriptorSet->SetSRV(0, m_gradientTex);
 
 	m_blurCbvSrvDescriptorSet->SetSRV(0, m_offscreenColorBuffer);
-	m_blurCbvSrvDescriptorSet->SetCBV(1, m_radialBlurConstantBuffer);
+	m_blurCbvSrvDescriptorSet->SetCBV(0, m_radialBlurConstantBuffer);
 }
 
 

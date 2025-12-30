@@ -18,11 +18,8 @@ struct PSInput
 };
 
 
-VK_BINDING(0, 1)
-Texture2D fontTex : register(t0);
-
-VK_BINDING(0, 2)
-SamplerState linearSampler : register(s0);
+Texture2D fontTex : register(t0 VK_DESCRIPTOR_SET(1));
+SamplerState linearSampler : register(s0 VK_DESCRIPTOR_SET(2));
 
 
 float4 main(PSInput input) : SV_Target

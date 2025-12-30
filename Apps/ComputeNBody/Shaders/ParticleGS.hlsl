@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct GSInput
 {
     float4 pos : POSITION;
@@ -24,8 +27,7 @@ struct GSOutput
 };
 
 
-[[vk::binding(0, 1)]]
-cbuffer GSConstants : register(b0)
+cbuffer GSConstants : register(b0 VK_DESCRIPTOR_SET(1))
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;

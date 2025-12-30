@@ -8,15 +8,16 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
 #include "VisualizerCommon.hlsli"
 #include "MeshletUtils.hlsli"
+
 
 #define GROUP_SIZE 128
 
 
 // Resource bindings
-[[vk::binding(0, 0)]]
-cbuffer Constants : register(b0)
+cbuffer Constants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 World;
     float4x4 ViewProj;
@@ -26,17 +27,19 @@ cbuffer Constants : register(b0)
     float Scale;
 };
 
+
 struct Options
 {
     uint MeshletOffset;
     uint MeshletCount;
 };
 
+
 [[vk::push_constant]]
 ConstantBuffer<Options> Options : register(b1);
 
-[[ vk::binding(1, 0)]]
-StructuredBuffer<CullData> MeshletCullData : register(t1);
+
+StructuredBuffer<CullData> MeshletCullData : register(t1 VK_DESCRIPTOR_SET(0));
 
 
 [NumThreads(GROUP_SIZE, 1, 1)]

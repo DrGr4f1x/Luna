@@ -17,14 +17,11 @@ struct PSInput
 };
 
 
-VK_BINDING(1, 1)
-TextureCubeArray texCubeArray : register(t0);
+TextureCubeArray texCubeArray : register(t0 VK_DESCRIPTOR_SET(1));
+SamplerState samplerLinear : register(s0 VK_DESCRIPTOR_SET(2));
 
-VK_BINDING(0, 2)
-SamplerState samplerLinear : register(s0);
 
-VK_BINDING(0, 1)
-cbuffer PSConstants : register(b0)
+cbuffer PSConstants : register(b0 VK_DESCRIPTOR_SET(1))
 {
     float lodBias;
     int arraySlice;

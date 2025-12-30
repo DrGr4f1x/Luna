@@ -175,7 +175,7 @@ void ComputeNBodyApp::InitRootSignatures()
 	RootSignatureDesc computeRootSignatureDesc{
 		.name				= "Compute Root Signature",
 		.rootParameters		= {
-			Table({ ConstantBuffer, StructuredBufferUAV(1) }, ShaderStage::Compute)
+			Table({ ConstantBuffer, StructuredBufferUAV }, ShaderStage::Compute)
 		}
 	};
 	m_computeRootSignature = CreateRootSignature(computeRootSignatureDesc);
@@ -234,7 +234,7 @@ void ComputeNBodyApp::InitDescriptorSets()
 {
 	m_graphicsVsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
 	m_graphicsVsCbvSrvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
-	m_graphicsVsCbvSrvDescriptorSet->SetSRV(1, m_particleBuffer);
+	m_graphicsVsCbvSrvDescriptorSet->SetSRV(0, m_particleBuffer);
 
 	m_graphicsGsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_graphicsGsCbvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
@@ -245,7 +245,7 @@ void ComputeNBodyApp::InitDescriptorSets()
 
 	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
 	m_computeCbvUavDescriptorSet->SetCBV(0, m_computeConstantBuffer);
-	m_computeCbvUavDescriptorSet->SetUAV(1, m_particleBuffer);
+	m_computeCbvUavDescriptorSet->SetUAV(0, m_particleBuffer);
 }
 
 

@@ -8,8 +8,12 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 #define INPUT_PATCH_SIZE 3
 #define OUTPUT_PATCH_SIZE 3
+
 
 struct HSInput
 {
@@ -26,8 +30,7 @@ struct HSConstantOutput
 };
 
 
-[[vk::binding(0,0)]]
-cbuffer HSConstants : register(b0)
+cbuffer HSConstants : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float tessLevel;
 };

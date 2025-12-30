@@ -131,7 +131,7 @@ void TextureArrayApp::CreateDeviceDependentResources()
 	LoadAssets();
 	InitConstantBuffer();
 
-	InitDescriptorSets();
+	InitDescriptorSet();
 }
 
 
@@ -231,11 +231,12 @@ void TextureArrayApp::InitConstantBuffer()
 }
 
 
-void TextureArrayApp::InitDescriptorSets()
+void TextureArrayApp::InitDescriptorSet()
 {
 	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
+
 
 void TextureArrayApp::UpdateConstantBuffer()
 {

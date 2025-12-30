@@ -35,7 +35,7 @@ protected:
 	void InitRootSignature();
 	void InitGraphicsPipeline();
 	void InitConstantBuffer();
-	void InitDescriptorSets();
+	void InitDescriptorSet();
 
 	void UpdateConstantBuffer();
 

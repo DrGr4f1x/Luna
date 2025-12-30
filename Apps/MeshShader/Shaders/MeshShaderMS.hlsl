@@ -8,8 +8,9 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 0)]]
-cbuffer ubo : register(b0)
+#include "Common.hlsli"
+
+cbuffer ubo : register(b0 VK_DESCRIPTOR_SET(0))
 {
     float4x4 projection;
     float4x4 model;
@@ -31,6 +32,7 @@ static const float4 positions[3] =
 	float4(1.0, -1.0, 0.0, 1.0)
 };
 
+
 static const float4 colors[3] =
 {
     float4(0.0, 1.0, 0.0, 1.0),
@@ -38,10 +40,12 @@ static const float4 colors[3] =
 	float4(1.0, 0.0, 0.0, 1.0)
 };
 
+
 struct DummyPayload
 {
     uint dummyData;
 };
+
 
 [outputtopology("triangle")]
 [numthreads(1, 1, 1)]

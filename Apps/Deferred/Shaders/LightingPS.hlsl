@@ -8,15 +8,13 @@
 // Author:  David Elder
 //
 
-[[vk::binding(0, 0)]]
-Texture2D textureposition : register(t0);
-[[vk::binding(1, 0)]]
-Texture2D textureNormal : register(t1);
-[[vk::binding(2, 0)]]
-Texture2D textureAlbedo : register(t2);
+#include "Common.hlsli"
 
-[[vk::binding(0, 1)]]
-SamplerState samplerLinear : register(s0);
+
+Texture2D texturePosition : register(t0 VK_DESCRIPTOR_SET(0));
+Texture2D textureNormal : register(t1 VK_DESCRIPTOR_SET(0));
+Texture2D textureAlbedo : register(t2 VK_DESCRIPTOR_SET(0));
+SamplerState samplerLinear : register(s0 VK_DESCRIPTOR_SET(1));
 
 
 struct Light
@@ -26,8 +24,7 @@ struct Light
 };
 
 
-[[vk::binding(3, 0)]]
-cbuffer ubo : register(b0)
+cbuffer ubo : register(b0 VK_DESCRIPTOR_SET(0))
 {
     Light lights[6];
     float4 viewPos;
@@ -45,7 +42,7 @@ struct PSInput
 float4 main(PSInput input) : SV_TARGET
 {
 	// Get G-Buffer values
-    float3 fragPos = textureposition.Sample(samplerLinear, input.uv).rgb;
+    float3 fragPos = texturePosition.Sample(samplerLinear, input.uv).rgb;
     float3 normal = textureNormal.Sample(samplerLinear, input.uv).rgb;
     float4 albedo = textureAlbedo.Sample(samplerLinear, input.uv);
 
