@@ -315,11 +315,11 @@ void ShadowMappingApp::InitConstantBuffers()
 void ShadowMappingApp::InitDescriptorSets()
 {
 	m_scenePsDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1);
-	m_scenePsDescriptorSet->SetSRV(0, m_shadowMap->GetSrvDescriptor(true));
+	m_scenePsDescriptorSet->SetSRV(0, m_shadowMap, true);
 
 	m_shadowVisualizationDescriptorSet = m_shadowVisualizationRootSignature->CreateDescriptorSet(0);
-	m_shadowVisualizationDescriptorSet->SetSRV(0, m_shadowMap->GetSrvDescriptor(true));
-	m_shadowVisualizationDescriptorSet->SetCBV(0, m_sceneConstantBuffer->GetCbvDescriptor());
+	m_shadowVisualizationDescriptorSet->SetSRV(0, m_shadowMap, true);
+	m_shadowVisualizationDescriptorSet->SetCBV(0, m_sceneConstantBuffer);
 }
 
  

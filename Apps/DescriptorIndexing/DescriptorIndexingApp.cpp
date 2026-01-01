@@ -188,7 +188,7 @@ void DescriptorIndexingApp::InitPipeline()
 void DescriptorIndexingApp::InitDescriptorSets()
 {
 	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_vsDescriptorSet->SetCBV(0, m_constantBuffer->GetCbvDescriptor());
+	m_vsDescriptorSet->SetCBV(0, m_constantBuffer);
 
 	std::vector<const IDescriptor*> textureDescriptors{ m_numTextures };
 	for (size_t i = 0; i < textureDescriptors.size(); ++i)

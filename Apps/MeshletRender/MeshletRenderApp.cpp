@@ -187,7 +187,7 @@ void MeshletRenderApp::InitPipeline()
 void MeshletRenderApp::InitDescriptorSets()
 {
 	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer->GetCbvDescriptor());
+	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 
 	m_srvDescriptorSets.resize(m_model.GetMeshCount());
 	for (uint32_t i = 0; i < (uint32_t)m_model.GetMeshCount(); ++i)
