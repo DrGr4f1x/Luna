@@ -12,6 +12,7 @@
 
 #include "VulkanUtil.h"
 
+#include "DeviceVK.h"
 #include "SemaphoreVK.h"
 #include "VulkanCommon.h"
 
@@ -173,6 +174,25 @@ SemaphorePtr CreateSemaphore(CVkDevice* device, VkSemaphoreType semaphoreType, u
 	return nullptr;
 }
 
+
+VkDeviceAddress GetBufferDeviceAddress(VkDevice device, VkBuffer buffer)
+{
+	VkBufferDeviceAddressInfoKHR bufferDeviceAddressInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+		.buffer = buffer
+	};
+	return vkGetBufferDeviceAddress(device, &bufferDeviceAddressInfo);
+}
+
+
+VkDeviceSize GetBufferDeviceSize(VkDevice device, VkBuffer buffer)
+{
+	VkMemoryRequirements memReqs{};
+	vkGetBufferMemoryRequirements(device, buffer, &memReqs);
+	return memReqs.size;
+}
+
+
 // TODO: make these configurable
 constexpr uint32_t s_tRegShift = 0;
 constexpr uint32_t s_sRegShift = 128;
@@ -271,5 +291,41 @@ uint32_t GetRegisterShiftSRV() { return s_tRegShift; }
 uint32_t GetRegisterShiftCBV() { return s_bRegShift; }
 uint32_t GetRegisterShiftUAV() { return s_uRegShift; }
 uint32_t GetRegisterShiftSampler() { return s_sRegShift; }
+
+
+size_t GetDescriptorSize(DescriptorType descriptorType)
+{
+	const auto& caps = GetVulkanDevice()->GetDeviceCaps();
+
+	switch (descriptorType)
+	{
+	case DescriptorType::ConstantBuffer:
+		return caps.descriptorBuffer.descriptorSize.uniformBuffer;
+	case DescriptorType::TextureSRV:
+		return caps.descriptorBuffer.descriptorSize.sampledImage;
+	case DescriptorType::TextureUAV:
+		return caps.descriptorBuffer.descriptorSize.storageImage;
+	case DescriptorType::TypedBufferSRV:
+		return caps.descriptorBuffer.descriptorSize.uniformTexelBuffer;
+	case DescriptorType::TypedBufferUAV:
+		return caps.descriptorBuffer.descriptorSize.storageTexelBuffer;
+	case DescriptorType::StructuredBufferSRV:
+		return caps.descriptorBuffer.descriptorSize.storageBuffer;
+	case DescriptorType::StructuredBufferUAV:
+		return caps.descriptorBuffer.descriptorSize.storageBuffer;
+	case DescriptorType::RawBufferSRV:
+		return caps.descriptorBuffer.descriptorSize.storageBuffer;
+	case DescriptorType::RawBufferUAV:
+		return caps.descriptorBuffer.descriptorSize.storageBuffer;
+	case DescriptorType::Sampler:
+		return caps.descriptorBuffer.descriptorSize.sampler;
+	case DescriptorType::RayTracingAccelStruct:
+		return caps.descriptorBuffer.descriptorSize.accelerationStructure;
+	case DescriptorType::SamplerFeedbackTextureUAV:
+		return caps.descriptorBuffer.descriptorSize.storageImage;
+	default:
+		return 0;
+	}
+}
 
 } // namespace Luna::VK
