@@ -283,7 +283,14 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
+#if USE_DESCRIPTOR_BUFFERS
+	VkBufferUsageFlags extraFlags = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	VkBufferUsageFlags extraFlags{};
+#endif // USE_LEGACY_DESCRIPTOR_SETS
+
 	if (gpuBufferDesc.bAllowShaderResource || gpuBufferDesc.bAllowUnorderedAccess)
 		extraFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	if (gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
@@ -334,7 +341,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
 	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
 	gpuBuffer->m_buffer = buffer;
-	gpuBuffer->m_descriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize);
+	gpuBuffer->m_descriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
 	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
 	if (gpuBufferDesc.initialData)
@@ -435,8 +442,10 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 	// Setup static samplers
 	vector<SamplerPtr> samplers;
+#if USE_LEGACY_DESCRIPTOR_SETS
 	VkDescriptorSet staticSamplerDescriptorSet = VK_NULL_HANDLE;
-	uint32_t staticSamplerDescriptorSetIndex = 0;
+#endif // USE_LEGACY_DESCRIPTOR_SETS
+	uint32_t staticSamplerDescriptorSetIndex = ~0u;
 	if (!rootSignatureDesc.staticSamplers.empty())
 	{
 		vector<VkSampler> vkSamplers;
@@ -486,6 +495,9 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		// Create the descriptor set layout for the static samplers
 		VkDescriptorSetLayoutCreateInfo createInfo{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+#if USE_DESCRIPTOR_BUFFERS
+			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
+#endif // USE_DESCRIPTOR_BUFFERS
 			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
 			.pBindings		= vkLayoutBindings.data()
 		};
@@ -500,7 +512,9 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
 		descriptorSetLayouts.push_back(descriptorSetLayout);
 
+#if USE_LEGACY_DESCRIPTOR_SETS
 		staticSamplerDescriptorSet = AllocateDescriptorSet(vkDescriptorSetLayout);
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 	}
 	
 	// Setup push descriptor set
@@ -529,10 +543,15 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
 		}
 
-		// Create the descriptor set layout for the static samplers
+		// Create the descriptor set layout for the push descriptors
 		VkDescriptorSetLayoutCreateInfo createInfo{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+#if USE_DESCRIPTOR_BUFFERS
+			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
+#endif // USE_DESCRIPTOR_BUFFERs
+#if USE_LEGACY_DESCRIPTOR_SETS
 			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
 			.pBindings		= vkLayoutBindings.data()
 		};
@@ -605,7 +624,9 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	rootSignature->m_descriptorSetLayouts = descriptorSetLayouts;
 	rootSignature->m_staticSamplers = samplers;
 	rootSignature->m_staticSamplerDescriptorSetIndex = staticSamplerDescriptorSetIndex;
+#if USE_LEGACY_DESCRIPTOR_SETS
 	rootSignature->m_staticSamplerDescriptorSet = staticSamplerDescriptorSet;
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 	rootSignature->m_pushDescriptorSetIndex = pushDescriptorSetIndex;
 	rootSignature->m_pushDescriptorBindingMap = pushDescriptorBindingMap;
 
@@ -735,12 +756,14 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-	VkPipelineCreateFlags flags{};
-	if (pipelineDesc.descriptorBuffers)
-	{
-		flags |= VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-	}
+#if USE_DESCRIPTOR_BUFFERS
+	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+#endif // USE_DESCRIPTOR_BUFFERS
 
+#if USE_LEGACY_DESCRIPTOR_SETS
+	VkPipelineCreateFlags flags{};
+#endif // USE_LEGACY_DESCRIPTOR_SETS
+	
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.pNext					= &dynamicRenderingInfo,
@@ -798,11 +821,13 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
+#if USE_DESCRIPTOR_BUFFERS
+	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	VkPipelineCreateFlags flags{};
-	if (pipelineDesc.descriptorBuffers)
-	{
-		flags |= VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-	}
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	VkComputePipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
@@ -893,12 +918,14 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-	VkPipelineCreateFlags flags{};
-	if (pipelineDesc.descriptorBuffers)
-	{
-		flags |= VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-	}
+#if USE_DESCRIPTOR_BUFFERS
+	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+#endif // USE_DESCRIPTOR_BUFFERS
 
+#if USE_LEGACY_DESCRIPTOR_SETS
+	VkPipelineCreateFlags flags{};
+#endif // USE_LEGACY_DESCRIPTOR_SETS
+	
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.pNext					= &dynamicRenderingInfo,
@@ -993,6 +1020,21 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
+#if USE_DESCRIPTOR_BUFFERS
+	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->GetDescriptorSetLayout()->Get();
+	assert(vkDescriptorSetLayout != VK_NULL_HANDLE);
+
+	// TODO: Handle sampler descriptor sets
+	DescriptorBufferAllocation allocation = AllocateDescriptorBufferMemory(DescriptorBufferType::Resource, vkDescriptorSetLayout);
+
+	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
+	descriptorSet->m_allocation = allocation;
+	descriptorSet->m_layout = descriptorSetDesc.descriptorSetLayout;
+
+	return descriptorSet;
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	// Find or create descriptor set pool
 	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->Get();
 	DescriptorPool* pool{ nullptr };
@@ -1024,6 +1066,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 	descriptorSet->m_numDescriptors = descriptorSetDesc.numDescriptors;
 
 	return descriptorSet;
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 }
 
 
@@ -1247,6 +1290,40 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 }
 
 
+#if USE_DESCRIPTOR_BUFFERS
+wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes)
+{
+	VkBufferUsageFlags extraFlags = type == DescriptorBufferType::Resource ?
+		VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT :
+		VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
+	extraFlags |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = sizeInBytes,
+		.usage = extraFlags
+	};
+
+	VmaAllocationCreateInfo allocCreateInfo{};
+	const MemoryAccess memoryAccess = MemoryAccess::CpuWrite | MemoryAccess::GpuRead;
+	allocCreateInfo.flags = GetMemoryFlags(memoryAccess);
+	allocCreateInfo.usage = GetMemoryUsage(memoryAccess);
+
+	VkBuffer vkBuffer{ VK_NULL_HANDLE };
+	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
+
+	auto res = vmaCreateBuffer(*m_allocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+	assert(res == VK_SUCCESS);
+
+	SetDebugName(*m_device, vkBuffer, "Descriptor Buffer");
+
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation);
+
+	return buffer;
+}
+#endif // USE_DESCRIPTOR_BUFFERS
+
+
 wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 {
 	const bool isVolume = HasAnyFlag(imageDesc.resourceType, ResourceType::Texture3D);
@@ -1444,21 +1521,25 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 		{
 			flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 		}
+#if USE_LEGACY_DESCRIPTOR_SETS
 		if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
 		{
 			flags |= VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
 			allowUpdateAfterSet = true;
 		}
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 		uint32_t numDescriptors = 1;
 		const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
 
 		if (isArray)
 		{
+#if USE_LEGACY_DESCRIPTOR_SETS
 			if (HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray))
 			{
 				flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
 			}
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 		}
 		else
 		{
@@ -1501,7 +1582,14 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 		.pBindingFlags	= bindingFlags.data()
 	};
 
+#if USE_DESCRIPTOR_BUFFERS
+	VkDescriptorSetLayoutCreateFlags layoutFlags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+#endif // USE_DESCRIPTOR_BUFFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	VkDescriptorSetLayoutCreateFlags layoutFlags{};
+#endif // USE_LEGACY_DESCRIPTOR_SETS
+
 	if (allowUpdateAfterSet)
 	{
 		layoutFlags |= VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
@@ -1528,35 +1616,27 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 	descriptorSetLayout->m_descriptorSetLayout = setLayout;
 	descriptorSetLayout->m_hashcode = hashCode;
 
-	// Descriptor buffer test
+#if USE_DESCRIPTOR_BUFFERS
+	// Get info for descriptor buffer binding
 	{
-		info.pNext = nullptr;
-		info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-
-		VkDescriptorSetLayout setLayout2 = VK_NULL_HANDLE;
-		vkCreateDescriptorSetLayout(*m_device, &info, nullptr, &setLayout2);
-
 		VkDeviceSize layoutSize{ 0 };
-		vkGetDescriptorSetLayoutSizeEXT(*m_device, setLayout2, &layoutSize);
-		LogInfo(LogVulkan) << "Set layout size: " << layoutSize << " [num bindings: " << bindings.size() << "]" << endl;
-
+		vkGetDescriptorSetLayoutSizeEXT(*m_device, vkSetLayout, &layoutSize);
+		
 		// TODO: Cache these
 		auto bindingTemplate = make_shared<DescriptorBindingTemplate>();
 
 		for (const auto& binding : bindings)
 		{
 			VkDeviceSize offset{ 0 };
-			vkGetDescriptorSetLayoutBindingOffsetEXT(*m_device, setLayout2, binding.binding, &offset);
-			LogInfo(LogVulkan) << "  Binding: " << binding.binding << " offset: " << offset << endl;
-
+			vkGetDescriptorSetLayoutBindingOffsetEXT(*m_device, vkSetLayout, binding.binding, &offset);
+			
 			bindingTemplate->m_bindingInfoMap[binding.binding] = { offset, binding.descriptorType };
 		}
-
-		vkDestroyDescriptorSetLayout(*m_device, setLayout2, nullptr);
 
 		descriptorSetLayout->m_layoutSize = layoutSize;
 		descriptorSetLayout->m_bindingTemplate = bindingTemplate;
 	}
+#endif // USE_DESCRIPTOR_BUFFERS
 
 	return descriptorSetLayout;
 }
@@ -1571,7 +1651,9 @@ DescriptorSetLayoutPtr Device::GetOrCreateEmptyDescriptorSetLayout()
 		VkDescriptorSetLayoutCreateInfo info{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 			.pNext			= nullptr,
-			.flags			= 0,
+#if USE_DESCRIPTOR_BUFFERS
+			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
+#endif // USE_DESCRIPTOR_BUFFERS
 			.bindingCount	= 0,
 			.pBindings		= nullptr
 		};
@@ -1631,38 +1713,6 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 	InitializeTexture(texture.Get(), texInit);
 
 	return texture;
-}
-
-
-wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes)
-{
-	VkBufferUsageFlags extraFlags = type == DescriptorBufferType::Resource ?
-		VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT :
-		VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
-	extraFlags |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-		
-	VkBufferCreateInfo bufferCreateInfo{
-		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size	= sizeInBytes,
-		.usage	= extraFlags
-	};
-
-	VmaAllocationCreateInfo allocCreateInfo{};
-	const MemoryAccess memoryAccess = MemoryAccess::CpuMapped | MemoryAccess::GpuRead;
-	allocCreateInfo.flags = GetMemoryFlags(memoryAccess);
-	allocCreateInfo.usage = GetMemoryUsage(memoryAccess);
-
-	VkBuffer vkBuffer{ VK_NULL_HANDLE };
-	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
-
-	auto res = vmaCreateBuffer(*m_allocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
-	assert(res == VK_SUCCESS);
-
-	SetDebugName(*m_device, vkBuffer, "Descriptor Buffer");
-
-	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation);
-
-	return buffer;
 }
 
 

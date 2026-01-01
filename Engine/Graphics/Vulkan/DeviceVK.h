@@ -30,12 +30,23 @@ class Shader;
 namespace Luna::VK
 {
 
+#if USE_DESCRIPTOR_BUFFERS
+struct DescriptorSetDesc
+{
+	DescriptorSetLayoutPtr descriptorSetLayout;
+	RootParameter rootParameter{};
+};
+#endif // USE_DESCRIPTOR_BUFFERS
+
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 struct DescriptorSetDesc
 {
 	CVkDescriptorSetLayout* descriptorSetLayout{ nullptr };
 	RootParameter rootParameter{};
 	uint32_t numDescriptors{ 0 };
 };
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 
 class Device : public IDevice
@@ -70,6 +81,10 @@ public:
 
 	ColorBufferPtr CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 
+#if USE_DESCRIPTOR_BUFFERS
+	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes);
+#endif // USE_DESCRIPTOR_BUFFERS
+
 	VkDevice GetVulkanDevice() const { return m_device->Get(); }
 
 protected:
@@ -84,8 +99,6 @@ protected:
 	DescriptorSetLayoutPtr GetOrCreateEmptyDescriptorSetLayout();
 
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
-
-	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

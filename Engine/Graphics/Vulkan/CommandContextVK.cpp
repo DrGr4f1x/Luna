@@ -197,6 +197,10 @@ void CommandContextVK::Reset()
 	m_renderingArea.offset.y = -1;
 	m_renderingArea.extent.width = 0;
 	m_renderingArea.extent.height = 0;
+
+#if USE_DESCRIPTOR_BUFFERS
+	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
+#endif // USE_DESCRIPTOR_BUFFERS
 }
 
 
@@ -832,6 +836,18 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 		}
 
 		// Bind static samplers, if needed
+#if USE_DESCRIPTOR_BUFFERS
+		if (rootSignatureVK->HasStaticSamplers())
+		{
+			vkCmdBindDescriptorBufferEmbeddedSamplersEXT(
+				m_commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				m_graphicsPipelineLayout,
+				rootSignatureVK->GetStaticSamplerDescriptorSetIndex());
+		}
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 		VkDescriptorSet staticSamplerDescriptorSet = rootSignatureVK->GetStaticSamplerDescriptorSet();
 		if (staticSamplerDescriptorSet != VK_NULL_HANDLE)
 		{
@@ -845,6 +861,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 				0,
 				nullptr);
 		}
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 	}
 	else
 	{
@@ -863,6 +880,18 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 		}
 
 		// Bind static samplers, if needed
+#if USE_DESCRIPTOR_BUFFERS
+		if (rootSignatureVK->HasStaticSamplers())
+		{
+			vkCmdBindDescriptorBufferEmbeddedSamplersEXT(
+				m_commandBuffer,
+				VK_PIPELINE_BIND_POINT_COMPUTE,
+				m_computePipelineLayout,
+				rootSignatureVK->GetStaticSamplerDescriptorSetIndex());
+		}
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 		VkDescriptorSet staticSamplerDescriptorSet = rootSignatureVK->GetStaticSamplerDescriptorSet();
 		if (staticSamplerDescriptorSet != VK_NULL_HANDLE)
 		{
@@ -876,6 +905,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 				0,
 				nullptr);
 		}
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 	}
 
 	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
@@ -1673,6 +1703,25 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
 	assert(descriptorSetVK != nullptr);
 
+#if USE_DESCRIPTOR_BUFFERS
+	BindUserDescriptorBuffers();
+
+	// TODO: This refers to the Resource buffer.  Shouldn't hardcode index 0.
+	uint32_t bufferIndex = 0;
+	VkDeviceSize offset = descriptorSetVK->GetDescriptorBufferOffset();
+
+	vkCmdSetDescriptorBufferOffsetsEXT(
+		m_commandBuffer,
+		(type == CommandListType::Direct) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
+		(type == CommandListType::Direct) ? m_graphicsPipelineLayout : m_computePipelineLayout,
+		rootIndex,
+		1,
+		&bufferIndex,
+		&offset
+	);
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	if (!descriptorSetVK->HasDescriptors())
 	{
 		return;
@@ -1693,7 +1742,67 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		&vkDescriptorSet,
 		0,
 		nullptr);
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 }
+
+
+#if USE_DESCRIPTOR_BUFFERS
+void CommandContextVK::SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers)
+{
+	bool anyChanged = false;
+
+	assert(bufferTypes.size() == buffers.size());
+
+	for (size_t i = 0; i < buffers.size(); ++i)
+	{
+		const uint32_t index = (uint32_t)bufferTypes[i];
+
+		if (m_currentDescriptorBuffers[index] != buffers[i])
+		{
+			m_currentDescriptorBuffers[index] = buffers[i];
+			anyChanged = true;
+		}
+	}
+
+	if (anyChanged)
+	{
+		BindDescriptorBuffers();
+	}
+}
+
+
+void CommandContextVK::BindUserDescriptorBuffers()
+{
+	DescriptorBufferType types[] = {
+		DescriptorBufferType::Resource,
+		DescriptorBufferType::Sampler
+	};
+
+	VkBuffer buffers[] = {
+		g_userDescriptorBufferAllocator[(uint32_t)DescriptorBufferType::Resource].GetBuffer(),
+		g_userDescriptorBufferAllocator[(uint32_t)DescriptorBufferType::Sampler].GetBuffer()
+	};
+
+	SetDescriptorBuffers(types, buffers);
+}
+
+
+void CommandContextVK::BindDescriptorBuffers()
+{
+	VkDescriptorBufferBindingInfoEXT bindingInfos[2];
+	for (uint32_t i = 0; i < 2; ++i)
+	{
+		bindingInfos[i].sType = VK_STRUCTURE_TYPE_DESCRIPTOR_BUFFER_BINDING_INFO_EXT;
+		bindingInfos[i].pNext = nullptr;
+		bindingInfos[i].address = GetBufferDeviceAddress(m_device->Get(), m_currentDescriptorBuffers[i]);
+		bindingInfos[i].usage = i == 0 ?
+			VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT :
+			VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
+	}
+
+	vkCmdBindDescriptorBuffersEXT(m_commandBuffer, 2, &bindingInfos[0]);
+}
+#endif // USE_DESCRIPTOR_BUFFERS
 
 
 void CommandContextVK::SetRenderingArea(const ColorBuffer& colorBuffer)

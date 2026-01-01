@@ -31,11 +31,6 @@ class DescriptorSet : public IDescriptorSet
 public:
 	DescriptorSet(Device* device, const RootParameter& rootParameter);
 
-	void SetSRV(uint32_t srvRegister, const IDescriptor* descriptor) override;
-	void SetUAV(uint32_t uavRegister, const IDescriptor* descriptor) override;
-	void SetCBV(uint32_t cbvRegister, const IDescriptor* descriptor) override;
-	void SetSampler(uint32_t samplerRegister, const IDescriptor* descriptor) override;
-
 	void SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors) override;
 
 	void SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer) override;

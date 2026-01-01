@@ -30,62 +30,6 @@ DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
 {}
 
 
-void DescriptorSet::SetSRV(uint32_t srvRegister, const IDescriptor* descriptor)
-{
-	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
-
-	assert(!m_isSamplerTable);
-	assert(IsDescriptorTypeSRV(descriptor12->GetDescriptorType()));
-	assert(m_rootParameter.parameterType == RootParameterType::RootSRV || m_rootParameter.parameterType == RootParameterType::Table);
-	
-	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);
-
-	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());	
-}
-
-
-void DescriptorSet::SetUAV(uint32_t uavRegister, const IDescriptor* descriptor)
-{
-	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
-
-	assert(!m_isSamplerTable);
-	assert(IsDescriptorTypeUAV(descriptor12->GetDescriptorType()));
-	assert(m_rootParameter.parameterType == RootParameterType::Table);
-	
-	const uint32_t descriptorSlot = GetUavOffset(uavRegister);
-
-	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());
-}
-
-
-void DescriptorSet::SetCBV(uint32_t cbvRegister, const IDescriptor* descriptor)
-{
-	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
-
-	assert(!m_isSamplerTable);
-	assert(descriptor12->GetDescriptorType() == DescriptorType::ConstantBuffer);
-	assert(m_rootParameter.parameterType == RootParameterType::Table);
-
-	const uint32_t descriptorSlot = GetCbvOffset(cbvRegister);
-
-	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());
-}
-
-
-void DescriptorSet::SetSampler(uint32_t samplerRegister, const IDescriptor* descriptor)
-{
-	const Descriptor* descriptor12 = (const Descriptor*)descriptor;
-
-	assert(m_isSamplerTable);
-	assert(descriptor12->GetDescriptorType() == DescriptorType::Sampler);
-	assert(m_rootParameter.parameterType == RootParameterType::Table);
-	
-	const uint32_t descriptorSlot = GetSamplerOffset(samplerRegister);
-
-	UpdateDescriptor(descriptorSlot, descriptor12->GetHandleCPU());
-}
-
-
 void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
 {
 	assert(!m_isSamplerTable);

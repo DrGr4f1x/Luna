@@ -129,7 +129,14 @@ DeviceManager::~DeviceManager()
 	ReleaseDeferredResources();
 	assert(m_deferredResources.empty());
 
+#if USE_DESCRIPTOR_BUFFERS
+	DescriptorBufferAllocator::DestroyAll();
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	DescriptorSetAllocator::DestroyAll();
+#endif // USE_LEGACY_DESCRIPTOR_BUFFERS
+
 	LinearAllocator::DestroyAll();
 
 	extern Luna::IDeviceManager* g_deviceManager;
@@ -347,6 +354,11 @@ void DeviceManager::CreateDeviceResources()
 			SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
 		}
 	}
+
+#if USE_DESCRIPTOR_BUFFERS
+	// Create user descriptor buffers
+	DescriptorBufferAllocator::CreateAll();
+#endif
 }
 
 
@@ -1428,6 +1440,7 @@ void DeviceManager::CreateDevice()
 	allocatorCreateInfo.device = *m_vkDevice;
 	allocatorCreateInfo.instance = *m_vkInstance;
 	allocatorCreateInfo.pVulkanFunctions = &vmaFunctions;
+	allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 
 	VmaAllocator vmaAllocator{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vmaCreateAllocator(&allocatorCreateInfo, &vmaAllocator)))

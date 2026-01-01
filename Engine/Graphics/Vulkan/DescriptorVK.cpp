@@ -44,11 +44,12 @@ void Descriptor::SetImageView(CVkImage* image, CVkImageView* imageView)
 }
 
 
-void Descriptor::SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize)
+void Descriptor::SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, VkFormat format)
 {
 	m_buffer = buffer;
 	m_bufferView = bufferView;
 	m_elementSize = elementSize;
+	m_format = format;
 	m_descriptorClass = DescriptorClass::Buffer;
 }
 

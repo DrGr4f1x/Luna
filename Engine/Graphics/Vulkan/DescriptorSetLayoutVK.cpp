@@ -29,4 +29,10 @@ wil::com_ptr<CVkDescriptorSetLayout> DescriptorSetLayout::GetDescriptorSetLayout
 	return m_descriptorSetLayout;
 }
 
+
+VkDeviceSize DescriptorSetLayout::GetBindingOffset(uint32_t bindingIndex) const
+{
+	return m_bindingTemplate->GetBindingInfo(bindingIndex).offset;
+}
+
 } // namespace Luna::VK

@@ -16,6 +16,55 @@
 namespace Luna::VK
 {
 
+#if USE_DESCRIPTOR_BUFFERS
+struct DescriptorBufferAllocation
+{
+	std::byte* mem{ nullptr };
+	size_t offset{ 0 };
+};
+
+
+class DescriptorBufferAllocator
+{
+	friend class Device;
+
+public:
+	DescriptorBufferAllocator(DescriptorBufferType bufferType, size_t sizeInBytes);
+	DescriptorBufferAllocation Allocate(VkDescriptorSetLayout layout);
+
+	static void CreateAll();
+	static void DestroyAll();
+
+	VkBuffer GetBuffer() const noexcept;
+
+protected:
+	static std::mutex sm_allocationMutex;
+
+	Device* m_device{ nullptr };
+	size_t m_alignment{ 0 };
+
+	const DescriptorBufferType m_type{ DescriptorBufferType::Resource };
+	const size_t m_bufferSize{ 0 };
+	size_t m_freeSpace{ 0 };
+	std::byte* m_bufferHead{ nullptr };
+	std::byte* m_initialHead{ nullptr };
+	wil::com_ptr<CVkBuffer> m_descriptorBuffer;
+
+private:
+	void Create();
+};
+
+
+extern DescriptorBufferAllocator g_userDescriptorBufferAllocator[];
+
+inline DescriptorBufferAllocation AllocateDescriptorBufferMemory(DescriptorBufferType bufferType, VkDescriptorSetLayout layout)
+{
+	return g_userDescriptorBufferAllocator[(uint32_t)bufferType].Allocate(layout);
+}
+#endif // USE_DESCRIPTOR_BUFFERS
+
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 class DescriptorSetAllocator
 {
 public:
@@ -40,5 +89,6 @@ inline VkDescriptorSet AllocateDescriptorSet(VkDescriptorSetLayout layout)
 {
 	return g_descriptorSetAllocator.Allocate(layout);
 }
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 } // namespace Luna::VK

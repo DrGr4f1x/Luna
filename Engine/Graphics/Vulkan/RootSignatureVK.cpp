@@ -24,12 +24,21 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 
 	// Can only create descriptor sets for tables
 	assert(rootParam.parameterType == RootParameterType::Table);
+	
+#if USE_DESCRIPTOR_BUFFERS
+	DescriptorSetDesc descriptorSetDesc{
+		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex],
+		.rootParameter			= rootParam
+	};
+#endif // USE_DESCRIPTOR_BUFFERS
 
+#if USE_LEGACY_DESCRIPTOR_SETS
 	DescriptorSetDesc descriptorSetDesc{
 		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex]->GetDescriptorSetLayout().get(),
 		.rootParameter			= rootParam,
 		.numDescriptors			= rootParam.GetNumDescriptors()
 	};
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	return m_device->CreateDescriptorSet(descriptorSetDesc);
 }

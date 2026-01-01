@@ -35,9 +35,10 @@ public:
 	VkImage GetImage() const;
 	VkBuffer GetBuffer() const;
 	size_t GetElementSize() const noexcept { return m_elementSize; }
+	VkFormat GetFormat() const noexcept { return m_format; }
 
 	void SetImageView(CVkImage* image, CVkImageView* imageView);
-	void SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize);
+	void SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, VkFormat format);
 	void SetSampler(CVkSampler* sampler);
 	
 private:
@@ -51,6 +52,7 @@ private:
 	wil::com_ptr<CVkImage> m_image;
 	wil::com_ptr<CVkBuffer> m_buffer;
 	size_t m_elementSize{ 0 };
+	VkFormat m_format{ VK_FORMAT_UNDEFINED };
 
 	DescriptorClass m_descriptorClass{ DescriptorClass::None };
 };

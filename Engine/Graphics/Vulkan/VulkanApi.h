@@ -29,3 +29,6 @@
 #include "External\VulkanMemoryAllocator\include\vk_mem_alloc.h"
 
 #include "External/vk-bootstrap/src/VkBootstrap.h"
+
+#define USE_DESCRIPTOR_BUFFERS 1
+#define USE_LEGACY_DESCRIPTOR_SETS (!USE_DESCRIPTOR_BUFFERS)

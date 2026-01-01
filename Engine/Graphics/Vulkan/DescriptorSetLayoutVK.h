@@ -45,6 +45,8 @@ public:
 
 	size_t GetHashCode() const noexcept { return m_hashcode; }
 
+	VkDeviceSize GetBindingOffset(uint32_t bindingIndex) const;
+
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkDescriptorSetLayout> m_descriptorSetLayout;

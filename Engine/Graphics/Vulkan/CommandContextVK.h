@@ -63,7 +63,11 @@ public:
 	explicit CommandContextVK(CVkDevice* device, CommandListType type)
 		: m_device{ device }
 		, m_commandListType{ type }
-	{}
+	{
+#if USE_DESCRIPTOR_BUFFERS
+		ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
+#endif // USE_DESCRIPTOR_BUFFERS
+	}
 	~CommandContextVK() = default;
 
 	void SetId(const std::string& id) override { m_id = id; }
@@ -183,7 +187,12 @@ private:
 	void InitializeTexture_Internal(ITexture* texture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
-	void BindDescriptorHeaps() {}
+#if USE_DESCRIPTOR_BUFFERS
+	void SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers);
+	void BindUserDescriptorBuffers();
+	void BindDescriptorBuffers();
+#endif // USE_DESCRIPTOR_BUFFERS
+
 	void SetRenderingArea(const ColorBuffer& colorBuffer);
 	void SetRenderingArea(const DepthBuffer& depthBuffer);
 	void BeginRenderingBlock();
@@ -237,6 +246,11 @@ private:
 	VkPipeline m_computePipeline{ VK_NULL_HANDLE };
 	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
 	VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_MAX_ENUM };
+
+#if USE_DESCRIPTOR_BUFFERS
+	// Descriptor buffers
+	VkBuffer m_currentDescriptorBuffers[2];
+#endif // USE_DESCRIPTOR_BUFFERS
 
 	const IRootSignature* m_graphicsRootSignature{ nullptr };
 	const IRootSignature* m_computeRootSignature{ nullptr };

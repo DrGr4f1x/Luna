@@ -13,7 +13,10 @@
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
-
+#if USE_DESCRIPTOR_BUFFERS
+#include "Graphics\Vulkan\DescriptorAllocatorVK.h"
+#include "Graphics\Vulkan\DescriptorSetLayoutVK.h"
+#endif // USE_DESCRIPTOR_BUFFERS
 
 namespace Luna::VK
 {
@@ -30,11 +33,6 @@ class DescriptorSet : public IDescriptorSet
 public:
 	DescriptorSet(Device* device, const RootParameter& rootParameter);
 
-	void SetSRV(uint32_t srvRegister, const IDescriptor* descriptor) override;
-	void SetUAV(uint32_t uavRegister, const IDescriptor* descriptor) override;
-	void SetCBV(uint32_t cbvRegister, const IDescriptor* descriptor) override;
-	void SetSampler(uint32_t samplerRegister, const IDescriptor* descriptor) override;
-
 	void SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors) override;
 
 	void SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer) override;
@@ -50,32 +48,59 @@ public:
 
 	void SetSampler(uint32_t samplerRegister, SamplerPtr sampler) override;
 
+#if USE_DESCRIPTOR_BUFFERS
+	size_t GetDescriptorBufferOffset() const;
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	bool HasDescriptors() const;
 	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
-
-	const DescriptorBindingTemplate* GetBindingTemplate() const { return m_template; }
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 protected:
+	template <DescriptorRegisterType registerType>
+	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
+	
+#if USE_DESCRIPTOR_BUFFERS
+	void SetTextureSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkImageView imageView);
+	void SetTextureUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkImageView imageView);
+
+	void SetBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer);
+	void SetBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer);
+
+	void SetTypedBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format);
+	void SetTypedBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format);
+
+	void SetCBV_Internal(uint32_t cbvRegister, uint32_t arrayIndex, VkBuffer buffer);
+
+	void SetSampler_Internal(uint32_t samplerRegister, uint32_t arrayIndex, VkSampler sampler);
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	void UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet);
 	template<bool isSrv>
 	void SetSRVUAV(uint32_t srvUavRegister, const IDescriptor* descriptor);
 
-	template <DescriptorRegisterType registerType>
-	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
 	void WriteSamplers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
 	void WriteBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
 	void WriteTextures(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
 	void WriteTypedBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 protected:
 	Device* m_device{ nullptr };
 
 	RootParameter m_rootParameter;
 
+#if USE_DESCRIPTOR_BUFFERS
+	DescriptorBufferAllocation m_allocation{};
+	DescriptorSetLayoutPtr m_layout;
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
 	uint32_t m_numDescriptors{ 0 };
-
-	DescriptorBindingTemplate* m_template{ nullptr };
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 };
 
 } // namespace Luna::VK
