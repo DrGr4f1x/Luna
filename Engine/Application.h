@@ -176,7 +176,7 @@ protected:
 	std::unique_ptr<LogSystem> m_logSystem;
 	std::unique_ptr<InputSystem> m_inputSystem;
 
-	wil::com_ptr<IDeviceManager> m_deviceManager;
+	std::unique_ptr<IDeviceManager> m_deviceManager;
 
 	std::unique_ptr<UIOverlay> m_uiOverlay;
 	std::unique_ptr<Grid> m_grid;

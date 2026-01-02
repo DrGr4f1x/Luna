@@ -43,7 +43,7 @@ using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 
 
-class __declspec(uuid("ECBD0FFD-6571-4836-9DBB-7DC6436E086F")) ICommandContext : public IUnknown
+class ICommandContext
 {
 	friend class CommandContext;
 
@@ -226,7 +226,7 @@ public:
 	void BeginFrame();
 
 protected:
-	wil::com_ptr<ICommandContext> m_contextImpl;
+	std::unique_ptr<ICommandContext> m_contextImpl;
 };
 
 

@@ -56,8 +56,7 @@ struct BufferBarrier
 };
 
 
-class __declspec(uuid("63C5358D-F31C-43DA-90DA-8676E272BE4A")) CommandContextVK final
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
+class CommandContextVK final : public ICommandContext
 {
 public:
 	explicit CommandContextVK(CVkDevice* device, CommandListType type)

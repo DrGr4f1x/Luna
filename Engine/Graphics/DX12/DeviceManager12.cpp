@@ -545,8 +545,8 @@ CommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 	CommandContext* ret{ nullptr };
 	if (availableContexts.empty())
 	{
-		wil::com_ptr<ICommandContext> contextImpl = Make<CommandContext12>(commandListType);
-		ret = new CommandContext(contextImpl.get());
+		ICommandContext* contextImpl = new CommandContext12(commandListType);
+		ret = new CommandContext(contextImpl);
 
 		m_contextPool[d3d12Type].emplace_back(ret);
 		ret->Initialize();

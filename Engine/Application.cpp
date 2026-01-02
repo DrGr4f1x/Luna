@@ -641,7 +641,7 @@ void Application::CreateDeviceManager()
 		.hinstance				= m_hinst
 	};
 
-	m_deviceManager = Luna::CreateDeviceManager(deviceManagerDesc);
+	m_deviceManager.reset(Luna::CreateDeviceManager(deviceManagerDesc));
 	m_deviceManager->CreateDeviceResources();
 }
 

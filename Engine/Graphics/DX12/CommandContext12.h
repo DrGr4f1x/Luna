@@ -31,8 +31,7 @@ class DescriptorSetHandleType;
 namespace Luna::DX12
 {
 
-class __declspec(uuid("D4B45425-3264-4D8E-8926-2AE73837C14C")) CommandContext12 final
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, ICommandContext>
+class CommandContext12 final : public ICommandContext
 {
 public:
 	explicit CommandContext12(CommandListType type);

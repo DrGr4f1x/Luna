@@ -447,8 +447,8 @@ CommandContext* DeviceManager::AllocateContext(CommandListType commandListType)
 	CommandContext* ret{ nullptr };
 	if (availableContexts.empty())
 	{
-		wil::com_ptr<ICommandContext> contextImpl = Make<CommandContextVK>(m_vkDevice.get(), commandListType);
-		ret = new CommandContext(contextImpl.get());
+		ICommandContext* contextImpl = new CommandContextVK(m_vkDevice.get(), commandListType);
+		ret = new CommandContext(contextImpl);
 
 		m_contextPool[(uint32_t)commandListType].emplace_back(ret);
 		ret->Initialize();

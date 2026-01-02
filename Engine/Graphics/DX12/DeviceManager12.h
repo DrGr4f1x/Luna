@@ -49,9 +49,7 @@ struct DeviceRLDOHelper
 };
 
 
-class __declspec(uuid("2B2F2AAF-4D90-45F4-8BF8-9D8136AB6FC8")) DeviceManager 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
-	, public NonCopyable
+class DeviceManager final : public IDeviceManager, public NonCopyable
 {
 	friend class CommandContext12;
 

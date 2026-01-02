@@ -95,9 +95,7 @@ struct ExtensionFeatures
 };
 
 
-class __declspec(uuid("BE54D89A-4FEB-4208-973F-E4B5EBAC4516")) DeviceManager 
-	: public RuntimeClass<RuntimeClassFlags<ClassicCom>, Luna::IDeviceManager>
-	, public NonCopyable
+class DeviceManager : public IDeviceManager, public NonCopyable
 {
 	friend class CommandContextVK;
 
