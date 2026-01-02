@@ -552,8 +552,7 @@ D3D12_COMMAND_LIST_TYPE CommandListTypeToDX12(CommandListType commandListType)
 
 	switch (commandListType)
 	{
-	case Direct:	return D3D12_COMMAND_LIST_TYPE_DIRECT; break;
-	case Bundle:	return D3D12_COMMAND_LIST_TYPE_BUNDLE; break;
+	case Graphics:	return D3D12_COMMAND_LIST_TYPE_DIRECT; break;
 	case Compute:	return D3D12_COMMAND_LIST_TYPE_COMPUTE; break;
 	case Copy:		return D3D12_COMMAND_LIST_TYPE_COPY; break;
 	default:

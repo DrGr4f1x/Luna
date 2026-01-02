@@ -603,7 +603,7 @@ inline void GraphicsContext::ResetQueries(const QueryHeapPtr& queryHeap, uint32_
 
 inline void GraphicsContext::SetRootSignature(const RootSignaturePtr& rootSignature)
 {
-	m_contextImpl->SetRootSignature(CommandListType::Direct, rootSignature.get());
+	m_contextImpl->SetRootSignature(CommandListType::Graphics, rootSignature.get());
 }
 
 
@@ -664,121 +664,121 @@ inline void GraphicsContext::SetDepthBias(float depthBiasConstantFactor, float d
 
 inline void GraphicsContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants)
 {
-	m_contextImpl->SetConstantArray(CommandListType::Direct, rootIndex, numConstants, constants, 0);
+	m_contextImpl->SetConstantArray(CommandListType::Graphics, rootIndex, numConstants, constants, 0);
 }
 
 
 inline void GraphicsContext::SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
-	m_contextImpl->SetConstantArray(CommandListType::Direct, rootIndex, numConstants, constants, offset);
+	m_contextImpl->SetConstantArray(CommandListType::Graphics, rootIndex, numConstants, constants, offset);
 }
 
 
 inline void GraphicsContext::SetConstant(uint32_t rootIndex, uint32_t offset, DWParam val)
 {
-	m_contextImpl->SetConstant(CommandListType::Direct, rootIndex, offset, val);
+	m_contextImpl->SetConstant(CommandListType::Graphics, rootIndex, offset, val);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x)
 {
-	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x);
+	m_contextImpl->SetConstants(CommandListType::Graphics, rootIndex, x);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y)
 {
-	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x, y);
+	m_contextImpl->SetConstants(CommandListType::Graphics, rootIndex, x, y);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
 {
-	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x, y, z);
+	m_contextImpl->SetConstants(CommandListType::Graphics, rootIndex, x, y, z);
 }
 
 
 inline void GraphicsContext::SetConstants(uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
-	m_contextImpl->SetConstants(CommandListType::Direct, rootIndex, x, y, z, w);
+	m_contextImpl->SetConstants(CommandListType::Graphics, rootIndex, x, y, z, w);
 }
 
 
 inline void GraphicsContext::SetRootCBV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetRootCBV(CommandListType::Direct, rootIndex, gpuBuffer.get(), offsetInBytes);
+	m_contextImpl->SetRootCBV(CommandListType::Graphics, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
 inline void GraphicsContext::SetRootSRV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetRootSRV(CommandListType::Direct, rootIndex, gpuBuffer.get(), offsetInBytes);
+	m_contextImpl->SetRootSRV(CommandListType::Graphics, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
 inline void GraphicsContext::SetRootUAV(uint32_t rootIndex, const GpuBufferPtr& gpuBuffer, size_t offsetInBytes)
 {
-	m_contextImpl->SetRootUAV(CommandListType::Direct, rootIndex, gpuBuffer.get(), offsetInBytes);
+	m_contextImpl->SetRootUAV(CommandListType::Graphics, rootIndex, gpuBuffer.get(), offsetInBytes);
 }
 
 
 inline void GraphicsContext::SetDescriptors(uint32_t rootIndex, const DescriptorSetPtr& descriptorSet)
 {
-	m_contextImpl->SetDescriptors(CommandListType::Direct, rootIndex, descriptorSet.get());
+	m_contextImpl->SetDescriptors(CommandListType::Graphics, rootIndex, descriptorSet.get());
 }
 
 
 inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 {
-	m_contextImpl->SetResources(CommandListType::Direct, resourceSet);
+	m_contextImpl->SetResources(CommandListType::Graphics, resourceSet);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, colorBuffer);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, colorBuffer);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
-	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, depthBuffer, depthSrv);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, depthBuffer, depthSrv);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, gpuBuffer);
 }
 
 
 inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, TexturePtr& texture)
 {
-	m_contextImpl->SetSRV(CommandListType::Direct, rootParam, offset, texture);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, texture);
 }
 
 
 inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Direct, rootParam, offset, colorBuffer);
+	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, offset, colorBuffer);
 }
 
 
 inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Direct, rootParam, offset, depthBuffer);
+	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, offset, depthBuffer);
 }
 
 
 inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Direct, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, offset, gpuBuffer);
 }
 
 
 inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetCBV(CommandListType::Direct, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetCBV(CommandListType::Graphics, rootParam, offset, gpuBuffer);
 }
 
 

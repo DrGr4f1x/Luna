@@ -24,7 +24,7 @@ namespace Luna
 
 CommandContext& CommandContext::Begin(const string id)
 {
-	CommandContext* newContext = GetDeviceManager()->AllocateContext(CommandListType::Direct);
+	CommandContext* newContext = GetDeviceManager()->AllocateContext(CommandListType::Graphics);
 	newContext->SetId(id);
 	newContext->BeginFrame();
 	newContext->BeginEvent(id);
@@ -74,7 +74,7 @@ void CommandContext::InitializeTexture(const TexturePtr& destTexture, const Text
 
 ComputeContext& ComputeContext::Begin(const string& id, bool bAsync)
 {
-	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Direct;
+	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Graphics;
 
 	ComputeContext& newContext = GetDeviceManager()->AllocateContext(commandListType)->GetComputeContext();
 	newContext.SetId(id);

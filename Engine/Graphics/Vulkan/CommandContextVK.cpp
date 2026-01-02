@@ -223,7 +223,7 @@ void CommandContextVK::BeginFrame()
 
 uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 {
-	assert(m_commandListType == CommandListType::Direct || m_commandListType == CommandListType::Compute);
+	assert(m_commandListType == CommandListType::Graphics || m_commandListType == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -811,7 +811,7 @@ void CommandContextVK::ResetQueries(const IQueryHeap* queryHeap, uint32_t startI
 
 void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignature* rootSignature)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	const RootSignature* rootSignatureVK = (const RootSignature*)rootSignature;
@@ -819,7 +819,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 
 	VkPipelineLayout pipelineLayout = rootSignatureVK->GetPipelineLayout();
 
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_computePipelineLayout = VK_NULL_HANDLE;
 		m_computeRootSignature = nullptr;
@@ -1133,7 +1133,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 		.pBufferInfo		= &info
 	};
 
-	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
+	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
@@ -1171,7 +1171,7 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 		.pBufferInfo		= &info
 	};
 
-	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
+	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
@@ -1209,7 +1209,7 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 		.pBufferInfo		= &info
 	};
 
-	VkPipelineBindPoint bindPoint = type == CommandListType::Direct ?
+	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
 		VK_PIPELINE_BIND_POINT_GRAPHICS :
 		VK_PIPELINE_BIND_POINT_COMPUTE;
 
@@ -1250,7 +1250,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 {
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 
 	VkDescriptorImageInfo info{
 		.imageView		= ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
@@ -1267,7 +1267,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 {
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 
 	VkDescriptorImageInfo info{
 		.imageView		= ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView(),
@@ -1288,7 +1288,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
 		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, ((const Descriptor*)gpuBufferVK->GetSrvDescriptor())->GetBufferView(), graphicsPipe);
@@ -1315,7 +1315,7 @@ void CommandContextVK::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 
 	VkDescriptorImageInfo info{
 		.imageView		= ((const Descriptor*)textureVK->GetDescriptor())->GetImageView(),
@@ -1332,7 +1332,7 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 {
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 
 	VkDescriptorImageInfo info{
 		.imageView = ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
@@ -1349,7 +1349,7 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 {
 	assert(false);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 }
 
 
@@ -1361,7 +1361,7 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
 	{
 		m_dynamicDescriptorHeap->SetDescriptorBufferView(rootIndex, offset, ((const Descriptor*)gpuBufferVK->GetUavDescriptor())->GetBufferView(), graphicsPipe);
@@ -1388,7 +1388,7 @@ void CommandContextVK::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	ParseRootSignature(type);
 
-	const bool graphicsPipe = type == CommandListType::Direct;
+	const bool graphicsPipe = type == CommandListType::Graphics;
 
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBufferVK->GetBuffer(),
@@ -1476,11 +1476,11 @@ void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t i
 {
 	FlushResourceBarriers();
 	
-	if (HasDirtyDescriptors(CommandListType::Direct))
+	if (HasDirtyDescriptors(CommandListType::Graphics))
 	{
 		const bool graphicsPipe = true;
 		m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Direct);
+		ClearDirtyDescriptors(CommandListType::Graphics);
 	}
 
 	vkCmdDraw(m_commandBuffer, vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
@@ -1492,11 +1492,11 @@ void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint
 {
 	FlushResourceBarriers();
 
-	if (HasDirtyDescriptors(CommandListType::Direct))
+	if (HasDirtyDescriptors(CommandListType::Graphics))
 	{
 		const bool graphicsPipe = true;
 		m_dynamicDescriptorHeap->UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Direct);
+		ClearDirtyDescriptors(CommandListType::Graphics);
 	}
 
 	vkCmdDrawIndexed(m_commandBuffer, indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
@@ -1697,7 +1697,7 @@ void CommandContextVK::InitializeTexture_Internal(ITexture* destTexture, const T
 
 void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
@@ -1712,8 +1712,8 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 
 	vkCmdSetDescriptorBufferOffsetsEXT(
 		m_commandBuffer,
-		(type == CommandListType::Direct) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
-		(type == CommandListType::Direct) ? m_graphicsPipelineLayout : m_computePipelineLayout,
+		(type == CommandListType::Graphics) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
+		(type == CommandListType::Graphics) ? m_graphicsPipelineLayout : m_computePipelineLayout,
 		rootIndex,
 		1,
 		&bufferIndex,
@@ -1735,8 +1735,8 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 
 	vkCmdBindDescriptorSets(
 		m_commandBuffer,
-		(type == CommandListType::Direct) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
-		(type == CommandListType::Direct) ? m_graphicsPipelineLayout : m_computePipelineLayout,
+		(type == CommandListType::Graphics) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
+		(type == CommandListType::Graphics) ? m_graphicsPipelineLayout : m_computePipelineLayout,
 		rootIndex,
 		1,
 		&vkDescriptorSet,
@@ -1882,7 +1882,7 @@ void CommandContextVK::ResetRenderTargets()
 
 void CommandContextVK::ParseRootSignature(CommandListType type)
 {
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		if (!m_isGraphicsRootSignatureParsed && (m_graphicsRootSignature != nullptr))
 		{
@@ -1909,7 +1909,7 @@ void CommandContextVK::ParseRootSignature(CommandListType type)
 
 void CommandContextVK::MarkDescriptorsDirty(CommandListType type)
 {
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_hasDirtyGraphicsDescriptors = true;
 	}
@@ -1922,7 +1922,7 @@ void CommandContextVK::MarkDescriptorsDirty(CommandListType type)
 
 bool CommandContextVK::HasDirtyDescriptors(CommandListType type)
 {
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		return m_hasDirtyGraphicsDescriptors;
 	}
@@ -1935,7 +1935,7 @@ bool CommandContextVK::HasDirtyDescriptors(CommandListType type)
 
 void CommandContextVK::ClearDirtyDescriptors(CommandListType type)
 {
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_hasDirtyGraphicsDescriptors = false;
 	}
@@ -1948,7 +1948,7 @@ void CommandContextVK::ClearDirtyDescriptors(CommandListType type)
 
 RootSignature* CommandContextVK::GetRootSignature(CommandListType type)
 {
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		return (RootSignature*)m_graphicsRootSignature;
 	}

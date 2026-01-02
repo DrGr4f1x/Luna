@@ -38,7 +38,7 @@ private:
 
 private:
 	wil::com_ptr<CVkCommandPool> m_vkCommandPool;
-	CommandListType m_commandListType{ CommandListType::Direct };
+	CommandListType m_commandListType{ CommandListType::Graphics };
 
 	std::vector<VkCommandBuffer> m_commandBuffers;
 	std::queue<std::pair<uint64_t, VkCommandBuffer>> m_readyCommandBuffers;

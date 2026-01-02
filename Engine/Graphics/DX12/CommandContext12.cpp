@@ -168,7 +168,7 @@ void CommandContext12::Initialize()
 
 uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 {
-	assert(m_commandListType == CommandListType::Direct || m_commandListType == CommandListType::Compute);
+	assert(m_commandListType == CommandListType::Graphics || m_commandListType == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -529,7 +529,7 @@ void CommandContext12::ResolveQueries(const IQueryHeap* queryHeap, uint32_t star
 
 void CommandContext12::SetRootSignature(CommandListType type, const IRootSignature* rootSignature)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	const RootSignature* rootSignature12 = (const RootSignature*)rootSignature;
@@ -537,7 +537,7 @@ void CommandContext12::SetRootSignature(CommandListType type, const IRootSignatu
 
 	ID3D12RootSignature* d3d12RootSignature = rootSignature12->GetRootSignature();
 
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_computeRootSignature = nullptr;
 		if (m_graphicsRootSignature == d3d12RootSignature)
@@ -682,8 +682,8 @@ void CommandContext12::SetDepthBias(float depthBiasConstantFactor, float depthBi
 
 void CommandContext12::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
-	if (type == CommandListType::Direct)
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRoot32BitConstants(rootIndex, numConstants, constants, offset);
 	}
@@ -696,8 +696,8 @@ void CommandContext12::SetConstantArray(CommandListType type, uint32_t rootIndex
 
 void CommandContext12::SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
-	if (type == CommandListType::Direct)
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(val.value), offset);
 	}
@@ -710,8 +710,8 @@ void CommandContext12::SetConstant(CommandListType type, uint32_t rootIndex, uin
 
 void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
-	if (type == CommandListType::Direct)
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 	}
@@ -724,8 +724,8 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
-	if (type == CommandListType::Direct)
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
@@ -740,8 +740,8 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
-	if (type == CommandListType::Direct)
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
@@ -758,8 +758,8 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
-	if (type == CommandListType::Direct)
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
 		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
@@ -778,7 +778,7 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContext12::SetRootCBV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -788,7 +788,7 @@ void CommandContext12::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 
 	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress() + offsetInBytes;
 
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuAddress);
 	}
@@ -801,7 +801,7 @@ void CommandContext12::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 
 void CommandContext12::SetRootSRV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -811,7 +811,7 @@ void CommandContext12::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 
 	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress() + offsetInBytes;
 
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRootShaderResourceView(rootIndex, gpuAddress);
 	}
@@ -824,7 +824,7 @@ void CommandContext12::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 
 void CommandContext12::SetRootUAV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	FlushResourceBarriers();
 
@@ -834,7 +834,7 @@ void CommandContext12::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 
 	uint64_t gpuAddress = gpuBuffer12->GetGpuAddress() + offsetInBytes;
 
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_commandList->SetGraphicsRootUnorderedAccessView(rootIndex, gpuAddress);
 	}
@@ -1301,7 +1301,7 @@ void CommandContext12::InitializeTexture_Internal(ITexture* destTexture, const T
 
 void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
-	assert(type == CommandListType::Direct || type == CommandListType::Compute);
+	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
 	// TODO: Try this with GetPlatformObject()
 	DescriptorSet* descriptorSet12 = (DescriptorSet*)descriptorSet;
@@ -1316,7 +1316,7 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 	auto gpuDescriptor = descriptorSet12->GetGpuDescriptorHandle();
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
-		if (type == CommandListType::Direct)
+		if (type == CommandListType::Graphics)
 		{
 			m_commandList->SetGraphicsRootDescriptorTable(rootIndex, gpuDescriptor);
 		}
@@ -1328,7 +1328,7 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 	else if (descriptorSet12->GetGpuAddress() != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
 		const D3D12_GPU_VIRTUAL_ADDRESS gpuFinalAddress = descriptorSet12->GetGpuAddressWithOffset();
-		if (type == CommandListType::Direct)
+		if (type == CommandListType::Graphics)
 		{
 			m_commandList->SetGraphicsRootConstantBufferView(rootIndex, gpuFinalAddress);
 		}
@@ -1342,7 +1342,7 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 
 void CommandContext12::SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[])
 {
-	if (type == CommandListType::Direct)
+	if (type == CommandListType::Graphics)
 	{
 		m_dynamicViewDescriptorHeap.SetGraphicsDescriptorHandles(rootIndex, offset, numDescriptors, handles);
 	}

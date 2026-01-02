@@ -288,7 +288,7 @@ void DeviceManager::BeginFrame()
 
 	m_backBufferIndex = m_dxSwapChain->GetCurrentBackBufferIndex();
 	
-	GetQueue(CommandListType::Direct).WaitForFence(m_fenceValues[m_backBufferIndex]);
+	GetQueue(CommandListType::Graphics).WaitForFence(m_fenceValues[m_backBufferIndex]);
 
 	//// If the next frame is not ready to be rendered yet, wait until it is ready.
 	//if (m_fence->GetCompletedValue() < m_fenceValues[m_backBufferIndex])
@@ -311,7 +311,7 @@ void DeviceManager::Present()
 
 	m_dxSwapChain->Present(vsync, presentFlags);
 
-	m_fenceValues[m_backBufferIndex] = GetQueue(CommandListType::Direct).GetLastSubmittedFenceValue();
+	m_fenceValues[m_backBufferIndex] = GetQueue(CommandListType::Graphics).GetLastSubmittedFenceValue();
 
 	ReleaseDeferredResources();
 
@@ -573,8 +573,6 @@ void DeviceManager::CreateNewCommandList(
 	ID3D12CommandSignature** drawIndexedIndirectSignature,
 	ID3D12CommandSignature** dispatchIndirectSignature)
 {
-	assert_msg(commandListType != CommandListType::Bundle, "Bundles are not yet supported");
-
 	*allocator = GetQueue(commandListType).RequestAllocator();
 
 	assert_succeeded(m_dxDevice->CreateCommandList(1, CommandListTypeToDX12(commandListType), *allocator, nullptr, IID_PPV_ARGS(commandList)));

@@ -403,8 +403,7 @@ enum class InputClassification : uint8_t
 
 enum class CommandListType : uint8_t
 {
-	Direct,
-	Bundle,
+	Graphics,
 	Compute,
 	Copy,
 
@@ -418,10 +417,9 @@ inline std::string EngineTypeToString(CommandListType commandListType)
 
 	switch (commandListType)
 	{
-	case Bundle:	return "Bundle"; break;
 	case Compute:	return "Compute"; break;
 	case Copy:		return "Copy"; break;
-	default:		return "Direct"; break;
+	default:		return "Graphics"; break;
 	}
 }
 
@@ -708,7 +706,7 @@ inline CommandListType QueueTypeToCommandListType(QueueType queueType)
 	{
 	case QueueType::Compute:	return CommandListType::Compute; break;
 	case QueueType::Copy:		return CommandListType::Copy; break;
-	default:					return CommandListType::Direct; break;
+	default:					return CommandListType::Graphics; break;
 	}
 }
 
