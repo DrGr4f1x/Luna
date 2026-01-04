@@ -246,31 +246,17 @@ void DeviceManager::CreateDeviceResources()
 	}
 
 	// Create Vulkan instance
-	vkb::InstanceBuilder instanceBuilder;
-	instanceBuilder.set_app_name(m_desc.appName.c_str());
-	instanceBuilder.set_engine_name(s_engineName.c_str());
-	instanceBuilder.set_engine_version(s_engineVersion);
-	instanceBuilder.require_api_version(VK_API_VERSION_1_4);
-	instanceBuilder.set_minimum_instance_version(VK_API_VERSION_1_4);
-	instanceBuilder.request_validation_layers(m_desc.enableValidation);
-	instanceBuilder.add_validation_feature_enable(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT);
-	if (m_desc.enableValidation)
+	bool instanceCreated = TryCreateInstance_NVIDIA();
+	if (!instanceCreated)
 	{
-		InstallDebugMessenger(instanceBuilder);
+		instanceCreated = TryCreateInstance_AMD();
 	}
 
-	EnableInstanceLayersAndExtensions(instanceBuilder);
-
-	auto instanceRet = instanceBuilder.build();
-	if (!instanceRet)
+	if (!instanceCreated)
 	{
-		LogFatal(LogVulkan) << "Failed to create Vulkan instance." << endl;
+		LogFatal(LogVulkan) << "Failed to create Vulkan instance" << endl;
 		return;
 	}
-	m_vkbInstance = instanceRet.value();
-
-	m_vkInstance = Create<CVkInstance>(m_vkbInstance.instance);
-	m_vkDebugMessenger = Create<CVkDebugUtilsMessenger>(m_vkInstance.get(), m_vkbInstance.debug_messenger);
 
 	uint32_t instanceVersion{ 0 };
 	if (VK_SUCCEEDED(vkEnumerateInstanceVersion(&instanceVersion)))
@@ -539,7 +525,67 @@ CVmaAllocator* DeviceManager::GetAllocator() const
 }
 
 
-void DeviceManager::EnableInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder)
+void DeviceManager::SetupInstanceBuilder(vkb::InstanceBuilder& instanceBuilder)
+{
+	instanceBuilder.set_app_name(m_desc.appName.c_str());
+	instanceBuilder.set_engine_name(s_engineName.c_str());
+	instanceBuilder.set_engine_version(s_engineVersion);
+	instanceBuilder.require_api_version(VK_API_VERSION_1_4);
+	instanceBuilder.set_minimum_instance_version(VK_API_VERSION_1_4);
+	instanceBuilder.request_validation_layers(m_desc.enableValidation);
+	instanceBuilder.add_validation_feature_enable(VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT);
+	if (m_desc.enableValidation)
+	{
+		InstallDebugMessenger(instanceBuilder);
+	}
+}
+
+
+bool DeviceManager::TryCreateInstance_AMD()
+{
+	vkb::InstanceBuilder instanceBuilder;
+	SetupInstanceBuilder(instanceBuilder);
+
+	EnableInstanceLayersAndExtensions_AMD(instanceBuilder);
+
+	auto instanceRet = instanceBuilder.build();
+	if (!instanceRet)
+	{
+		LogFatal(LogVulkan) << "Failed to create Vulkan instance with AMD-supported instance extensions." << endl;
+		return false;
+	}
+	m_vkbInstance = instanceRet.value();
+
+	m_vkInstance = Create<CVkInstance>(m_vkbInstance.instance);
+	m_vkDebugMessenger = Create<CVkDebugUtilsMessenger>(m_vkInstance.get(), m_vkbInstance.debug_messenger);
+
+	return true;
+}
+
+
+bool DeviceManager::TryCreateInstance_NVIDIA()
+{
+	vkb::InstanceBuilder instanceBuilder;
+	SetupInstanceBuilder(instanceBuilder);
+
+	EnableInstanceLayersAndExtensions_NVIDIA(instanceBuilder);
+
+	auto instanceRet = instanceBuilder.build();
+	if (!instanceRet)
+	{
+		LogError(LogVulkan) << "Failed to create Vulkan instance with NVIDIA-supported instance extensions." << endl;
+		return false;
+	}
+	m_vkbInstance = instanceRet.value();
+
+	m_vkInstance = Create<CVkInstance>(m_vkbInstance.instance);
+	m_vkDebugMessenger = Create<CVkDebugUtilsMessenger>(m_vkInstance.get(), m_vkbInstance.debug_messenger);
+
+	return true;
+}
+
+
+void DeviceManager::EnableInstanceLayersAndExtensions_AMD(vkb::InstanceBuilder& instanceBuilder)
 {
 	if (m_desc.enableValidation)
 	{
@@ -551,6 +597,24 @@ void DeviceManager::EnableInstanceLayersAndExtensions(vkb::InstanceBuilder& inst
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 		VK_KHR_SURFACE_EXTENSION_NAME,
 		VK_KHR_SURFACE_MAINTENANCE_1_EXTENSION_NAME,
+		VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME
+	};
+	instanceBuilder.enable_extensions(requiredExtensions);
+}
+
+
+void DeviceManager::EnableInstanceLayersAndExtensions_NVIDIA(vkb::InstanceBuilder& instanceBuilder)
+{
+	if (m_desc.enableValidation)
+	{
+		instanceBuilder.enable_validation_layers(true);
+	}
+
+	vector<const char*> requiredExtensions{
+		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+		VK_KHR_SURFACE_EXTENSION_NAME,
+		VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME,
 		VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME
 	};
 	instanceBuilder.enable_extensions(requiredExtensions);

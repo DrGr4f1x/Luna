@@ -138,7 +138,13 @@ public:
 	CVmaAllocator* GetAllocator() const;
 
 private:
-	void EnableInstanceLayersAndExtensions(vkb::InstanceBuilder& instanceBuilder);
+	void SetupInstanceBuilder(vkb::InstanceBuilder& instanceBuilder);
+	bool TryCreateInstance_AMD();
+	bool TryCreateInstance_NVIDIA();
+
+	void EnableInstanceLayersAndExtensions_AMD(vkb::InstanceBuilder& instanceBuilder);
+	void EnableInstanceLayersAndExtensions_NVIDIA(vkb::InstanceBuilder& instanceBuilder);
+
 	void EnableDeviceExtensions();
 	void InstallDebugMessenger(vkb::InstanceBuilder& instanceBuilder);
 
