@@ -62,18 +62,10 @@ protected:
 	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
 	
 #if USE_DESCRIPTOR_BUFFERS
-	void SetTextureSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkImageView imageView);
-	void SetTextureUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkImageView imageView);
-
-	void SetBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize);
-	void SetBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize);
-
-	void SetTypedBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format, size_t bufferSize);
-	void SetTypedBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format, size_t bufferSize);
-
-	void SetCBV_Internal(uint32_t cbvRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize);
-
-	void SetSampler_Internal(uint32_t samplerRegister, uint32_t arrayIndex, VkSampler sampler);
+	size_t GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
+	size_t GetRegisterOffsetUAV(uint32_t uavRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
+	size_t GetRegisterOffsetCBV(uint32_t cbvRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
+	size_t GetRegisterOffsetSampler(uint32_t samplerRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
 #endif // USE_DESCRIPTOR_BUFFERS
 
 #if USE_LEGACY_DESCRIPTOR_SETS

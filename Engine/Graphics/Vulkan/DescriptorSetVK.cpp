@@ -41,100 +41,63 @@ void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescr
 #if USE_DESCRIPTOR_BUFFERS
 void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
-	const uint32_t arrayIndex = 0;
-	SetTextureSRV_Internal(srvRegister, arrayIndex, ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView());
+	const auto descriptor = (const Descriptor*)colorBuffer->GetSrvDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	const uint32_t arrayIndex = 0;
-	SetTextureSRV_Internal(srvRegister, arrayIndex, ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView());
+	const auto descriptor = (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv);
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 {
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
-	VkBuffer bufferVK = gpuBufferVK->GetBuffer();
-
-	const bool isTypedBuffer = gpuBuffer->GetResourceType() == ResourceType::TypedBuffer;
-
-	const uint32_t arrayIndex = 0;
-	const size_t bufferSize = gpuBuffer->GetBufferSize();
-
-	if (isTypedBuffer)
-	{
-		SetTypedBufferSRV_Internal(srvRegister, arrayIndex, bufferVK, FormatToVulkan(gpuBufferVK->GetFormat()), bufferSize);
-	}
-	else
-	{
-		SetBufferSRV_Internal(srvRegister, arrayIndex, bufferVK, bufferSize);
-	}
+	const auto descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, TexturePtr texture)
 {
-	const uint32_t arrayIndex = 0;
-	SetTextureSRV_Internal(srvRegister, arrayIndex, ((const Descriptor*)texture->GetDescriptor())->GetImageView());
+	const auto descriptor = (const Descriptor*)texture->GetDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 }
 
 
 void DescriptorSet::SetUAV(uint32_t uavRegister, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
-	const uint32_t arrayIndex = 0;
-	SetTextureUAV_Internal(uavRegister, arrayIndex, ((const Descriptor*)colorBuffer->GetUavDescriptor())->GetImageView());
+	const auto descriptor = (const Descriptor*)colorBuffer->GetUavDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(uavRegister)));
 }
 
 
 void DescriptorSet::SetUAV(uint32_t uavRegister, DepthBufferPtr depthBuffer)
 {
-	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer.get();
-	assert(depthBufferVK != nullptr);
-
 	assert_msg(false, "Depth UAVs not yet supported");
-
-	const uint32_t arrayIndex = 0;
 }
 
 
 void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 {
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
-	VkBuffer bufferVK = gpuBufferVK->GetBuffer();
-
-	const bool isTypedBuffer = gpuBuffer->GetResourceType() == ResourceType::TypedBuffer;
-
-	const uint32_t arrayIndex = 0;
-	const size_t bufferSize = gpuBuffer->GetBufferSize();
-
-	if (isTypedBuffer)
-	{
-		SetTypedBufferUAV_Internal(uavRegister, arrayIndex, bufferVK, FormatToVulkan(gpuBufferVK->GetFormat()), bufferSize);
-	}
-	else
-	{
-		SetBufferUAV_Internal(uavRegister, arrayIndex, bufferVK, bufferSize);
-	}
+	const auto descriptor = (const Descriptor*)gpuBuffer->GetUavDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(uavRegister)));
 }
 
 
 void DescriptorSet::SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer)
 {
-	const uint32_t arrayIndex = 0;
-	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
-
-	const size_t bufferSize = gpuBuffer->GetBufferSize();
-	SetCBV_Internal(cbvRegister, arrayIndex, gpuBufferVK->GetBuffer(), bufferSize);
+	const auto descriptor = (const Descriptor*)gpuBuffer->GetCbvDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetCBV(cbvRegister)));
 }
 
 
 void DescriptorSet::SetSampler(uint32_t samplerRegister, SamplerPtr sampler)
 {
-	const uint32_t arrayIndex = 0;
-	Sampler* samplerVK = (Sampler*)sampler.get();
-	SetSampler_Internal(samplerRegister, arrayIndex, samplerVK->GetSampler());
+	const auto descriptor = (const Descriptor*)sampler->GetDescriptor();
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSampler(samplerRegister)));
 }
 
 
@@ -400,255 +363,64 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 
 	for (uint32_t i = 0; i < numDescriptors; ++i)
 	{
-		const size_t bufferSize = ((const Descriptor*)descriptors[i])->GetBufferSize();
+		const auto descriptor = (const Descriptor*)descriptors[i];
+		const uint32_t descriptorSize = (uint32_t)descriptor->GetRawDescriptorSize();
 
 		switch (range.descriptorType)
 		{
 		case DescriptorType::Sampler:
-		{
-			VkSampler vkSampler = ((const Descriptor*)descriptors[i])->GetSampler();
-			SetSampler_Internal(descriptorRegister, i, vkSampler);
-		}
+			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSampler(descriptorRegister, i, descriptorSize)));
 			break;
 
 		case DescriptorType::ConstantBuffer:
-		{
-			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			SetCBV_Internal(descriptorRegister, i, vkBuffer, bufferSize);
-		}
-		break;
-
-		case DescriptorType::StructuredBufferSRV:
-		case DescriptorType::RawBufferSRV:
-		{
-			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			SetBufferSRV_Internal(descriptorRegister, i, vkBuffer, bufferSize);
-		}
-		break;
-
-		case DescriptorType::StructuredBufferUAV:
-		case DescriptorType::RawBufferUAV:
-		{
-			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			SetBufferUAV_Internal(descriptorRegister, i, vkBuffer, bufferSize);
-		}
+			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetCBV(descriptorRegister, i, descriptorSize)));
 			break;
 
 		case DescriptorType::TextureSRV:
-		{
-			VkImageView imageView = ((const Descriptor*)descriptors[i])->GetImageView();
-			SetTextureSRV_Internal(descriptorRegister, i, imageView);
-		}
-		break;
-
-		case DescriptorType::TextureUAV:
-		{
-			VkImageView imageView = ((const Descriptor*)descriptors[i])->GetImageView();
-			SetTextureUAV_Internal(descriptorRegister, i, imageView);
-		}
+		case DescriptorType::TypedBufferSRV:
+		case DescriptorType::StructuredBufferSRV:
+		case DescriptorType::RawBufferSRV:
+			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(descriptorRegister, i, descriptorSize)));
 			break;
 
-		case DescriptorType::TypedBufferSRV:
-		{
-			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			VkFormat format = ((const Descriptor*)descriptors[i])->GetFormat();
-			SetTypedBufferSRV_Internal(descriptorRegister, i, vkBuffer, format, bufferSize);
-		}
-		break;
-
+		case DescriptorType::TextureUAV:
 		case DescriptorType::TypedBufferUAV:
-		{
-			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			VkFormat format = ((const Descriptor*)descriptors[i])->GetFormat();
-			SetTypedBufferUAV_Internal(descriptorRegister, i, vkBuffer, format, bufferSize);
-		}
+		case DescriptorType::StructuredBufferUAV:
+		case DescriptorType::RawBufferUAV:
+			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(descriptorRegister, i, descriptorSize)));
 			break;
 		}
 	}
 }
 
 
-void DescriptorSet::SetTextureSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkImageView imageView)
+size_t DescriptorSet::GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	VkDescriptorImageInfo info{
-		.imageView		= imageView,
-		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-		.data	= { .pSampledImage = &info }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampledImage;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
+	const uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 
-void DescriptorSet::SetTextureUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkImageView imageView)
+size_t DescriptorSet::GetRegisterOffsetUAV(uint32_t uavRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	VkDescriptorImageInfo info{
-		.imageView		= imageView,
-		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-		.data	= { .pStorageImage = &info }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageImage;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
+	const uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 
-void DescriptorSet::SetBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize)
+size_t DescriptorSet::GetRegisterOffsetCBV(uint32_t cbvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	auto device = m_device->GetVulkanDevice();
-
-	VkDescriptorAddressInfoEXT addressInfo{
-		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= bufferSize,
-		.format		= VK_FORMAT_UNDEFINED
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		.data	= {.pStorageBuffer = &addressInfo }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageBuffer;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
+	const uint32_t bindingIndex = GetRegisterShiftCBV() + cbvRegister;
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 
-void DescriptorSet::SetBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize)
+size_t DescriptorSet::GetRegisterOffsetSampler(uint32_t samplerRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	auto device = m_device->GetVulkanDevice();
-
-	VkDescriptorAddressInfoEXT addressInfo{
-		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= bufferSize,
-		.format		= VK_FORMAT_UNDEFINED
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		.data	= { .pStorageBuffer = &addressInfo }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageBuffer;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
+	const uint32_t bindingIndex = GetRegisterShiftSampler() + samplerRegister;
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
-
-void DescriptorSet::SetTypedBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format, size_t bufferSize)
-{
-	auto device = m_device->GetVulkanDevice();
-
-	VkDescriptorAddressInfoEXT addressInfo{
-		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= bufferSize,
-		.format		= format
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
-		.data	= { .pUniformTexelBuffer = &addressInfo }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformTexelBuffer;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
-}
-
-
-void DescriptorSet::SetTypedBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format, size_t bufferSize)
-{
-	auto device = m_device->GetVulkanDevice();
-
-	VkDescriptorAddressInfoEXT addressInfo{
-		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= bufferSize,
-		.format		= format
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
-		.data	= { .pStorageTexelBuffer = &addressInfo }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageTexelBuffer;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
-}
-
-
-void DescriptorSet::SetCBV_Internal(uint32_t cbvRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize)
-{
-	auto device = m_device->GetVulkanDevice();
-
-	VkDescriptorAddressInfoEXT addressInfo{
-		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= bufferSize,
-		.format		= VK_FORMAT_UNDEFINED
-	};
-
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.data	= { .pUniformBuffer = &addressInfo }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftCBV() + cbvRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformBuffer;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
-}
-
-
-void DescriptorSet::SetSampler_Internal(uint32_t samplerRegister, uint32_t arrayIndex, VkSampler sampler)
-{
-	VkDescriptorGetInfoEXT descriptorGetInfo{
-		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-		.type	= VK_DESCRIPTOR_TYPE_SAMPLER,
-		.data	= { .pSampler = &sampler }
-	};
-
-	uint32_t bindingIndex = GetRegisterShiftSampler() + samplerRegister;
-	size_t dataSize = m_device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampler;
-	size_t offset = m_layout->GetBindingOffset(bindingIndex) + arrayIndex * dataSize;
-
-	vkGetDescriptorEXT(m_device->GetVulkanDevice(), &descriptorGetInfo, dataSize, (void*)(m_allocation.mem + offset));
-}
 #endif // USE_DESCRIPTOR_BUFFERS
 
 
