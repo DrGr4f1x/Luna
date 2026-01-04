@@ -549,7 +549,9 @@ void DeviceManager::EnableInstanceLayersAndExtensions(vkb::InstanceBuilder& inst
 	vector<const char*> requiredExtensions{
 		VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
-		VK_KHR_SURFACE_EXTENSION_NAME
+		VK_KHR_SURFACE_EXTENSION_NAME,
+		VK_EXT_SURFACE_MAINTENANCE_1_EXTENSION_NAME,
+		VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME
 	};
 	instanceBuilder.enable_extensions(requiredExtensions);
 }
@@ -817,11 +819,6 @@ void DeviceManager::EnableDeviceExtensions()
 		VK_APPEND_PNEXT(m_extFeatures.robustness2Features);
 	}
 
-	if (IsExtensionRequested(VK_EXT_PIPELINE_ROBUSTNESS_EXTENSION_NAME)) 
-	{
-		VK_APPEND_PNEXT(m_extFeatures.pipelineRobustnessFeatures);
-	}
-
 	if (IsExtensionRequested(VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME)) 
 	{
 		VK_APPEND_PNEXT(m_extFeatures.fragmentShaderInterlockFeatures);
@@ -866,7 +863,7 @@ void DeviceManager::EnableDeviceExtensions()
 	m_supportedFeatures.customBorderColor = m_extFeatures.borderColorFeatures.customBorderColors != 0 && m_extFeatures.borderColorFeatures.customBorderColorWithoutFormat != 0;
 	m_supportedFeatures.robustness = m_features.features.robustBufferAccess != 0 && (m_extFeatures.imageRobustnessFeatures.robustImageAccess != 0 || m_extFeatures.features13.robustImageAccess != 0);
 	m_supportedFeatures.robustness2 = m_extFeatures.robustness2Features.robustBufferAccess2 != 0 && m_extFeatures.robustness2Features.robustImageAccess2 != 0;
-	m_supportedFeatures.pipelineRobustness = m_extFeatures.pipelineRobustnessFeatures.pipelineRobustness;
+	m_supportedFeatures.pipelineRobustness = m_extFeatures.features14.pipelineRobustness;
 	m_supportedFeatures.swapChainMaintenance1 = m_extFeatures.swapchainMaintenance1Features.swapchainMaintenance1;
 	m_supportedFeatures.fifoLatestReady = m_extFeatures.presentModeFifoLatestReadyFeaturesEXT.presentModeFifoLatestReady;
 	m_supportedFeatures.descriptorBuffers = m_extFeatures.descriptorBufferFeatures.descriptorBuffer;
@@ -1417,6 +1414,8 @@ void DeviceManager::CreateDevice()
 	auto deviceBuilder = vkb::DeviceBuilder(m_vkbPhysicalDevice);
 
 	deviceBuilder.add_pNext(&m_features);
+
+	_putenv("DISABLE_VK_LAYER_VALVE_steam_overlay_1=1");
 
 	auto deviceRet = deviceBuilder.build();
 	if (!deviceRet)
