@@ -52,11 +52,12 @@ void Descriptor::SetImageView(CVkImage* image, CVkImageView* imageView)
 }
 
 
-void Descriptor::SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, VkFormat format)
+void Descriptor::SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, size_t bufferSize, VkFormat format)
 {
 	m_buffer = buffer;
 	m_bufferView = bufferView;
 	m_elementSize = elementSize;
+	m_bufferSize = bufferSize;
 	m_format = format;
 	m_descriptorClass = DescriptorClass::Buffer;
 }
@@ -85,7 +86,7 @@ void Descriptor::ReadRawDescriptor(Device* device, DescriptorType descriptorType
 		VkDescriptorAddressInfoEXT addressInfo{
 			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 			.address	= GetBufferDeviceAddress(vkDevice, m_buffer->Get()),
-			.range		= GetBufferDeviceSize(vkDevice, m_buffer->Get()),
+			.range		= m_bufferSize,
 			.format		= VK_FORMAT_UNDEFINED
 		};
 
@@ -155,7 +156,7 @@ void Descriptor::ReadRawDescriptor(Device* device, DescriptorType descriptorType
 		VkDescriptorAddressInfoEXT addressInfo{
 			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 			.address	= GetBufferDeviceAddress(vkDevice, m_buffer->Get()),
-			.range		= GetBufferDeviceSize(vkDevice, m_buffer->Get()),
+			.range		= m_bufferSize,
 			.format		= m_format
 		};
 
@@ -180,7 +181,7 @@ void Descriptor::ReadRawDescriptor(Device* device, DescriptorType descriptorType
 		VkDescriptorAddressInfoEXT addressInfo{
 			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 			.address	= GetBufferDeviceAddress(vkDevice, m_buffer->Get()),
-			.range		= GetBufferDeviceSize(vkDevice, m_buffer->Get()),
+			.range		= m_bufferSize,
 			.format		= m_format
 		};
 
@@ -207,7 +208,7 @@ void Descriptor::ReadRawDescriptor(Device* device, DescriptorType descriptorType
 		VkDescriptorAddressInfoEXT addressInfo{
 			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 			.address	= GetBufferDeviceAddress(vkDevice, m_buffer->Get()),
-			.range		= GetBufferDeviceSize(vkDevice, m_buffer->Get()),
+			.range		= m_bufferSize,
 			.format		= VK_FORMAT_UNDEFINED
 		};
 

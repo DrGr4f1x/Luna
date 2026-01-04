@@ -36,10 +36,11 @@ public:
 	VkImage GetImage() const;
 	VkBuffer GetBuffer() const;
 	size_t GetElementSize() const noexcept { return m_elementSize; }
+	size_t GetBufferSize() const noexcept { return m_bufferSize; }
 	VkFormat GetFormat() const noexcept { return m_format; }
 
 	void SetImageView(CVkImage* image, CVkImageView* imageView);
-	void SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, VkFormat format);
+	void SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, size_t bufferSize, VkFormat format);
 	void SetSampler(CVkSampler* sampler);
 
 	void ReadRawDescriptor(Device* device, DescriptorType descriptorType);
@@ -57,6 +58,7 @@ private:
 	wil::com_ptr<CVkImage> m_image;
 	wil::com_ptr<CVkBuffer> m_buffer;
 	size_t m_elementSize{ 0 };
+	size_t m_bufferSize{ 0 };
 	VkFormat m_format{ VK_FORMAT_UNDEFINED };
 
 	std::array<std::byte, kMaxRawDescriptorSize> m_rawDescriptor;

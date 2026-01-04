@@ -354,7 +354,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	
 	if (gpuBufferDesc.bAllowShaderResource)
 	{
-		gpuBuffer->m_srvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
+		gpuBuffer->m_srvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, gpuBuffer->GetBufferSize(), FormatToVulkan(gpuBufferDesc.format));
 
 		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
 		{
@@ -371,7 +371,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	}
 	if (gpuBufferDesc.bAllowUnorderedAccess)
 	{
-		gpuBuffer->m_uavDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
+		gpuBuffer->m_uavDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, gpuBuffer->GetBufferSize(), FormatToVulkan(gpuBufferDesc.format));
 
 		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
 		{
@@ -388,7 +388,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	}
 	if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ConstantBuffer))
 	{
-		gpuBuffer->m_cbvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
+		gpuBuffer->m_cbvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, gpuBuffer->GetBufferSize(), FormatToVulkan(gpuBufferDesc.format));
 		gpuBuffer->m_cbvDescriptor.ReadRawDescriptor(this, DescriptorType::ConstantBuffer);
 	}
 	

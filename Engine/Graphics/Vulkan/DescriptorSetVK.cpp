@@ -61,14 +61,15 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 	const bool isTypedBuffer = gpuBuffer->GetResourceType() == ResourceType::TypedBuffer;
 
 	const uint32_t arrayIndex = 0;
+	const size_t bufferSize = gpuBuffer->GetBufferSize();
 
 	if (isTypedBuffer)
 	{
-		SetTypedBufferSRV_Internal(srvRegister, arrayIndex, bufferVK, FormatToVulkan(gpuBufferVK->GetFormat()));
+		SetTypedBufferSRV_Internal(srvRegister, arrayIndex, bufferVK, FormatToVulkan(gpuBufferVK->GetFormat()), bufferSize);
 	}
 	else
 	{
-		SetBufferSRV_Internal(srvRegister, arrayIndex, bufferVK);
+		SetBufferSRV_Internal(srvRegister, arrayIndex, bufferVK, bufferSize);
 	}
 }
 
@@ -106,14 +107,15 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 	const bool isTypedBuffer = gpuBuffer->GetResourceType() == ResourceType::TypedBuffer;
 
 	const uint32_t arrayIndex = 0;
+	const size_t bufferSize = gpuBuffer->GetBufferSize();
 
 	if (isTypedBuffer)
 	{
-		SetTypedBufferUAV_Internal(uavRegister, arrayIndex, bufferVK, FormatToVulkan(gpuBufferVK->GetFormat()));
+		SetTypedBufferUAV_Internal(uavRegister, arrayIndex, bufferVK, FormatToVulkan(gpuBufferVK->GetFormat()), bufferSize);
 	}
 	else
 	{
-		SetBufferUAV_Internal(uavRegister, arrayIndex, bufferVK);
+		SetBufferUAV_Internal(uavRegister, arrayIndex, bufferVK, bufferSize);
 	}
 }
 
@@ -122,7 +124,9 @@ void DescriptorSet::SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer)
 {
 	const uint32_t arrayIndex = 0;
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer.get();
-	SetCBV_Internal(cbvRegister, arrayIndex, gpuBufferVK->GetBuffer());
+
+	const size_t bufferSize = gpuBuffer->GetBufferSize();
+	SetCBV_Internal(cbvRegister, arrayIndex, gpuBufferVK->GetBuffer(), bufferSize);
 }
 
 
@@ -396,6 +400,8 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 
 	for (uint32_t i = 0; i < numDescriptors; ++i)
 	{
+		const size_t bufferSize = ((const Descriptor*)descriptors[i])->GetBufferSize();
+
 		switch (range.descriptorType)
 		{
 		case DescriptorType::Sampler:
@@ -408,7 +414,7 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		case DescriptorType::ConstantBuffer:
 		{
 			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			SetCBV_Internal(descriptorRegister, i, vkBuffer);
+			SetCBV_Internal(descriptorRegister, i, vkBuffer, bufferSize);
 		}
 		break;
 
@@ -416,7 +422,7 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		case DescriptorType::RawBufferSRV:
 		{
 			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			SetBufferSRV_Internal(descriptorRegister, i, vkBuffer);
+			SetBufferSRV_Internal(descriptorRegister, i, vkBuffer, bufferSize);
 		}
 		break;
 
@@ -424,7 +430,7 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		case DescriptorType::RawBufferUAV:
 		{
 			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
-			SetBufferUAV_Internal(descriptorRegister, i, vkBuffer);
+			SetBufferUAV_Internal(descriptorRegister, i, vkBuffer, bufferSize);
 		}
 			break;
 
@@ -446,7 +452,7 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		{
 			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
 			VkFormat format = ((const Descriptor*)descriptors[i])->GetFormat();
-			SetTypedBufferSRV_Internal(descriptorRegister, i, vkBuffer, format);
+			SetTypedBufferSRV_Internal(descriptorRegister, i, vkBuffer, format, bufferSize);
 		}
 		break;
 
@@ -454,7 +460,7 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		{
 			VkBuffer vkBuffer = ((const Descriptor*)descriptors[i])->GetBuffer();
 			VkFormat format = ((const Descriptor*)descriptors[i])->GetFormat();
-			SetTypedBufferUAV_Internal(descriptorRegister, i, vkBuffer, format);
+			SetTypedBufferUAV_Internal(descriptorRegister, i, vkBuffer, format, bufferSize);
 		}
 			break;
 		}
@@ -504,14 +510,14 @@ void DescriptorSet::SetTextureUAV_Internal(uint32_t uavRegister, uint32_t arrayI
 }
 
 
-void DescriptorSet::SetBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer)
+void DescriptorSet::SetBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize)
 {
 	auto device = m_device->GetVulkanDevice();
 
 	VkDescriptorAddressInfoEXT addressInfo{
 		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= GetBufferDeviceSize(device, buffer),
+		.range		= bufferSize,
 		.format		= VK_FORMAT_UNDEFINED
 	};
 
@@ -529,14 +535,14 @@ void DescriptorSet::SetBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIn
 }
 
 
-void DescriptorSet::SetBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer)
+void DescriptorSet::SetBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize)
 {
 	auto device = m_device->GetVulkanDevice();
 
 	VkDescriptorAddressInfoEXT addressInfo{
 		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= GetBufferDeviceSize(device, buffer),
+		.range		= bufferSize,
 		.format		= VK_FORMAT_UNDEFINED
 	};
 
@@ -554,14 +560,14 @@ void DescriptorSet::SetBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIn
 }
 
 
-void DescriptorSet::SetTypedBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format)
+void DescriptorSet::SetTypedBufferSRV_Internal(uint32_t srvRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format, size_t bufferSize)
 {
 	auto device = m_device->GetVulkanDevice();
 
 	VkDescriptorAddressInfoEXT addressInfo{
 		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= GetBufferDeviceSize(device, buffer),
+		.range		= bufferSize,
 		.format		= format
 	};
 
@@ -579,14 +585,14 @@ void DescriptorSet::SetTypedBufferSRV_Internal(uint32_t srvRegister, uint32_t ar
 }
 
 
-void DescriptorSet::SetTypedBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format)
+void DescriptorSet::SetTypedBufferUAV_Internal(uint32_t uavRegister, uint32_t arrayIndex, VkBuffer buffer, VkFormat format, size_t bufferSize)
 {
 	auto device = m_device->GetVulkanDevice();
 
 	VkDescriptorAddressInfoEXT addressInfo{
 		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= GetBufferDeviceSize(device, buffer),
+		.range		= bufferSize,
 		.format		= format
 	};
 
@@ -604,14 +610,14 @@ void DescriptorSet::SetTypedBufferUAV_Internal(uint32_t uavRegister, uint32_t ar
 }
 
 
-void DescriptorSet::SetCBV_Internal(uint32_t cbvRegister, uint32_t arrayIndex, VkBuffer buffer)
+void DescriptorSet::SetCBV_Internal(uint32_t cbvRegister, uint32_t arrayIndex, VkBuffer buffer, size_t bufferSize)
 {
 	auto device = m_device->GetVulkanDevice();
 
 	VkDescriptorAddressInfoEXT addressInfo{
 		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
 		.address	= GetBufferDeviceAddress(device, buffer),
-		.range		= GetBufferDeviceSize(device, buffer),
+		.range		= bufferSize,
 		.format		= VK_FORMAT_UNDEFINED
 	};
 
