@@ -113,18 +113,21 @@ public:
 	void SetResources(CommandListType type, ResourceSet& resourceSet) override;
 
 	// Dynamic SRVs, using DynamicDescriptorHeap
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IColorBuffer* colorBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IDepthBuffer* depthBuffer, bool depthSrv) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IGpuBuffer* gpuBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const ITexture* texture) override;
 
 	// Dynamic UAVs, using DynamicDescriptorHeap
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) override;
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IColorBuffer* colorBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IDepthBuffer* depthBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IGpuBuffer* gpuBuffer) override;
 
 	// Dynamic CBV, using DynamicDescriptorHeap
-	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, const IGpuBuffer* gpuBuffer) override;
+
+	// Dynamic sampler, using DynamicDescriptorHeap
+	void SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, const ISampler* sampler) override;
 
 	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;

@@ -24,6 +24,7 @@ class Device;
 class Descriptor : public IDescriptor
 {
 public:
+	Descriptor();
 	~Descriptor() override {}
 
 	DescriptorClass GetDescriptorClass() const noexcept { return m_descriptorClass; }
@@ -40,7 +41,11 @@ public:
 	void SetImageView(CVkImage* image, CVkImageView* imageView);
 	void SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, VkFormat format);
 	void SetSampler(CVkSampler* sampler);
-	
+
+	void ReadRawDescriptor(Device* device, DescriptorType descriptorType);
+	size_t CopyRawDescriptor(void* dest) const;
+	size_t GetRawDescriptorSize() const noexcept { return m_rawDescriptorSize; }
+
 private:
 	union 
 	{
@@ -53,6 +58,9 @@ private:
 	wil::com_ptr<CVkBuffer> m_buffer;
 	size_t m_elementSize{ 0 };
 	VkFormat m_format{ VK_FORMAT_UNDEFINED };
+
+	std::array<std::byte, kMaxRawDescriptorSize> m_rawDescriptor;
+	size_t m_rawDescriptorSize{ 0 };
 
 	DescriptorClass m_descriptorClass{ DescriptorClass::None };
 };

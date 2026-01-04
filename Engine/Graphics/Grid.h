@@ -65,10 +65,12 @@ protected:
 	// Uniform buffer block object
 	Luna::GpuBufferPtr m_constantBuffer;
 
-	struct
+	struct VSConstants
 	{
-		Math::Matrix4 viewProjectionMatrix;
-	} m_vsConstants;
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+	};
+
+	VSConstants m_vsConstants{};
 
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::GraphicsPipelinePtr m_pipeline;

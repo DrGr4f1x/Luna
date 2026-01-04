@@ -24,6 +24,7 @@
 #include "Queue12.h"
 #include "RootSignature12.h"
 #include "PipelineState12.h"
+#include "Sampler12.h"
 #include "Texture12.h"
 
 
@@ -878,91 +879,102 @@ void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceS
 }
 
 
-void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IColorBuffer* colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	auto descriptor = ((const Descriptor*)colorBuffer12->GetSrvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &descriptor);
 }
 
 
-void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IDepthBuffer* depthBuffer, bool depthSrv)
 {
 	auto descriptor = ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &descriptor);
 }
 
 
-void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetSrvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
+	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &cpuHandle);
 }
 
 
-void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture)
+void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const ITexture* texture)
 {
 	// TODO: Try this with GetPlatformObject()
-	Texture* texture12 = (Texture*)texture.Get();
+	Texture* texture12 = (Texture*)texture;
 	assert(texture12 != nullptr);
 
 	auto descriptor = texture12->GetSrvDescriptor().GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &descriptor);
 }
 
 
-void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer)
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IColorBuffer* colorBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer.get();
+	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 
 	// TODO: Need a UAV index parameter
 	auto descriptor = ((const Descriptor*)colorBuffer12->GetUavDescriptor(0))->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
+	SetDynamicDescriptors_Internal(type, rootIndex, uavRegister, 1, &descriptor);
 }
 
 
-void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer)
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IDepthBuffer* depthBuffer)
 {
 	// TODO: support this
 	assert(false);
 }
 
 
-void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetUavDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
+	SetDynamicDescriptors_Internal(type, rootIndex, uavRegister, 1, &cpuHandle);
 }
 
 
-void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer)
+void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, const IGpuBuffer* gpuBuffer)
 {
 	// TODO: Try this with GetPlatformObject()
-	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer.get();
+	GpuBuffer* gpuBuffer12 = (GpuBuffer*)gpuBuffer;
 	assert(gpuBuffer12 != nullptr);
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
+	SetDynamicDescriptors_Internal(type, rootIndex, cbvRegister, 1, &cpuHandle);
+}
+
+
+void CommandContext12::SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, const ISampler* sampler)
+{
+	Sampler* sampler12 = (Sampler*)sampler;
+
+	auto cpuHandle = ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU();
+
+	// TODO: This is probably wrong for samplers
+	SetDynamicDescriptors_Internal(type, rootIndex, samplerRegister, 1, &cpuHandle);
 }
 
 

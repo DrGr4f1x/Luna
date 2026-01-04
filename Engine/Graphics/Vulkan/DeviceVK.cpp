@@ -186,7 +186,9 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	colorBuffer->m_image = image;
 	colorBuffer->m_rtvDescriptor.SetImageView(image.get(), imageViewRtv.get());
 	colorBuffer->m_srvDescriptor.SetImageView(image.get(), imageViewSrv.get());
-
+	colorBuffer->m_uavDescriptor.SetImageView(image.get(), imageViewSrv.get());
+	colorBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
+	colorBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::TextureUAV);
 	return colorBuffer;
 }
 
@@ -274,6 +276,9 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	depthBuffer->m_depthStencilDescriptor.SetImageView(image.get(), imageViewDepthStencil.get());
 	depthBuffer->m_depthOnlyDescriptor.SetImageView(image.get(), imageViewDepthOnly.get());
 	depthBuffer->m_stencilOnlyDescriptor.SetImageView(image.get(), imageViewStencilOnly.get());
+	depthBuffer->m_depthStencilDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
+	depthBuffer->m_depthOnlyDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
+	depthBuffer->m_stencilOnlyDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
 
 	return depthBuffer;
 }
@@ -296,6 +301,8 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	if (gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
 		extraFlags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 
+	const bool isTypedBuffer = gpuBufferDesc.resourceType == ResourceType::TypedBuffer;
+
 	VkBufferCreateInfo bufferCreateInfo{
 		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 		.size	= gpuBufferDesc.elementCount * gpuBufferDesc.elementSize,
@@ -317,7 +324,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation);
 
 	wil::com_ptr<CVkBufferView> bufferView;
-	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
+	if (isTypedBuffer)
 	{
 		VkBufferViewCreateInfo bufferViewCreateInfo{
 			.sType		= VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
@@ -341,9 +348,50 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
 	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
 	gpuBuffer->m_buffer = buffer;
-	gpuBuffer->m_descriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
 	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
+	// Descriptor setup
+	
+	if (gpuBufferDesc.bAllowShaderResource)
+	{
+		gpuBuffer->m_srvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
+
+		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
+		{
+			gpuBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TypedBufferSRV);
+		}
+		else if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ByteAddressBuffer))
+		{
+			gpuBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::RawBufferSRV);
+		}
+		else
+		{
+			gpuBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::StructuredBufferSRV);
+		}
+	}
+	if (gpuBufferDesc.bAllowUnorderedAccess)
+	{
+		gpuBuffer->m_uavDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
+
+		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
+		{
+			gpuBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::TypedBufferUAV);
+		}
+		else if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ByteAddressBuffer))
+		{
+			gpuBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::RawBufferUAV);
+		}
+		else
+		{
+			gpuBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::StructuredBufferUAV);
+		}
+	}
+	if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ConstantBuffer))
+	{
+		gpuBuffer->m_cbvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, FormatToVulkan(gpuBufferDesc.format));
+		gpuBuffer->m_cbvDescriptor.ReadRawDescriptor(this, DescriptorType::ConstantBuffer);
+	}
+	
 	if (gpuBufferDesc.initialData)
 	{
 		if (gpuBuffer->m_type == ResourceType::ConstantBuffer)
@@ -1123,6 +1171,7 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 	// Create Sampler
 	auto samplerPtr = std::make_shared<Sampler>();
 	samplerPtr->m_descriptor.SetSampler(pSampler.get());
+	samplerPtr->m_descriptor.ReadRawDescriptor(this, DescriptorType::Sampler);
 
 	return samplerPtr;
 };
@@ -1217,6 +1266,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	auto imageView = CreateImageView(imageViewDesc);
 
 	textureVK->m_descriptor.SetImageView(textureVK->m_image.get(), imageView.get());
+	textureVK->m_descriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
 
 	// Copy initial data
 	TexturePtr temp = texture;
@@ -1285,6 +1335,7 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	colorBuffer->m_image = swapChainImage;
 	colorBuffer->m_rtvDescriptor.SetImageView(swapChainImage, imageViewRtv.get());
 	colorBuffer->m_srvDescriptor.SetImageView(swapChainImage, imageViewSrv.get());
+	colorBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
 
 	return colorBuffer;
 }
@@ -1299,9 +1350,9 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type
 	extraFlags |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
 	VkBufferCreateInfo bufferCreateInfo{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = sizeInBytes,
-		.usage = extraFlags
+		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size	= sizeInBytes,
+		.usage	= extraFlags
 	};
 
 	VmaAllocationCreateInfo allocCreateInfo{};
@@ -1339,10 +1390,10 @@ wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 		.imageType		= GetImageType(imageDesc.resourceType),
 		.format			= FormatToVulkan(imageDesc.format),
 		.extent = {
-			.width = (uint32_t)imageDesc.width,
+			.width	= (uint32_t)imageDesc.width,
 			.height = imageDesc.height,
-			.depth = depth },
-		.mipLevels = imageDesc.numMips,
+			.depth	= depth },
+		.mipLevels		= imageDesc.numMips,
 		.arrayLayers	= arraySize,
 		.samples		= GetSampleCountFlags(imageDesc.numSamples),
 		.tiling			= VK_IMAGE_TILING_OPTIMAL,

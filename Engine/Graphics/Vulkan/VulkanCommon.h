@@ -35,7 +35,7 @@
 namespace Luna::VK
 {
 
-inline const uint32_t g_requiredVulkanApiVersion = VK_API_VERSION_1_3;
+inline const uint32_t g_requiredVulkanApiVersion = VK_API_VERSION_1_4;
 inline LogCategory LogVulkan{ "LogVulkan" };
 
 

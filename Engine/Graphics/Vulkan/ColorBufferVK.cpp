@@ -18,7 +18,8 @@ namespace Luna::VK
 
 const IDescriptor* ColorBuffer::GetUavDescriptor(uint32_t index) const noexcept
 {
-	return &m_srvDescriptor;
+	assert(index == 0);
+	return &m_uavDescriptor;
 }
 
 } // namespace Luna::VK

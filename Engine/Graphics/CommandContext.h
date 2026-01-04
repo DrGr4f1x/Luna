@@ -30,6 +30,7 @@ class IMeshletPipeline;
 class IQueryHeap;
 class ResourceSet;
 class IRootSignature;
+class ISampler;
 
 
 using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
@@ -41,6 +42,7 @@ using GraphicsPipelinePtr = std::shared_ptr<IGraphicsPipeline>;
 using MeshletPipelinePtr = std::shared_ptr<IMeshletPipeline>;
 using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
+using SamplerPtr = std::shared_ptr<ISampler>;
 
 
 class ICommandContext
@@ -129,18 +131,21 @@ public:
 	virtual void SetResources(CommandListType type, ResourceSet& resourceSet) = 0;
 
 	// Dynamic SRVs, using the DynamicDescriptorHeap
-	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
-	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) = 0;
-	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
-	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IDepthBuffer* depthBuffer, bool depthSrv) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IGpuBuffer* gpuBuffer) = 0;
+	virtual void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const ITexture* texture) = 0;
 
 	// Dynamic UAVs, using the DynamicDescriptorHeap
-	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) = 0;
-	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) = 0;
-	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IColorBuffer* colorBuffer) = 0;
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IDepthBuffer* depthBuffer) = 0;
+	virtual void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IGpuBuffer* gpuBuffer) = 0;
 
 	// Dynamic CBV, using the DynamicDescriptorHeap
-	virtual void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) = 0;
+	virtual void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, const IGpuBuffer* gpuBuffer) = 0;
+
+	// Dynamic sampler, using the DynamicDescriptorHeap
+	virtual void SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, const ISampler* sampler) = 0;
 
 	virtual void SetIndexBuffer(const IGpuBuffer* gpuBuffer) = 0;
 	virtual void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) = 0;
@@ -289,18 +294,21 @@ public:
 	void SetResources(ResourceSet& resourceSet);
 
 	// Dynamic SRVs, using the DynamicDescriptorHeap
-	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv = true);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, ColorBufferPtr& colorBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, DepthBufferPtr& depthBuffer, bool depthSrv = true);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, GpuBufferPtr& gpuBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, TexturePtr& texture);
 
 	// Dynamic UAVs, using the DynamicDescriptorHeap
-	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
-	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer);
-	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t uavRegister, ColorBufferPtr& colorBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t uavRegister, DepthBufferPtr& depthBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t uavRegister, GpuBufferPtr& gpuBuffer);
 
-	// Dynamic CBVs, using the DynamicDescriptorHeap
-	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+	// Dynamic CBV, using the DynamicDescriptorHeap
+	void SetCBV(uint32_t rootIndex, uint32_t cbvRegister, GpuBufferPtr& gpuBuffer);
+
+	// Dynamic sampler, using the DynamicDescriptorHeap
+	void SetSampler(uint32_t rootIndex, uint32_t samplerRegister, SamplerPtr& sampler);
 
 	void SetIndexBuffer(const GpuBufferPtr& gpuBuffer);
 	void SetVertexBuffer(uint32_t slot, const GpuBufferPtr& gpuBuffer);
@@ -351,18 +359,21 @@ public:
 	void SetResources(ResourceSet& resourceSet);
 
 	// Dynamic SRVs, using DynamicDescriptorHeap
-	void SetSRV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv = true);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
-	void SetSRV(uint32_t rootIndex, uint32_t offset, TexturePtr& texture);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, ColorBufferPtr& colorBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, DepthBufferPtr& depthBuffer, bool depthSrv = true);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, GpuBufferPtr& gpuBuffer);
+	void SetSRV(uint32_t rootIndex, uint32_t srvRegister, TexturePtr& texture);
 
 	// Dynamic UAVs, using DynamicDescriptorHeap
-	void SetUAV(uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer);
-	void SetUAV(uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer);
-	void SetUAV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t uavRegister, ColorBufferPtr& colorBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t uavRegister, DepthBufferPtr& depthBuffer);
+	void SetUAV(uint32_t rootIndex, uint32_t uavRegister, GpuBufferPtr& gpuBuffer);
 
 	// Dynamic CBV, using DynamicDescriptorHeap
-	void SetCBV(uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer);
+	void SetCBV(uint32_t rootIndex, uint32_t cbvRegister, GpuBufferPtr& gpuBuffer);
+
+	// Dynamic sampler, using DynamicDescriptorHeap
+	void SetSampler(uint32_t rootIndex, uint32_t samplerRegister, SamplerPtr& sampler);
 
 	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1);
 	void Dispatch1D(uint32_t threadCountX, uint32_t groupSizeX = 64);
@@ -734,51 +745,57 @@ inline void GraphicsContext::SetResources(ResourceSet& resourceSet)
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, colorBuffer);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, srvRegister, colorBuffer.get());
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
-	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, depthBuffer, depthSrv);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, srvRegister, depthBuffer.get(), depthSrv);
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, srvRegister, gpuBuffer.get());
 }
 
 
-inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t offset, TexturePtr& texture)
+inline void GraphicsContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, TexturePtr& texture)
 {
-	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, offset, texture);
+	m_contextImpl->SetSRV(CommandListType::Graphics, rootParam, srvRegister, texture.Get());
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t uavRegister, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, offset, colorBuffer);
+	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, uavRegister, colorBuffer.get());
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer)
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t uavRegister, DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, offset, depthBuffer);
+	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, uavRegister, depthBuffer.get());
 }
 
 
-inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetUAV(uint32_t rootParam, uint32_t uavRegister, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetUAV(CommandListType::Graphics, rootParam, uavRegister, gpuBuffer.get());
 }
 
 
-inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+inline void GraphicsContext::SetCBV(uint32_t rootParam, uint32_t cbvRegister, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetCBV(CommandListType::Graphics, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetCBV(CommandListType::Graphics, rootParam, cbvRegister, gpuBuffer.get());
+}
+
+
+inline void GraphicsContext::SetSampler(uint32_t rootParam, uint32_t samplerRegister, SamplerPtr& sampler)
+{
+	m_contextImpl->SetSampler(CommandListType::Graphics, rootParam, samplerRegister, sampler.get());
 }
 
 
@@ -952,51 +969,57 @@ inline void ComputeContext::SetResources(ResourceSet& resourceSet)
 }
 
 
-inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, colorBuffer);
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, srvRegister, colorBuffer.get());
 }
 
 
-inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv)
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, DepthBufferPtr& depthBuffer, bool depthSrv)
 {
-	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, depthBuffer, depthSrv);
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, srvRegister, depthBuffer.get(), depthSrv);
 }
 
 
-inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, srvRegister, gpuBuffer.get());
 }
 
 
-inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t offset, TexturePtr& texture)
+inline void ComputeContext::SetSRV(uint32_t rootParam, uint32_t srvRegister, TexturePtr& texture)
 {
-	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, offset, texture);
+	m_contextImpl->SetSRV(CommandListType::Compute, rootParam, srvRegister, texture.Get());
 }
 
 
-inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t offset, ColorBufferPtr& colorBuffer)
+inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t uavRegister, ColorBufferPtr& colorBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, offset, colorBuffer);
+	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, uavRegister, colorBuffer.get());
 }
 
 
-inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t offset, DepthBufferPtr& depthBuffer)
+inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t uavRegister, DepthBufferPtr& depthBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, offset, depthBuffer);
+	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, uavRegister, depthBuffer.get());
 }
 
 
-inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetUAV(uint32_t rootParam, uint32_t uavRegister, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetUAV(CommandListType::Compute, rootParam, uavRegister, gpuBuffer.get());
 }
 
 
-inline void ComputeContext::SetCBV(uint32_t rootParam, uint32_t offset, GpuBufferPtr& gpuBuffer)
+inline void ComputeContext::SetCBV(uint32_t rootParam, uint32_t cbvRegister, GpuBufferPtr& gpuBuffer)
 {
-	m_contextImpl->SetCBV(CommandListType::Compute, rootParam, offset, gpuBuffer);
+	m_contextImpl->SetCBV(CommandListType::Compute, rootParam, cbvRegister, gpuBuffer.get());
+}
+
+
+inline void ComputeContext::SetSampler(uint32_t rootParam, uint32_t samplerRegister, SamplerPtr& sampler)
+{
+	m_contextImpl->SetSampler(CommandListType::Compute, rootParam, samplerRegister, sampler.get());
 }
 
 

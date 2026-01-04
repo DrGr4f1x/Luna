@@ -19,7 +19,7 @@ namespace Luna::VK
 struct BindingInfo
 {
 	VkDeviceSize offset{ 0 };
-	VkDescriptorType type;
+	VkDescriptorType type{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER };
 };
 
 
@@ -44,6 +44,7 @@ public:
 	wil::com_ptr<CVkDescriptorSetLayout> GetDescriptorSetLayout() const noexcept;
 
 	size_t GetHashCode() const noexcept { return m_hashcode; }
+	size_t GetDescriptorSetSize() const noexcept { return m_layoutSize; }
 
 	VkDeviceSize GetBindingOffset(uint32_t bindingIndex) const;
 
@@ -53,7 +54,7 @@ protected:
 	size_t m_hashcode{ 0 };
 
 	// Descriptor buffer data
-	VkDeviceSize m_layoutSize;
+	VkDeviceSize m_layoutSize{ 0 };
 	std::shared_ptr<DescriptorBindingTemplate> m_bindingTemplate;
 };
 

@@ -12,8 +12,18 @@
 
 #include "DynamicDescriptorHeapVK.h"
 
+#include "CommandContextVK.h"
+#include "DescriptorVK.h"
+#include "DeviceManagerVK.h"
+#include "DeviceVK.h"
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 #include "DescriptorPoolVK.h"
+#endif // USE_LEGACY_DESCRIPTOR_SETS
+
+#include "GpuBufferVK.h"
 #include "RootSignatureVK.h"
+#include "SamplerVK.h"
 
 using namespace std;
 
@@ -21,6 +31,321 @@ using namespace std;
 namespace Luna::VK
 {
 
+#if USE_DESCRIPTOR_BUFFERS
+std::mutex DynamicDescriptorBuffer::sm_mutex;
+std::vector<wil::com_ptr<CVkBuffer>> DynamicDescriptorBuffer::sm_descriptorBufferPool[2];
+std::queue<std::pair<uint64_t, CVkBuffer*>> DynamicDescriptorBuffer::sm_retiredDescriptorBuffers[2];
+std::queue<CVkBuffer*> DynamicDescriptorBuffer::sm_availableDescriptorBuffers[2];
+
+
+DynamicDescriptorBuffer::DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorBufferType bufferType)
+	: m_owningContext{ owningContext }
+	, m_bufferType{ bufferType }
+{
+	m_offsetAlignment = GetVulkanDevice()->GetDeviceCaps().descriptorBuffer.descriptorBufferOffsetAlignment;
+
+	m_graphicsCache.memory = (std::byte*)_aligned_malloc(DescriptorCache::kScratchMemorySize, m_offsetAlignment);
+	m_computeCache.memory = (std::byte*)_aligned_malloc(DescriptorCache::kScratchMemorySize, m_offsetAlignment);
+
+	ClearGraphicsTableAllocations();
+	ClearComputeTableAllocations();
+}
+
+
+DynamicDescriptorBuffer::~DynamicDescriptorBuffer()
+{
+	_aligned_free(m_graphicsCache.memory);
+	_aligned_free(m_computeCache.memory);
+	m_graphicsCache.memory = nullptr;
+	m_computeCache.memory = nullptr;
+}
+
+
+void DynamicDescriptorBuffer::CleanupUsedBuffers(uint64_t fenceValue)
+{
+	RetireCurrentBuffer();
+	RetireUsedBuffers(fenceValue);
+	ClearGraphicsTableAllocations();
+	ClearComputeTableAllocations();
+}
+
+
+void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe)
+{
+	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
+	descriptorCache.ParseRootSignature(rootSignature);
+}
+
+
+void DynamicDescriptorBuffer::UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe)
+{
+	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
+	size_t neededSize = descriptorCache.allocationSize;
+	if (!HasSpace(neededSize))
+	{
+		RetireCurrentBuffer();
+	}
+
+	// Bind the descriptor buffer
+	m_owningContext.SetDescriptorBuffer(m_bufferType, GetCurrentBuffer());
+
+	if (descriptorCache.allocationSize > 0)
+	{
+		std::byte* dest = m_bufferStart + m_currentOffset;
+		memcpy(dest, descriptorCache.memory, descriptorCache.allocationSize);
+	}
+
+	// Bind the buffer offsets
+	VkPipelineLayout pipelineLayout = descriptorCache.pipelineLayout;
+	uint32_t bufferIndex = m_bufferType == DescriptorBufferType::Resource ? 0 : 1;
+
+	VkDeviceSize localOffset = 0;
+	for (uint32_t rootIndex = 0; rootIndex < MaxRootParameters; ++rootIndex)
+	{
+		if (descriptorCache.tableAllocations[rootIndex].mem != nullptr)
+		{
+			localOffset += descriptorCache.tableAllocations[rootIndex].offset;
+
+			VkDeviceSize offset = m_currentOffset + localOffset;
+
+			vkCmdSetDescriptorBufferOffsetsEXT(
+				commandBuffer,
+				graphicsPipe ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
+				pipelineLayout,
+				rootIndex,
+				1,
+				&bufferIndex,
+				&offset
+			);
+		}
+	}
+
+	m_currentOffset += descriptorCache.allocationSize;
+	m_freeSpace -= descriptorCache.allocationSize;
+}
+
+
+void DynamicDescriptorBuffer::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	srvRegister += GetRegisterShiftSRV();
+	descriptorCache.SetDescriptor(rootIndex, srvRegister, arrayIndex, (const Descriptor*)colorBuffer->GetSrvDescriptor());
+}
+
+
+void DynamicDescriptorBuffer::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer, bool depthSrv)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	srvRegister += GetRegisterShiftSRV();
+	descriptorCache.SetDescriptor(rootIndex, srvRegister, arrayIndex, (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv));
+}
+
+
+void DynamicDescriptorBuffer::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	srvRegister += GetRegisterShiftSRV();
+	descriptorCache.SetDescriptor(rootIndex, srvRegister, arrayIndex, (const Descriptor*)gpuBuffer->GetSrvDescriptor());
+}
+
+
+void DynamicDescriptorBuffer::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const ITexture* texture)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	srvRegister += GetRegisterShiftSRV();
+	descriptorCache.SetDescriptor(rootIndex, srvRegister, arrayIndex, (const Descriptor*)texture->GetDescriptor());
+}
+
+
+void DynamicDescriptorBuffer::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	uavRegister += GetRegisterShiftUAV();
+	descriptorCache.SetDescriptor(rootIndex, uavRegister, arrayIndex, (const Descriptor*)colorBuffer->GetUavDescriptor());
+}
+
+
+void DynamicDescriptorBuffer::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+	assert_msg(false, "Depth UAVs not yet supported");
+}
+
+
+void DynamicDescriptorBuffer::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	uavRegister += GetRegisterShiftUAV();
+	descriptorCache.SetDescriptor(rootIndex, uavRegister, arrayIndex, (const Descriptor*)gpuBuffer->GetUavDescriptor());
+}
+
+
+void DynamicDescriptorBuffer::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	cbvRegister += GetRegisterShiftCBV();
+	descriptorCache.SetDescriptor(rootIndex, cbvRegister, arrayIndex, (const Descriptor*)gpuBuffer->GetCbvDescriptor());
+}
+
+
+void DynamicDescriptorBuffer::SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, uint32_t arrayIndex, const ISampler* sampler)
+{
+	auto& descriptorCache = (type == CommandListType::Graphics) ? m_graphicsCache : m_computeCache;
+
+	samplerRegister += GetRegisterShiftSampler();
+	descriptorCache.SetDescriptor(rootIndex, samplerRegister, arrayIndex, (const Descriptor*)sampler->GetDescriptor());
+}
+
+
+/* static */ CVkBuffer* DynamicDescriptorBuffer::RequestDescriptorBuffer(DescriptorBufferType bufferType)
+{
+	lock_guard<mutex> CS(sm_mutex);
+
+	uint32_t idx = bufferType == DescriptorBufferType::Sampler ? 1 : 0;
+
+	while (!sm_retiredDescriptorBuffers[idx].empty() && GetVulkanDeviceManager()->IsFenceComplete(sm_retiredDescriptorBuffers[idx].front().first))
+	{
+		sm_availableDescriptorBuffers[idx].push(sm_retiredDescriptorBuffers[idx].front().second);
+		sm_retiredDescriptorBuffers[idx].pop();
+	}
+
+	if (!sm_availableDescriptorBuffers[idx].empty())
+	{
+		CVkBuffer* bufferPtr = sm_availableDescriptorBuffers[idx].front();
+		sm_availableDescriptorBuffers[idx].pop();
+		return bufferPtr;
+	}
+	else
+	{
+		auto device = GetVulkanDevice();
+		auto newBuffer = device->CreateDescriptorBuffer(bufferType, sm_bufferSize);
+		sm_descriptorBufferPool[idx].emplace_back(newBuffer);
+		return newBuffer.get();
+	}
+}
+
+
+/* static */ void DynamicDescriptorBuffer::DiscardDescriptorBuffers(DescriptorBufferType bufferType, uint64_t fenceValue, const vector<CVkBuffer*>& usedBuffers)
+{
+	const uint32_t idx = bufferType == DescriptorBufferType::Sampler ? 1 : 0;
+
+	lock_guard<mutex> CS(sm_mutex);
+
+	for (auto iter = usedBuffers.begin(); iter != usedBuffers.end(); ++iter)
+	{
+		sm_retiredDescriptorBuffers[idx].push(make_pair(fenceValue, *iter));
+	}
+}
+
+
+void DynamicDescriptorBuffer::RetireCurrentBuffer()
+{
+	// Don't retire unused buffers.
+	if (m_currentOffset == 0)
+	{
+		assert(m_currentBufferPtr == nullptr);
+		return;
+	}
+
+	assert(m_currentBufferPtr != nullptr);
+	vmaUnmapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation());
+	m_retiredBuffers.push_back(m_currentBufferPtr);
+	m_currentBufferPtr = nullptr;
+	m_currentOffset = 0;
+	m_bufferStart = nullptr;
+}
+
+
+void DynamicDescriptorBuffer::RetireUsedBuffers(uint64_t fenceValue)
+{
+	DiscardDescriptorBuffers(m_bufferType, fenceValue, m_retiredBuffers);
+	m_retiredBuffers.clear();
+}
+
+
+VkBuffer DynamicDescriptorBuffer::GetCurrentBuffer()
+{
+	if (m_currentBufferPtr == nullptr)
+	{
+		assert(m_currentOffset == 0);
+		m_currentBufferPtr = RequestDescriptorBuffer(m_bufferType);
+		ThrowIfFailed(vmaMapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation(), (void**)&m_bufferStart));
+		m_freeSpace = sm_bufferSize;
+	}
+
+	return m_currentBufferPtr->Get();
+}
+
+
+void DynamicDescriptorBuffer::ClearGraphicsTableAllocations()
+{
+	m_graphicsCache.pipelineLayout = VK_NULL_HANDLE;
+	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	{
+		m_graphicsCache.tableAllocations[i].mem = nullptr;
+		m_graphicsCache.tableAllocations[i].offset = 0;
+		m_graphicsCache.descriptorSetLayouts[i] = nullptr;
+	}
+}
+
+
+void DynamicDescriptorBuffer::ClearComputeTableAllocations()
+{
+	m_computeCache.pipelineLayout = VK_NULL_HANDLE;
+	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	{
+		m_computeCache.tableAllocations[i].mem = nullptr;
+		m_computeCache.tableAllocations[i].offset = 0;
+		m_computeCache.descriptorSetLayouts[i] = nullptr;
+	}
+}
+
+
+void DynamicDescriptorBuffer::DescriptorCache::ParseRootSignature(const RootSignature& rootSignature)
+{
+	uint32_t currentSlot = 0;
+	allocationSize = 0;
+	pipelineLayout = rootSignature.GetPipelineLayout();
+
+	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
+	for (uint32_t i = 0; i < numRootParameters; ++i)
+	{
+		const auto& rootParameter = rootSignature.GetRootParameter(i);
+		if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			tableAllocations[i].mem = memory + allocationSize;
+			tableAllocations[i].offset = allocationSize;
+
+			descriptorSetLayouts[i] = rootSignature.GetDescriptorSetLayout(i);
+			allocationSize += descriptorSetLayouts[i]->GetDescriptorSetSize();
+		}
+	}
+}
+
+
+void DynamicDescriptorBuffer::DescriptorCache::SetDescriptor(uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const Descriptor* descriptor)
+{
+	auto device = GetVulkanDevice();
+
+	assert(descriptorSetLayouts[rootIndex] != nullptr);
+	assert(tableAllocations[rootIndex].mem != nullptr);
+
+	size_t offset = descriptorSetLayouts[rootIndex]->GetBindingOffset(srvRegister) + arrayIndex * descriptor->GetRawDescriptorSize();
+
+	descriptor->CopyRawDescriptor((void*)(tableAllocations[rootIndex].mem + offset));
+}
+
+#endif // USE_DESCRIPTOR_BUFFERS
+
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 DefaultDynamicDescriptorHeap::DefaultDynamicDescriptorHeap(CVkDevice* device)
 	: m_device{ device }
 {
@@ -309,5 +634,6 @@ void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorBinding(uint32_
 		hasDynamicOffset = true;
 	}
 }
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 } // namespace Luna::VK

@@ -76,6 +76,7 @@ void TriangleApp::Render()
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	context.SetRootCBV(0, m_constantBuffer);
+	//context.SetCBV(0, 0, m_constantBuffer);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
@@ -185,6 +186,9 @@ void TriangleApp::InitRootSignature()
 	auto rootSignatureDesc = RootSignatureDesc{
 		.name				= "Root Sig",
 		.rootParameters		= { RootCBV(0, ShaderStage::Vertex) }
+		//.rootParameters		= {
+		//	Table({ ConstantBuffer }, ShaderStage::Vertex)
+		//}
 	};
 
 	m_rootSignature = CreateRootSignature(rootSignatureDesc);

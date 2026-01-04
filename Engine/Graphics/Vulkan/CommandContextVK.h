@@ -59,14 +59,7 @@ struct BufferBarrier
 class CommandContextVK final : public ICommandContext
 {
 public:
-	explicit CommandContextVK(CVkDevice* device, CommandListType type)
-		: m_device{ device }
-		, m_commandListType{ type }
-	{
-#if USE_DESCRIPTOR_BUFFERS
-		ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
-#endif // USE_DESCRIPTOR_BUFFERS
-	}
+	CommandContextVK(CVkDevice* device, CommandListType type);
 	~CommandContextVK() = default;
 
 	void SetId(const std::string& id) override { m_id = id; }
@@ -143,18 +136,21 @@ public:
 	void SetResources(CommandListType type, ResourceSet& resourceSet) override;
 
 	// Dynamic SRVs, using DynamicDescriptorHeap
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer, bool depthSrv) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t offset, TexturePtr& texture) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IColorBuffer* colorBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IDepthBuffer* depthBuffer, bool depthSrv) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IGpuBuffer* gpuBuffer) override;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const ITexture* texture) override;
 
 	// Dynamic UAVs, using DynamicDescriptorHeap
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, ColorBufferPtr& colorBuffer) override;
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, DepthBufferPtr& depthBuffer) override;
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IColorBuffer* colorBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IDepthBuffer* depthBuffer) override;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, const IGpuBuffer* gpuBuffer) override;
 
 	// Dynamic CBV, using DynamicDescriptorHeap
-	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t offset, GpuBufferPtr& gpuBuffer) override;
+	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, const IGpuBuffer* gpuBuffer) override;
+
+	// Dynamic sampler, using DynamicDescriptorHeap
+	void SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, const ISampler* sampler) override;
 
 	void SetIndexBuffer(const IGpuBuffer* gpuBuffer) override;
 	void SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer) override;
@@ -180,6 +176,13 @@ public:
 	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ) override;
 	void DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
+	// Platform-specific methods
+#if USE_DESCRIPTOR_BUFFERS
+	void SetDescriptorBuffer(DescriptorBufferType bufferType, VkBuffer descriptorBuffer);
+	void SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers);
+	VkCommandBuffer GetCommandBuffer() const noexcept { return m_commandBuffer; }
+#endif // USE_DESCRIPTOR_BUFFERS
+
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
@@ -187,10 +190,11 @@ private:
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
 #if USE_DESCRIPTOR_BUFFERS
-	void SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers);
 	void BindUserDescriptorBuffers();
 	void BindDescriptorBuffers();
 #endif // USE_DESCRIPTOR_BUFFERS
+
+	void UpdateAndBindDynamicDescriptors(bool graphicsPipe);
 
 	void SetRenderingArea(const ColorBuffer& colorBuffer);
 	void SetRenderingArea(const DepthBuffer& depthBuffer);
@@ -213,8 +217,15 @@ private:
 	wil::com_ptr<CVkDevice> m_device;
 	CommandListType m_commandListType;
 
+#if USE_DESCRIPTOR_BUFFERS
+	DynamicDescriptorBuffer m_dynamicResourceDescriptorBuffer;
+	DynamicDescriptorBuffer m_dynamicSamplerDescriptorBuffer;
+#endif // USE_DESCRIPTOR_BUFFERS
+
+#if USE_LEGACY_DESCRIPTOR_SETS
 	// Dynamic descriptor heap
 	std::unique_ptr<IDynamicDescriptorHeap> m_dynamicDescriptorHeap;
+#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	VkCommandBuffer m_commandBuffer{ VK_NULL_HANDLE };
 

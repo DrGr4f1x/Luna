@@ -37,6 +37,7 @@ protected:
 	wil::com_ptr<CVkImage> m_image;
 	Descriptor m_rtvDescriptor;
 	Descriptor m_srvDescriptor;
+	Descriptor m_uavDescriptor;
 };
 
 } // namespace Luna::VK
