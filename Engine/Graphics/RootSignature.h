@@ -347,7 +347,6 @@ public:
 	virtual ~IRootSignature() = default;
 
 	virtual DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const = 0;
-	virtual DescriptorSetPtr CreateDescriptorSet2(uint32_t rootParamIndex) const = 0;
 
 	const RootSignatureDesc& GetDesc() const noexcept { return m_desc; }
 	uint32_t GetNumRootParameters() const noexcept;

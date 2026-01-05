@@ -433,6 +433,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	unordered_map<uint32_t, uint32_t> pushDescriptorBindingMap;
 
 	size_t hashCode = Utility::g_hashStart;
+	size_t resourceDescriptorSetLayoutSize = 0;
+	size_t samplerDescriptorSetLayoutSize = 0;
 
 	uint32_t rootParamIndex = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
@@ -480,6 +482,15 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 			descriptorSetLayout = CreateDescriptorSetLayout(rootParameter);
 
 			hashCode = Utility::HashMerge(hashCode, descriptorSetLayout->GetHashCode());
+			if (rootParameter.IsSamplerTable())
+			{
+				samplerDescriptorSetLayoutSize += descriptorSetLayout->GetDescriptorSetSize();
+			}
+			else
+			{
+				resourceDescriptorSetLayoutSize += descriptorSetLayout->GetDescriptorSetSize();
+			}
+
 
 			vkDescriptorSetLayouts[rootParamIndex] = descriptorSetLayout->GetDescriptorSetLayout()->Get();
 			descriptorSetLayouts[rootParamIndex] = descriptorSetLayout;
@@ -677,6 +688,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 #endif // USE_LEGACY_DESCRIPTOR_SETS
 	rootSignature->m_pushDescriptorSetIndex = pushDescriptorSetIndex;
 	rootSignature->m_pushDescriptorBindingMap = pushDescriptorBindingMap;
+	rootSignature->m_resourceDescriptorSetLayoutSize = resourceDescriptorSetLayoutSize;
+	rootSignature->m_samplerDescriptorSetLayoutSize = samplerDescriptorSetLayoutSize;
 
 	return rootSignature;
 }
@@ -1684,7 +1697,7 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 			bindingTemplate->m_bindingInfoMap[binding.binding] = { offset, binding.descriptorType };
 		}
 
-		descriptorSetLayout->m_layoutSize = layoutSize;
+		descriptorSetLayout->m_layoutSize = Math::AlignUp(layoutSize, m_caps.descriptorBuffer.descriptorBufferOffsetAlignment);
 		descriptorSetLayout->m_bindingTemplate = bindingTemplate;
 	}
 #endif // USE_DESCRIPTOR_BUFFERS

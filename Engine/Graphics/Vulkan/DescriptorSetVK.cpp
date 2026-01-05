@@ -389,6 +389,10 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		case DescriptorType::RawBufferUAV:
 			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(descriptorRegister, i, descriptorSize)));
 			break;
+
+		default:
+			assert(false);
+			break;
 		}
 	}
 }

@@ -52,7 +52,8 @@ class DynamicDescriptorBuffer
 {
 public:
 	DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorBufferType bufferType);
-	~DynamicDescriptorBuffer();
+
+	static void DestroyAll();
 
 	void CleanupUsedBuffers(uint64_t fenceValue);
 
@@ -85,10 +86,8 @@ private:
 
 	void RetireCurrentBuffer();
 	void RetireUsedBuffers(uint64_t fenceValue);
-	VkBuffer GetCurrentBuffer();
 
-	void ClearGraphicsTableAllocations();
-	void ClearComputeTableAllocations();
+	DescriptorBufferAllocation Allocate(size_t sizeInBytes);
 
 private:
 	// Static members
@@ -112,24 +111,17 @@ private:
 
 	struct DescriptorCache
 	{
-		static const size_t kNumDescriptors = 256;
-		static const size_t kMaxDescriptorSize = 64;
-		static const size_t kScratchMemorySize = kNumDescriptors * kMaxDescriptorSize;
-
 		// Pointers to mapped memory for writing descriptors with vkGetDescriptorEXT
 		std::array<DescriptorBufferAllocation, MaxRootParameters> tableAllocations;
 
 		// Descriptor set layouts
 		std::array<DescriptorSetLayout*, MaxRootParameters> descriptorSetLayouts;
 
-		std::byte* memory{ nullptr };
-		size_t allocationSize{ 0 };
-
 		VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
 
-		void ParseRootSignature(const RootSignature& rootSignature);
+		void SetDescriptor(uint32_t rootIndex, uint32_t descriptorRegister, uint32_t arrayIndex, const Descriptor* descriptor);
 
-		void SetDescriptor(uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const Descriptor* descriptor);
+		void Clear();
 	};
 
 	DescriptorCache m_graphicsCache;

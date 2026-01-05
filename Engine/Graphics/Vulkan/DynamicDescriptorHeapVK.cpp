@@ -43,21 +43,15 @@ DynamicDescriptorBuffer::DynamicDescriptorBuffer(CommandContextVK& owningContext
 	, m_bufferType{ bufferType }
 {
 	m_offsetAlignment = GetVulkanDevice()->GetDeviceCaps().descriptorBuffer.descriptorBufferOffsetAlignment;
-
-	m_graphicsCache.memory = (std::byte*)_aligned_malloc(DescriptorCache::kScratchMemorySize, m_offsetAlignment);
-	m_computeCache.memory = (std::byte*)_aligned_malloc(DescriptorCache::kScratchMemorySize, m_offsetAlignment);
-
-	ClearGraphicsTableAllocations();
-	ClearComputeTableAllocations();
+	m_graphicsCache.Clear();
+	m_computeCache.Clear();
 }
 
 
-DynamicDescriptorBuffer::~DynamicDescriptorBuffer()
+void DynamicDescriptorBuffer::DestroyAll()
 {
-	_aligned_free(m_graphicsCache.memory);
-	_aligned_free(m_computeCache.memory);
-	m_graphicsCache.memory = nullptr;
-	m_computeCache.memory = nullptr;
+	sm_descriptorBufferPool[0].clear();
+	sm_descriptorBufferPool[1].clear();
 }
 
 
@@ -65,35 +59,74 @@ void DynamicDescriptorBuffer::CleanupUsedBuffers(uint64_t fenceValue)
 {
 	RetireCurrentBuffer();
 	RetireUsedBuffers(fenceValue);
-	ClearGraphicsTableAllocations();
-	ClearComputeTableAllocations();
+	m_graphicsCache.Clear();
+	m_computeCache.Clear();
 }
 
 
 void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe)
 {
 	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
-	descriptorCache.ParseRootSignature(rootSignature);
+
+	size_t requiredSize = 0;
+	const bool isSamplerBuffer = m_bufferType == DescriptorBufferType::Sampler;
+
+	if (isSamplerBuffer)
+	{
+		requiredSize = rootSignature.GetSamplerDescriptorSetLayoutSize();
+	}
+	else
+	{
+		requiredSize = rootSignature.GetResourceDescriptorSetLayoutSize();
+	}
+
+	if (!HasSpace(requiredSize))
+	{
+		RetireCurrentBuffer();
+
+		if (m_currentBufferPtr == nullptr)
+		{
+			assert(m_currentOffset == 0);
+			m_currentBufferPtr = RequestDescriptorBuffer(m_bufferType);
+			ThrowIfFailed(vmaMapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation(), (void**)&m_bufferStart));
+			m_freeSpace = sm_bufferSize;
+		}
+	}
+
+	descriptorCache.Clear();
+
+	descriptorCache.pipelineLayout = rootSignature.GetPipelineLayout();
+
+	size_t allocatedSize = 0;
+	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
+	for (uint32_t i = 0; i < numRootParameters; ++i)
+	{
+		const auto& rootParameter = rootSignature.GetRootParameter(i);
+
+		if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			if (isSamplerBuffer == rootParameter.IsSamplerTable())
+			{
+				descriptorCache.descriptorSetLayouts[i] = rootSignature.GetDescriptorSetLayout(i);
+
+				const size_t descriptorSetLayoutSize = descriptorCache.descriptorSetLayouts[i]->GetDescriptorSetSize();
+				descriptorCache.tableAllocations[i] = Allocate(descriptorSetLayoutSize);
+
+				allocatedSize += descriptorSetLayoutSize;
+			}
+		}
+	}
+
+	assert(allocatedSize == requiredSize);
 }
 
 
 void DynamicDescriptorBuffer::UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe)
 {
 	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
-	size_t neededSize = descriptorCache.allocationSize;
-	if (!HasSpace(neededSize))
-	{
-		RetireCurrentBuffer();
-	}
-
+	
 	// Bind the descriptor buffer
-	m_owningContext.SetDescriptorBuffer(m_bufferType, GetCurrentBuffer());
-
-	if (descriptorCache.allocationSize > 0)
-	{
-		std::byte* dest = m_bufferStart + m_currentOffset;
-		memcpy(dest, descriptorCache.memory, descriptorCache.allocationSize);
-	}
+	m_owningContext.SetDescriptorBuffer(m_bufferType, m_currentBufferPtr->Get());
 
 	// Bind the buffer offsets
 	VkPipelineLayout pipelineLayout = descriptorCache.pipelineLayout;
@@ -104,9 +137,7 @@ void DynamicDescriptorBuffer::UpdateAndBindDescriptorSets(VkCommandBuffer comman
 	{
 		if (descriptorCache.tableAllocations[rootIndex].mem != nullptr)
 		{
-			localOffset += descriptorCache.tableAllocations[rootIndex].offset;
-
-			VkDeviceSize offset = m_currentOffset + localOffset;
+			VkDeviceSize offset = descriptorCache.tableAllocations[rootIndex].offset;
 
 			vkCmdSetDescriptorBufferOffsetsEXT(
 				commandBuffer,
@@ -119,9 +150,6 @@ void DynamicDescriptorBuffer::UpdateAndBindDescriptorSets(VkCommandBuffer comman
 			);
 		}
 	}
-
-	m_currentOffset += descriptorCache.allocationSize;
-	m_freeSpace -= descriptorCache.allocationSize;
 }
 
 
@@ -247,17 +275,12 @@ void DynamicDescriptorBuffer::SetSampler(CommandListType type, uint32_t rootInde
 
 void DynamicDescriptorBuffer::RetireCurrentBuffer()
 {
-	// Don't retire unused buffers.
-	if (m_currentOffset == 0)
+	if (m_currentBufferPtr != nullptr)
 	{
-		assert(m_currentBufferPtr == nullptr);
-		return;
+		vmaUnmapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation());
+		m_retiredBuffers.push_back(m_currentBufferPtr);
+		m_currentBufferPtr = nullptr;
 	}
-
-	assert(m_currentBufferPtr != nullptr);
-	vmaUnmapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation());
-	m_retiredBuffers.push_back(m_currentBufferPtr);
-	m_currentBufferPtr = nullptr;
 	m_currentOffset = 0;
 	m_bufferStart = nullptr;
 }
@@ -270,76 +293,45 @@ void DynamicDescriptorBuffer::RetireUsedBuffers(uint64_t fenceValue)
 }
 
 
-VkBuffer DynamicDescriptorBuffer::GetCurrentBuffer()
+DescriptorBufferAllocation DynamicDescriptorBuffer::Allocate(size_t sizeInBytes)
 {
-	if (m_currentBufferPtr == nullptr)
-	{
-		assert(m_currentOffset == 0);
-		m_currentBufferPtr = RequestDescriptorBuffer(m_bufferType);
-		ThrowIfFailed(vmaMapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation(), (void**)&m_bufferStart));
-		m_freeSpace = sm_bufferSize;
-	}
+	size_t alignedSize = Math::AlignUp(sizeInBytes, m_offsetAlignment);
+	assert(m_freeSpace >= alignedSize);
 
-	return m_currentBufferPtr->Get();
+	std::byte* allocation = m_bufferStart + m_currentOffset;
+	m_currentOffset += alignedSize;
+
+	m_freeSpace -= alignedSize;
+
+	return DescriptorBufferAllocation{
+		.mem		= allocation,
+		.offset		= (size_t)(allocation - m_bufferStart)
+	};
 }
 
 
-void DynamicDescriptorBuffer::ClearGraphicsTableAllocations()
-{
-	m_graphicsCache.pipelineLayout = VK_NULL_HANDLE;
-	for (uint32_t i = 0; i < MaxRootParameters; ++i)
-	{
-		m_graphicsCache.tableAllocations[i].mem = nullptr;
-		m_graphicsCache.tableAllocations[i].offset = 0;
-		m_graphicsCache.descriptorSetLayouts[i] = nullptr;
-	}
-}
-
-
-void DynamicDescriptorBuffer::ClearComputeTableAllocations()
-{
-	m_computeCache.pipelineLayout = VK_NULL_HANDLE;
-	for (uint32_t i = 0; i < MaxRootParameters; ++i)
-	{
-		m_computeCache.tableAllocations[i].mem = nullptr;
-		m_computeCache.tableAllocations[i].offset = 0;
-		m_computeCache.descriptorSetLayouts[i] = nullptr;
-	}
-}
-
-
-void DynamicDescriptorBuffer::DescriptorCache::ParseRootSignature(const RootSignature& rootSignature)
-{
-	uint32_t currentSlot = 0;
-	allocationSize = 0;
-	pipelineLayout = rootSignature.GetPipelineLayout();
-
-	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
-	for (uint32_t i = 0; i < numRootParameters; ++i)
-	{
-		const auto& rootParameter = rootSignature.GetRootParameter(i);
-		if (rootParameter.parameterType == RootParameterType::Table)
-		{
-			tableAllocations[i].mem = memory + allocationSize;
-			tableAllocations[i].offset = allocationSize;
-
-			descriptorSetLayouts[i] = rootSignature.GetDescriptorSetLayout(i);
-			allocationSize += descriptorSetLayouts[i]->GetDescriptorSetSize();
-		}
-	}
-}
-
-
-void DynamicDescriptorBuffer::DescriptorCache::SetDescriptor(uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const Descriptor* descriptor)
+void DynamicDescriptorBuffer::DescriptorCache::SetDescriptor(uint32_t rootIndex, uint32_t descriptorRegister, uint32_t arrayIndex, const Descriptor* descriptor)
 {
 	auto device = GetVulkanDevice();
 
 	assert(descriptorSetLayouts[rootIndex] != nullptr);
 	assert(tableAllocations[rootIndex].mem != nullptr);
 
-	size_t offset = descriptorSetLayouts[rootIndex]->GetBindingOffset(srvRegister) + arrayIndex * descriptor->GetRawDescriptorSize();
+	size_t offset = descriptorSetLayouts[rootIndex]->GetBindingOffset(descriptorRegister) + arrayIndex * descriptor->GetRawDescriptorSize();
 
 	descriptor->CopyRawDescriptor((void*)(tableAllocations[rootIndex].mem + offset));
+}
+
+
+void DynamicDescriptorBuffer::DescriptorCache::Clear()
+{
+	for (uint32_t i = 0; i < MaxRootParameters; ++i)
+	{
+		tableAllocations[i].mem = nullptr;
+		tableAllocations[i].offset = 0;
+		descriptorSetLayouts[i] = nullptr;
+	}
+	pipelineLayout = VK_NULL_HANDLE;
 }
 
 #endif // USE_DESCRIPTOR_BUFFERS

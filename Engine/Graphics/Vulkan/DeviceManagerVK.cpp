@@ -131,6 +131,7 @@ DeviceManager::~DeviceManager()
 
 #if USE_DESCRIPTOR_BUFFERS
 	DescriptorBufferAllocator::DestroyAll();
+	DynamicDescriptorBuffer::DestroyAll();
 #endif // USE_DESCRIPTOR_BUFFERS
 
 #if USE_LEGACY_DESCRIPTOR_SETS

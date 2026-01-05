@@ -1937,7 +1937,7 @@ void CommandContextVK::UpdateAndBindDynamicDescriptors(bool graphicsPipe)
 {
 #if USE_DESCRIPTOR_BUFFERS
 	m_dynamicResourceDescriptorBuffer.UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
-	m_dynamicSamplerDescriptorBuffer.UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
+	//m_dynamicSamplerDescriptorBuffer.UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
 #endif // USE_DESCRIPTOR_BUFFERS
 
 #if USE_LEGACY_DESCRIPTOR_SETS

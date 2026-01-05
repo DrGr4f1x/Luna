@@ -53,8 +53,8 @@ DescriptorBufferAllocation DescriptorBufferAllocator::Allocate(VkDescriptorSetLa
 	m_freeSpace -= alignedSize;
 
 	return DescriptorBufferAllocation{
-		.mem = allocation,
-		.offset = (size_t)(allocation - m_initialHead)
+		.mem		= allocation,
+		.offset		= (size_t)(allocation - m_initialHead)
 	};
 }
 

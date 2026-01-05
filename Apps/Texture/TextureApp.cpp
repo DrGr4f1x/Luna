@@ -95,8 +95,8 @@ void TextureApp::Render()
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	context.SetRootCBV(0, m_constantBuffer);
-	context.SetDescriptors(1, m_srvDescriptorSet);
-	//context.SetSRV(1, 0, m_texture);
+	//context.SetDescriptors(1, m_srvDescriptorSet);
+	context.SetSRV(1, 0, m_texture);
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 	context.SetVertexBuffer(0, m_vertexBuffer);

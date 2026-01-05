@@ -26,7 +26,6 @@ class RootSignature : public IRootSignature
 
 public:
 	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
-	DescriptorSetPtr CreateDescriptorSet2(uint32_t rootParamIndex) const override;
 
 	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
 	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;
@@ -39,6 +38,10 @@ public:
 	VkDescriptorSet GetStaticSamplerDescriptorSet() const noexcept { return m_staticSamplerDescriptorSet; }
 #endif // USE_LEGACY_DESCRIPTOR_SETS
 
+	size_t GetResourceDescriptorSetLayoutSize() const noexcept { return m_resourceDescriptorSetLayoutSize; }
+	size_t GetSamplerDescriptorSetLayoutSize() const noexcept { return m_samplerDescriptorSetLayoutSize; }
+
+
 	uint32_t GetStaticSamplerDescriptorSetIndex() const noexcept { return m_staticSamplerDescriptorSetIndex; }
 
 	uint32_t GetPushDescriptorSetIndex() const noexcept { return m_pushDescriptorSetIndex; }
@@ -49,6 +52,8 @@ protected:
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
 	std::unordered_map<uint32_t, uint32_t> m_rootParameterIndexToDescriptorSetMap;
 	std::vector<DescriptorSetLayoutPtr> m_descriptorSetLayouts;
+	size_t m_resourceDescriptorSetLayoutSize{ 0 };
+	size_t m_samplerDescriptorSetLayoutSize{ 0 };
 
 	// Static samplers
 	std::vector<SamplerPtr> m_staticSamplers;
