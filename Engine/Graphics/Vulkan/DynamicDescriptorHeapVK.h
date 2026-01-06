@@ -88,10 +88,12 @@ private:
 	void RetireUsedBuffers(uint64_t fenceValue);
 
 	DescriptorBufferAllocation Allocate(size_t sizeInBytes);
+	static size_t GetBufferSize(DescriptorBufferType bufferType);
 
 private:
 	// Static members
-	static const size_t sm_bufferSize = 64 * (1 << 16);
+	static const size_t sm_numResourceDescriptors = (1 << 16);
+	static const size_t sm_numSamplerDescriptors = (1 << 10);
 	static std::mutex sm_mutex;
 	static std::vector<wil::com_ptr<CVkBuffer>> sm_descriptorBufferPool[2];
 	static std::queue<std::pair<uint64_t, CVkBuffer*>> sm_retiredDescriptorBuffers[2];

@@ -1157,6 +1157,7 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.descriptorBuffer.resourceDescriptorBufferAddressSpaceSize = descriptorBufferProps.resourceDescriptorBufferAddressSpaceSize;
 		m_caps.descriptorBuffer.descriptorBufferAddressSpaceSize = descriptorBufferProps.descriptorBufferAddressSpaceSize;
 
+		size_t largest = 0;
 		m_caps.descriptorBuffer.descriptorSize.sampler = descriptorBufferProps.samplerDescriptorSize;
 		m_caps.descriptorBuffer.descriptorSize.combinedImageSampler = descriptorBufferProps.combinedImageSamplerDescriptorSize;
 		m_caps.descriptorBuffer.descriptorSize.sampledImage = descriptorBufferProps.sampledImageDescriptorSize;
@@ -1171,6 +1172,21 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.descriptorBuffer.descriptorSize.robustStorageBuffer = descriptorBufferProps.robustStorageBufferDescriptorSize;
 		m_caps.descriptorBuffer.descriptorSize.inputAttachment = descriptorBufferProps.inputAttachmentDescriptorSize;
 		m_caps.descriptorBuffer.descriptorSize.accelerationStructure = descriptorBufferProps.accelerationStructureDescriptorSize;
+
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.combinedImageSampler);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.sampledImage);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.storageImage);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.uniformTexelBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.robustUniformTexelBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.storageTexelBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.robustStorageTexelBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.uniformBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.robustUniformBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.storageBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.robustStorageBuffer);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.inputAttachment);
+		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.accelerationStructure);
+		m_caps.descriptorBuffer.descriptorSize.largest = largest;
 
 		m_caps.shaderStage.descriptorSamplerMaxNum = limits.maxPerStageDescriptorSamplers;
 		m_caps.shaderStage.descriptorConstantBufferMaxNum = limits.maxPerStageDescriptorUniformBuffers;

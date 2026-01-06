@@ -139,6 +139,7 @@ struct DeviceCaps
 			size_t robustStorageBuffer;
 			size_t inputAttachment;
 			size_t accelerationStructure;
+			size_t largest;
 		} descriptorSize;
 	} descriptorBuffer;
 

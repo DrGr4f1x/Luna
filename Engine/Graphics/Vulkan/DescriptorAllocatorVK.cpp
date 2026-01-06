@@ -25,14 +25,13 @@ namespace Luna::VK
 mutex DescriptorBufferAllocator::sm_allocationMutex;
 
 DescriptorBufferAllocator g_userDescriptorBufferAllocator[] = {
-	{ DescriptorBufferType::Resource, 64 * (1 << 16) },
-	{ DescriptorBufferType::Sampler, 32 * (1 << 10) }
+	{ DescriptorBufferType::Resource },
+	{ DescriptorBufferType::Sampler }
 };
 
 
-DescriptorBufferAllocator::DescriptorBufferAllocator(DescriptorBufferType bufferType, size_t sizeInBytes)
+DescriptorBufferAllocator::DescriptorBufferAllocator(DescriptorBufferType bufferType)
 	: m_type{ bufferType }
-	, m_bufferSize{ sizeInBytes }
 {
 }
 
@@ -40,6 +39,8 @@ DescriptorBufferAllocator::DescriptorBufferAllocator(DescriptorBufferType buffer
 DescriptorBufferAllocation DescriptorBufferAllocator::Allocate(VkDescriptorSetLayout layout)
 {
 	lock_guard<mutex> guard{ sm_allocationMutex };
+
+	assert(m_bufferSize > 0);
 
 	VkDeviceSize size{ 0 };
 	vkGetDescriptorSetLayoutSizeEXT(m_device->GetVulkanDevice(), layout, &size);
@@ -98,10 +99,31 @@ VkBuffer DescriptorBufferAllocator::GetBuffer() const noexcept
 }
 
 
+size_t DescriptorBufferAllocator::GetBufferSize(DescriptorBufferType bufferType)
+{
+	auto device = GetVulkanDevice();
+
+	const size_t bufferSize = (bufferType == DescriptorBufferType::Resource) ?
+		device->GetDeviceCaps().descriptorBuffer.descriptorSize.largest :
+		device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampler;
+
+	const size_t numDescriptors = (bufferType == DescriptorBufferType::Resource) ?
+		sm_numResourceDescriptors :
+		sm_numSamplerDescriptors;
+
+	return bufferSize * numDescriptors;
+}
+
+
 void DescriptorBufferAllocator::Create()
 {
 	m_device = GetVulkanDevice();
 	m_alignment = m_device->GetDeviceCaps().descriptorBuffer.descriptorBufferOffsetAlignment;
+
+	if (m_bufferSize == 0)
+	{
+		m_bufferSize = GetBufferSize(m_type);
+	}
 
 	m_descriptorBuffer = m_device->CreateDescriptorBuffer(m_type, m_bufferSize);
 
