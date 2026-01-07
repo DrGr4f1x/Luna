@@ -586,22 +586,14 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 				d3d12Range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 				// Set flags
-				if (HasAnyFlag(range.flags, DescriptorRangeFlags::PartiallyBound | DescriptorRangeFlags::AllowUpdateAfterSet))
-				{
-					descriptorRangeFlags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
-				}
 				if (range.descriptorType != DescriptorType::Sampler)
 				{
-					if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
-					{
-						descriptorRangeFlags |= D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE;
-					}
-					else
-					{
-						descriptorRangeFlags |= D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
-					}
+					d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE | D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE;
 				}
-				d3d12Range.Flags = descriptorRangeFlags;
+				else
+				{
+					d3d12Range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+				}
 			}
 			param.DescriptorTable.pDescriptorRanges = pRanges;
 		}
