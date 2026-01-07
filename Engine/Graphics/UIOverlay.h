@@ -73,7 +73,7 @@ protected:
 
 	struct VSConstants
 	{
-		Math::Matrix4 projectionMatrix;
+		Math::Matrix4 projectionMatrix{ Math::kIdentity };
 	};
 
 	RootSignaturePtr m_rootSignature;
@@ -83,7 +83,7 @@ protected:
 	TexturePtr m_fontTex;
 	SamplerPtr m_fontSampler;
 
-	VSConstants m_vsConstants;
+	VSConstants m_vsConstants{};
 	GpuBufferPtr m_vsConstantBuffer;
 
 	ResourceSet	m_resources;
