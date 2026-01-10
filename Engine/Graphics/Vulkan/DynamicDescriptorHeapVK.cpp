@@ -354,7 +354,7 @@ void DynamicDescriptorBuffer::DescriptorCache::Clear()
 
 
 #if USE_LEGACY_DESCRIPTOR_SETS
-DefaultDynamicDescriptorHeap::DefaultDynamicDescriptorHeap(CVkDevice* device)
+DynamicDescriptorSet::DynamicDescriptorSet(CVkDevice* device)
 	: m_device{ device }
 {
 	Reset();
@@ -375,28 +375,158 @@ DefaultDynamicDescriptorHeap::DefaultDynamicDescriptorHeap(CVkDevice* device)
 }
 
 
-void DefaultDynamicDescriptorHeap::SetDescriptorImageInfo(uint32_t rootParameter, uint32_t offset, VkDescriptorImageInfo descriptorImageInfo, bool graphicsPipe)
+void DynamicDescriptorSet::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer)
 {
-	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
-	m_descriptorCaches[pipeIndex][rootParameter].SetDescriptorImageInfo(offset, descriptorImageInfo);
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	VkDescriptorImageInfo info{
+		.imageView		= ((const Descriptor*)colorBuffer->GetSrvDescriptor())->GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	const uint32_t regShift = GetRegisterShiftSRV();
+
+	m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorImageInfo(regShift + srvRegister, info);
 }
 
 
-void DefaultDynamicDescriptorHeap::SetDescriptorBufferInfo(uint32_t rootParameter, uint32_t offset, VkDescriptorBufferInfo descriptorBufferInfo, bool graphicsPipe)
+void DynamicDescriptorSet::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer, bool depthSrv)
 {
-	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
-	m_descriptorCaches[pipeIndex][rootParameter].SetDescriptorBufferInfo(offset, descriptorBufferInfo);
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	VkDescriptorImageInfo info{
+		.imageView		= ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	const uint32_t regShift = GetRegisterShiftSRV();
+
+	m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorImageInfo(regShift + srvRegister, info);
 }
 
 
-void DefaultDynamicDescriptorHeap::SetDescriptorBufferView(uint32_t rootParameter, uint32_t offset, VkBufferView descriptorBufferView, bool graphicsPipe)
+void DynamicDescriptorSet::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer)
 {
-	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
-	m_descriptorCaches[pipeIndex][rootParameter].SetDescriptorBufferView(offset, descriptorBufferView);
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
+
+	const uint32_t regShift = GetRegisterShiftSRV();
+
+	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
+	{
+		auto bufferView = descriptor->GetBufferView();
+
+		m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorBufferView(regShift + srvRegister, bufferView);
+	}
+	else
+	{
+		VkDescriptorBufferInfo info{
+			.buffer		= ((GpuBuffer*)gpuBuffer)->GetBuffer(),
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
+		};
+
+		m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorBufferInfo(regShift + srvRegister, info);
+	}
 }
 
 
-void DefaultDynamicDescriptorHeap::CleanupUsedPools(uint64_t fenceValue)
+void DynamicDescriptorSet::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const ITexture* texture)
+{
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	VkDescriptorImageInfo info{
+		.imageView		= ((const Descriptor*)texture->GetDescriptor())->GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	const uint32_t regShift = GetRegisterShiftSRV();
+
+	m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorImageInfo(regShift + srvRegister, info);
+}
+
+
+void DynamicDescriptorSet::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer)
+{
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	VkDescriptorImageInfo info{
+		.imageView		= ((const Descriptor*)colorBuffer->GetUavDescriptor())->GetImageView(),
+		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
+	};
+
+	const uint32_t regShift = GetRegisterShiftUAV();
+
+	m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorImageInfo(regShift + uavRegister, info);
+}
+
+
+void DynamicDescriptorSet::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer)
+{
+	assert_msg(false, "Depth UAVs not yet supported");
+}
+
+
+void DynamicDescriptorSet::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer)
+{
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
+
+	const uint32_t regShift = GetRegisterShiftUAV();
+
+	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
+	{
+		auto bufferView = descriptor->GetBufferView();
+
+		m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorBufferView(regShift + uavRegister, bufferView);
+	}
+	else
+	{
+		VkDescriptorBufferInfo info{
+			.buffer		= ((GpuBuffer*)gpuBuffer)->GetBuffer(),
+			.offset		= 0,
+			.range		= VK_WHOLE_SIZE
+		};
+
+		m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorBufferInfo(regShift + uavRegister, info);
+	}
+}
+
+
+void DynamicDescriptorSet::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer)
+{
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	VkDescriptorBufferInfo info{
+		.buffer		= ((GpuBuffer*)gpuBuffer)->GetBuffer(),
+		.offset		= 0,
+		.range		= VK_WHOLE_SIZE
+	};
+
+	const uint32_t regShift = GetRegisterShiftCBV();
+
+	m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorBufferInfo(regShift + cbvRegister, info);
+}
+
+
+void DynamicDescriptorSet::SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, uint32_t arrayIndex, const ISampler* sampler)
+{
+	const uint32_t pipeIndex = (type == CommandListType::Graphics) ? 0 : 1;
+
+	VkDescriptorImageInfo info{
+		.sampler		= ((const Descriptor*)sampler->GetDescriptor())->GetSampler(),
+		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	};
+
+	const uint32_t regShift = GetRegisterShiftSampler();
+
+	m_descriptorCaches[pipeIndex][rootIndex].SetDescriptorImageInfo(regShift + samplerRegister, info);
+}
+
+
+void DynamicDescriptorSet::CleanupUsedPools(uint64_t fenceValue)
 {
 	for (auto& [layout, pool] : m_layoutToPoolMap)
 	{
@@ -405,7 +535,7 @@ void DefaultDynamicDescriptorHeap::CleanupUsedPools(uint64_t fenceValue)
 }
 
 
-void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe)
+void DynamicDescriptorSet::ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe)
 {
 	ScopedEvent event("ParseRootSignature");
 
@@ -429,25 +559,22 @@ void DefaultDynamicDescriptorHeap::ParseRootSignature(const RootSignature& rootS
 		// Allocate descriptor set
 		auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParamIndex];
 		const auto& rootParameter = rootSignatureDesc.rootParameters[rootParamIndex];
-		auto pool = FindOrCreateDescriptorPoolCache(layout, rootParameter);
+		auto pool = FindOrCreateDescriptorPoolCache(layout->GetDescriptorSetLayout().get(), rootParameter);
 		descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
 
 		// Process descriptor bindings
 		ScopedEvent event("Process descriptor bindings");
 
-		/*const auto& bindings = rootSignature.GetLayoutBindings(rootParamIndex);
+		const auto& bindings = layout->GetDescriptorSetLayoutBindings();
 		for (const auto& binding : bindings)
 		{
-			for (uint32_t bindingIndex = 0; bindingIndex < binding.numDescriptors; ++bindingIndex)
-			{
-				descriptorCache.SetDescriptorBinding(bindingIndex + binding.startSlot, binding.descriptorType, binding.offset);
-			}
-		}*/
+			descriptorCache.SetDescriptorBinding(binding.binding, binding.descriptorType);
+		}
 	}
 }
 
 
-void DefaultDynamicDescriptorHeap::UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe)
+void DynamicDescriptorSet::UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe)
 {
 	const VkPipelineBindPoint bindPoint = graphicsPipe ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE;
 	const uint32_t pipeIndex = graphicsPipe ? 0 : 1;
@@ -477,7 +604,7 @@ void DefaultDynamicDescriptorHeap::UpdateAndBindDescriptorSets(VkCommandBuffer c
 }
 
 
-DescriptorPoolCache* DefaultDynamicDescriptorHeap::FindOrCreateDescriptorPoolCache(CVkDescriptorSetLayout* layout, const RootParameter& rootParameter)
+DescriptorPoolCache* DynamicDescriptorSet::FindOrCreateDescriptorPoolCache(CVkDescriptorSetLayout* layout, const RootParameter& rootParameter)
 {
 	ScopedEvent event("FindOrCreateDescriptorPoolCache");
 
@@ -500,7 +627,7 @@ DescriptorPoolCache* DefaultDynamicDescriptorHeap::FindOrCreateDescriptorPoolCac
 }
 
 
-void DefaultDynamicDescriptorHeap::Reset()
+void DynamicDescriptorSet::Reset()
 {
 	m_pipelineLayout[0] = VK_NULL_HANDLE;
 	m_pipelineLayout[1] = VK_NULL_HANDLE;
@@ -519,7 +646,7 @@ void DefaultDynamicDescriptorHeap::Reset()
 }
 
 
-void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorImageInfo(uint32_t offset, VkDescriptorImageInfo descriptorImageInfo)
+void DynamicDescriptorSet::DescriptorCache::SetDescriptorImageInfo(uint32_t offset, VkDescriptorImageInfo descriptorImageInfo)
 {
 	assert(descriptorBindings.find(offset) != descriptorBindings.end());
 
@@ -532,7 +659,7 @@ void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorImageInfo(uint3
 }
 
 
-void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorBufferInfo(uint32_t offset, VkDescriptorBufferInfo descriptorBufferInfo)
+void DynamicDescriptorSet::DescriptorCache::SetDescriptorBufferInfo(uint32_t offset, VkDescriptorBufferInfo descriptorBufferInfo)
 {
 	assert(descriptorBindings.find(offset) != descriptorBindings.end());
 
@@ -545,7 +672,7 @@ void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorBufferInfo(uint
 }
 
 
-void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorBufferView(uint32_t offset, VkBufferView descriptorBufferView)
+void DynamicDescriptorSet::DescriptorCache::SetDescriptorBufferView(uint32_t offset, VkBufferView descriptorBufferView)
 {
 	assert(descriptorBindings.find(offset) != descriptorBindings.end());
 
@@ -558,7 +685,7 @@ void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorBufferView(uint
 }
 
 
-void DefaultDynamicDescriptorHeap::DescriptorCache::Reset()
+void DynamicDescriptorSet::DescriptorCache::Reset()
 {
 	descriptorSet = VK_NULL_HANDLE;
 	descriptorBindings.clear();
@@ -568,7 +695,7 @@ void DefaultDynamicDescriptorHeap::DescriptorCache::Reset()
 }
 
 
-bool DefaultDynamicDescriptorHeap::DescriptorCache::UpdateDescriptorSet()
+bool DynamicDescriptorSet::DescriptorCache::UpdateDescriptorSet()
 {
 	if (!dirty)
 	{
@@ -583,7 +710,7 @@ bool DefaultDynamicDescriptorHeap::DescriptorCache::UpdateDescriptorSet()
 			.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.pNext				= nullptr,
 			.dstSet				= descriptorSet,
-			.dstBinding			= bindingSlot + descriptorBinding.offset,
+			.dstBinding			= bindingSlot,
 			.dstArrayElement	= 0,
 			.descriptorCount	= 1,
 			.descriptorType		= descriptorBinding.descriptorType
@@ -633,10 +760,10 @@ bool DefaultDynamicDescriptorHeap::DescriptorCache::UpdateDescriptorSet()
 }
 
 
-void DefaultDynamicDescriptorHeap::DescriptorCache::SetDescriptorBinding(uint32_t bindingSlot, VkDescriptorType descriptorType, uint32_t offset)
+void DynamicDescriptorSet::DescriptorCache::SetDescriptorBinding(uint32_t binding, VkDescriptorType descriptorType)
 {
-	DescriptorBinding binding{ .descriptorType = descriptorType, .offset = offset };
-	descriptorBindings[bindingSlot] = binding;
+	DescriptorBinding descriptorBinding{ .descriptorType = descriptorType };
+	descriptorBindings[binding] = descriptorBinding;
 	if (descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC || descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC)
 	{
 		hasDynamicOffset = true;

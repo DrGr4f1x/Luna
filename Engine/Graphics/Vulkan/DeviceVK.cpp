@@ -288,13 +288,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-#if USE_DESCRIPTOR_BUFFERS
 	VkBufferUsageFlags extraFlags = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkBufferUsageFlags extraFlags{};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	if (gpuBufferDesc.bAllowShaderResource || gpuBufferDesc.bAllowUnorderedAccess)
 		extraFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -1679,6 +1673,7 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 	descriptorSetLayout->m_device = this;
 	descriptorSetLayout->m_descriptorSetLayout = setLayout;
 	descriptorSetLayout->m_hashcode = hashCode;
+	descriptorSetLayout->m_descriptorSetLayoutBindings = bindings;
 
 #if USE_DESCRIPTOR_BUFFERS
 	// Get info for descriptor buffer binding

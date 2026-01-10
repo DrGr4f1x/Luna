@@ -133,35 +133,30 @@ private:
 
 
 #if USE_LEGACY_DESCRIPTOR_SETS
-class IDynamicDescriptorHeap
+
+class DynamicDescriptorSet
 {
 public:
-	virtual void SetDescriptorImageInfo(uint32_t rootParameter, uint32_t offset, VkDescriptorImageInfo descriptorImageInfo, bool graphicsPipe = true) = 0;
-	virtual void SetDescriptorBufferInfo(uint32_t rootParameter, uint32_t offset, VkDescriptorBufferInfo descriptorBufferInfo, bool graphicsPipe = true) = 0;
-	virtual void SetDescriptorBufferView(uint32_t rootParameter, uint32_t offset, VkBufferView descriptorBufferView, bool graphicsPipe = true) = 0;
+	explicit DynamicDescriptorSet(CVkDevice* device);
 
-	virtual void CleanupUsedPools(uint64_t fenceValue) = 0;
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer);
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer, bool depthSrv);
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer);
+	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const ITexture* texture);
 
-	virtual void ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe = true) = 0;
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer);
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer);
+	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer);
 
-	virtual void UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe = true) = 0;
-};
+	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer);
 
+	void SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, uint32_t arrayIndex, const ISampler* sampler);
 
-class DefaultDynamicDescriptorHeap final : public IDynamicDescriptorHeap
-{
-public:
-	explicit DefaultDynamicDescriptorHeap(CVkDevice* device);
+	void CleanupUsedPools(uint64_t fenceValue);
 
-	void SetDescriptorImageInfo(uint32_t rootParameter, uint32_t offset, VkDescriptorImageInfo descriptorImageInfo, bool graphicsPipe = true) override;
-	void SetDescriptorBufferInfo(uint32_t rootParameter, uint32_t offset, VkDescriptorBufferInfo descriptorBufferInfo, bool graphicsPipe = true) override;
-	void SetDescriptorBufferView(uint32_t rootParameter, uint32_t offset, VkBufferView descriptorBufferView, bool graphicsPipe = true) override;
+	void ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe = true);
 
-	void CleanupUsedPools(uint64_t fenceValue) override;
-
-	void ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe = true) override;
-
-	void UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe = true) override;
+	void UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe = true);
 
 private:
 	DescriptorPoolCache* FindOrCreateDescriptorPoolCache(CVkDescriptorSetLayout* layout, const RootParameter& rootParameter);
@@ -171,7 +166,7 @@ private:
 	struct DescriptorBinding
 	{
 		VkDescriptorType descriptorType;
-		uint32_t offset;
+		uint32_t binding;
 		std::variant<VkDescriptorImageInfo, VkDescriptorBufferInfo, VkBufferView> descriptorInfo;
 	};
 
@@ -182,13 +177,13 @@ private:
 		uint32_t rootParameterIndex{ 0 };
 		bool dirty{ false };
 
-		void SetDescriptorImageInfo(uint32_t offset, VkDescriptorImageInfo descriptorImageInfo);
-		void SetDescriptorBufferInfo(uint32_t offset, VkDescriptorBufferInfo descriptorBufferInfo);
-		void SetDescriptorBufferView(uint32_t, VkBufferView descriptorBufferView);
+		void SetDescriptorImageInfo(uint32_t binding, VkDescriptorImageInfo descriptorImageInfo);
+		void SetDescriptorBufferInfo(uint32_t binding, VkDescriptorBufferInfo descriptorBufferInfo);
+		void SetDescriptorBufferView(uint32_t binding, VkBufferView descriptorBufferView);
 
 		void Reset();
 		bool UpdateDescriptorSet();
-		void SetDescriptorBinding(uint32_t bindingSlot, VkDescriptorType descriptorType, uint32_t offset);
+		void SetDescriptorBinding(uint32_t binding, VkDescriptorType descriptorType);
 
 		// TODO: Support dynamic offsets properly.
 		bool HasDynamicOffset() const { return hasDynamicOffset; }

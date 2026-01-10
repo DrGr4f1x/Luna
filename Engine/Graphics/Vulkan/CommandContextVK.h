@@ -27,7 +27,6 @@ class ComputeContext;
 class DepthBuffer;
 class GpuBuffer;
 class GraphicsContext;
-class IDynamicDescriptorHeap;
 
 
 struct TextureBarrier
@@ -224,7 +223,7 @@ private:
 
 #if USE_LEGACY_DESCRIPTOR_SETS
 	// Dynamic descriptor heap
-	std::unique_ptr<IDynamicDescriptorHeap> m_dynamicDescriptorHeap;
+	DynamicDescriptorSet m_dynamicDescriptorSet;
 #endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	VkCommandBuffer m_commandBuffer{ VK_NULL_HANDLE };
