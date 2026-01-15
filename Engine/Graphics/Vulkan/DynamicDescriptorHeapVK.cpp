@@ -99,6 +99,7 @@ void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignat
 
 	size_t allocatedSize = 0;
 	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
+	uint8_t activeTable = 0;
 	for (uint32_t i = 0; i < numRootParameters; ++i)
 	{
 		const auto& rootParameter = rootSignature.GetRootParameter(i);
@@ -113,6 +114,10 @@ void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignat
 				descriptorCache.tableAllocations[i] = Allocate(descriptorSetLayoutSize);
 
 				allocatedSize += descriptorSetLayoutSize;
+
+				descriptorCache.activeTables[activeTable] = i;
+				descriptorCache.numActiveTables++;
+				++activeTable;
 			}
 		}
 	}
@@ -132,9 +137,11 @@ void DynamicDescriptorBuffer::UpdateAndBindDescriptorSets(VkCommandBuffer comman
 	VkPipelineLayout pipelineLayout = descriptorCache.pipelineLayout;
 	uint32_t bufferIndex = m_bufferType == DescriptorBufferType::Resource ? 0 : 1;
 
-	VkDeviceSize localOffset = 0;
-	for (uint32_t rootIndex = 0; rootIndex < MaxRootParameters; ++rootIndex)
+	for (uint8_t activeTable = 0; activeTable < descriptorCache.numActiveTables; ++activeTable)
 	{
+		uint8_t rootIndex = descriptorCache.activeTables[activeTable];
+		assert(rootIndex != ~((uint8_t)8));
+
 		if (descriptorCache.tableAllocations[rootIndex].mem != nullptr)
 		{
 			VkDeviceSize offset = descriptorCache.tableAllocations[rootIndex].offset;
@@ -346,8 +353,10 @@ void DynamicDescriptorBuffer::DescriptorCache::Clear()
 		tableAllocations[i].mem = nullptr;
 		tableAllocations[i].offset = 0;
 		descriptorSetLayouts[i] = nullptr;
+		activeTables[i] = ~((uint8_t)0);
 	}
 	pipelineLayout = VK_NULL_HANDLE;
+	numActiveTables = 0;
 }
 
 #endif // USE_DESCRIPTOR_BUFFERS

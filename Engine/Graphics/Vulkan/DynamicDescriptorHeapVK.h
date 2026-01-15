@@ -115,6 +115,9 @@ private:
 	{
 		// Pointers to mapped memory for writing descriptors with vkGetDescriptorEXT
 		std::array<DescriptorBufferAllocation, MaxRootParameters> tableAllocations;
+		
+		std::array<uint8_t, MaxRootParameters> activeTables;
+		uint8_t numActiveTables{ 0 };
 
 		// Descriptor set layouts
 		std::array<DescriptorSetLayout*, MaxRootParameters> descriptorSetLayouts;
