@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Stdafx.cpp" />
+    <ClCompile Include="SSAOApp.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="SSAOApp.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <LunaShaderCfg Include="Shaders\shaders.cfg">
+      <Filter>Shaders</Filter>
+    </LunaShaderCfg>
+    <None Include="Shaders\CompositionPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\GBufferVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\SSAOPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b02a4703-6c91-41d6-b1b3-f9dd4c86077b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\FullscreenVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\BlurPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shaders\GBufferPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>

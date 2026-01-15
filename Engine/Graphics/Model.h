@@ -94,6 +94,7 @@ struct MeshMaterial
 { 
 	Color diffuseColor{ DirectX::Colors::Black };
 	TexturePtr diffuseTexture;
+	TexturePtr normalTexture;
 };
 
 

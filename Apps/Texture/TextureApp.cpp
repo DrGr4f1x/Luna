@@ -95,8 +95,11 @@ void TextureApp::Render()
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	context.SetRootCBV(0, m_constantBuffer);
-	//context.SetDescriptors(1, m_srvDescriptorSet);
+#if APP_DYNAMIC_DESCRIPTORS
 	context.SetSRV(1, 0, m_texture);
+#else
+	context.SetDescriptors(1, m_srvDescriptorSet);
+#endif	
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 	context.SetVertexBuffer(0, m_vertexBuffer);
@@ -135,7 +138,9 @@ void TextureApp::CreateDeviceDependentResources()
 	UpdateConstantBuffer();
 	InitRootSignature();
 	LoadAssets();
+#if !APP_DYNAMIC_DESCRIPTORS
 	InitDescriptorSet();
+#endif // !APP_DYNAMIC_DESCRIPTORS
 }
 
 
@@ -206,11 +211,13 @@ void TextureApp::InitPipelineState()
 }
 
 
+#if !APP_DYNAMIC_DESCRIPTORS
 void TextureApp::InitDescriptorSet()
 {
 	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
+#endif // !APP_DYNAMIC_DESCRIPTORS
 
 
 void TextureApp::LoadAssets()

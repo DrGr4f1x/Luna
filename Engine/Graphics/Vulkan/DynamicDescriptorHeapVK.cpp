@@ -548,17 +548,24 @@ void DynamicDescriptorSet::ParseRootSignature(const RootSignature& rootSignature
 	m_pipelineLayout[pipeIndex] = rootSignature.GetPipelineLayout();
 
 	// Get the descriptor set layout for each root parameter and, if valid, set a bit in the
-	// m_activeDescriptorSetMap.  The only root parameter type that does not have a descriptor set layout
-	// is RootConstants (aka push constants).
+	// m_activeDescriptorSetMap.  The only root parameter type that has a descriptor set layout
+	// is Table.
 	const uint32_t numParams = rootSignature.GetNumRootParameters();
 	for (uint32_t rootParamIndex = 0; rootParamIndex < numParams; ++rootParamIndex)
 	{
+		const auto& rootParameter = rootSignatureDesc.rootParameters[rootParamIndex];
+		auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParamIndex];
+
+		if (rootParameter.parameterType != RootParameterType::Table)
+		{
+			descriptorCache.Reset();
+			continue;
+		}
+
 		// Get layout
 		auto layout = rootSignature.GetDescriptorSetLayout(rootParamIndex);
 
 		// Allocate descriptor set
-		auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParamIndex];
-		const auto& rootParameter = rootSignatureDesc.rootParameters[rootParamIndex];
 		auto pool = FindOrCreateDescriptorPoolCache(layout->GetDescriptorSetLayout().get(), rootParameter);
 		descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
 

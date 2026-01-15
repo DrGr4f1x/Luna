@@ -157,7 +157,7 @@ void CameraController::UpdateWASD(InputSystem* inputSystem, float deltaTime, boo
 		}
 
 		// don't apply momentum to mouse inputs
-		if (m_allowRotation)
+		if (m_allowRotation && inputSystem->IsPressed(DigitalInput::kMouse0))
 		{
 			yaw += inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseX) * m_mouseSensitivityX;
 			pitch += inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseY) * m_mouseSensitivityY;

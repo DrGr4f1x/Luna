@@ -206,8 +206,13 @@ void Texture3dApp::Render()
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
 	// Bind descriptor sets
+#if APP_DYNAMIC_DESCRIPTORS
+	context.SetCBV(0, 0, m_constantBuffer);
+	context.SetSRV(1, 0, m_texture);
+#else
 	context.SetDescriptors(0, m_cbvDescriptorSet);
 	context.SetDescriptors(1, m_srvDescriptorSet);
+#endif // APP_DYNAMIC_DESCRIPTORS
 
 	context.SetVertexBuffer(0, m_vertexBuffer);
 	context.SetIndexBuffer(m_indexBuffer);
@@ -246,7 +251,9 @@ void Texture3dApp::CreateDeviceDependentResources()
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 
 	InitTexture();
+#if !APP_DYNAMIC_DESCRIPTORS
 	InitDescriptorSets();
+#endif // !APP_DYNAMIC_DESCRIPTORS
 }
 
 
@@ -371,6 +378,7 @@ void Texture3dApp::InitTexture()
 }
 
 
+#if !APP_DYNAMIC_DESCRIPTORS
 void Texture3dApp::InitDescriptorSets()
 {
 	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
@@ -379,6 +387,7 @@ void Texture3dApp::InitDescriptorSets()
 	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
+#endif // !APP_DYNAMIC_DESCRIPTORS
 
 
 void Texture3dApp::UpdateConstantBuffer()

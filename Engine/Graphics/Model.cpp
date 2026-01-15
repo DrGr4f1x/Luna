@@ -557,12 +557,19 @@ int ModelLoader::ProcessMaterial(ModelPtr model, const aiMaterial* aiMaterial, c
 		diffuseTex = FindOrCreateTexture(scene, materialData.diffuseTex.value());
 	}
 
+	TexturePtr normalTex;
+	if (materialData.normalTex.has_value())
+	{
+		normalTex = FindOrCreateTexture(scene, materialData.normalTex.value());
+	}
+
 	MeshMaterial material{};
 	if (materialData.diffuse)
 	{
 		material.diffuseColor = materialData.diffuse.value();
 	}
 	material.diffuseTexture = diffuseTex;
+	material.normalTexture = normalTex;
 
 	int index = (int)model->materials.size();
 	model->materials.push_back(material);
@@ -606,10 +613,10 @@ TexturePtr ModelLoader::CreateTexture(const aiScene* scene, const string& textur
 	}
 	else
 	{
-		LogError(LogModel) << "Can't load external texture " << textureName << endl;
-	}
+		TexturePtr texture = GetTextureManager()->Load(textureName, Format::Unknown, false, false);
 
-	return nullptr;
+		return texture;
+	}
 }
 
 

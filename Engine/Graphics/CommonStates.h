@@ -54,6 +54,7 @@ const SamplerDesc& SamplerAnisoWrap();
 const SamplerDesc& SamplerShadow();
 const SamplerDesc& SamplerLinearClamp();
 const SamplerDesc& SamplerVolumeWrap();
+const SamplerDesc& SamplerPointWrap();
 const SamplerDesc& SamplerPointClamp();
 const SamplerDesc& SamplerPointBorder(StaticBorderColor borderColor = StaticBorderColor::OpaqueBlack);
 const SamplerDesc& SamplerLinearBorder(StaticBorderColor borderColor = StaticBorderColor::OpaqueBlack);

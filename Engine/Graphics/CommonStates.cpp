@@ -541,6 +541,19 @@ const SamplerDesc& CommonStates::SamplerVolumeWrap()
 }
 
 
+const SamplerDesc& CommonStates::SamplerPointWrap()
+{
+	static SamplerDesc desc{
+		.filter = TextureFilter::MinMagMipPoint,
+		.addressU = TextureAddress::Wrap,
+		.addressV = TextureAddress::Wrap,
+		.addressW = TextureAddress::Wrap
+	};
+
+	return desc;
+}
+
+
 const SamplerDesc& CommonStates::SamplerPointClamp()
 {
 	static SamplerDesc desc{ 
