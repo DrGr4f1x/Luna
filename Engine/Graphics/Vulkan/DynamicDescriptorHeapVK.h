@@ -52,6 +52,7 @@ class DynamicDescriptorBuffer
 {
 public:
 	DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorBufferType bufferType);
+	~DynamicDescriptorBuffer();
 
 	static void DestroyAll();
 
@@ -94,6 +95,7 @@ private:
 	// Static members
 	static const size_t sm_numResourceDescriptors = (1 << 16);
 	static const size_t sm_numSamplerDescriptors = (1 << 10);
+	static const size_t sm_numCachedDescriptors = 32 * MaxRootParameters;
 	static std::mutex sm_mutex;
 	static std::vector<wil::com_ptr<CVkBuffer>> sm_descriptorBufferPool[2];
 	static std::queue<std::pair<uint64_t, CVkBuffer*>> sm_retiredDescriptorBuffers[2];
@@ -108,6 +110,7 @@ private:
 	size_t m_currentOffset{ 0 };
 	size_t m_freeSpace{ 0 };
 	size_t m_offsetAlignment{ 0 };
+	size_t m_rootSignatureSize{ 0 };
 
 	std::vector<CVkBuffer*> m_retiredBuffers;
 
@@ -115,22 +118,52 @@ private:
 	{
 		// Pointers to mapped memory for writing descriptors with vkGetDescriptorEXT
 		std::array<DescriptorBufferAllocation, MaxRootParameters> tableAllocations;
-		
+
+		// Data dirty flags
+		std::array<bool, MaxRootParameters> hasActiveData;
+		std::array<bool, MaxRootParameters> hasDirtyData;
+
+		// Table sizes
+		std::array<size_t, MaxRootParameters> tableSizes;
+
+		// Table offsets in the target descriptor buffer 
+		std::array<size_t, MaxRootParameters> bindingOffsets;
+
+		// Remap table
 		std::array<uint8_t, MaxRootParameters> activeTables;
 		uint8_t numActiveTables{ 0 };
 
 		// Descriptor set layouts
 		std::array<DescriptorSetLayout*, MaxRootParameters> descriptorSetLayouts;
 
+		// Cached descriptor memory
+		std::byte* descriptorMemory{ nullptr };
+		size_t allocatedSize{ 0 };	// Total size in bytes of the descriptorMemory buffer
+		size_t currentOffset{ 0 };	// Current offset into descriptorMemory buffer
+		size_t freeSpace{ 0 };		// Remaining free space (allocatedSize - currentOffset)
+
+		// Total required size
+		size_t totalSize{ 0 };		// Sum of tableSize, i.e. the total required bytes for all descriptors
+									// for the current root signature (pipelineLayout)
+
 		VkPipelineLayout pipelineLayout{ VK_NULL_HANDLE };
 
 		void SetDescriptor(uint32_t rootIndex, uint32_t descriptorRegister, uint32_t arrayIndex, const Descriptor* descriptor);
 
+		void Allocate(uint32_t rootIndex, size_t requiredSize, size_t offsetAlignment);
+
 		void Clear();
+
+		// Gets the size required by all the dirty tables
+		size_t GetDirtySize() const;
 	};
 
 	DescriptorCache m_graphicsCache;
 	DescriptorCache m_computeCache;
+
+private:
+	void CopyDescriptors(DescriptorCache& descriptorCache, bool copyDirtyDescriptorsOnly);
+	void BindDescriptorSetOffsets(VkCommandBuffer commandBuffer, DescriptorCache& descriptorCache, bool bindDirtyDescriptorSetsOnly, bool graphicsPipe);
 };
 #endif // USE_DESCRIPTOR_BUFFERS
 

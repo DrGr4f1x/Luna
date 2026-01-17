@@ -38,13 +38,43 @@ std::queue<std::pair<uint64_t, CVkBuffer*>> DynamicDescriptorBuffer::sm_retiredD
 std::queue<CVkBuffer*> DynamicDescriptorBuffer::sm_availableDescriptorBuffers[2];
 
 
+static size_t GetDescriptorSize(DescriptorBufferType bufferType)
+{
+	auto device = GetVulkanDevice();
+
+	return (bufferType == DescriptorBufferType::Resource) ?
+		device->GetDeviceCaps().descriptorBuffer.descriptorSize.largest :
+		device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampler;
+}
+
+
 DynamicDescriptorBuffer::DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorBufferType bufferType)
 	: m_owningContext{ owningContext }
 	, m_bufferType{ bufferType }
 {
 	m_offsetAlignment = GetVulkanDevice()->GetDeviceCaps().descriptorBuffer.descriptorBufferOffsetAlignment;
+
+	const size_t descriptorSize = GetDescriptorSize(bufferType);
+	const size_t descriptorCacheMemorySize = sm_numCachedDescriptors * descriptorSize;
+
+	m_graphicsCache.descriptorMemory = (std::byte*)_aligned_malloc(descriptorCacheMemorySize, m_offsetAlignment);
+	m_computeCache.descriptorMemory = (std::byte*)_aligned_malloc(descriptorCacheMemorySize, m_offsetAlignment);
+
+	m_graphicsCache.allocatedSize = descriptorCacheMemorySize;
+	m_computeCache.allocatedSize = descriptorCacheMemorySize;
+
+	ZeroMemory(m_graphicsCache.descriptorMemory, descriptorCacheMemorySize);
+	ZeroMemory(m_computeCache.descriptorMemory, descriptorCacheMemorySize);
+
 	m_graphicsCache.Clear();
 	m_computeCache.Clear();
+}
+
+
+DynamicDescriptorBuffer::~DynamicDescriptorBuffer()
+{
+	_aligned_free(m_graphicsCache.descriptorMemory);
+	_aligned_free(m_computeCache.descriptorMemory);
 }
 
 
@@ -68,36 +98,22 @@ void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignat
 {
 	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
 
-	size_t requiredSize = 0;
+	m_rootSignatureSize = 0;
 	const bool isSamplerBuffer = m_bufferType == DescriptorBufferType::Sampler;
 
 	if (isSamplerBuffer)
 	{
-		requiredSize = rootSignature.GetSamplerDescriptorSetLayoutSize();
+		m_rootSignatureSize = rootSignature.GetSamplerDescriptorSetLayoutSize();
 	}
 	else
 	{
-		requiredSize = rootSignature.GetResourceDescriptorSetLayoutSize();
-	}
-
-	if (!HasSpace(requiredSize))
-	{
-		RetireCurrentBuffer();
-
-		if (m_currentBufferPtr == nullptr)
-		{
-			assert(m_currentOffset == 0);
-			m_currentBufferPtr = RequestDescriptorBuffer(m_bufferType);
-			ThrowIfFailed(vmaMapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation(), (void**)&m_bufferStart));
-			m_freeSpace = GetBufferSize(m_bufferType);
-		}
+		m_rootSignatureSize = rootSignature.GetResourceDescriptorSetLayoutSize();
 	}
 
 	descriptorCache.Clear();
 
 	descriptorCache.pipelineLayout = rootSignature.GetPipelineLayout();
 
-	size_t allocatedSize = 0;
 	const uint32_t numRootParameters = rootSignature.GetNumRootParameters();
 	uint8_t activeTable = 0;
 	for (uint32_t i = 0; i < numRootParameters; ++i)
@@ -111,9 +127,10 @@ void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignat
 				descriptorCache.descriptorSetLayouts[i] = rootSignature.GetDescriptorSetLayout(i);
 
 				const size_t descriptorSetLayoutSize = descriptorCache.descriptorSetLayouts[i]->GetDescriptorSetSize();
-				descriptorCache.tableAllocations[i] = Allocate(descriptorSetLayoutSize);
+				descriptorCache.Allocate(i, descriptorSetLayoutSize, m_offsetAlignment);
 
-				allocatedSize += descriptorSetLayoutSize;
+				descriptorCache.tableSizes[i] = descriptorSetLayoutSize;
+				descriptorCache.totalSize += descriptorSetLayoutSize;
 
 				descriptorCache.activeTables[activeTable] = i;
 				descriptorCache.numActiveTables++;
@@ -122,7 +139,7 @@ void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignat
 		}
 	}
 
-	assert(allocatedSize == requiredSize);
+	assert(descriptorCache.totalSize == m_rootSignatureSize);
 }
 
 
@@ -130,33 +147,38 @@ void DynamicDescriptorBuffer::UpdateAndBindDescriptorSets(VkCommandBuffer comman
 {
 	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
 	
+	const size_t dirtySize = descriptorCache.GetDirtySize();
+	bool acquiredNewBuffer = false;
+
+	// If we don't have enough space to hold the dirty descriptors, acquire a new buffer
+	if (!HasSpace(dirtySize))
+	{
+		RetireCurrentBuffer();
+
+		if (m_currentBufferPtr == nullptr)
+		{
+			assert(m_currentOffset == 0);
+			m_currentBufferPtr = RequestDescriptorBuffer(m_bufferType);
+			ThrowIfFailed(vmaMapMemory(m_currentBufferPtr->GetAllocator(), m_currentBufferPtr->GetAllocation(), (void**)&m_bufferStart));
+			m_freeSpace = GetBufferSize(m_bufferType);
+		}
+
+		acquiredNewBuffer = true;
+
+		// We'll have to copy the whole descriptor cache into the new buffer, 
+		// so assert that we have enough space.
+		assert(HasSpace(descriptorCache.totalSize));
+	}
+
+	// Copy descriptors into buffer
+	bool dirtyDescriptorsOnly = !acquiredNewBuffer;
+	CopyDescriptors(descriptorCache, dirtyDescriptorsOnly);
+
 	// Bind the descriptor buffer
 	m_owningContext.SetDescriptorBuffer(m_bufferType, m_currentBufferPtr->Get());
 
 	// Bind the buffer offsets
-	VkPipelineLayout pipelineLayout = descriptorCache.pipelineLayout;
-	uint32_t bufferIndex = m_bufferType == DescriptorBufferType::Resource ? 0 : 1;
-
-	for (uint8_t activeTable = 0; activeTable < descriptorCache.numActiveTables; ++activeTable)
-	{
-		uint8_t rootIndex = descriptorCache.activeTables[activeTable];
-		assert(rootIndex != ~((uint8_t)8));
-
-		if (descriptorCache.tableAllocations[rootIndex].mem != nullptr)
-		{
-			VkDeviceSize offset = descriptorCache.tableAllocations[rootIndex].offset;
-
-			vkCmdSetDescriptorBufferOffsetsEXT(
-				commandBuffer,
-				graphicsPipe ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
-				pipelineLayout,
-				rootIndex,
-				1,
-				&bufferIndex,
-				&offset
-			);
-		}
-	}
+	BindDescriptorSetOffsets(commandBuffer, descriptorCache, dirtyDescriptorsOnly, graphicsPipe);
 }
 
 
@@ -321,15 +343,13 @@ size_t DynamicDescriptorBuffer::GetBufferSize(DescriptorBufferType bufferType)
 {
 	auto device = GetVulkanDevice();
 
-	const size_t bufferSize = (bufferType == DescriptorBufferType::Resource) ?
-		device->GetDeviceCaps().descriptorBuffer.descriptorSize.largest :
-		device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampler;
+	const size_t descriptorSize = GetDescriptorSize(bufferType);
 
 	const size_t numDescriptors = (bufferType == DescriptorBufferType::Resource) ?
 		sm_numResourceDescriptors :
 		sm_numSamplerDescriptors;
 
-	return bufferSize * numDescriptors;
+	return descriptorSize * numDescriptors;
 }
 
 
@@ -343,6 +363,26 @@ void DynamicDescriptorBuffer::DescriptorCache::SetDescriptor(uint32_t rootIndex,
 	size_t offset = descriptorSetLayouts[rootIndex]->GetBindingOffset(descriptorRegister) + arrayIndex * descriptor->GetRawDescriptorSize();
 
 	descriptor->CopyRawDescriptor((void*)(tableAllocations[rootIndex].mem + offset));
+
+	hasActiveData[rootIndex] = true;
+	hasDirtyData[rootIndex] = true;
+}
+
+
+void DynamicDescriptorBuffer::DescriptorCache::Allocate(uint32_t rootIndex, size_t requiredSize, size_t offsetAlignment)
+{
+	size_t alignedSize = Math::AlignUp(requiredSize, offsetAlignment);
+	assert(freeSpace >= alignedSize);
+
+	std::byte* allocation = descriptorMemory + currentOffset;
+	currentOffset += alignedSize;
+
+	freeSpace -= alignedSize;
+
+	tableAllocations[rootIndex] = DescriptorBufferAllocation{
+		.mem		= allocation,
+		.offset		= (size_t)(allocation - descriptorMemory)
+	};
 }
 
 
@@ -352,13 +392,94 @@ void DynamicDescriptorBuffer::DescriptorCache::Clear()
 	{
 		tableAllocations[i].mem = nullptr;
 		tableAllocations[i].offset = 0;
+
+		hasActiveData[i] = false;
+		hasDirtyData[i] = false;
+
+		bindingOffsets[i] = (size_t)-1;
+
+		tableSizes[i] = 0;
+
 		descriptorSetLayouts[i] = nullptr;
 		activeTables[i] = ~((uint8_t)0);
 	}
+	totalSize = 0;
+	currentOffset = 0;
+	freeSpace = allocatedSize;
 	pipelineLayout = VK_NULL_HANDLE;
 	numActiveTables = 0;
 }
 
+
+size_t DynamicDescriptorBuffer::DescriptorCache::GetDirtySize() const
+{
+	size_t dirtySize = 0;
+	for (uint8_t i = 0; i < numActiveTables; ++i)
+	{
+		const uint8_t rootIndex = activeTables[i];
+		if (hasDirtyData[rootIndex])
+		{
+			dirtySize += tableSizes[rootIndex];
+		}
+	}
+	return dirtySize;
+}
+
+
+void DynamicDescriptorBuffer::CopyDescriptors(DynamicDescriptorBuffer::DescriptorCache& descriptorCache, bool copyDirtyDescriptorsOnly)
+{
+	size_t offset = m_currentOffset;
+
+	bool copyAllDescriptors = !copyDirtyDescriptorsOnly;
+
+	for (uint8_t i = 0; i < descriptorCache.numActiveTables; ++i)
+	{
+		const uint8_t rootIndex = descriptorCache.activeTables[i];
+
+		if (copyAllDescriptors || (copyDirtyDescriptorsOnly && descriptorCache.hasDirtyData[rootIndex]))
+		{
+			size_t tableSize = descriptorCache.tableSizes[rootIndex];
+			memcpy(m_bufferStart + offset, descriptorCache.tableAllocations[rootIndex].mem, tableSize);
+			descriptorCache.bindingOffsets[rootIndex] = offset;
+			offset += tableSize;
+		}
+	}
+
+	m_currentOffset += offset;
+	m_freeSpace -= offset;
+}
+
+
+void DynamicDescriptorBuffer::BindDescriptorSetOffsets(VkCommandBuffer commandBuffer, DynamicDescriptorBuffer::DescriptorCache& descriptorCache, bool bindDirtyDescriptorSetsOnly, bool graphicsPipe)
+{ 
+	bool bindAllDescriptorSets = !bindDirtyDescriptorSetsOnly;
+
+	// Bind the buffer offsets
+	VkPipelineLayout pipelineLayout = descriptorCache.pipelineLayout;
+	uint32_t bufferIndex = m_bufferType == DescriptorBufferType::Resource ? 0 : 1;
+
+	for (uint8_t i = 0; i < descriptorCache.numActiveTables; ++i)
+	{
+		const uint8_t rootIndex = descriptorCache.activeTables[i];
+
+		if (bindAllDescriptorSets || (bindDirtyDescriptorSetsOnly && descriptorCache.hasDirtyData[rootIndex]))
+		{
+			VkDeviceSize offset = descriptorCache.bindingOffsets[rootIndex];
+
+			vkCmdSetDescriptorBufferOffsetsEXT(
+				commandBuffer,
+				graphicsPipe ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
+				pipelineLayout,
+				rootIndex,
+				1,
+				&bufferIndex,
+				&offset
+			);
+		}
+
+		descriptorCache.hasDirtyData[rootIndex] = false;
+	}
+}
 #endif // USE_DESCRIPTOR_BUFFERS
 
 
