@@ -493,14 +493,12 @@ DynamicDescriptorSet::DynamicDescriptorSet(CVkDevice* device)
 	for (uint32_t i = 0; i < (uint32_t)m_descriptorCaches[0].size(); ++i)
 	{
 		m_descriptorCaches[0][i].device = device->Get();
-		m_descriptorCaches[0][i].rootParameterIndex = i;
 	}
 
 	// Set the device on the compute descriptor caches
 	for (uint32_t i = 0; i < (uint32_t)m_descriptorCaches[1].size(); ++i)
 	{
 		m_descriptorCaches[1][i].device = device->Get();
-		m_descriptorCaches[1][i].rootParameterIndex = i;
 	}
 }
 
@@ -677,9 +675,8 @@ void DynamicDescriptorSet::ParseRootSignature(const RootSignature& rootSignature
 	// Get the pipeline layout
 	m_pipelineLayout[pipeIndex] = rootSignature.GetPipelineLayout();
 
-	// Get the descriptor set layout for each root parameter and, if valid, set a bit in the
-	// m_activeDescriptorSetMap.  The only root parameter type that has a descriptor set layout
-	// is Table.
+	// Get the descriptor set layout for each root parameter.  The only root parameter type 
+	// that has a descriptor set layout is Table.
 	const uint32_t numParams = rootSignature.GetNumRootParameters();
 	for (uint32_t rootParamIndex = 0; rootParamIndex < numParams; ++rootParamIndex)
 	{
@@ -688,16 +685,15 @@ void DynamicDescriptorSet::ParseRootSignature(const RootSignature& rootSignature
 
 		if (rootParameter.parameterType != RootParameterType::Table)
 		{
-			descriptorCache.Reset();
 			continue;
 		}
 
 		// Get layout
 		auto layout = rootSignature.GetDescriptorSetLayout(rootParamIndex);
 
-		// Allocate descriptor set
-		auto pool = FindOrCreateDescriptorPoolCache(layout->GetDescriptorSetLayout().get(), rootParameter);
-		descriptorCache.descriptorSet = pool->AllocateDescriptorSet();
+		// Set the root parameter and descriptor set layout for the descriptor cache
+		descriptorCache.rootParameter = rootParameter;
+		descriptorCache.descriptorSetLayout = layout->GetDescriptorSetLayout();
 
 		// Process descriptor bindings
 		ScopedEvent event("Process descriptor bindings");
@@ -723,7 +719,18 @@ void DynamicDescriptorSet::UpdateAndBindDescriptorSets(VkCommandBuffer commandBu
 	{
 		auto& descriptorCache = m_descriptorCaches[pipeIndex][rootParameterIndex];
 
-		if (descriptorCache.UpdateDescriptorSet())
+		VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+
+		if (descriptorCache.dirty)
+		{
+			// Allocate descriptor set
+			auto descriptorSetLayout = descriptorCache.descriptorSetLayout.get();
+			const auto& rootParameter = descriptorCache.rootParameter;
+			auto pool = FindOrCreateDescriptorPoolCache(descriptorSetLayout, rootParameter);
+			descriptorSet = pool->AllocateDescriptorSet();
+		}
+
+		if (descriptorCache.UpdateDescriptorSet(descriptorSet))
 		{
 			uint32_t dynamicOffset = descriptorCache.GetDynamicOffset();
 
@@ -733,7 +740,7 @@ void DynamicDescriptorSet::UpdateAndBindDescriptorSets(VkCommandBuffer commandBu
 				pipelineLayout,
 				rootParameterIndex,
 				1,
-				&descriptorCache.descriptorSet,
+				&descriptorSet,
 				descriptorCache.HasDynamicOffset() ? 1 : 0,
 				descriptorCache.HasDynamicOffset() ? &dynamicOffset : nullptr);
 		}
@@ -745,20 +752,26 @@ DescriptorPoolCache* DynamicDescriptorSet::FindOrCreateDescriptorPoolCache(CVkDe
 {
 	ScopedEvent event("FindOrCreateDescriptorPoolCache");
 
+	DescriptorPoolCache* ret = nullptr;
+
 	auto it = m_layoutToPoolMap.find(layout->Get());
 	if (it != m_layoutToPoolMap.end())
 	{
-		return it->second.get();
+		ret = it->second.get();
+		assert(ret->GetLayout() == layout->Get());
+		return ret;
 	}
 
 	DescriptorPoolDesc descriptorPoolDesc{
-		.device = m_device.get(),
-		.layout = layout,
-		.rootParameter = rootParameter
+		.device			= m_device.get(),
+		.layout			= layout,
+		.rootParameter	= rootParameter
 	};
 
 	auto pool = make_shared<DescriptorPoolCache>(descriptorPoolDesc);
 	m_layoutToPoolMap[layout->Get()] = pool;
+
+	assert(pool->GetLayout() == layout->Get());
 
 	return pool.get();
 }
@@ -824,15 +837,17 @@ void DynamicDescriptorSet::DescriptorCache::SetDescriptorBufferView(uint32_t off
 
 void DynamicDescriptorSet::DescriptorCache::Reset()
 {
-	descriptorSet = VK_NULL_HANDLE;
+	rootParameter = RootParameter{};
+	descriptorSetLayout.reset();
 	descriptorBindings.clear();
 	writeDescriptorSets.clear();
 	hasDynamicOffset = false;
 	dynamicOffset = 0;
+	dirty = false;
 }
 
 
-bool DynamicDescriptorSet::DescriptorCache::UpdateDescriptorSet()
+bool DynamicDescriptorSet::DescriptorCache::UpdateDescriptorSet(VkDescriptorSet descriptorSet)
 {
 	if (!dirty)
 	{
@@ -892,6 +907,8 @@ bool DynamicDescriptorSet::DescriptorCache::UpdateDescriptorSet()
 		writeDescriptorSets.data(),
 		0,
 		nullptr);
+
+	writeDescriptorSets.clear();
 
 	return true;
 }

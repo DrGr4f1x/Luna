@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\Vulkan\VulkanCommon.h"
+#include "Graphics\RootSignature.h"
 
 #if USE_DESCRIPTOR_BUFFERS
 #include "Graphics\Vulkan\DescriptorAllocatorVK.h"
@@ -18,10 +19,6 @@
 
 namespace Luna
 {
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-class DescriptorSetPool;
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 class IColorBuffer;
 class IDepthBuffer;
@@ -209,8 +206,8 @@ private:
 	struct DescriptorCache
 	{
 		VkDevice device{ VK_NULL_HANDLE };
-		VkDescriptorSet descriptorSet{ VK_NULL_HANDLE };
-		uint32_t rootParameterIndex{ 0 };
+		RootParameter rootParameter;
+		wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout;
 		bool dirty{ false };
 
 		void SetDescriptorImageInfo(uint32_t binding, VkDescriptorImageInfo descriptorImageInfo);
@@ -218,7 +215,7 @@ private:
 		void SetDescriptorBufferView(uint32_t binding, VkBufferView descriptorBufferView);
 
 		void Reset();
-		bool UpdateDescriptorSet();
+		bool UpdateDescriptorSet(VkDescriptorSet descriptorSet);
 		void SetDescriptorBinding(uint32_t binding, VkDescriptorType descriptorType);
 
 		// TODO: Support dynamic offsets properly.

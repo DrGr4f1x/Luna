@@ -38,7 +38,6 @@ TODO:
 -- IndirectDraw app - support multi-draw indirect
 -- Directly create DescriptorSets without needing RootSignature
 -- ShaderCompiler - figure out how to handle shader permutations.  Need this for compiling in/out PCF in ShadowMapping.
--- Get rid of ExtensionManagerVK.h
 -- Support register offsets for Vulkan shaders
 
 DONE:
@@ -90,6 +89,7 @@ DONE:
 -- Look at normals in the BloomApp - Vulkan seems wrong.
 -- Separate Front/Back stencil ref, both platforms
 -- Support push descriptors in Vulkan - use MeshletCullApp
+-- Get rid of ExtensionManagerVK.h
 
 
 WON'T DO:

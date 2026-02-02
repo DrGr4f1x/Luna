@@ -121,10 +121,10 @@ private:
 	// Active descriptor set pool
 	std::shared_ptr<DescriptorPool> m_activePool;
 
-	// Static members
-	static std::mutex sm_mutex;
-	static std::queue<std::shared_ptr<DescriptorPool>> sm_availablePools;
-	static std::queue<std::pair<uint64_t, std::shared_ptr<DescriptorPool>>> sm_retiredPools;
+	// Pool management
+	std::mutex m_mutex;
+	std::queue<std::shared_ptr<DescriptorPool>> m_availablePools;
+	std::queue<std::pair<uint64_t, std::shared_ptr<DescriptorPool>>> m_retiredPools;
 };
 
 } // namespace Luna::VK

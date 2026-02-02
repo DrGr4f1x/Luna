@@ -216,11 +216,6 @@ uint32_t DescriptorPool::FindAvailablePool(uint32_t searchIndex)
 }
 
 
-std::mutex DescriptorPoolCache::sm_mutex;
-std::queue<std::shared_ptr<DescriptorPool>> DescriptorPoolCache::sm_availablePools;
-std::queue<std::pair<uint64_t, std::shared_ptr<DescriptorPool>>> DescriptorPoolCache::sm_retiredPools;
-
-
 DescriptorPoolCache::DescriptorPoolCache(const DescriptorPoolDesc& descriptorPoolDesc)
 	: m_device { descriptorPoolDesc.device }
 	, m_layout{ descriptorPoolDesc.layout }
@@ -248,8 +243,8 @@ VkDescriptorSet DescriptorPoolCache::AllocateDescriptorSet()
 
 void DescriptorPoolCache::RetirePool(uint64_t fenceValue)
 {
-	lock_guard<mutex> lockGuard(sm_mutex);
-	sm_retiredPools.push(make_pair(fenceValue, m_activePool));
+	lock_guard<mutex> lockGuard(m_mutex);
+	m_retiredPools.push(make_pair(fenceValue, m_activePool));
 	m_activePool.reset();
 }
 
@@ -267,20 +262,20 @@ VkDescriptorSetLayout DescriptorPoolCache::GetLayout() const
 
 shared_ptr<DescriptorPool> DescriptorPoolCache::RequestDescriptorPool()
 {
-	lock_guard<mutex> lockGuard(sm_mutex);
+	lock_guard<mutex> lockGuard(m_mutex);
 
 	auto deviceManager = GetVulkanDeviceManager();
 
-	while (!sm_retiredPools.empty() && deviceManager->IsFenceComplete(sm_retiredPools.front().first))
+	while (!m_retiredPools.empty() && deviceManager->IsFenceComplete(m_retiredPools.front().first))
 	{
-		sm_availablePools.push(sm_retiredPools.front().second);
-		sm_retiredPools.pop();
+		m_availablePools.push(m_retiredPools.front().second);
+		m_retiredPools.pop();
 	}
 
-	if (!sm_availablePools.empty())
+	if (!m_availablePools.empty())
 	{
-		auto pool = sm_availablePools.front();
-		sm_availablePools.pop();
+		auto pool = m_availablePools.front();
+		m_availablePools.pop();
 		pool->Reset();
 		return pool;
 	}
