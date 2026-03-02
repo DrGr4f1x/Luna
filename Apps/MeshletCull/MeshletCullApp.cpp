@@ -333,11 +333,11 @@ void MeshletCullApp::InitRootSignature()
 			RootCBV(0, stages),
 			RootCBV(1, stages),
 			RootCBV(2, stages),
+			RootSRV(0, stages),
+			RootSRV(1, stages),
+			RootSRV(2, stages),
 			RootSRV(3, stages),
-			RootSRV(4, stages),
-			RootSRV(5, stages),
-			RootSRV(6, stages),
-			RootSRV(7, stages)
+			RootSRV(4, stages)
 			//Table({ StructuredBufferSRV, StructuredBufferSRV, RawBufferSRV, StructuredBufferSRV, StructuredBufferSRV }, stages)
 		}
 	};

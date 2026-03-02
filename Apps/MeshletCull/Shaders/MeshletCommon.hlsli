@@ -43,11 +43,11 @@ ConstantBuffer<Instance> Instance : BINDING(b2, 0);
 // TODO - if I set the texture registers to start with t0 (which should be fine),
 // it doesn't work with Vulkan push descriptors (something in the RootSignature).
 // Look into it.
-StructuredBuffer<Vertex> Vertices : BINDING(t3, 0);
-StructuredBuffer<Meshlet> Meshlets : BINDING(t4, 0);
-ByteAddressBuffer UniqueVertexIndices : BINDING(t5, 0);
-StructuredBuffer<uint> PrimitiveIndices : BINDING(t6, 0);
-StructuredBuffer<CullData> MeshletCullData : BINDING(t7, 0);
+StructuredBuffer<Vertex> Vertices : BINDING(t0, 0);
+StructuredBuffer<Meshlet> Meshlets : BINDING(t1, 0);
+ByteAddressBuffer UniqueVertexIndices : BINDING(t2, 0);
+StructuredBuffer<uint> PrimitiveIndices : BINDING(t3, 0);
+StructuredBuffer<CullData> MeshletCullData : BINDING(t4, 0);
 
 
 // Rotates a vector, v0, about an axis by some angle
