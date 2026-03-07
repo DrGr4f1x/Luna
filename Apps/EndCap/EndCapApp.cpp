@@ -1,0 +1,293 @@
+//
+// This code is licensed under the MIT License (MIT).
+// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
+// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
+//
+// Author:  David Elder
+//
+
+#include "Stdafx.h"
+
+#include "EndCapApp.h"
+
+#include "Graphics\CommandContext.h"
+#include "Graphics\CommonStates.h"
+
+using namespace Luna;
+using namespace Math;
+using namespace std;
+
+
+EndCapApp::EndCapApp(uint32_t width, uint32_t height)
+	: Application{ width, height, s_appName }
+{
+}
+
+
+int EndCapApp::ProcessCommandLine(int argc, char* argv[])
+{
+	// Handle commandline arguments here
+	return Application::ProcessCommandLine(argc, argv);
+}
+
+
+void EndCapApp::Configure()
+{
+	// Application config, before device creation
+	Application::Configure();
+}
+
+
+void EndCapApp::Startup()
+{
+	m_showGrid = true;
+}
+
+
+void EndCapApp::Shutdown()
+{
+	// Application cleanup on shutdown
+}
+
+
+void EndCapApp::Update()
+{
+	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
+
+	UpdateConstantBuffers();
+}
+
+
+void EndCapApp::UpdateUI()
+{
+	if (m_uiOverlay->Header("Settings"))
+	{
+		m_uiOverlay->SliderFloat("Plane Height", &m_planeDelta, 0.0f, 1.0f);
+	}
+}
+
+
+void EndCapApp::Render()
+{
+	auto& context = GraphicsContext::Begin("Scene");
+
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
+	context.ClearColor(GetColorBuffer());
+	context.ClearDepthAndStencil(GetDepthBuffer());
+
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
+
+	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+
+	// Setup for mesh drawing
+	context.SetRootSignature(m_meshRootSignature);
+	context.SetGraphicsPipeline(m_meshPipeline);
+
+	// Draw model
+	{
+		ScopedDrawEvent event(context, "Model");
+
+		context.SetRootCBV(0, m_modelConstantBuffer);
+		m_model->Render(context);
+	}
+	
+	// Draw plane
+	{
+		ScopedDrawEvent event(context, "Plane");
+
+		context.SetRootCBV(0, m_planeConstantBuffer);
+		m_planeModel->Render(context);
+	}
+
+	// Draw contour
+	{
+		ScopedDrawEvent event(context, "Contour");
+
+		context.SetRootSignature(m_contourRootSignature);
+		context.SetGraphicsPipeline(m_contourPipeline);
+		context.SetRootCBV(0, m_contourConstantBuffer);
+		m_model->Render(context);
+	}
+
+	RenderGrid(context);
+	RenderUI(context);
+
+	context.EndRendering();
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+
+	context.Finish();
+}
+
+
+void EndCapApp::CreateDeviceDependentResources()
+{
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
+	Vector3 cameraPosition{ 4.75f, 3.25f, 4.75f };
+	m_camera.SetPosition(cameraPosition);
+
+	InitRootSignatures();
+
+	// Create and initialize constant buffers
+	m_modelConstantBuffer = CreateConstantBuffer("Model Constant Buffer", 1, sizeof(Constants));
+	m_planeConstantBuffer = CreateConstantBuffer("Plane Constant Buffer", 1, sizeof(Constants));
+	m_contourConstantBuffer = CreateConstantBuffer("Contour Constant Buffer", 1, sizeof(ContourConstants));
+	UpdateConstantBuffers();
+
+	LoadAssets();
+
+	m_modelBounds = m_model->boundingBox;
+	m_minY = m_modelBounds.GetMin().GetY();
+	m_maxY = m_modelBounds.GetMax().GetY();
+
+	m_controller.RefreshFromCamera();
+	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.SetOrbitTarget(m_modelBounds.GetCenter(), 4.0f, 0.25f);
+	m_controller.SlowMovement(true);
+	m_controller.SlowRotation(false);
+	m_controller.SetSpeedScale(0.25f);
+}
+
+
+void EndCapApp::CreateWindowSizeDependentResources()
+{
+	// Create any resources that depend on window size.  May be called when the window size changes.
+	if (!m_pipelinesCreated)
+	{
+		InitPipelines();
+		m_pipelinesCreated = true;
+	}
+
+	// Update the camera since the aspect ratio might have changed
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
+}
+
+
+void EndCapApp::InitRootSignatures()
+{
+	auto meshDesc = RootSignatureDesc{
+		.name				= "Mesh Root Signature",
+		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
+	};
+
+	m_meshRootSignature = CreateRootSignature(meshDesc);
+
+	RootSignatureDesc contourDesc{
+		.name				= "Contour Root Signature",
+		.rootParameters		= {	RootCBV(0, ShaderStage::Geometry) }
+	};
+
+	m_contourRootSignature = CreateRootSignature(contourDesc);
+}
+
+
+void EndCapApp::InitPipelines()
+{
+	VertexStreamDesc vertexStreamDesc{
+		.inputSlot = 0,
+		.stride = sizeof(Vertex),
+		.inputClassification = InputClassification::PerVertexData
+	};
+
+	auto layout = VertexLayout<VertexComponent::PositionNormalColor>();
+
+	// Mesh pipeline
+	{
+		DepthStencilStateDesc depthStencilDesc = CommonStates::DepthStateReadWriteReversed();
+		//depthStencilDesc.stencilEnable = true;
+		//depthStencilDesc.backFace.stencilFunc = ComparisonFunc::Always;
+		//depthStencilDesc.backFace.stencilDepthFailOp = StencilOp::Replace;
+		//depthStencilDesc.backFace.stencilFailOp = StencilOp::Replace;
+		//depthStencilDesc.backFace.stencilPassOp = StencilOp::Replace;
+		//depthStencilDesc.frontFace = depthStencilDesc.backFace;
+
+		GraphicsPipelineDesc meshPipelineDesc
+		{
+			.name				= "Mesh Graphics PSO",
+			.blendState			= CommonStates::BlendDisable(),
+			.depthStencilState	= depthStencilDesc,
+			.rasterizerState	= CommonStates::RasterizerDefault(),
+			.rtvFormats			= { GetColorFormat() },
+			.dsvFormat			= GetDepthFormat(),
+			.topology			= PrimitiveTopology::TriangleList,
+			.vertexShader		= { .shaderFile = "MeshVS" },
+			.pixelShader		= { .shaderFile = "MeshPS" },
+			.vertexStreams		= { vertexStreamDesc },
+			.vertexElements		= layout.GetElements(),
+			.rootSignature		= m_meshRootSignature
+		};
+
+		m_meshPipeline = CreateGraphicsPipeline(meshPipelineDesc);
+	}
+
+	// Contour pipeline
+	{
+		GraphicsPipelineDesc contourPipelineDesc{
+			.name				= "Contour Graphics PSO",
+			.blendState			= CommonStates::BlendDisable(),
+			.depthStencilState	= CommonStates::DepthStateDisabled(),
+			.rasterizerState	= CommonStates::RasterizerDefault(),
+			.rtvFormats			= { GetColorFormat() },
+			.dsvFormat			= GetDepthFormat(),
+			.topology			= PrimitiveTopology::TriangleList,
+			.vertexShader		= { .shaderFile = "ContourVS" },
+			.pixelShader		= { .shaderFile = "ContourPS" },
+			.geometryShader		= { .shaderFile = "ContourGS" },
+			.vertexStreams		= { vertexStreamDesc },
+			.vertexElements		= layout.GetElements(),
+			.rootSignature		= m_contourRootSignature
+		};
+
+		m_contourPipeline = CreateGraphicsPipeline(contourPipelineDesc);
+	}
+}
+
+
+void EndCapApp::UpdateConstantBuffers()
+{
+	m_modelConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
+	m_modelConstants.modelMatrix = Matrix4(kIdentity);
+	m_modelConstants.lightPos = Vector4(3.0f, 10.0f, 3.0f, 1.0f);
+	m_modelConstants.modelColor = Vector4(0.6f, 0.6f, 0.9f, 0.0f);
+
+	m_modelConstantBuffer->Update(sizeof(Constants), &m_modelConstants);
+
+	m_planeConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
+
+	float y = Lerp(m_minY, m_maxY, m_planeDelta);
+
+	m_planeConstants.modelMatrix = Matrix4::MakeTranslation(0.0f, y, 0.0f);
+	m_planeConstants.lightPos = Vector4(3.0f, 10.0f, 3.0f, 1.0f);
+	m_planeConstants.modelColor = Vector4(0.7f, 0.7f, 0.7f, 0.0f);
+
+	m_planeConstantBuffer->Update(sizeof(Constants), &m_planeConstants);
+
+	m_contourConstants.viewProjectionMatrix = m_modelConstants.viewProjectionMatrix;
+	m_contourConstants.modelMatrix = m_modelConstants.modelMatrix;
+	
+	Vector3 planeNormal = Vector3(0.0f, 1.0f, 0.0f);
+	Vector3 pointOnPlane = Vector3(0.0f, y, 0.0f);
+	m_contourConstants.plane = Vector4(planeNormal, -Dot(pointOnPlane, planeNormal));
+
+	m_contourConstantBuffer->Update(sizeof(ContourConstants), &m_contourConstants);
+}
+
+
+void EndCapApp::LoadAssets()
+{
+	auto layout = VertexLayout<VertexComponent::PositionNormalColor>();
+
+	m_model = LoadModel("venus.gltf", layout, 1.8f);
+
+	m_planeModel = LoadModel("plane.gltf", layout, 0.3f);
+}

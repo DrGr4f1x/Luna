@@ -259,6 +259,14 @@ void ModelLoader::ProcessNode(ModelPtr model, const aiNode* node, const aiScene*
 	{
 		ProcessNode(model, node->mChildren[i], scene);
 	}
+
+	// Compute the model's bounding box
+	vector<BoundingBox> meshBounds;
+	for (const auto mesh : model->meshes)
+	{
+		meshBounds.push_back(mesh->boundingBox);
+	}
+	model->boundingBox = Math::BoundingBoxUnion(meshBounds);
 }
 
 
