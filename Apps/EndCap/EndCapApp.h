@@ -12,7 +12,7 @@
 
 #include "Application.h"
 #include "CameraController.h"
-
+#include "EndCapGenerator.h"
 
 class EndCapApp : public Luna::Application
 {
@@ -59,9 +59,6 @@ protected:
 	Luna::RootSignaturePtr m_meshRootSignature;
 	Luna::GraphicsPipelinePtr m_meshPipeline;
 
-	Luna::RootSignaturePtr m_contourRootSignature;
-	Luna::GraphicsPipelinePtr m_contourPipeline;
-
 	bool m_pipelinesCreated{ false };
 
 	// Main model constants
@@ -72,16 +69,8 @@ protected:
 	Luna::GpuBufferPtr m_planeConstantBuffer;
 	Constants m_planeConstants;
 
-	// Contour constants
-	struct ContourConstants
-	{
-		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
-		Math::Matrix4 modelMatrix{ Math::kIdentity };
-		Math::Vector4 plane{ Math::kZero };
-	};
-
-	Luna::GpuBufferPtr m_contourConstantBuffer;
-	ContourConstants m_contourConstants;
+	// End cap generator
+	EndCapGenerator m_endCapGenerator;
 
 	Luna::ModelPtr m_model;
 	Math::BoundingBox m_modelBounds;
@@ -92,6 +81,7 @@ protected:
 
 	// Controls and position of the cut plane
 	float m_planeDelta = 0.0f;
+	float m_planeY = 0.0f;
 	float m_minY = -1.0f;
 	float m_maxY = 1.0f;
 };

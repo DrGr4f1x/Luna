@@ -28,6 +28,7 @@
     <VcpkgConfiguration Condition="'$(Configuration)' == 'Profile'">Release</VcpkgConfiguration>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="EndCapGenerator.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="EndCapApp.cpp" />
     <ClCompile Include="Stdafx.cpp">
@@ -35,6 +36,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EndCapGenerator.h" />
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="EndCapApp.h" />
   </ItemGroup>

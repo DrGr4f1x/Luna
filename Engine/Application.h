@@ -112,6 +112,8 @@ public:
 	ColorBufferPtr GetColorBuffer() const;
 	DepthBufferPtr GetDepthBuffer() const { return m_depthBuffer; }
 
+	const Camera* GetCamera() const { return &m_camera; }
+
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 	// Wrappers for graphics resource creation

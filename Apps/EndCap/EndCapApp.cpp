@@ -22,6 +22,7 @@ using namespace std;
 
 EndCapApp::EndCapApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
+	, m_endCapGenerator{ this }
 {
 }
 
@@ -56,7 +57,10 @@ void EndCapApp::Update()
 {
 	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
 
+	m_planeY = Lerp(m_minY, m_maxY, m_planeDelta);
+
 	UpdateConstantBuffers();
+	m_endCapGenerator.Update(m_planeY);
 }
 
 
@@ -102,15 +106,8 @@ void EndCapApp::Render()
 		m_planeModel->Render(context);
 	}
 
-	// Draw contour
-	{
-		ScopedDrawEvent event(context, "Contour");
-
-		context.SetRootSignature(m_contourRootSignature);
-		context.SetGraphicsPipeline(m_contourPipeline);
-		context.SetRootCBV(0, m_contourConstantBuffer);
-		m_model->Render(context);
-	}
+	// Generate end cap
+	m_endCapGenerator.Render(context, m_model.get());
 
 	RenderGrid(context);
 	RenderUI(context);
@@ -137,7 +134,6 @@ void EndCapApp::CreateDeviceDependentResources()
 	// Create and initialize constant buffers
 	m_modelConstantBuffer = CreateConstantBuffer("Model Constant Buffer", 1, sizeof(Constants));
 	m_planeConstantBuffer = CreateConstantBuffer("Plane Constant Buffer", 1, sizeof(Constants));
-	m_contourConstantBuffer = CreateConstantBuffer("Contour Constant Buffer", 1, sizeof(ContourConstants));
 	UpdateConstantBuffers();
 
 	LoadAssets();
@@ -152,6 +148,8 @@ void EndCapApp::CreateDeviceDependentResources()
 	m_controller.SlowMovement(true);
 	m_controller.SlowRotation(false);
 	m_controller.SetSpeedScale(0.25f);
+
+	m_endCapGenerator.CreateDeviceDependentResources();
 }
 
 
@@ -170,6 +168,8 @@ void EndCapApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
+
+	m_endCapGenerator.CreateWindowSizeDependentResources();
 }
 
 
@@ -181,13 +181,6 @@ void EndCapApp::InitRootSignatures()
 	};
 
 	m_meshRootSignature = CreateRootSignature(meshDesc);
-
-	RootSignatureDesc contourDesc{
-		.name				= "Contour Root Signature",
-		.rootParameters		= {	RootCBV(0, ShaderStage::Geometry) }
-	};
-
-	m_contourRootSignature = CreateRootSignature(contourDesc);
 }
 
 
@@ -229,27 +222,6 @@ void EndCapApp::InitPipelines()
 
 		m_meshPipeline = CreateGraphicsPipeline(meshPipelineDesc);
 	}
-
-	// Contour pipeline
-	{
-		GraphicsPipelineDesc contourPipelineDesc{
-			.name				= "Contour Graphics PSO",
-			.blendState			= CommonStates::BlendDisable(),
-			.depthStencilState	= CommonStates::DepthStateDisabled(),
-			.rasterizerState	= CommonStates::RasterizerDefault(),
-			.rtvFormats			= { GetColorFormat() },
-			.dsvFormat			= GetDepthFormat(),
-			.topology			= PrimitiveTopology::TriangleList,
-			.vertexShader		= { .shaderFile = "ContourVS" },
-			.pixelShader		= { .shaderFile = "ContourPS" },
-			.geometryShader		= { .shaderFile = "ContourGS" },
-			.vertexStreams		= { vertexStreamDesc },
-			.vertexElements		= layout.GetElements(),
-			.rootSignature		= m_contourRootSignature
-		};
-
-		m_contourPipeline = CreateGraphicsPipeline(contourPipelineDesc);
-	}
 }
 
 
@@ -271,15 +243,6 @@ void EndCapApp::UpdateConstantBuffers()
 	m_planeConstants.modelColor = Vector4(0.7f, 0.7f, 0.7f, 0.0f);
 
 	m_planeConstantBuffer->Update(sizeof(Constants), &m_planeConstants);
-
-	m_contourConstants.viewProjectionMatrix = m_modelConstants.viewProjectionMatrix;
-	m_contourConstants.modelMatrix = m_modelConstants.modelMatrix;
-	
-	Vector3 planeNormal = Vector3(0.0f, 1.0f, 0.0f);
-	Vector3 pointOnPlane = Vector3(0.0f, y, 0.0f);
-	m_contourConstants.plane = Vector4(planeNormal, -Dot(pointOnPlane, planeNormal));
-
-	m_contourConstantBuffer->Update(sizeof(ContourConstants), &m_contourConstants);
 }
 
 
