@@ -94,8 +94,20 @@ void FillRasterizerDesc2(D3D12_RASTERIZER_DESC2& rasterizerDesc, const Rasterize
 	rasterizerDesc.DepthBiasClamp = desc.depthBiasClamp;
 	rasterizerDesc.SlopeScaledDepthBias = desc.slopeScaledDepthBias;
 	rasterizerDesc.DepthClipEnable = desc.depthClipEnable ? TRUE : FALSE;
-	rasterizerDesc.LineRasterizationMode = 
-		desc.antialiasedLineEnable ? D3D12_LINE_RASTERIZATION_MODE_ALPHA_ANTIALIASED : D3D12_LINE_RASTERIZATION_MODE_ALIASED;
+
+	if (desc.multisampleEnable)
+	{
+		rasterizerDesc.LineRasterizationMode = D3D12_LINE_RASTERIZATION_MODE_QUADRILATERAL_WIDE;
+	}
+	else if (desc.antialiasedLineEnable)
+	{
+		rasterizerDesc.LineRasterizationMode = D3D12_LINE_RASTERIZATION_MODE_ALPHA_ANTIALIASED;
+	}
+	else
+	{
+		rasterizerDesc.LineRasterizationMode = D3D12_LINE_RASTERIZATION_MODE_ALIASED;
+	}
+
 	rasterizerDesc.ForcedSampleCount = desc.forcedSampleCount;
 	rasterizerDesc.ConservativeRaster =
 		desc.conservativeRasterizationEnable ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;

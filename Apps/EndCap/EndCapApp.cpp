@@ -106,8 +106,13 @@ void EndCapApp::Render()
 		m_planeModel->Render(context);
 	}
 
+	context.EndRendering();
+
 	// Generate end cap
 	m_endCapGenerator.Render(context, m_model.get());
+
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
+	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
 	RenderGrid(context);
 	RenderUI(context);
@@ -229,6 +234,7 @@ void EndCapApp::UpdateConstantBuffers()
 {
 	m_modelConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 	m_modelConstants.modelMatrix = Matrix4(kIdentity);
+	m_modelConstants.modelViewMatrix = m_camera.GetViewMatrix();
 	m_modelConstants.lightPos = Vector4(3.0f, 10.0f, 3.0f, 1.0f);
 	m_modelConstants.modelColor = Vector4(0.6f, 0.6f, 0.9f, 0.0f);
 
@@ -251,6 +257,7 @@ void EndCapApp::LoadAssets()
 	auto layout = VertexLayout<VertexComponent::PositionNormalColor>();
 
 	m_model = LoadModel("venus.gltf", layout, 1.8f);
+	//m_model = LoadModel("sphere.gltf", layout, 1.0f);
 
 	m_planeModel = LoadModel("plane.gltf", layout, 0.3f);
 }

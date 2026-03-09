@@ -33,6 +33,7 @@ public:
 private:
 	void InitRootSignatures();
 	void InitPipelines();
+	void InitBuffers();
 
 	void UpdateConstantBuffers(float planeY);
 
@@ -51,13 +52,29 @@ private:
 	bool m_pipelineCreated{ false };
 
 	// Contour constants
-	struct ContourConstants
+	struct GSContourConstants
 	{
-		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
 		Math::Matrix4 modelMatrix{ Math::kIdentity };
 		Math::Vector4 plane{ Math::kZero };
 	};
 
-	Luna::GpuBufferPtr m_contourConstantBuffer;
-	ContourConstants m_contourConstants;
+	Luna::GpuBufferPtr m_gsContourConstantBuffer;
+	GSContourConstants m_gsContourConstants;
+
+	struct PSContourConstants
+	{
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
+		Math::Vector4 worldUpVector{ Math::kYUnitVector };
+		Math::Vector4 viewPos{ Math::kZero };
+	};
+
+	Luna::GpuBufferPtr m_psContourConstantBuffer;
+	PSContourConstants m_psContourConstants;
+
+	// Color and depth buffers
+	Luna::ColorBufferPtr m_colorBuffer;
+	Luna::ColorBufferPtr m_normalBuffer;
+	Luna::DepthBufferPtr m_depthBuffer;
 };

@@ -19,6 +19,9 @@
     <None Include="Shaders\ContourGS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\LineDetectCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

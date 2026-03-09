@@ -25,6 +25,8 @@ struct VSOutput
     float3 color : COLOR;
     float3 viewVec : TEXCOORD0;
     float3 lightVec : TEXCOORD1;
+    float3 normalVS : TEXCOORD2;
+    float3 normalSS : TEXCOORD3;
 };
 
 
@@ -32,6 +34,7 @@ cbuffer VSConstants : BINDING(b0, 0)
 {
     float4x4 projectionMatrix;
     float4x4 modelMatrix;
+    float4x4 modelViewMatrix;
     float4 lightPos;
     float3 modelColor;
 };
@@ -42,6 +45,8 @@ VSOutput main(VSInput input)
     VSOutput output = (VSOutput) 0;
 
     output.normal = mul((float3x3) modelMatrix, input.normal);
+    output.normalVS = mul((float3x3) modelViewMatrix, input.normal);
+    output.normalSS = mul((float3x3) projectionMatrix, input.normal);
     output.color = modelColor;
 
     float4 pos = mul(modelMatrix, float4(input.pos, 1.0f));

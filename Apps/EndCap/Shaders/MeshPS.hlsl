@@ -15,6 +15,8 @@ struct PSInput
     float3 color : COLOR;
     float3 viewVec : TEXCOORD0;
     float3 lightVec : TEXCOORD1;
+    float3 normalVS : TEXCOORD2;
+    float3 normalSS : TEXCOORD3;
 };
 
 
@@ -30,5 +32,7 @@ float4 main(PSInput input) : SV_Target
     //float3 specular = pow(max(dot(R, V), 0.0), 16.0) * 0.75.xxx;
     float3 specular = 0.0.xxx;
 
-    return float4((ambient + diffuse) * input.color.rgb + specular, 1.0);
+    //return float4((ambient + diffuse) * input.color.rgb + specular, 1.0);
+    return float4(0.25 * input.normalSS, 1.0);
+
 }

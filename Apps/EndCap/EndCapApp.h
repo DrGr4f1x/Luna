@@ -52,6 +52,7 @@ protected:
 	{
 		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
 		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
 		Math::Vector4 lightPos{ 0.0f, -2.0f, 1.0f, 0.0f };
 		Math::Vector4 modelColor{ 0.5f, 0.5f, 0.5f, 0.0f };
 	};

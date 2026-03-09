@@ -10,15 +10,17 @@
 
 struct VSInput
 {
-    float3 pos : POSITION;
-    float3 normal : NORMAL;
+    float3 pos      : POSITION;
+    float3 normal   : NORMAL;
+    float4 color    : COLOR;
 };
 
 
 struct VSOutput
 {
-    float3 pos : POSITION;
-    float3 normal : NORMAL;
+    float3 pos      : POSITION;
+    float3 normal   : NORMAL;
+    float4 color    : COLOR;
 };
 
 
@@ -28,6 +30,7 @@ VSOutput main(VSInput input)
 
     output.pos = input.pos;
     output.normal = input.normal;
+    output.color = input.color;
 
     return output;
 }
