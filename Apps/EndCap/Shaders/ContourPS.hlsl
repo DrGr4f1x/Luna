@@ -42,6 +42,7 @@ PSOutput main(PSInput input)
     output.color = float4(input.color, 1.0);
     
     float3 normal = normalize(float3(input.normal.xy, 0.0));
+    normal.y = -normal.y;
     output.normal = float4(normal, 1.0);
     
     return output;

@@ -19,7 +19,13 @@
     <None Include="Shaders\ContourGS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\LineDetectCS.hlsl">
+    <None Include="Shaders\JumpFloodInitCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\JumpFloodCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\MedianFilterCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

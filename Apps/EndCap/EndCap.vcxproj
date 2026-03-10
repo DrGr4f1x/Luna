@@ -69,7 +69,17 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\LineDetectCS.hlsl">
+    <None Include="Shaders\JumpFloodInitCS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\JumpFloodCS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\MedianFilterCS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
