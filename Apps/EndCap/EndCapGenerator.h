@@ -28,7 +28,7 @@ public:
 	void CreateWindowSizeDependentResources();
 
 	void Update(float planeY);
-	void Render(Luna::GraphicsContext& context, Luna::Model* model);
+	void Render(Luna::GraphicsContext& context, Luna::Model* model, bool multipleModels);
 
 private:
 	void InitRootSignatures();

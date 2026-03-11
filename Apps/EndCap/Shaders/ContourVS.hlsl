@@ -24,11 +24,19 @@ struct VSOutput
 };
 
 
+struct Model
+{
+    float3 posOffset;
+};
+[[vk::push_constant]]
+ConstantBuffer<Model> Model : register(b0);
+
+
 VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
 
-    output.pos = input.pos;
+    output.pos = input.pos + Model.posOffset;
     output.normal = input.normal;
     output.color = input.color;
 

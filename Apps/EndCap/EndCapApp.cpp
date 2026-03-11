@@ -69,6 +69,7 @@ void EndCapApp::UpdateUI()
 	if (m_uiOverlay->Header("Settings"))
 	{
 		m_uiOverlay->SliderFloat("Plane Height", &m_planeDelta, 0.0f, 1.0f);
+		m_uiOverlay->CheckBox("Multiple Models", &m_multipleModels);
 	}
 }
 
@@ -95,7 +96,21 @@ void EndCapApp::Render()
 		ScopedDrawEvent event(context, "Model");
 
 		context.SetRootCBV(0, m_modelConstantBuffer);
-		m_model->Render(context);
+
+		if (m_multipleModels)
+		{
+			float xOffset[] = { -0.6f, 0.0f, 0.6f };
+			for (uint32_t i = 0; i < _countof(xOffset); ++i)
+			{
+				context.SetConstants(1, xOffset[i], 0.0f, 0.0f);
+				m_model->Render(context);
+			}
+		}
+		else
+		{
+			context.SetConstants(1, 0.0f, 0.0f, 0.0f);
+			m_model->Render(context);
+		}
 	}
 	
 	// Draw plane
@@ -103,13 +118,14 @@ void EndCapApp::Render()
 		ScopedDrawEvent event(context, "Plane");
 
 		context.SetRootCBV(0, m_planeConstantBuffer);
+		context.SetConstants(1, 0.0f, 0.0f, 0.0f);
 		m_planeModel->Render(context);
 	}
 
 	context.EndRendering();
 
 	// Generate end cap
-	m_endCapGenerator.Render(context, m_model.get());
+	m_endCapGenerator.Render(context, m_model.get(), m_multipleModels);
 
 	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
@@ -182,7 +198,10 @@ void EndCapApp::InitRootSignatures()
 {
 	auto meshDesc = RootSignatureDesc{
 		.name				= "Mesh Root Signature",
-		.rootParameters		= {	RootCBV(0, ShaderStage::Vertex) }
+		.rootParameters		= {	
+			RootCBV(0, ShaderStage::Vertex),
+			RootConstants(1, 3, ShaderStage::Vertex)
+		}
 	};
 
 	m_meshRootSignature = CreateRootSignature(meshDesc);

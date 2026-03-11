@@ -58,7 +58,7 @@ void EndCapGenerator::Update(float planeY)
 }
 
 
-void EndCapGenerator::Render(GraphicsContext& context, Model* model)
+void EndCapGenerator::Render(GraphicsContext& context, Model* model, bool multipleModels)
 {
 	ScopedDrawEvent event(context, "End Cap");
 
@@ -81,10 +81,23 @@ void EndCapGenerator::Render(GraphicsContext& context, Model* model)
 	context.SetRootSignature(m_contourRootSignature);
 	context.SetGraphicsPipeline(m_contourPipeline);
 
-	context.SetRootCBV(0, m_gsContourConstantBuffer);
-	context.SetRootCBV(1, m_psContourConstantBuffer);
+	context.SetRootCBV(1, m_gsContourConstantBuffer);
+	context.SetRootCBV(2, m_psContourConstantBuffer);
 
-	model->Render(context);
+	if (multipleModels)
+	{
+		float xOffset[] = { -0.6f, 0.0f, 0.6f };
+		for (uint32_t i = 0; i < _countof(xOffset); ++i)
+		{
+			context.SetConstants(0, xOffset[i], 0.0f, 0.0f);
+			model->Render(context);
+		}
+	}
+	else
+	{
+		context.SetConstants(0, 0.0f, 0.0f, 0.0f);
+		model->Render(context);
+	}
 
 	context.EndRendering();
 
@@ -165,7 +178,8 @@ void EndCapGenerator::InitRootSignatures()
 {
 	RootSignatureDesc contourDesc{
 		.name				= "Contour Root Signature",
-		.rootParameters		= {	
+		.rootParameters		= {
+			RootConstants(0, 3, ShaderStage::Vertex),
 			RootCBV(0, ShaderStage::Geometry),
 			RootCBV(0, ShaderStage::Pixel)
 		}

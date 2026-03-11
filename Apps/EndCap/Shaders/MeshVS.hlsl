@@ -40,6 +40,14 @@ cbuffer VSConstants : BINDING(b0, 0)
 };
 
 
+struct Model
+{
+    float3 posOffset;
+};
+[[vk::push_constant]]
+ConstantBuffer<Model> Model : register(b1);
+
+
 VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
@@ -49,7 +57,7 @@ VSOutput main(VSInput input)
     output.normalSS = mul((float3x3) projectionMatrix, input.normal);
     output.color = modelColor;
 
-    float4 pos = mul(modelMatrix, float4(input.pos, 1.0f));
+    float4 pos = mul(modelMatrix, float4(input.pos + Model.posOffset, 1.0f));
 
     output.lightVec = lightPos.xyz - pos.xyz;
     output.viewVec = -pos.xyz;

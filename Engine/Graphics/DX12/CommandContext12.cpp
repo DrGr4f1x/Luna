@@ -700,11 +700,11 @@ void CommandContext12::SetConstant(CommandListType type, uint32_t rootIndex, uin
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 	if (type == CommandListType::Graphics)
 	{
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(val.value), offset);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, val.u_value, offset);
 	}
 	else
 	{
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(val.value), offset);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, val.u_value, offset);
 	}
 }
 
@@ -714,11 +714,11 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 	if (type == CommandListType::Graphics)
 	{
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.u_value, 0);
 	}
 	else
 	{
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, x.u_value, 0);
 	}
 }
 
@@ -728,13 +728,13 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 	if (type == CommandListType::Graphics)
 	{
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.u_value, 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, y.u_value, 1);
 	}
 	else
 	{
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, x.u_value, 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, y.u_value, 1);
 	}
 }
 
@@ -744,15 +744,15 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 	if (type == CommandListType::Graphics)
 	{
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.u_value, 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, y.u_value, 1);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, z.u_value, 2);
 	}
 	else
 	{
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, x.u_value, 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, y.u_value, 1);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, z.u_value, 2);
 	}
 }
 
@@ -762,17 +762,17 @@ void CommandContext12::SetConstants(CommandListType type, uint32_t rootIndex, DW
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 	if (type == CommandListType::Graphics)
 	{
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
-		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, get<uint32_t>(w.value), 3);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, x.u_value, 0);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, y.u_value, 1);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, z.u_value, 2);
+		m_commandList->SetGraphicsRoot32BitConstant(rootIndex, w.u_value, 3);
 	}
 	else
 	{
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(x.value), 0);
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(y.value), 1);
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(z.value), 2);
-		m_commandList->SetComputeRoot32BitConstant(rootIndex, get<uint32_t>(w.value), 3);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, x.u_value, 0);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, y.u_value, 1);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, z.u_value, 2);
+		m_commandList->SetComputeRoot32BitConstant(rootIndex, w.u_value, 3);
 	}
 }
 

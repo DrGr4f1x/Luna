@@ -15,15 +15,20 @@ namespace Luna
 
 struct DWParam
 {
-	DWParam(float f) : value{ f } {}
-	DWParam(uint32_t u) : value{ u } {}
-	DWParam(int32_t i) : value{ i } {}
+	DWParam(float f) : f_value{ f } {}
+	DWParam(uint32_t u) : u_value{ u } {}
+	DWParam(int32_t i) : i_value{ i } {}
 
-	void operator=(float f) { value = f; }
-	void operator=(uint32_t u) { value = u; }
-	void operator=(int32_t i) { value = i; }
+	void operator=(float f) { f_value = f; }
+	void operator=(uint32_t u) { u_value = u; }
+	void operator=(int32_t i) { i_value = i; }
 
-	std::variant<float, uint32_t, int32_t> value;
+	union
+	{
+		float f_value;
+		uint32_t u_value;
+		int32_t i_value;
+	};
 };
 
 } // namespace Luna

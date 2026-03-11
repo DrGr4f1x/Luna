@@ -85,4 +85,7 @@ protected:
 	float m_planeY = 0.0f;
 	float m_minY = -1.0f;
 	float m_maxY = 1.0f;
+
+	// Scene controls
+	bool m_multipleModels{ false };
 };

@@ -1065,7 +1065,7 @@ void CommandContextVK::SetConstantArray(CommandListType type, uint32_t rootIndex
 
 void CommandContextVK::SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val)
 {
-	uint32_t v = get<uint32_t>(val.value);
+	uint32_t v = val.u_value;
 	vkCmdPushConstants(
 		m_commandBuffer,
 		GetPipelineLayout(type),
@@ -1078,7 +1078,7 @@ void CommandContextVK::SetConstant(CommandListType type, uint32_t rootIndex, uin
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x)
 {
-	uint32_t v = get<uint32_t>(x.value);
+	uint32_t v = x.u_value;
 	vkCmdPushConstants(
 		m_commandBuffer,
 		GetPipelineLayout(type),
@@ -1091,7 +1091,7 @@ void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y)
 {
-	uint32_t val[] = { get<uint32_t>(x.value), get<uint32_t>(y.value) };
+	uint32_t val[] = { x.u_value, y.u_value };
 	vkCmdPushConstants(
 		m_commandBuffer,
 		GetPipelineLayout(type),
@@ -1104,7 +1104,7 @@ void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
 {
-	uint32_t val[] = { get<uint32_t>(x.value), get<uint32_t>(y.value), get<uint32_t>(z.value) };
+	uint32_t val[] = { x.u_value, y.u_value, z.u_value };
 	vkCmdPushConstants(
 		m_commandBuffer,
 		GetPipelineLayout(type),
@@ -1117,7 +1117,7 @@ void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
-	uint32_t val[] = { get<uint32_t>(x.value), get<uint32_t>(y.value), get<uint32_t>(z.value), get<uint32_t>(w.value) };
+	uint32_t val[] = { x.u_value, y.u_value, z.u_value, w.u_value };
 	vkCmdPushConstants(
 		m_commandBuffer,
 		GetPipelineLayout(type),
