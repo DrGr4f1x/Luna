@@ -83,7 +83,7 @@ void main(uint3 DTid : SV_DispatchThreadId)
                     
                         if (dot(sampleData.zw, sampleVector) < 0.0)
                         {
-                            localClass = 1;
+                            localClass = sampleClass;
                         }
                         else
                         {

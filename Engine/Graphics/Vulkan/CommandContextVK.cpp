@@ -550,7 +550,6 @@ DynAlloc CommandContextVK::ReserveUploadMemory(size_t sizeInBytes)
 
 void CommandContextVK::ClearUAV(IGpuBuffer* gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 

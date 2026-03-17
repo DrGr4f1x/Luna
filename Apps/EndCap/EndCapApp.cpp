@@ -70,6 +70,8 @@ void EndCapApp::UpdateUI()
 	{
 		m_uiOverlay->SliderFloat("Plane Height", &m_planeDelta, 0.0f, 1.0f);
 		m_uiOverlay->CheckBox("Multiple Models", &m_multipleModels);
+		m_uiOverlay->CheckBox("Apply Cut", &m_applyCut);
+		m_uiOverlay->ComboBox("Model", &m_curModel, m_modelNames);
 	}
 }
 
@@ -92,24 +94,28 @@ void EndCapApp::Render()
 	context.SetGraphicsPipeline(m_meshPipeline);
 
 	// Draw model
+	auto model = m_models[m_curModel];
+
 	{
 		ScopedDrawEvent event(context, "Model");
 
 		context.SetRootCBV(0, m_modelConstantBuffer);
+
+		int applyCut = m_applyCut ? 1 : 0;
 
 		if (m_multipleModels)
 		{
 			float xOffset[] = { -0.6f, 0.0f, 0.6f };
 			for (uint32_t i = 0; i < _countof(xOffset); ++i)
 			{
-				context.SetConstants(1, xOffset[i], 0.0f, 0.0f);
-				m_model->Render(context);
+				context.SetConstants(1, xOffset[i], 0.0f, 0.0f, applyCut);
+				model->Render(context);
 			}
 		}
 		else
 		{
-			context.SetConstants(1, 0.0f, 0.0f, 0.0f);
-			m_model->Render(context);
+			context.SetConstants(1, 0.0f, 0.0f, 0.0f, applyCut);
+			model->Render(context);
 		}
 	}
 	
@@ -125,7 +131,7 @@ void EndCapApp::Render()
 	context.EndRendering();
 
 	// Generate end cap
-	m_endCapGenerator.Render(context, m_model.get(), m_multipleModels);
+	m_endCapGenerator.Render(context, model.get(), m_multipleModels);
 
 	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
@@ -159,13 +165,13 @@ void EndCapApp::CreateDeviceDependentResources()
 
 	LoadAssets();
 
-	m_modelBounds = m_model->boundingBox;
-	m_minY = m_modelBounds.GetMin().GetY();
-	m_maxY = m_modelBounds.GetMax().GetY();
+	BoundingBox bounds = BoundingBoxUnion(m_modelBounds);
+	m_minY = bounds.GetMin().GetY();
+	m_maxY = bounds.GetMax().GetY();
 
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(m_modelBounds.GetCenter(), 4.0f, 0.25f);
+	m_controller.SetOrbitTarget(bounds.GetCenter(), 4.0f, 0.25f);
 	m_controller.SlowMovement(true);
 	m_controller.SlowRotation(false);
 	m_controller.SetSpeedScale(0.25f);
@@ -200,7 +206,7 @@ void EndCapApp::InitRootSignatures()
 		.name				= "Mesh Root Signature",
 		.rootParameters		= {	
 			RootCBV(0, ShaderStage::Vertex),
-			RootConstants(1, 3, ShaderStage::Vertex)
+			RootConstants(1, 4, ShaderStage::Vertex)
 		}
 	};
 
@@ -257,13 +263,15 @@ void EndCapApp::UpdateConstantBuffers()
 	m_modelConstants.lightPos = Vector4(3.0f, 10.0f, 3.0f, 1.0f);
 	m_modelConstants.modelColor = Vector4(0.6f, 0.6f, 0.9f, 0.0f);
 
+	Vector3 planeNormal = Vector3(0.0f, 1.0f, 0.0f);
+	Vector3 pointOnPlane = Vector3(0.0f, m_planeY, 0.0f);
+	m_modelConstants.clipPlane = Vector4(planeNormal, -Dot(pointOnPlane, planeNormal));
+
 	m_modelConstantBuffer->Update(sizeof(Constants), &m_modelConstants);
 
 	m_planeConstants.viewProjectionMatrix = m_camera.GetViewProjectionMatrix();
 
-	float y = Lerp(m_minY, m_maxY, m_planeDelta);
-
-	m_planeConstants.modelMatrix = Matrix4::MakeTranslation(0.0f, y, 0.0f);
+	m_planeConstants.modelMatrix = Matrix4::MakeTranslation(0.0f, m_planeY, 0.0f);
 	m_planeConstants.lightPos = Vector4(3.0f, 10.0f, 3.0f, 1.0f);
 	m_planeConstants.modelColor = Vector4(0.7f, 0.7f, 0.7f, 0.0f);
 
@@ -275,8 +283,35 @@ void EndCapApp::LoadAssets()
 {
 	auto layout = VertexLayout<VertexComponent::PositionNormalColor>();
 
-	m_model = LoadModel("venus.gltf", layout, 1.8f);
-	//m_model = LoadModel("sphere.gltf", layout, 1.0f);
+	// Sphere
+	auto model = LoadModel("sphere.gltf", layout, 1.0f);
+	m_models.push_back(model);
+	m_modelNames.push_back("Sphere");
+	m_modelBounds.push_back(model->boundingBox);
+
+	// Venus
+	model = LoadModel("venus.gltf", layout, 1.8f);
+	m_models.push_back(model);
+	m_modelNames.push_back("Venus");
+	m_modelBounds.push_back(model->boundingBox);
+
+	// Coral 1
+	model = LoadModel("astraea_fissicella_favistella/scene.gltf", layout, 30.0f);
+	m_models.push_back(model);
+	m_modelNames.push_back("Coral 1");
+	m_modelBounds.push_back(model->boundingBox);
+
+	// Coral 2
+	model = LoadModel("gemmipora_brassica/scene.gltf", layout, 6.0f);
+	m_models.push_back(model);
+	m_modelNames.push_back("Coral 2");
+	m_modelBounds.push_back(model->boundingBox);
+
+	// Coral 3
+	model = LoadModel("distichopora_violacea/scene.gltf", layout, 8.0f);
+	m_models.push_back(model);
+	m_modelNames.push_back("Coral 3");
+	m_modelBounds.push_back(model->boundingBox);
 
 	m_planeModel = LoadModel("plane.gltf", layout, 0.3f);
 }

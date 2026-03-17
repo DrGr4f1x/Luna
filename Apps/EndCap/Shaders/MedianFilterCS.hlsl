@@ -11,7 +11,7 @@
 #include "Common.hlsli"
 
 Texture2D<uint> inputClassTex : BINDING(t0, 0);
-Texture2D<float4> contourTex : BINDING(t1, 0);
+Texture2D<float4> contourDataTex : BINDING(t1, 0);
 RWTexture2D<uint> outputClassTex : BINDING(u0, 0);
 SamplerState clampSampler : register(s0);
 
@@ -82,7 +82,7 @@ void main(uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV
         gs_C[ulIdx + 10], gs_C[ulIdx + 11], gs_C[ulIdx + 12],
         gs_C[ulIdx + 20], gs_C[ulIdx + 21], gs_C[ulIdx + 22]);
     
-    uint originalClass = contourTex[DTid.xy].r > 0.0 ? 1 : 0;
+    uint originalClass = contourDataTex[DTid.xy].z > 0.0 ? 1 : 0;
     
     outputClassTex[st] = originalClass == 1 ? 1 : medC;
 }

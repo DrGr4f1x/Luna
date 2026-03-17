@@ -49,6 +49,26 @@ private:
 
 	Luna::Application* m_app{ nullptr };
 
+	// Bounds init
+	Luna::RootSignaturePtr m_boundsInitRootSig;
+	Luna::ComputePipelinePtr m_boundsInitPipeline;
+
+	Luna::DescriptorSetPtr m_boundsInitDescriptors;
+
+	Luna::GpuBufferPtr m_boundsBuffer;
+
+	// Border init
+	Luna::RootSignaturePtr m_borderInitRootSig;
+	Luna::ComputePipelinePtr m_borderInitPipeline;
+
+	Luna::DescriptorSetPtr m_leftRightBorderInitDescriptors;
+	Luna::DescriptorSetPtr m_topBottomBorderInitDescriptors;
+
+	Luna::GpuBufferPtr m_leftBorderBuffer;
+	Luna::GpuBufferPtr m_rightBorderBuffer;
+	Luna::GpuBufferPtr m_topBorderBuffer;
+	Luna::GpuBufferPtr m_bottomBorderBuffer;
+
 	// Contour RS and PSO
 	Luna::RootSignaturePtr m_contourRootSignature;
 	Luna::GraphicsPipelinePtr m_contourPipeline;
@@ -66,20 +86,65 @@ private:
 	Luna::GpuBufferPtr m_gsContourConstantBuffer;
 	GSContourConstants m_gsContourConstants;
 
-	struct PSContourConstants
-	{
-		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
-		Math::Vector4 worldUpVector{ Math::kYUnitVector };
-		Math::Vector4 viewPos{ Math::kZero };
-	};
-
-	Luna::GpuBufferPtr m_psContourConstantBuffer;
-	PSContourConstants m_psContourConstants;
+	Luna::DescriptorSetPtr m_psContourDescriptors;
 
 	// Color and depth buffers
-	Luna::ColorBufferPtr m_colorBuffer;
-	Luna::ColorBufferPtr m_normalBuffer;
+	Luna::ColorBufferPtr m_contourDataBuffer;
 	Luna::DepthBufferPtr m_depthBuffer;
+
+	// Outer boundary
+	Luna::RootSignaturePtr m_outerBoundaryRootSig;
+	Luna::ComputePipelinePtr m_outerBoundaryPipeline;
+
+	Luna::ColorBufferPtr m_outerBoundaryBuffer;
+
+	Luna::DescriptorSetPtr m_outerBoundaryDescriptors;
+
+	// Edge crossing
+	Luna::RootSignaturePtr m_edgeCrossingRootSig;
+	Luna::ComputePipelinePtr m_edgeCrossingPipeline;
+
+	Luna::ColorBufferPtr m_edgeCrossingBuffer;
+	Luna::ColorBufferPtr m_edgeCrossingBuffer2;
+	Luna::ColorBufferPtr m_edgeIdBuffer;
+
+	struct EdgeCrossingConstants
+	{
+		float texDimensions[2] = { 0.0f, 0.0f };
+		float invTexDimensions[2] = { 1.0f, 1.0f };
+	};
+
+	EdgeCrossingConstants m_edgeCrossingConstants;
+	Luna::GpuBufferPtr m_edgeCrossingConstantBuffer;
+
+	Luna::DescriptorSetPtr m_edgeCrossingDescriptors;
+
+	// Fill
+	Luna::RootSignaturePtr m_fillRootSig;
+	Luna::ComputePipelinePtr m_fillPipeline;
+
+	Luna::ColorBufferPtr m_endCapMaskBuffer;
+	Luna::ColorBufferPtr m_fillDebugTex;
+
+	Luna::DescriptorSetPtr m_fillDescriptors;
+
+	// Edge downsample
+	Luna::RootSignaturePtr m_edgeDownsampleRootSig;
+	Luna::ComputePipelinePtr m_edgeDownsamplePipeline;
+
+	Luna::ColorBufferPtr m_edgeDownsample8xBuffer;
+	Luna::ColorBufferPtr m_edgeDownsample64xBuffer;
+
+	Luna::DescriptorSetPtr m_edgeDownsample8xDescriptors;
+	Luna::DescriptorSetPtr m_edgeDownsample64xDescriptors;
+
+	// Edge cull
+	Luna::RootSignaturePtr m_edgeCullRootSig;
+	Luna::ComputePipelinePtr m_edgeCullPipeline;
+
+	Luna::ColorBufferPtr m_edgeCullDebugBuffer;
+
+	Luna::DescriptorSetPtr m_edgeCullDescriptors;
 
 	// Jump flood RS and PSOs
 	Luna::RootSignaturePtr m_jumpFloodInitRootSig;

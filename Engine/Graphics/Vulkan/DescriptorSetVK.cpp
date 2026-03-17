@@ -160,6 +160,7 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
 
 	const uint32_t regShift = GetRegisterShiftSRV();
+	const bool isTypedBuffer = gpuBuffer->GetResourceType() == ResourceType::TypedBuffer;
 
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -167,13 +168,13 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 		.dstBinding			= regShift + srvRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+		.descriptorType		= isTypedBuffer ? VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 	};
 
 	VkBufferView texelBufferView = VK_NULL_HANDLE;
 	VkDescriptorBufferInfo info{};
 
-	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
+	if (isTypedBuffer)
 	{
 		texelBufferView = descriptor->GetBufferView();
 		writeDescriptorSet.pTexelBufferView = &texelBufferView;
@@ -254,6 +255,7 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 	const Descriptor* descriptor = (const Descriptor*)gpuBuffer->GetUavDescriptor();
 
 	const uint32_t regShift = GetRegisterShiftUAV();
+	const bool isTypedBuffer = gpuBuffer->GetResourceType() == ResourceType::TypedBuffer;
 
 	VkWriteDescriptorSet writeDescriptorSet{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
@@ -261,13 +263,13 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 		.dstBinding			= regShift + uavRegister,
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+		.descriptorType		= isTypedBuffer? VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 	};
 
 	VkBufferView texelBufferView = VK_NULL_HANDLE;
 	VkDescriptorBufferInfo info{};
 
-	if (gpuBuffer->GetResourceType() == ResourceType::TypedBuffer)
+	if (isTypedBuffer)
 	{
 		texelBufferView = descriptor->GetBufferView();
 		writeDescriptorSet.pTexelBufferView = &texelBufferView;

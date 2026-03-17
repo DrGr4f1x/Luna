@@ -28,6 +28,42 @@
     <None Include="Shaders\MedianFilterCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\ContourPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\ContourVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\MeshPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\MeshVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\BoundsInitCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\PrepareEdgeCullCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\EdgeCullCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\EdgeCrossingCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\BorderInitCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\OuterContourCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\DownsampleContoursCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\FillCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -36,19 +72,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\MeshPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\MeshVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ContourVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\ContourPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

@@ -21,24 +21,26 @@ struct VSOutput
     float3 pos      : POSITION;
     float3 normal   : NORMAL;
     float4 color    : COLOR;
+    float id        : TEXCOORD;
 };
 
 
-struct Model
+struct PerModelData
 {
-    float3 posOffset;
+    float4 posOffsetId;
 };
 [[vk::push_constant]]
-ConstantBuffer<Model> Model : register(b0);
+ConstantBuffer<PerModelData> Model : register(b0);
 
 
 VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
 
-    output.pos = input.pos + Model.posOffset;
+    output.pos = input.pos + Model.posOffsetId.xyz;
     output.normal = input.normal;
     output.color = input.color;
+    output.id = Model.posOffsetId.w;
 
     return output;
 }

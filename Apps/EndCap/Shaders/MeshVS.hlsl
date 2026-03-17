@@ -23,6 +23,7 @@ struct VSOutput
     float4 pos : SV_Position;
     float3 normal : NORMAL;
     float3 color : COLOR;
+    float clipDistance : SV_ClipDistance;
     float3 viewVec : TEXCOORD0;
     float3 lightVec : TEXCOORD1;
     float3 normalVS : TEXCOORD2;
@@ -37,12 +38,14 @@ cbuffer VSConstants : BINDING(b0, 0)
     float4x4 modelViewMatrix;
     float4 lightPos;
     float3 modelColor;
+    float4 clipPlane;
 };
 
 
 struct Model
 {
     float3 posOffset;
+    int applyCut;
 };
 [[vk::push_constant]]
 ConstantBuffer<Model> Model : register(b1);
@@ -64,5 +67,13 @@ VSOutput main(VSInput input)
 
     output.pos = mul(projectionMatrix, pos);
 
+    output.clipDistance = 1.0;
+    if (Model.applyCut > 0)
+    {
+        // We're keeping points below the plane, so take the negative
+        output.clipDistance = -(dot(pos.xyz, clipPlane.xyz) + clipPlane.w);
+
+    }
+    
     return output;
 }

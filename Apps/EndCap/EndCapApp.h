@@ -55,6 +55,7 @@ protected:
 		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
 		Math::Vector4 lightPos{ 0.0f, -2.0f, 1.0f, 0.0f };
 		Math::Vector4 modelColor{ 0.5f, 0.5f, 0.5f, 0.0f };
+		Math::Vector4 clipPlane{ 0.0f, 0.0f, 0.0f, 0.0f };
 	};
 
 	Luna::RootSignaturePtr m_meshRootSignature;
@@ -73,8 +74,10 @@ protected:
 	// End cap generator
 	EndCapGenerator m_endCapGenerator;
 
-	Luna::ModelPtr m_model;
-	Math::BoundingBox m_modelBounds;
+	std::vector<Luna::ModelPtr> m_models;
+	std::vector<std::string> m_modelNames;
+	std::vector<Math::BoundingBox> m_modelBounds;
+	int32_t	m_curModel{ 0 };
 
 	Luna::ModelPtr m_planeModel;
 
@@ -87,5 +90,6 @@ protected:
 	float m_maxY = 1.0f;
 
 	// Scene controls
+	bool m_applyCut{ false };
 	bool m_multipleModels{ false };
 };

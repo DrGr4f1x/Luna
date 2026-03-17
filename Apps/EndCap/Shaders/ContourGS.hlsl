@@ -12,8 +12,10 @@
 
 struct GSInput
 {
-    float3 pos : POSITION;
-    float3 normal : NORMAL;
+    float3 pos      : POSITION;
+    float3 normal   : NORMAL;
+    float4 color    : COLOR;
+    float id        : TEXCOORD;
 };
 
 
@@ -23,6 +25,7 @@ struct GSOutput
     float3 normal   : NORMAL;
     float3 color    : COLOR;
     float4 wpos     : TEXCOORD;
+    float id        : TEXCOORD1;
 };
 
 
@@ -50,7 +53,7 @@ GSOutput EmitVertex(float d0, float3 pt0, float d1, float3 pt1)
     
     output.pos = mul(modelViewProjectionMatrix, float4(intpos, 1.0f));
     output.color = float4(1.0, 0.0, 0.0, 1.0);
-    output.wpos = float4(intpos, 1.0);
+    output.wpos = float4(intpos, 0.0);
     
     return output;
 }
@@ -132,6 +135,8 @@ void main(triangle GSInput input[3], inout LineStream<GSOutput> outputStream)
     normal = mul((float3x3) modelViewProjectionMatrix, normal);
     output[0].normal = normal;
     output[1].normal = normal;
+    output[0].id = input[0].id;
+    output[1].id = input[0].id;
         
     outputStream.Append(output[0]);
     outputStream.Append(output[1]);

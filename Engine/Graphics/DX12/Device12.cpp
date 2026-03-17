@@ -417,7 +417,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-			.Format						= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+			.Format						= FormatToDxgi(gpuBufferDesc.format).srvFormat,
 			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
 			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
 			.Buffer = {
@@ -429,7 +429,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-			.Format				= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+			.Format				= FormatToDxgi(gpuBufferDesc.format).srvFormat,
 			.ViewDimension		= D3D12_UAV_DIMENSION_BUFFER,
 			.Buffer = {
 				.NumElements	= (uint32_t)gpuBufferDesc.elementCount,
@@ -1315,8 +1315,8 @@ wil::com_ptr<D3D12MA::Allocation> Device::AllocateBuffer(const GpuBufferDesc& gp
 		.Height				= 1,
 		.DepthOrArraySize	= 1,
 		.MipLevels			= 1,
-		.Format				= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
-		.SampleDesc		= { .Count = 1, .Quality = 0 },
+		.Format				= DXGI_FORMAT_UNKNOWN,
+		.SampleDesc			= { .Count = 1, .Quality = 0 },
 		.Layout				= D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
 		.Flags				= flags
 	};

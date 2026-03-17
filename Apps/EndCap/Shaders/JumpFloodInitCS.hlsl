@@ -10,25 +10,25 @@
 
 #include "Common.hlsli"
 
-Texture2D contourTex : BINDING(t0, 0);
-Texture2D normalTex : BINDING(t1, 0);
+Texture2D contourDataTex : BINDING(t0, 0);
 RWTexture2D<float4> outDataTex : BINDING(u0, 0);
 RWTexture2D<uint> outClassTex : BINDING(u1, 0);
 
 [numthreads(8, 8, 1)]
 void main(uint3 DTid : SV_DispatchThreadId)
 {
-    float r = contourTex[DTid.xy].x;
+    float4 contourData = contourDataTex[DTid.xy];
     
     float4 outData = float4(-1.0, -1.0, 0.0, 0.0);
-    uint outClass = (r > 0.0) ? 1 : 0;
+    //uint outClass = (contourData.z > 0.0) ? 1 : 0;
+    uint outClass = (uint) contourData.w;
     
-    if (outClass == 1)
+    if (outClass > 0)
     {
         outData.x = (float) DTid.x;
         outData.y = (float) DTid.y;
         
-        outData.zw = normalTex[DTid.xy].xy;
+        outData.zw = contourData.xy;
     }
     
     outDataTex[DTid.xy] = outData;
