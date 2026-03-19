@@ -1,0 +1,8 @@
+Model Information:
+* title:	Pseudodiploria strigosa
+* source:	https://sketchfab.com/3d-models/pseudodiploria-strigosa-8db353e299634cf1bfeca6f6d112582d
+* author:	The Smithsonian Institution (https://sketchfab.com/Smithsonian)
+
+Model License:
+* license type:	CC0-1.0 (http://creativecommons.org/publicdomain/zero/1.0/)
+* requirements:	Credit is not mandatory. Commercial use is allowed.

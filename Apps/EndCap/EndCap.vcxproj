@@ -69,32 +69,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\JumpFloodInitCS.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\JumpFloodCS.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Shaders\MedianFilterCS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\BoundsInitCS.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\PrepareEdgeCullCS.hlsl">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\EdgeCullCS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
@@ -114,12 +94,26 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\DownsampleContoursCS.hlsl">
+    <None Include="Shaders\FillCS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\FillCS.hlsl">
+    <None Include="Shaders\EndCapPS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\EndCapVS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\NormalDebugGS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\NormalDebugPS.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\NormalDebugVS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

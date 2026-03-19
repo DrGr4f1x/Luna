@@ -67,6 +67,17 @@ void Grid::CreateWindowSizeDependentResources()
 }
 
 
+void Grid::SetGridColor(Color gridColor)
+{
+	m_gridColor = gridColor;
+
+	if (m_vertexBuffer)
+	{
+		InitMesh();
+	}
+}
+
+
 void Grid::InitMesh()
 {
 	vector<Vertex> vertices;
@@ -85,22 +96,16 @@ void Grid::InitMesh()
 	{
 		if (j == 0)
 		{
-			Color color = DirectX::Colors::WhiteSmoke;
+			InsertVertex(-width, 0.0f, zCur, m_gridColor);
+			InsertVertex(0.0f, 0.0f, zCur, m_gridColor);
 
-			InsertVertex(-width, 0.0f, zCur, color);
-			InsertVertex(0.0f, 0.0f, zCur, color);
-
-			color = DirectX::Colors::Red;
-
-			InsertVertex(0.0f, 0.0f, zCur, color);
-			InsertVertex(width + 1.0f, 0.0f, zCur, color);
+			InsertVertex(0.0f, 0.0f, zCur, DirectX::Colors::Red);
+			InsertVertex(width + 1.0f, 0.0f, zCur, DirectX::Colors::Red);
 		}
 		else
 		{
-			Color color = DirectX::Colors::WhiteSmoke;
-
-			InsertVertex(-width, 0.0f, zCur, color);
-			InsertVertex(width, 0.0f, zCur, color);
+			InsertVertex(-width, 0.0f, zCur, m_gridColor);
+			InsertVertex(width, 0.0f, zCur, m_gridColor);
 		}
 		zCur += 1.0f;
 	}
@@ -111,22 +116,16 @@ void Grid::InitMesh()
 	{
 		if (j == 0)
 		{
-			Color color = DirectX::Colors::WhiteSmoke;
+			InsertVertex(xCur, 0.0f, -height, m_gridColor);
+			InsertVertex(xCur, 0.0f, 0.0f, m_gridColor);
 
-			InsertVertex(xCur, 0.0f, -height, color);
-			InsertVertex(xCur, 0.0f, 0.0f, color);
-
-			color = DirectX::Colors::Blue;
-
-			InsertVertex(xCur, 0.0f, 0.0f, color);
-			InsertVertex(xCur, 0.0f, height + 1.0f, color);
+			InsertVertex(xCur, 0.0f, 0.0f, DirectX::Colors::Blue);
+			InsertVertex(xCur, 0.0f, height + 1.0f, DirectX::Colors::Blue);
 		}
 		else
 		{
-			Color color = DirectX::Colors::WhiteSmoke;
-
-			InsertVertex(xCur, 0.0f, -height, color);
-			InsertVertex(xCur, 0.0f, height, color);
+			InsertVertex(xCur, 0.0f, -height, m_gridColor);
+			InsertVertex(xCur, 0.0f, height, m_gridColor);
 		}
 		xCur += 1.0f;
 	}

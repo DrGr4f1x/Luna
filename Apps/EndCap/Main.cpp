@@ -15,7 +15,7 @@
 
 int main(int argc, char* argv[])
 {
-	EndCapApp app{ 1920, 1080 };
+	EndCapApp app{ 2560, 1440 };
 	
 	app.ProcessCommandLine(argc, argv);
 

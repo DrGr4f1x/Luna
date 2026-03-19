@@ -22,7 +22,7 @@ struct VSOutput
 {
     float4 pos : SV_Position;
     float3 normal : NORMAL;
-    float3 color : COLOR;
+    float4 color : COLOR;
     float clipDistance : SV_ClipDistance;
     float3 viewVec : TEXCOORD0;
     float3 lightVec : TEXCOORD1;
@@ -39,6 +39,7 @@ cbuffer VSConstants : BINDING(b0, 0)
     float4 lightPos;
     float3 modelColor;
     float4 clipPlane;
+    float alpha;
 };
 
 
@@ -58,7 +59,7 @@ VSOutput main(VSInput input)
     output.normal = mul((float3x3) modelMatrix, input.normal);
     output.normalVS = mul((float3x3) modelViewMatrix, input.normal);
     output.normalSS = mul((float3x3) projectionMatrix, input.normal);
-    output.color = modelColor;
+    output.color = float4(modelColor, alpha);
 
     float4 pos = mul(modelMatrix, float4(input.pos + Model.posOffset, 1.0f));
 

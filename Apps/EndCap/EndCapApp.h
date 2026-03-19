@@ -35,10 +35,13 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
+	void InitDescriptorSet();
 
 	void UpdateConstantBuffers();
 
 	void LoadAssets();
+
+	void OnModelChanged();
 
 protected:
 	struct Vertex
@@ -56,6 +59,7 @@ protected:
 		Math::Vector4 lightPos{ 0.0f, -2.0f, 1.0f, 0.0f };
 		Math::Vector4 modelColor{ 0.5f, 0.5f, 0.5f, 0.0f };
 		Math::Vector4 clipPlane{ 0.0f, 0.0f, 0.0f, 0.0f };
+		float alpha{ 1.0f };
 	};
 
 	Luna::RootSignaturePtr m_meshRootSignature;
@@ -67,7 +71,9 @@ protected:
 	Luna::GpuBufferPtr m_modelConstantBuffer;
 	Constants m_modelConstants;
 
-	// Plane model constants
+	// Plane model variables
+	Luna::GraphicsPipelinePtr m_planePipeline;
+	Math::Matrix4 m_planeScaleMatrix;
 	Luna::GpuBufferPtr m_planeConstantBuffer;
 	Constants m_planeConstants;
 
@@ -76,20 +82,41 @@ protected:
 
 	std::vector<Luna::ModelPtr> m_models;
 	std::vector<std::string> m_modelNames;
-	std::vector<Math::BoundingBox> m_modelBounds;
 	int32_t	m_curModel{ 0 };
 
 	Luna::ModelPtr m_planeModel;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 
+	// End cap rendering
+	Luna::RootSignaturePtr m_endCapRootSig;
+	Luna::GraphicsPipelinePtr m_endCapPipeline;
+
+	struct EndCapConstants
+	{
+		Math::Matrix4 viewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
+		Math::Vector4 lightPos{ 0.0f, -2.0f, 1.0f, 0.0f };
+		Math::Vector4 modelColor{ 0.5f, 0.5f, 0.5f, 0.0f };
+	};
+
+	Luna::GpuBufferPtr m_endCapConstantBuffer;
+	EndCapConstants m_endCapConstants;
+
+	Luna::DescriptorSetPtr m_endCapDescriptors;
+
 	// Controls and position of the cut plane
 	float m_planeDelta = 0.0f;
 	float m_planeY = 0.0f;
 	float m_minY = -1.0f;
 	float m_maxY = 1.0f;
+	float m_alpha{ 0.5f };
 
 	// Scene controls
 	bool m_applyCut{ false };
 	bool m_multipleModels{ false };
+	bool m_debugNormals{ false };
+	bool m_showEndCap{ true };
+	float m_normalLength{ 0.15f };
 };

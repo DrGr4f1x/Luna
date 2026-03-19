@@ -10,6 +10,7 @@
 
 #include "Common.hlsli"
 
+[[vk::image_format("r8ui")]]
 RWTexture2D<uint> OuterContourTex : BINDING(u0, 0);
 Buffer<int> LeftBounds : BINDING(t0, 0);
 Buffer<int> RightBounds : BINDING(t1, 0);

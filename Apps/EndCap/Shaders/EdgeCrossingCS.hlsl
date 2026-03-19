@@ -10,11 +10,14 @@
 
 #include "Common.hlsli"
 
-Texture2D<float4> contourDataTex : BINDING(t0, 0);
-RWTexture2D<float4> outEdgeCrossingTex : BINDING(u0, 0);
-RWTexture2D<uint> outEdgeId : BINDING(u1, 0);
-RWTexture2D<uint> outEdgeCrossingTex2 : BINDING(u2, 0);
-SamplerState clampSampler : register(s0);
+Texture2D<float4> contourDataTex        : BINDING(t0, 0);
+[[vk::image_format("rgba8ui")]]
+RWTexture2D<uint4> outEdgeCrossingTex   : BINDING(u0, 0);
+[[vk::image_format("r8ui")]]
+RWTexture2D<uint> outEdgeId             : BINDING(u1, 0);
+[[vk::image_format("r8ui")]]
+RWTexture2D<uint> outEdgeCrossingTex2   : BINDING(u2, 0);
+SamplerState clampSampler               : BINDING(s0, 1);
 
 struct Constants
 {

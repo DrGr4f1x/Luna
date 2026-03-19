@@ -28,8 +28,9 @@ class GraphicsContext;
 class Grid
 {
 public:
-	explicit Grid(Application* application) 
+	Grid(Application* application, Color gridColor) 
 		: m_application{ application } 
+		, m_gridColor{ gridColor }
 	{}
 
 	void Update(const Camera& camera);
@@ -37,6 +38,8 @@ public:
 
 	void CreateDeviceDependentResources();
 	void CreateWindowSizeDependentResources();
+
+	void SetGridColor(Color gridColor);
 
 protected:
 	void InitMesh();
@@ -55,6 +58,8 @@ protected:
 		float position[3];
 		float color[4];
 	};
+
+	Color m_gridColor{ DirectX::Colors::WhiteSmoke };
 
 	// Vertex buffer and attributes
 	Luna::GpuBufferPtr m_vertexBuffer;

@@ -10,13 +10,16 @@
 
 #include "Common.hlsli"
 
+[[vk::image_format("r8ui")]]
 RWTexture2D<uint> endCapMaskTex : BINDING(u0, 0);
-RWTexture2D<uint> fillDebugTex  : BINDING(u1, 1);
+[[vk::image_format("r8ui")]]
+RWTexture2D<uint> fillDebugTex  : BINDING(u1, 0);
 Texture2D<uint> edgeCrossingTex : BINDING(t0, 0);
-Buffer<int> LeftBounds          : BINDING(t1, 0);
-Buffer<int> RightBounds         : BINDING(t2, 0);
-Buffer<int> TopBounds           : BINDING(t3, 0);
-Buffer<int> BottomBounds        : BINDING(t4, 0);
+Texture2D<uint2> stencilTex     : BINDING(t1, 0);
+Buffer<int> LeftBounds          : BINDING(t2, 0);
+Buffer<int> RightBounds         : BINDING(t3, 0);
+Buffer<int> TopBounds           : BINDING(t4, 0);
+Buffer<int> BottomBounds        : BINDING(t5, 0);
 
 struct Constants_t
 {
@@ -50,6 +53,7 @@ void main(uint3 DTid : SV_DispatchThreadId)
         {
             const int2 st = int2(col, DTid.x);
             const uint edgeStatePacked = (uint) edgeCrossingTex[st].r;
+            const uint incVal = (uint) stencilTex[st].g;
             
             bool isLeftEdge = (edgeStatePacked & (1 << 0)) == (1 << 0);
             bool isRightEdge = (edgeStatePacked & (1 << 1)) == (1 << 1);
@@ -57,11 +61,11 @@ void main(uint3 DTid : SV_DispatchThreadId)
             bool shouldDraw = edgeCount > 0;
             
             if (isLeftEdge)
-                edgeCount += 1;
+                edgeCount += (int) incVal;
             else if (isRightEdge)
             {
-                if (edgeCount > 0)
-                    edgeCount -= 1;
+                edgeCount -= (int) incVal;
+                edgeCount = max(edgeCount, 0);
             }
 
             if (edgeCount > 1 || shouldDraw)

@@ -496,6 +496,16 @@ void Application::RenderGrid(GraphicsContext& context)
 }
 
 
+void Application::SetGridColor(Color gridColor)
+{
+	m_gridColor = gridColor;
+	if (m_grid)
+	{
+		m_grid->SetGridColor(gridColor);
+	}
+}
+
+
 bool Application::Initialize()
 {
 	// Create core engine systems
@@ -519,7 +529,7 @@ bool Application::Initialize()
 
 	CreateDeviceManager();
 
-	m_grid = make_unique<Grid>(this);
+	m_grid = make_unique<Grid>(this, m_gridColor);
 	m_uiOverlay = make_unique<UIOverlay>(this, m_pWindow, m_appInfo.api);
 
 	// Call the base then the derived function

@@ -19,12 +19,6 @@
     <None Include="Shaders\ContourGS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\JumpFloodInitCS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\JumpFloodCS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\MedianFilterCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
@@ -43,12 +37,6 @@
     <None Include="Shaders\BoundsInitCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\PrepareEdgeCullCS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="Shaders\EdgeCullCS.hlsl">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="Shaders\EdgeCrossingCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
@@ -58,10 +46,22 @@
     <None Include="Shaders\OuterContourCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\DownsampleContoursCS.hlsl">
+    <None Include="Shaders\FillCS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\FillCS.hlsl">
+    <None Include="Shaders\EndCapPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\EndCapVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\NormalDebugGS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\NormalDebugPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\NormalDebugVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

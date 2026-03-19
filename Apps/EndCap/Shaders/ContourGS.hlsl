@@ -29,9 +29,10 @@ struct GSOutput
 };
 
 
-cbuffer GSConstants : BINDING(b0, 0)
+cbuffer GSConstants : BINDING(b0, 1)
 {
     float4x4 modelViewProjectionMatrix;
+    float4x4 modelViewProjectionInvTransposeMatrix;
     float4x4 modelViewMatrix;
     float4x4 modelMatrix;
     float4 plane;
@@ -132,7 +133,7 @@ void main(triangle GSInput input[3], inout LineStream<GSOutput> outputStream)
     // Calculate the normal.  The point of all the bitmask logic is to ensure
     // that we can calculate a normal that is pointing out from the edge (and the face of the triangle)
     float3 normal = cross(normalize(output[1].wpos.xyz - output[0].wpos.xyz), plane.xyz);
-    normal = mul((float3x3) modelViewProjectionMatrix, normal);
+    normal = mul((float3x3) modelViewProjectionInvTransposeMatrix, normal);
     output[0].normal = normal;
     output[1].normal = normal;
     output[0].id = input[0].id;

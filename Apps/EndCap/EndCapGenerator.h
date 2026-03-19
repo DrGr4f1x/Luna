@@ -27,17 +27,18 @@ public:
 	void CreateDeviceDependentResources();
 	void CreateWindowSizeDependentResources();
 
-	void Update(float planeY);
+	void Update(bool debugNormals, float planeY, float normalLength);
 	void Render(Luna::GraphicsContext& context, Luna::Model* model, bool multipleModels);
+
+	Luna::ColorBufferPtr GetEndCapMaskTexture() { return m_filteredBuffer; }
 
 private:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitBuffers();
-	void InitJfaSteps();
 	void InitDescriptorSets();
 
-	void UpdateConstantBuffers(float planeY);
+	void UpdateConstantBuffers(float planeY, float normalLength);
 
 private:
 	struct Vertex
@@ -48,6 +49,7 @@ private:
 	};
 
 	Luna::Application* m_app{ nullptr };
+	bool m_debugNormals{ false };
 
 	// Bounds init
 	Luna::RootSignaturePtr m_boundsInitRootSig;
@@ -78,6 +80,7 @@ private:
 	struct GSContourConstants
 	{
 		Math::Matrix4 modelViewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewProjectionInvTransposeMatrix{ Math::kIdentity };
 		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
 		Math::Matrix4 modelMatrix{ Math::kIdentity };
 		Math::Vector4 plane{ Math::kZero };
@@ -128,51 +131,6 @@ private:
 
 	Luna::DescriptorSetPtr m_fillDescriptors;
 
-	// Edge downsample
-	Luna::RootSignaturePtr m_edgeDownsampleRootSig;
-	Luna::ComputePipelinePtr m_edgeDownsamplePipeline;
-
-	Luna::ColorBufferPtr m_edgeDownsample8xBuffer;
-	Luna::ColorBufferPtr m_edgeDownsample64xBuffer;
-
-	Luna::DescriptorSetPtr m_edgeDownsample8xDescriptors;
-	Luna::DescriptorSetPtr m_edgeDownsample64xDescriptors;
-
-	// Edge cull
-	Luna::RootSignaturePtr m_edgeCullRootSig;
-	Luna::ComputePipelinePtr m_edgeCullPipeline;
-
-	Luna::ColorBufferPtr m_edgeCullDebugBuffer;
-
-	Luna::DescriptorSetPtr m_edgeCullDescriptors;
-
-	// Jump flood RS and PSOs
-	Luna::RootSignaturePtr m_jumpFloodInitRootSig;
-	Luna::ComputePipelinePtr m_jumpFloodInitPipeline;
-
-	Luna::RootSignaturePtr m_jumpFloodRootSig;
-	Luna::ComputePipelinePtr m_jumpFloodPipeline;
-
-	// Jump flood buffers
-	Luna::ColorBufferPtr m_jumpFloodDataBuffers[2];
-	Luna::ColorBufferPtr m_jumpFloodClassBuffers[2];
-
-	// Jump flood init descriptor set
-	Luna::DescriptorSetPtr m_jumpFloodInitDescriptors;
-
-	struct JumpFloodConstants
-	{
-		int texWidth{ 1 };
-		int texHeight{ 1 };
-	};
-
-	JumpFloodConstants m_jumpFloodConstants;
-	Luna::GpuBufferPtr m_jumpFloodConstantBuffer;
-
-	std::vector<std::pair<uint32_t, uint32_t>> m_jfaSteps;
-
-	std::vector<Luna::DescriptorSetPtr> m_jumpFloodDescriptors;
-
 	// Median filter
 	Luna::RootSignaturePtr m_medianFilterRootSig;
 	Luna::ComputePipelinePtr m_medianFilterPipeline;
@@ -186,7 +144,24 @@ private:
 	MedianFilterConstants m_medianFilterConstants;
 	Luna::GpuBufferPtr m_medianFilterConstantBuffer;
 
-	Luna::DescriptorSetPtr m_medianFilterDescriptors[2];
+	Luna::DescriptorSetPtr m_medianFilterDescriptors;
 
-	Luna::ColorBufferPtr m_filteredClassBuffer;
+	Luna::ColorBufferPtr m_filteredBuffer;
+
+	// Debug normals 
+	Luna::RootSignaturePtr m_debugNormalsRootSig;
+	Luna::GraphicsPipelinePtr m_debugNormalsPipeline;
+
+	// Debug normal constants
+	struct GSDebugNormalsConstants
+	{
+		Math::Matrix4 modelViewProjectionMatrix{ Math::kIdentity };
+		Math::Matrix4 modelViewMatrix{ Math::kIdentity };
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector4 plane{ Math::kZero };
+		float normalLength{ 1.0f };
+	};
+
+	Luna::GpuBufferPtr m_gsDebugNormalsConstantBuffer;
+	GSDebugNormalsConstants m_gsDebugNormalsConstants;
 };

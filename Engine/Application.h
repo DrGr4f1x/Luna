@@ -148,6 +148,9 @@ protected:
 	void RenderUI(GraphicsContext& context);
 	void RenderGrid(GraphicsContext& context);
 
+	// To be called in Configure()
+	void SetGridColor(Color color);
+
 protected:
 	FrameProCloser m_frameProCloser{};
 
@@ -185,6 +188,8 @@ protected:
 
 	// Rendering resources
 	DepthBufferPtr m_depthBuffer;
+
+	Color m_gridColor{ DirectX::Colors::WhiteSmoke };
 
 private:
 	bool Initialize();

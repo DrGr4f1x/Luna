@@ -10,11 +10,11 @@
 
 #include "Common.hlsli"
 
-RWBuffer<int> BoundsBuffer : BINDING(u0, 0);
-RWBuffer<int> LeftBounds : BINDING(u1, 0);
-RWBuffer<int> RightBounds : BINDING(u2, 0);
-RWBuffer<int> TopBounds : BINDING(u3, 0);
-RWBuffer<int> BottomBounds : BINDING(u4, 0);
+RWBuffer<int> BoundsBuffer  : BINDING(u0, 2);
+RWBuffer<int> LeftBounds    : BINDING(u1, 2);
+RWBuffer<int> RightBounds   : BINDING(u2, 2);
+RWBuffer<int> TopBounds     : BINDING(u3, 2);
+RWBuffer<int> BottomBounds  : BINDING(u4, 2);
 
 struct PSInput
 {

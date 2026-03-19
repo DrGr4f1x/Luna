@@ -10,10 +10,10 @@
 
 #include "Common.hlsli"
 
-Texture2D<uint> inputClassTex : BINDING(t0, 0);
-Texture2D<float4> contourDataTex : BINDING(t1, 0);
-RWTexture2D<uint> outputClassTex : BINDING(u0, 0);
-SamplerState clampSampler : register(s0);
+Texture2D<uint> inputTex        : BINDING(t0, 0);
+[[vk::image_format("r8ui")]]
+RWTexture2D<uint> outputTex     : BINDING(u0, 0);
+SamplerState clampSampler       : BINDING(s0, 1);
 
 struct Constants
 {
@@ -62,14 +62,14 @@ void main(uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV
     if (GTid.x < 5 && GTid.y < 5)
     {
         float2 prefetchUV = (st + GTid.xy) * Globals.invTexDimensions;
-        uint4 C = inputClassTex.GatherRed(clampSampler, prefetchUV);
+        uint4 val = inputTex.GatherRed(clampSampler, prefetchUV);
         
         uint destIdx = GTid * 2 + GTid.y * 2 * 10;
         
-        gs_C[destIdx] = (C.w == 1) ? 1 : 0;
-        gs_C[destIdx + 1] = (C.z == 1) ? 1 : 0;
-        gs_C[destIdx + 10] = (C.x == 1) ? 1 : 0;
-        gs_C[destIdx + 11] = (C.y == 1) ? 1 : 0;
+        gs_C[destIdx] = val.w;
+        gs_C[destIdx + 1] = val.z;
+        gs_C[destIdx + 10] = val.x;
+        gs_C[destIdx + 11] = val.y;
 
     }
     
@@ -82,7 +82,5 @@ void main(uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV
         gs_C[ulIdx + 10], gs_C[ulIdx + 11], gs_C[ulIdx + 12],
         gs_C[ulIdx + 20], gs_C[ulIdx + 21], gs_C[ulIdx + 22]);
     
-    uint originalClass = contourDataTex[DTid.xy].z > 0.0 ? 1 : 0;
-    
-    outputClassTex[st] = originalClass == 1 ? 1 : medC;
+    outputTex[st] = medC;
 }
