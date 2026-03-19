@@ -59,7 +59,7 @@ void EndCapGenerator::Update(bool debugNormals, float planeY, float normalLength
 
 void EndCapGenerator::Render(GraphicsContext& context, Model* model, bool multipleModels)
 {
-	ScopedDrawEvent event(context, "End Cap");
+	ScopedDrawEvent event(context, "Generate End Cap");
 
 	uint32_t width = (uint32_t)m_contourDataBuffer->GetWidth();
 	uint32_t height = m_contourDataBuffer->GetHeight();
