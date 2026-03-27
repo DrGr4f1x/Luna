@@ -341,7 +341,15 @@ DynAlloc CommandContext12::ReserveUploadMemory(size_t sizeInBytes)
 
 void CommandContext12::ClearUAV(IGpuBuffer* gpuBuffer)
 {
-	// TODO: We need to allocate a GPU descriptor, so need to implement dynamic descriptor heaps to do this.
+	FlushResourceBarriers();
+
+	// After binding a UAV, we can get a GPU handle that is required to clear it as a UAV (because it essentially runs
+	// a shader to set all of the values).
+	Descriptor* uavDescriptor = (Descriptor*)gpuBuffer->GetUavDescriptor();
+
+	D3D12_GPU_DESCRIPTOR_HANDLE GpuVisibleHandle = m_dynamicViewDescriptorHeap.UploadDirect(uavDescriptor->GetHandleCPU());
+	const UINT clearColor[4] = {};
+	m_commandList->ClearUnorderedAccessViewUint(GpuVisibleHandle, uavDescriptor->GetHandleCPU(), ((GpuBuffer*)gpuBuffer)->GetResource(), clearColor, 0, nullptr);
 }
 
 
