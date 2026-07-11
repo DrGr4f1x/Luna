@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions xmlns="http://schemas.microsoft.com/build/2009/properties">
+  <!-- Associate LunaShaderCfg item type with .cfg files -->
+  <ItemType Name="LunaShaderCfg" DisplayName="Luna Shader Config" />
+  <ContentType Name="LunaShaderCfg" ItemType="LunaShaderCfg" DisplayName="Luna Shader Config" />
+  <FileExtension Name=".cfg" ContentType="LunaShaderCfg" />
+</ProjectSchemaDefinitions>
