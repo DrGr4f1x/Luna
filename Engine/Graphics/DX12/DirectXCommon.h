@@ -23,7 +23,7 @@
 // DirectX 12 headers
 #include <d3d12.h>
 #if USE_AGILITY_SDK
-#define D3D12_AGILITY_SDK_VERSION 616
+#define D3D12_AGILITY_SDK_VERSION 619
 #include <d3dx12\d3dx12.h>
 #else
 #define D3D12_AGILITY_SDK_VERSION 0
@@ -58,7 +58,7 @@
 #endif // (D3D12_AGILITY_SDK_VERSION >= 616)
 
 #define D3D12MA_D3D12_HEADERS_ALREADY_INCLUDED 1
-#include "D3D12MemAlloc.h"
+#include <D3D12MemAlloc.h>
 
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\DX12\Enums12.h"

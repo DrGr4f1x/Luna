@@ -16,7 +16,7 @@
 #include "Graphics\Texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "..\External\stb\stb_image.h"
+#include <stb_image.h>
 
 
 namespace Luna

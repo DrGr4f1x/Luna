@@ -407,3 +407,6 @@ FodyWeavers.xsd
 
 # PIX captures
 *.wpix
+
+# vcpkg build artifacts and installed dependencies
+vcpkg_installed/

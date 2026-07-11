@@ -22,13 +22,13 @@
 #include <vulkan\vulkan.h>
 #pragma comment(lib, "vulkan-1.lib")
 
-#include <External/volk/volk.h>
+#include <volk.h>
 
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
-#include "External\VulkanMemoryAllocator\include\vk_mem_alloc.h"
+#include "vma\vk_mem_alloc.h"
 
-#include "External/vk-bootstrap/src/VkBootstrap.h"
+#include "VkBootstrap.h"
 
 #define USE_DESCRIPTOR_BUFFERS 0
 #define USE_LEGACY_DESCRIPTOR_SETS (!USE_DESCRIPTOR_BUFFERS)

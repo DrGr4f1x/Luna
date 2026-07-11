@@ -87,9 +87,6 @@
     <ClCompile Include="Graphics\Vulkan\CommandContextVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\D3D12MemoryAllocator\src\D3D12MemAlloc.cpp">
-      <Filter>External\D3D12MemoryAllocator</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\InputLayout.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -122,17 +119,11 @@
     <ClCompile Include="Graphics\DX12\DynamicDescriptorHeap12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\vk-bootstrap\src\VkBootstrap.cpp">
-      <Filter>External\vk-bootstrap</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\Vulkan\DynamicDescriptorHeapVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\volk\volk.c">
-      <Filter>External\volk</Filter>
     </ClCompile>
     <ClCompile Include="Core\Profiling.cpp">
       <Filter>Core</Filter>
@@ -187,33 +178,6 @@
     </ClCompile>
     <ClCompile Include="Graphics\UIOverlay.cpp">
       <Filter>Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\backends\imgui_impl_dx12.cpp">
-      <Filter>External\imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\backends\imgui_impl_glfw.cpp">
-      <Filter>External\imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\backends\imgui_impl_vulkan.cpp">
-      <Filter>External\imgui\backends</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\misc\cpp\imgui_stdlib.cpp">
-      <Filter>External\imgui\misc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\imgui.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\imgui_demo.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\imgui_draw.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\imgui_tables.cpp">
-      <Filter>External\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\imgui\imgui_widgets.cpp">
-      <Filter>External\imgui</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\Model.cpp">
       <Filter>Graphics</Filter>
@@ -436,9 +400,6 @@
     <ClInclude Include="Graphics\GpuBuffer.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\D3D12MemoryAllocator\include\D3D12MemAlloc.h">
-      <Filter>External\D3D12MemoryAllocator</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\RootSignature.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -477,12 +438,6 @@
     <ClInclude Include="Graphics\DX12\DynamicDescriptorHeap12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrapDispatch.h">
-      <Filter>External\vk-bootstrap</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\vk-bootstrap\src\VkBootstrap.h">
-      <Filter>External\vk-bootstrap</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Vulkan\DynamicDescriptorHeapVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
@@ -491,9 +446,6 @@
     </ClInclude>
     <ClInclude Include="Graphics\Vulkan\HashVK.h">
       <Filter>Graphics\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\volk\volk.h">
-      <Filter>External\volk</Filter>
     </ClInclude>
     <ClInclude Include="Core\Profiling.h">
       <Filter>Core</Filter>
@@ -582,36 +534,6 @@
     <ClInclude Include="Graphics\UIOverlay.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\imgui\imgui.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\backends\imgui_impl_dx12.h">
-      <Filter>External\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\backends\imgui_impl_glfw.h">
-      <Filter>External\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\backends\imgui_impl_vulkan.h">
-      <Filter>External\imgui\backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\misc\cpp\imgui_stdlib.h">
-      <Filter>External\imgui\misc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\imconfig.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\imgui_internal.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\imstb_rectpack.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\imstb_textedit.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\imgui\imstb_truetype.h">
-      <Filter>External\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Model.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -684,29 +606,11 @@
     <Filter Include="External">
       <UniqueIdentifier>{292eff18-e6b3-4d0b-b58a-dfeea620a2fa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="External\D3D12MemoryAllocator">
-      <UniqueIdentifier>{59823768-1df6-473b-92a4-bf53b64cf05b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\vk-bootstrap">
-      <UniqueIdentifier>{06149bfa-c211-4463-bb4a-52bf5cc8fab2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\volk">
-      <UniqueIdentifier>{a92d6ce0-eb31-48a6-8c92-4697353a93f4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Graphics\Shaders">
       <UniqueIdentifier>{7c537d5b-1c16-423d-9c65-8cd97eb4e865}</UniqueIdentifier>
     </Filter>
     <Filter Include="Graphics\Loaders">
       <UniqueIdentifier>{767998e0-58e2-4189-ac3d-fd272850b2ee}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\imgui">
-      <UniqueIdentifier>{a1b5cbda-4177-45e2-9b8a-f735d56873e0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\imgui\backends">
-      <UniqueIdentifier>{e2b457ab-45d1-493a-a499-8bdda845a9d0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\imgui\misc">
-      <UniqueIdentifier>{b6f615ff-07e5-4362-a334-00921dbb0734}</UniqueIdentifier>
     </Filter>
     <Filter Include="External\FramePro">
       <UniqueIdentifier>{25bbef98-7975-4ed9-b196-ea73d75ed1d0}</UniqueIdentifier>

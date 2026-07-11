@@ -1,0 +1,23 @@
+{
+  "dependencies": [
+    "assimp",
+    "d3d12-memory-allocator",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding"
+      ]
+    },
+    {
+      "name": "ktx",
+      "features": [
+        "vulkan"
+      ]
+    },
+    "stb",
+    "vk-bootstrap",
+    "volk",
+    "vulkan-memory-allocator"
+  ],
+  "builtin-baseline": "03e366fb91e38b9432ebd5f8cc79f7c8f55e96ab"
+}
