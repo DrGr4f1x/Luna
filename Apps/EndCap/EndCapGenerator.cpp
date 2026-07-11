@@ -34,6 +34,7 @@ void EndCapGenerator::CreateDeviceDependentResources()
 	m_edgeCrossingConstantBuffer = CreateConstantBuffer("Edge crossing constant buffer", 1, sizeof(EdgeCrossingConstants));
 	m_medianFilterConstantBuffer = CreateConstantBuffer("Median filter constant buffer", 1, sizeof(MedianFilterConstants));
 	m_gsDebugNormalsConstantBuffer = CreateConstantBuffer("GS Debug Normals Constant Buffer", 1, sizeof(GSDebugNormalsConstants));
+	m_edgeGenConstantBuffer = CreateConstantBuffer("Edge Gen Constant Buffer", 1, sizeof(EdgeGenConstants));
 }
 
 
@@ -363,6 +364,16 @@ void EndCapGenerator::InitRootSignatures()
 		}
 	};
 	m_debugNormalsRootSig = m_app->CreateRootSignature(debugNormalsDesc);
+
+	// Edge gen
+	RootSignatureDesc edgeGenDesc{
+		.name				= "Edge Gen Root Signature",
+		.rootParameters		= {
+			Table({ TypedBufferSRV(0, 2), StructuredBufferUAV, ConstantBuffer }, ShaderStage::Compute),
+			RootConstants(1, 1, ShaderStage::Compute)
+		}
+	};
+	m_edgeGenRootSig = m_app->CreateRootSignature(edgeGenDesc);
 }
 
 
@@ -473,6 +484,14 @@ void EndCapGenerator::InitPipelines()
 	};
 
 	m_debugNormalsPipeline = m_app->CreateGraphicsPipeline(debugNormalsPipelineDesc);
+
+	// Edge gen
+	ComputePipelineDesc edgeGenDesc{
+		.name			= "Edge gen PSO",
+		.computeShader	= { .shaderFile = "EdgeGenCS" },
+		.rootSignature	= m_edgeGenRootSig
+	};
+	m_edgeGenPipeline = m_app->CreateComputePipeline(edgeGenDesc);
 }
 
 
@@ -695,4 +714,10 @@ void EndCapGenerator::UpdateConstantBuffers(float planeY, float normalLength)
 	m_gsDebugNormalsConstants.normalLength = normalLength;
 
 	m_gsDebugNormalsConstantBuffer->Update(sizeof(GSDebugNormalsConstants), &m_gsDebugNormalsConstants);
+
+	// Edge gen
+	m_edgeGenConstants.modelMatrix = modelMatrix;
+	m_edgeGenConstants.plane = m_gsContourConstants.plane;
+
+	m_edgeGenConstantBuffer->Update(sizeof(EdgeGenConstants), &m_edgeGenConstants);
 }

@@ -64,6 +64,9 @@
     <None Include="Shaders\NormalDebugVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\EdgeGenCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

@@ -164,4 +164,21 @@ private:
 
 	Luna::GpuBufferPtr m_gsDebugNormalsConstantBuffer;
 	GSDebugNormalsConstants m_gsDebugNormalsConstants;
+
+	// Edge gen
+	Luna::RootSignaturePtr m_edgeGenRootSig;
+	Luna::ComputePipelinePtr m_edgeGenPipeline;
+
+	struct EdgeGenConstants
+	{
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector4 plane{ Math::kZero };
+	};
+
+	EdgeGenConstants m_edgeGenConstants;
+	Luna::GpuBufferPtr m_edgeGenConstantBuffer;
+
+	Luna::GpuBufferPtr m_edgeBuffer;
+
+	Luna::DescriptorSetPtr m_edgeGenDescriptors;
 };
