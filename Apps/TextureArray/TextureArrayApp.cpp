@@ -106,7 +106,12 @@ void TextureArrayApp::Render()
 
 	// Bind descriptor sets
 	context.SetRootCBV(0, m_constantBuffer);
+
+#if APP_DYNAMIC_DESCRIPTORS
+	context.SetSRV(1, 0, m_texture);
+#else
 	context.SetDescriptors(1, m_srvDescriptorSet);
+#endif
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 	context.SetVertexBuffer(0, m_vertexBuffer);
@@ -131,7 +136,9 @@ void TextureArrayApp::CreateDeviceDependentResources()
 	LoadAssets();
 	InitConstantBuffer();
 
+#if !APP_DYNAMIC_DESCRIPTORS
 	InitDescriptorSet();
+#endif
 }
 
 
@@ -231,11 +238,13 @@ void TextureArrayApp::InitConstantBuffer()
 }
 
 
+#if !APP_DYNAMIC_DESCRIPTORS
 void TextureArrayApp::InitDescriptorSet()
 {
 	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
+#endif
 
 
 void TextureArrayApp::UpdateConstantBuffer()

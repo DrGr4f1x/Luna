@@ -108,7 +108,11 @@ void TextureCubeMapApp::Render()
 
 		// Bind descriptors
 		context.SetRootCBV(0, m_vsSkyboxConstantBuffer);
+#if APP_DYNAMIC_DESCRIPTORS
+		context.SetSRV(1, 0, m_skyboxTex);
+#else
 		context.SetDescriptors(1, m_skyBoxSrvDescriptorSet);
+#endif
 
 		m_skyboxModel->Render(context);
 	}
@@ -123,7 +127,12 @@ void TextureCubeMapApp::Render()
 
 		// Bind descriptors
 		context.SetRootCBV(0, m_vsModelConstantBuffer);
+#if APP_DYNAMIC_DESCRIPTORS
+		context.SetCBV(1, 0, m_psModelConstantBuffer);
+		context.SetSRV(1, 0, m_skyboxTex);
+#else
 		context.SetDescriptors(1, m_modelCbvSrvDescriptorSet);
+#endif
 
 		model->Render(context);
 	}
@@ -148,7 +157,9 @@ void TextureCubeMapApp::CreateDeviceDependentResources()
 	m_psModelConstantBuffer = CreateConstantBuffer("PS Model Constant Buffer", 1, sizeof(PSConstants));
 
 	LoadAssets();
+#if !APP_DYNAMIC_DESCRIPTORS
 	InitDescriptorSets();
+#endif
 }
 
 
@@ -248,6 +259,7 @@ void TextureCubeMapApp::InitPipelines()
 }
 
 
+#if !APP_DYNAMIC_DESCRIPTORS
 void TextureCubeMapApp::InitDescriptorSets()
 {
 	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
@@ -257,6 +269,7 @@ void TextureCubeMapApp::InitDescriptorSets()
 	m_modelCbvSrvDescriptorSet->SetCBV(0, m_psModelConstantBuffer);
 	m_modelCbvSrvDescriptorSet->SetSRV(0, m_skyboxTex);
 }
+#endif
 
 
 void TextureCubeMapApp::UpdateConstantBuffers()

@@ -10,6 +10,8 @@
 
 #pragma once
 
+#define APP_DYNAMIC_DESCRIPTORS 1
+
 #include "Application.h"
 #include "CameraController.h"
 
@@ -35,7 +37,9 @@ protected:
 
 	void InitRootSignatures();
 	void InitPipelines();
+#if !APP_DYNAMIC_DESCRIPTORS
 	void InitDescriptorSets();
+#endif
 
 	void UpdateConstantBuffers();
 
@@ -76,8 +80,10 @@ protected:
 	Luna::GpuBufferPtr m_vsModelConstantBuffer;
 	Luna::GpuBufferPtr m_psModelConstantBuffer;
 
+#if !APP_DYNAMIC_DESCRIPTORS
 	Luna::DescriptorSetPtr m_skyBoxSrvDescriptorSet;
 	Luna::DescriptorSetPtr m_modelCbvSrvDescriptorSet;
+#endif
 
 	Luna::TexturePtr m_skyboxTex;
 	Luna::ModelPtr m_skyboxModel;
