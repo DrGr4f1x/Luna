@@ -299,12 +299,14 @@ void ComputeNBodyApp::InitParticles()
 	}
 
 	GpuBufferDesc particleBufferDesc{
-		.name			= "Particle Buffer",
-		.resourceType	= ResourceType::StructuredBuffer,
-		.memoryAccess	= MemoryAccess::GpuReadWrite,
-		.elementCount	= particles.size(),
-		.elementSize	= sizeof(Particle),
-		.initialData	= particles.data()
+		.name					= "Particle Buffer",
+		.resourceType			= ResourceType::StructuredBuffer,
+		.memoryAccess			= MemoryAccess::GpuReadWrite,
+		.elementCount			= particles.size(),
+		.elementSize			= sizeof(Particle),
+		.initialData			= particles.data(),
+		.bAllowShaderResource	= true,
+		.bAllowUnorderedAccess	= true
 	};
 	m_particleBuffer = CreateGpuBuffer(particleBufferDesc);
 }
