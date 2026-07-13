@@ -116,6 +116,8 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
+	assert_msg(info.imageView != VK_NULL_HANDLE, "DescriptorSet::SetSRV - Got null handle for descriptor.  Check ColorBuffer creation flags.");
+
 	const uint32_t regShift = GetRegisterShiftSRV();
 
 	VkWriteDescriptorSet writeDescriptorSet{
@@ -138,6 +140,8 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, boo
 		.imageView		= ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
+
+	assert_msg(info.imageView != VK_NULL_HANDLE, "DescriptorSet::SetSRV - Got null handle for descriptor.  Check DepthBuffer creation flags.");
 
 	const uint32_t regShift = GetRegisterShiftSRV();
 
@@ -178,6 +182,8 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 	{
 		texelBufferView = descriptor->GetBufferView();
 		writeDescriptorSet.pTexelBufferView = &texelBufferView;
+
+		assert_msg(texelBufferView != VK_NULL_HANDLE, "DescriptorSet::SetSRV - Got null handle for descriptor.  Check GpuBuffer creation flags.");
 	}
 	else
 	{
@@ -186,6 +192,8 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 		info.range = VK_WHOLE_SIZE;
 
 		writeDescriptorSet.pBufferInfo = &info;
+
+		assert_msg(info.buffer != VK_NULL_HANDLE, "DescriptorSet::SetSRV - Got null handle for descriptor.  Check GpuBuffer creation flags.");
 	}
 
 	UpdateDescriptorSet(writeDescriptorSet);
@@ -201,6 +209,8 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, TexturePtr texture)
 		.imageView = ((const Descriptor*)textureVK->GetDescriptor())->GetImageView(),
 		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
+
+	assert_msg(info.imageView != VK_NULL_HANDLE, "DescriptorSet::SetSRV - Got null handle for descriptor.  Check Texture creation flags.");
 
 	const uint32_t regShift = GetRegisterShiftSRV();
 
@@ -224,6 +234,8 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, ColorBufferPtr colorBuffer, uin
 		.imageView		= ((const Descriptor*)colorBuffer->GetUavDescriptor(uavIndex))->GetImageView(),
 		.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
 	};
+
+	assert_msg(info.imageView != VK_NULL_HANDLE, "DescriptorSet::SetUAV - Got null handle for descriptor.  Check ColorBuffer creation flags.");
 
 	const uint32_t regShift = GetRegisterShiftUAV();
 
@@ -273,6 +285,8 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 	{
 		texelBufferView = descriptor->GetBufferView();
 		writeDescriptorSet.pTexelBufferView = &texelBufferView;
+
+		assert_msg(texelBufferView != VK_NULL_HANDLE, "DescriptorSet::SetUAV - Got null handle for descriptor.  Check GpuBuffer creation flags.");
 	}
 	else
 	{
@@ -281,6 +295,8 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 		info.range = VK_WHOLE_SIZE;
 
 		writeDescriptorSet.pBufferInfo = &info;
+
+		assert_msg(info.buffer != VK_NULL_HANDLE, "DescriptorSet::SetUAV - Got null handle for descriptor.  Check GpuBuffer creation flags.");
 	}
 
 	UpdateDescriptorSet(writeDescriptorSet);
@@ -294,6 +310,8 @@ void DescriptorSet::SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer)
 		.offset		= 0,
 		.range		= VK_WHOLE_SIZE
 	};
+
+	assert_msg(info.buffer != VK_NULL_HANDLE, "DescriptorSet::SetCBV - Got null handle for descriptor.  Check GpuBuffer creation flags.");
 
 	const uint32_t regShift = GetRegisterShiftCBV();
 
@@ -317,6 +335,8 @@ void DescriptorSet::SetSampler(uint32_t samplerRegister, SamplerPtr sampler)
 		.sampler		= ((const Descriptor*)sampler->GetDescriptor())->GetSampler(),
 		.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
+
+	assert_msg(info.sampler != VK_NULL_HANDLE, "DescriptorSet::SetSampler - Got null handle for descriptor.  Check Sampler creation flags.");
 
 	const uint32_t regShift = GetRegisterShiftSampler();
 
