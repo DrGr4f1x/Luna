@@ -240,8 +240,6 @@ void ComputeParticlesApp::InitParticles()
 		.elementCount			= particles.size(),
 		.elementSize			= sizeof(Particle),
 		.initialData			= particles.data(),
-		.bAllowShaderResource	= true,
-		.bAllowUnorderedAccess	= true
 	};
 	m_particleBuffer = CreateGpuBuffer(particleBufferDesc);
 }

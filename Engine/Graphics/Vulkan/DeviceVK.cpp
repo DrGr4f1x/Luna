@@ -284,9 +284,36 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 }
 
 
-GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
+GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 {
+	GpuBufferDesc gpuBufferDesc = gpuBufferDescIn;
+
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+
+	// Set GPU access flags for StructuredBuffer, ByteAddressBuffer, and TypedBuffer
+	if (gpuBufferDesc.resourceType == ResourceType::StructuredBuffer || 
+		gpuBufferDesc.resourceType == ResourceType::ByteAddressBuffer ||
+		gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
+	{
+		if (HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::GpuRead))
+		{
+			gpuBufferDesc.bAllowShaderResource = true;
+		}
+
+		if (HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::GpuWrite))
+		{
+			gpuBufferDesc.bAllowUnorderedAccess = true;
+		}
+	}
+
+	// Set GPU access flags for IndirectArgsBuffer
+	if (gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
+	{
+		if (HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::GpuWrite))
+		{
+			gpuBufferDesc.bAllowUnorderedAccess = true;
+		}
+	}
 
 	VkBufferUsageFlags extraFlags = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
