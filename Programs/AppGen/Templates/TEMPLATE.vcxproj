@@ -147,9 +147,6 @@
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(ProjectDir)..\..\Engine\Bin\$(Configuration);</AdditionalLibraryDirectories>
       <AdditionalDependencies>Engine.lib;advapi32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -163,9 +160,6 @@
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(ProjectDir)..\..\Engine\Bin\$(Configuration);</AdditionalLibraryDirectories>
       <AdditionalDependencies>Engine.lib;advapi32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <ClCompile>
@@ -179,9 +173,6 @@
       <AdditionalLibraryDirectories>$(VULKAN_SDK)\Lib;$(ProjectDir)..\..\Engine\Bin\$(Configuration);</AdditionalLibraryDirectories>
       <AdditionalDependencies>Engine.lib;advapi32.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PostBuildEvent>
-      <Command>copy $(ProjectDir)..\..\External\ktx\bin\ktx.dll $(OutDir)</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
