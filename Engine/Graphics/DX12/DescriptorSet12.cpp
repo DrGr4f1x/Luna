@@ -27,6 +27,7 @@ namespace Luna::DX12
 DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
 	: m_device{ device }
 	, m_rootParameter{ rootParameter }
+	, m_descriptorOffsetTable{ rootParameter }
 {}
 
 
@@ -179,25 +180,25 @@ void DescriptorSet::UpdateDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE 
 
 uint32_t DescriptorSet::GetSrvOffset(uint32_t srvRegister) const
 {
-	auto ret = m_srvOffsets.find(srvRegister);
-	assert(ret != m_srvOffsets.end());
-	return ret->second;
+	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::SRV, srvRegister);
 }
 
 
 uint32_t DescriptorSet::GetCbvOffset(uint32_t cbvRegister) const
 {
-	auto ret = m_cbvOffsets.find(cbvRegister);
-	assert(ret != m_cbvOffsets.end());
-	return ret->second;
+	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::CBV, cbvRegister);
 }
 
 
 uint32_t DescriptorSet::GetUavOffset(uint32_t uavRegister) const
 {
-	auto ret = m_uavOffsets.find(uavRegister);
-	assert(ret != m_uavOffsets.end());
-	return ret->second;
+	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::UAV, uavRegister);
+}
+
+
+uint32_t DescriptorSet::GetSamplerOffset(uint32_t samplerRegister) const
+{
+	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::Sampler, samplerRegister);
 }
 
 } // namespace Luna::DX12

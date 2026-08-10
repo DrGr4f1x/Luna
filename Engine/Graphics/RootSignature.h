@@ -194,6 +194,26 @@ struct RootParameter
 using RootParameters = std::vector<RootParameter>;
 
 
+class DescriptorOffsetTable
+{
+public:
+	DescriptorOffsetTable() = default;
+	DescriptorOffsetTable(const RootParameter& rootParameter);
+
+	uint32_t GetDescriptorOffset(DescriptorRegisterType type, uint32_t descriptorRegister) const;
+
+private:
+	void SetDescriptorOffset(DescriptorRegisterType type, uint32_t offset, uint32_t descriptorRegister);
+
+private:
+	// TODO: Optimize this for the case of fewer than 32 max registers
+	std::unordered_map<uint32_t, uint32_t> m_srvOffsets;
+	std::unordered_map<uint32_t, uint32_t> m_uavOffsets;
+	std::unordered_map<uint32_t, uint32_t> m_cbvOffsets;
+	std::unordered_map<uint32_t, uint32_t> m_samplerOffsets;
+};
+
+
 class RootConstantsBuilder
 {
 public:
@@ -347,6 +367,8 @@ public:
 	virtual ~IRootSignature() = default;
 
 	virtual DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const = 0;
+
+	virtual uint32_t GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const = 0;
 
 	const RootSignatureDesc& GetDesc() const noexcept { return m_desc; }
 	uint32_t GetNumRootParameters() const noexcept;

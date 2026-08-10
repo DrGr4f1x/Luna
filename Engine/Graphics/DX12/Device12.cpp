@@ -752,6 +752,16 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 	rootSignature->m_samplerTableBitmap = samplerTableBitmap;
 	rootSignature->m_descriptorTableSizes = descriptorTableSize;
 
+	uint32_t rootIndex = 0;
+	for (const auto rootParameter : rootSignatureDesc.rootParameters)
+	{
+		if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			rootSignature->m_descriptorOffsetTables[rootIndex] = make_shared<DescriptorOffsetTable>(rootParameter);
+		}
+		++rootIndex;
+	}
+
 	return rootSignature;
 }
 
@@ -945,67 +955,6 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 	descriptorSet->m_descriptorHandle = descriptorSetDesc.descriptorHandle;
 	descriptorSet->m_numDescriptors = descriptorSetDesc.numDescriptors;
 	descriptorSet->m_isSamplerTable = descriptorSetDesc.isSamplerTable;
-
-	// Setup offset tables
-	// TODO: Cache this
-	uint32_t offset = 0;
-	for (const auto& range : descriptorSetDesc.rootParameter.table)
-	{
-		uint32_t startRegister = range.startRegister;
-		assert(startRegister != APPEND_REGISTER);
-
-		uint32_t rangeType = 0;
-		switch (range.descriptorType)
-		{
-		case DescriptorType::ConstantBuffer:
-			rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-			break;
-
-		case DescriptorType::TextureSRV:
-		case DescriptorType::TypedBufferSRV:
-		case DescriptorType::StructuredBufferSRV:
-		case DescriptorType::RawBufferSRV:
-		case DescriptorType::RayTracingAccelStruct:
-			rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-			break;
-
-		case DescriptorType::TextureUAV:
-		case DescriptorType::TypedBufferUAV:
-		case DescriptorType::StructuredBufferUAV:
-		case DescriptorType::RawBufferUAV:
-		case DescriptorType::SamplerFeedbackTextureUAV:
-			rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-			break;
-
-		case DescriptorType::Sampler:
-			rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-			break;
-		}
-
-		for (uint32_t i = 0; i < range.numDescriptors; ++i)
-		{
-			switch (rangeType)
-			{
-			case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
-				descriptorSet->m_cbvOffsets[startRegister + i] = offset;
-				break;
-
-			case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
-				descriptorSet->m_srvOffsets[startRegister + i] = offset;
-				break;
-
-			case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
-				descriptorSet->m_uavOffsets[startRegister + i] = offset;
-				break;
-
-			case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
-				descriptorSet->m_srvOffsets[startRegister + i] = offset;
-				break;
-			}
-			
-			++offset;
-		}
-	}
 
 	return descriptorSet;
 }

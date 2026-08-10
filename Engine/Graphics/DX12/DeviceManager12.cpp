@@ -846,7 +846,7 @@ vector<AdapterInfo> DeviceManager::EnumerateAdapters()
 	wil::com_ptr<IDXGIFactory6> dxgiFactory6;
 	m_dxgiFactory->QueryInterface(IID_PPV_ARGS(&dxgiFactory6));
 
-	const D3D_FEATURE_LEVEL minRequiredLevel{ D3D_FEATURE_LEVEL_11_0 };
+	const D3D_FEATURE_LEVEL minRequiredLevel{ D3D_FEATURE_LEVEL_12_0 };
 	const DXGI_GPU_PREFERENCE gpuPreference{ DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE };
 
 	IDXGIAdapter* tempAdapter{ nullptr };
@@ -859,6 +859,11 @@ vector<AdapterInfo> DeviceManager::EnumerateAdapters()
 		tempAdapter->GetDesc(&desc);
 
 		DeviceBasicCaps basicCaps{};
+
+		if (desc.VendorId == 0x1414 && desc.DeviceId == 0x8c)
+		{
+			continue;
+		}
 
 		if (TestCreateDevice(tempAdapter, minRequiredLevel, basicCaps))
 		{

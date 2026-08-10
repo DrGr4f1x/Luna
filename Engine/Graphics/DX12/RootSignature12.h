@@ -28,6 +28,8 @@ class RootSignature : public IRootSignature
 public:
 	Luna::DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
 
+	uint32_t GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const override;
+
 	ID3D12RootSignature* GetRootSignature() const noexcept { return m_rootSignature.get(); }
 	uint32_t GetDescriptorTableBitmap() const noexcept { return m_descriptorTableBitmap; }
 	uint32_t GetSamplerTableBitmap() const noexcept { return m_samplerTableBitmap; }
@@ -40,6 +42,7 @@ protected:
 	uint32_t m_descriptorTableBitmap{ 0 };
 	uint32_t m_samplerTableBitmap{ 0 };
 	std::vector<uint32_t> m_descriptorTableSizes;
+	std::array<std::shared_ptr<DescriptorOffsetTable>, MaxRootParameters> m_descriptorOffsetTables;
 };
 
 } // namespace Luna::DX12

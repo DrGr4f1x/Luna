@@ -57,12 +57,13 @@ protected:
 	uint32_t GetSrvOffset(uint32_t srvRegister) const;
 	uint32_t GetCbvOffset(uint32_t cbvRegister) const;
 	uint32_t GetUavOffset(uint32_t uavRegister) const;
-	uint32_t GetSamplerOffset(uint32_t samplerRegister) const { return GetSrvOffset(samplerRegister); }
+	uint32_t GetSamplerOffset(uint32_t samplerRegister) const;
 
 protected:
 	Device* m_device{ nullptr };
 
 	RootParameter m_rootParameter;
+	DescriptorOffsetTable m_descriptorOffsetTable;
 
 	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, MaxDescriptorsPerTable> m_descriptors;
 	DescriptorHandle m_descriptorHandle;
@@ -70,11 +71,6 @@ protected:
 	uint32_t m_numDescriptors{ 0 };
 
 	bool m_isSamplerTable{ false };
-
-	// Offset tables (samplers use the SRV table)
-	std::unordered_map<uint32_t, uint32_t> m_srvOffsets;
-	std::unordered_map<uint32_t, uint32_t> m_cbvOffsets;
-	std::unordered_map<uint32_t, uint32_t> m_uavOffsets;
 };
 
 } // namespace Luna::DX12

@@ -165,6 +165,7 @@ protected:
 	void InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 	void SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
+	uint32_t GetDescriptorOffset(CommandListType type, DescriptorRegisterType registerType, uint32_t rootIndex, uint32_t descriptorOffset);
 
 private:
 	void BindUserDescriptorHeaps();
@@ -190,8 +191,11 @@ private:
 
 	ID3D12CommandAllocator* m_currentAllocator{ nullptr };
 
-	ID3D12RootSignature* m_graphicsRootSignature{ nullptr };
-	ID3D12RootSignature* m_computeRootSignature{ nullptr };
+	const IRootSignature* m_graphicsRootSignature{ nullptr };
+	const IRootSignature* m_computeRootSignature{ nullptr };
+
+	ID3D12RootSignature* m_graphicsRootSignatureDX12{ nullptr };
+	ID3D12RootSignature* m_computeRootSignatureDX12{ nullptr };
 	ID3D12PipelineState* m_graphicsPipelineState{ nullptr };
 	ID3D12PipelineState* m_computePipelineState{ nullptr };
 

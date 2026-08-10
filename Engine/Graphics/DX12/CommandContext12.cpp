@@ -134,6 +134,9 @@ void CommandContext12::Reset()
 
 	m_graphicsRootSignature = nullptr;
 	m_computeRootSignature = nullptr;
+
+	m_graphicsRootSignatureDX12 = nullptr;
+	m_computeRootSignatureDX12 = nullptr;
 	m_graphicsPipelineState = nullptr;
 	m_computePipelineState = nullptr;
 	m_primitiveTopology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
@@ -549,26 +552,32 @@ void CommandContext12::SetRootSignature(CommandListType type, const IRootSignatu
 	if (type == CommandListType::Graphics)
 	{
 		m_computeRootSignature = nullptr;
-		if (m_graphicsRootSignature == d3d12RootSignature)
+		m_computeRootSignatureDX12 = nullptr;
+		if (m_graphicsRootSignatureDX12 == d3d12RootSignature)
 		{
 			return;
 		}
 
+		m_graphicsRootSignature = rootSignature;
+
 		m_commandList->SetGraphicsRootSignature(d3d12RootSignature);
-		m_graphicsRootSignature = d3d12RootSignature;
+		m_graphicsRootSignatureDX12 = d3d12RootSignature;
 		m_dynamicViewDescriptorHeap.ParseGraphicsRootSignature(*rootSignature12);
 		m_dynamicSamplerDescriptorHeap.ParseGraphicsRootSignature(*rootSignature12);
 	}
 	else
 	{
 		m_graphicsRootSignature = nullptr;
-		if (m_computeRootSignature == d3d12RootSignature)
+		m_graphicsRootSignatureDX12 = nullptr;
+		if (m_computeRootSignatureDX12 == d3d12RootSignature)
 		{
 			return;
 		}
 
+		m_computeRootSignature = rootSignature;
+
 		m_commandList->SetComputeRootSignature(d3d12RootSignature);
-		m_computeRootSignature = d3d12RootSignature;
+		m_computeRootSignatureDX12 = d3d12RootSignature;
 		m_dynamicViewDescriptorHeap.ParseComputeRootSignature(*rootSignature12);
 		m_dynamicSamplerDescriptorHeap.ParseComputeRootSignature(*rootSignature12);
 	}
@@ -895,7 +904,9 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	auto descriptor = ((const Descriptor*)colorBuffer12->GetSrvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &descriptor);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::SRV, rootIndex, srvRegister);
+	
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
@@ -903,7 +914,9 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 {
 	auto descriptor = ((const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv))->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &descriptor);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::SRV, rootIndex, srvRegister);
+
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
@@ -915,7 +928,9 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetSrvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &cpuHandle);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::SRV, rootIndex, srvRegister);
+
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 
@@ -927,7 +942,9 @@ void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	auto descriptor = texture12->GetSrvDescriptor().GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, srvRegister, 1, &descriptor);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::SRV, rootIndex, srvRegister);
+
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
@@ -940,7 +957,9 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 	// TODO: Need a UAV index parameter
 	auto descriptor = ((const Descriptor*)colorBuffer12->GetUavDescriptor(0))->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, uavRegister, 1, &descriptor);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::UAV, rootIndex, uavRegister);
+
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &descriptor);
 }
 
 
@@ -959,7 +978,9 @@ void CommandContext12::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetUavDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, uavRegister, 1, &cpuHandle);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::UAV, rootIndex, uavRegister);
+
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 
@@ -971,7 +992,9 @@ void CommandContext12::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t
 
 	auto cpuHandle = ((const Descriptor*)gpuBuffer12->GetCbvDescriptor())->GetHandleCPU();
 
-	SetDynamicDescriptors_Internal(type, rootIndex, cbvRegister, 1, &cpuHandle);
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::CBV, rootIndex, cbvRegister);
+
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 
@@ -981,8 +1004,10 @@ void CommandContext12::SetSampler(CommandListType type, uint32_t rootIndex, uint
 
 	auto cpuHandle = ((const Descriptor*)sampler->GetDescriptor())->GetHandleCPU();
 
+	uint32_t offset = GetDescriptorOffset(type, DescriptorRegisterType::Sampler, rootIndex, samplerRegister);
+
 	// TODO: This is probably wrong for samplers
-	SetDynamicDescriptors_Internal(type, rootIndex, samplerRegister, 1, &cpuHandle);
+	SetDynamicDescriptors_Internal(type, rootIndex, offset, 1, &cpuHandle);
 }
 
 
@@ -1369,6 +1394,21 @@ void CommandContext12::SetDynamicDescriptors_Internal(CommandListType type, uint
 	else
 	{
 		m_dynamicViewDescriptorHeap.SetComputeDescriptorHandles(rootIndex, offset, numDescriptors, handles);
+	}
+}
+
+
+uint32_t CommandContext12::GetDescriptorOffset(CommandListType type, DescriptorRegisterType registerType, uint32_t rootIndex, uint32_t descriptorRegister)
+{
+	if (type == CommandListType::Graphics)
+	{
+		assert(m_graphicsRootSignature);
+		return m_graphicsRootSignature->GetDescriptorOffsetForRegister(registerType, rootIndex, descriptorRegister);
+	}
+	else
+	{
+		assert(m_computeRootSignature);
+		return m_computeRootSignature->GetDescriptorOffsetForRegister(registerType, rootIndex, descriptorRegister);
 	}
 }
 

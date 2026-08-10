@@ -44,4 +44,12 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 	return m_device->CreateDescriptorSet(descriptorSetDesc);
 }
 
+
+uint32_t RootSignature::GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const
+{
+	assert(rootIndex < MaxRootParameters);
+	assert(m_descriptorOffsetTables[rootIndex]);
+	return m_descriptorOffsetTables[rootIndex]->GetDescriptorOffset(type, descriptorRegister);
+}
+
 } // namespace Luna::DX12
