@@ -1755,7 +1755,14 @@ void CommandContextVK::InitializeTexture_Internal(ITexture* destTexture, const T
 	}
 
 	DynAlloc dynAlloc = ReserveUploadMemory(texInit.totalBytes);
-	SIMDMemCopy(dynAlloc.dataPtr, texInit.baseData, Math::DivideByMultiple(texInit.totalBytes, 16));
+	if (Math::IsAligned(dynAlloc.dataPtr, 16) && Math::IsAligned(texInit.baseData, 16))
+	{
+		SIMDMemCopy(dynAlloc.dataPtr, texInit.baseData, Math::DivideByMultiple(texInit.totalBytes, 16));
+	}
+	else
+	{
+		memcpy(dynAlloc.dataPtr, texInit.baseData, texInit.totalBytes);
+	}
 
 	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)destTexture;

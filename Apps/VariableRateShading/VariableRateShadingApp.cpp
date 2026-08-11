@@ -59,24 +59,73 @@ void VariableRateShadingApp::Shutdown()
 
 void VariableRateShadingApp::Update()
 {
-	// Application update tick
-	// Set m_bIsRunning to false if your application wants to exit
+	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
+
+	UpdateConstantBuffers();
 }
 
 
 void VariableRateShadingApp::Render()
 {
-	// Application main render loop
-	Application::Render();
+	auto& context = GraphicsContext::Begin("Scene");
+
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
+	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
+	context.ClearColor(GetColorBuffer());
+	context.ClearDepthAndStencil(GetDepthBuffer());
+
+	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
+
+	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+	context.SetRootSignature(m_sceneRootSignature);
+	context.SetGraphicsPipeline(m_sceneGraphicsPipeline);
+
+	context.SetIndexBuffer(m_indexBuffer);
+	context.SetVertexBuffer(0, m_vertexBuffer);
+
+	context.SetRootCBV(0, m_sceneConstantBuffer);
+
+	for (int i = 0; i < _countof(SampleAssets::s_draws); ++i)
+	{
+		const SampleAssets::DrawParameters& drawArgs = SampleAssets::s_draws[i];
+		context.SetSRV(1, 0, m_textures[drawArgs.diffuseTextureIndex]);
+		context.SetSRV(1, 1, m_textures[drawArgs.normalTextureIndex]);
+
+		context.DrawIndexedInstanced(drawArgs.indexCount, 1, drawArgs.indexStart, drawArgs.vertexBase, 0);
+	}
+
+	RenderUI(context);
+
+	context.EndRendering();
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+
+	context.Finish();
 }
 
 
 void VariableRateShadingApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
+	Vector3 cameraPosition{ 0.0f, 17.1954231f, -28.555980f };
+	m_camera.SetPosition(cameraPosition);
+
+	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
+	m_shadowConstantBuffer = CreateConstantBuffer("Shadow Constant Buffer", 1, sizeof(SceneConstants));
 
 	LoadAssets();
 	InitRootSignature();
+
+	m_controller.RefreshFromCamera();
+	m_controller.SetCameraMode(CameraMode::ArcBall);
+	Vector3 target{ 0.0f, 8.0f, 0.0f };
+	m_controller.SetOrbitTarget(target, Length(cameraPosition - target), 0.25f);
+	m_controller.SlowMovement(true);
+	m_controller.SlowRotation(false);
+	m_controller.SetSpeedScale(0.25f);
 }
 
 
@@ -88,6 +137,12 @@ void VariableRateShadingApp::CreateWindowSizeDependentResources()
 		InitPipeline();
 		m_pipelineCreated = true;
 	}
+
+	m_camera.SetPerspectiveMatrix(
+		DirectX::XMConvertToRadians(60.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		512.0f);
 }
 
 
@@ -96,8 +151,8 @@ void VariableRateShadingApp::InitRootSignature()
 	RootSignatureDesc desc{
 		.name				= "Scene Root Signature",
 		.rootParameters		= {
-			RootCBV(0, ShaderStage::Vertex),
-			Table({ TextureSRV(3) }, ShaderStage::Pixel)
+			RootCBV(0, ShaderStage::Vertex | ShaderStage::Pixel),
+			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel)
 		},
 		.staticSamplers		= { 
 			StaticSampler(CommonStates::SamplerLinearClamp(), ShaderStage::Pixel), 
@@ -196,4 +251,45 @@ void VariableRateShadingApp::LoadAssets()
 
 		m_textures.push_back(texture);
 	}
+}
+
+
+void VariableRateShadingApp::UpdateConstantBuffers()
+{
+	// Scale down the world a bit.
+	const float worldScale = GetWorldScale();
+	Math::Matrix4 worldScaleMatrix = Math::Matrix4::MakeScale(worldScale);
+	m_sceneConstants.modelMatrix = worldScaleMatrix;
+	m_shadowConstants.modelMatrix = worldScaleMatrix;
+
+	auto width = GetWindowWidth();
+	auto height = GetWindowHeight();
+
+	m_sceneConstants.viewport = Math::Vector4{ (float)width, (float)height, 0.0f, 0.0f };
+
+	// The scene pass is drawn from the main camera
+	m_sceneConstants.viewMatrix = m_camera.GetViewMatrix();
+	m_sceneConstants.projectionMatrix = m_camera.GetProjectionMatrix();
+
+	// The shadow pass is drawn from the first light
+	m_shadowConstants.viewMatrix = m_lightCameras[0].GetViewMatrix();
+	m_shadowConstants.projectionMatrix = m_lightCameras[0].GetProjectionMatrix();
+
+	for (int i = 0; i < m_numLights; ++i)
+	{
+		memcpy(&m_sceneConstants.lights[i], &m_lightState[i], sizeof(LightState));
+		memcpy(&m_shadowConstants.lights[i], &m_lightState[i], sizeof(LightState));
+	}
+
+	// The shadow pass won't sample the shadow map, but rather write to it.
+	m_shadowConstants.sampleShadowMap = FALSE;
+
+	// The scene pass samples the shadow map.
+	m_sceneConstants.sampleShadowMap = TRUE;
+
+	m_shadowConstants.ambientColor = m_sceneConstants.ambientColor = { 0.1f, 0.2f, 0.3f, 1.0f };
+
+	// Update the constant buffers
+	m_sceneConstantBuffer->Update(sizeof(SceneConstants), &m_sceneConstants);
+	m_shadowConstantBuffer->Update(sizeof(SceneConstants), &m_shadowConstants);
 }

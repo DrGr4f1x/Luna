@@ -16,7 +16,7 @@
 
 Texture2D diffuseMap        : BINDING(t0, 1);
 Texture2D normalMap         : BINDING(t1, 1);
-Texture2D shadowMap         : BINDING(t2, 1);
+//Texture2D shadowMap         : BINDING(t2, 1);
 
 SamplerState sampleClamp    : BINDING(s0, 2);
 SamplerState sampleWrap     : BINDING(s1, 2);
@@ -46,10 +46,10 @@ float4 main(PSInput input) : SV_TARGET
     for (int i = 0; i < NUM_LIGHTS; i++)
     {
         float4 lightPass = CalcLightingColor(lights[i].position, lights[i].direction, lights[i].color, lights[i].falloff, input.worldpos.xyz, pixelNormal);
-        if (sampleShadowMap && i == 0)
-        {
-            lightPass *= CalcUnshadowedAmountPCF2x2(i, input.worldpos);
-        }
+        //if (sampleShadowMap && i == 0)
+        //{
+        //    lightPass *= CalcUnshadowedAmountPCF2x2(i, input.worldpos);
+        //}
         totalLight += lightPass;
     }
 

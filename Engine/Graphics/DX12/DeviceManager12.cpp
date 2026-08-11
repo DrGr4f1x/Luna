@@ -860,6 +860,7 @@ vector<AdapterInfo> DeviceManager::EnumerateAdapters()
 
 		DeviceBasicCaps basicCaps{};
 
+		// Skip the WARP device - it throws an error in TestCreateDevice below
 		if (desc.VendorId == 0x1414 && desc.DeviceId == 0x8c)
 		{
 			continue;
