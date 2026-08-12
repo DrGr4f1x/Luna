@@ -59,7 +59,30 @@ void VariableRateShadingApp::Shutdown()
 
 void VariableRateShadingApp::Update()
 {
-	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
+	const float elapsedSeconds = (float)m_timer.GetElapsedSeconds();
+	m_controller.Update(m_inputSystem.get(), elapsedSeconds, m_mouseMoveHandled);
+
+	if (m_animate)
+	{
+		const float angleChange = 2.0f * elapsedSeconds;
+
+		for (int i = 0; i < m_numLights; i++)
+		{
+			m_lightState[i].position = OrthogonalTransform::MakeYRotation(angleChange) * m_lightState[i].position;
+			Vector3 eye{ m_lightState[i].position };
+			Vector3 at{ 0.0f, 15.0f, 0.0f };
+			Vector3 up{ 0.0f, 1.0f, 0.0f };
+			switch (i)
+			{
+			case 4: up = Vector3{ 0.0f, 0.0f, -1.0f }; break;
+			case 5: up = Vector3{ 0.0f, 0.0f, 1.0f }; break;
+			}
+			m_lightCameras[i].SetLookAt(eye, at, up);
+
+			m_lightState[i].viewMatrix = m_lightCameras[i].GetViewMatrix();
+			m_lightState[i].projectionMatrix = m_lightCameras[i].GetProjectionMatrix();
+		}
+	}
 
 	UpdateConstantBuffers();
 }
@@ -144,6 +167,11 @@ void VariableRateShadingApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
+
+	for (int i = 0; i < m_numLights; ++i)
+	{
+		m_lightCameras[i].SetPerspectiveMatrix(DirectX::XMConvertToRadians(90.0f), GetWindowAspectRatio(), 0.01f, 125.0f);
+	}
 }
 
 
@@ -176,6 +204,7 @@ void VariableRateShadingApp::InitLights()
 		}
 
 		m_lightCameras[i].SetLookAt(eye, at, up);
+		m_lightCameras[i].SetPerspectiveMatrix(DirectX::XMConvertToRadians(90.0f), GetWindowAspectRatio(), 0.01f, 125.0f);
 	}
 }
 
