@@ -32,6 +32,7 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
+	void InitLights();
 	void InitRootSignature();
 	void InitPipeline();
 
@@ -101,7 +102,12 @@ protected:
 
 	Math::BoundingBox m_sceneBoundingBox{};
 
+	// Textures for scene objects
 	std::vector<Luna::TexturePtr> m_textures;
 
+	// Camera controller
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
+
+	// Application state
+	bool m_animate{ true };
 };

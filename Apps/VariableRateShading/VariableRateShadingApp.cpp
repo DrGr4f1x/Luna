@@ -116,6 +116,7 @@ void VariableRateShadingApp::CreateDeviceDependentResources()
 	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
 	m_shadowConstantBuffer = CreateConstantBuffer("Shadow Constant Buffer", 1, sizeof(SceneConstants));
 
+	InitLights();
 	LoadAssets();
 	InitRootSignature();
 
@@ -143,6 +144,39 @@ void VariableRateShadingApp::CreateWindowSizeDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
+}
+
+
+void VariableRateShadingApp::InitLights()
+{
+	for (int i = 0; i < m_numLights; i++)
+	{
+		switch (i)
+		{
+		case 0: m_lightState[0].direction = { 0.0, 0.0f, 1.0f, 0.0f }; break;   // +z
+#if m_numLights > 1
+		case 1: m_lightState[1].direction = { 1.0, 0.0f, 0.0f, 0.0f }; break;   // +x
+		case 2: m_lightState[2].direction = { 0.0, 0.0f, -1.0f, 0.0f }; break;  // -z
+		case 3: m_lightState[3].direction = { -1.0, 0.0f, 0.0f, 0.0f }; break;  // -x
+		case 4: m_lightState[4].direction = { 0.0, 1.0f, 0.0f, 0.0f }; break;   // +y
+		case 5: m_lightState[5].direction = { 0.0, -1.0f, 0.0f, 0.0f }; break;  // -y
+#endif
+		}
+		m_lightState[i].position = { 0.0f, 15.0f, -30.0f, 1.0f };
+		m_lightState[i].falloff = { 120.0f, 1.0f, 0.0f, 1.0f };
+		m_lightState[i].color = { 0.7f, 0.7f, 0.7f, 1.0f };
+
+		Vector3 eye{ m_lightState[i].position };
+		Vector3 at = eye + Vector3{ m_lightState[i].direction };
+		Vector3 up = { 0.0f, 1.0f, 0.0f };
+		switch (i)
+		{
+		case 4: up = { 0.0f, 0.0f, -1.0f }; break;
+		case 5: up = { 0.0f, 0.0f, 1.0f }; break;
+		}
+
+		m_lightCameras[i].SetLookAt(eye, at, up);
+	}
 }
 
 
@@ -175,7 +209,7 @@ void VariableRateShadingApp::InitPipeline()
 		.name				= "Graphics Pipeline",
 		.blendState			= CommonStates::BlendDisable(),
 		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
-		.rasterizerState	= CommonStates::RasterizerDefault(),
+		.rasterizerState	= CommonStates::RasterizerDefaultCW(),
 		.rtvFormats			= { GetColorFormat() },
 		.dsvFormat			= GetDepthFormat(),
 		.topology			= PrimitiveTopology::TriangleList,
