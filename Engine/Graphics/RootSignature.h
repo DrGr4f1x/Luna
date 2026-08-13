@@ -331,6 +331,7 @@ struct RootSignatureDesc
 	std::string name{};
 	RootParameters rootParameters;
 	StaticSamplers staticSamplers;
+	bool allowStreamOut{ false };
 
 	RootSignatureDesc& SetName(const std::string& value) { name = value; return *this; }
 	RootSignatureDesc& SetRootParameters(const RootParameters& value) { rootParameters = value; return *this; }

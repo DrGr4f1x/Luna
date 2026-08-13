@@ -92,8 +92,12 @@ void VariableRateShadingApp::Render()
 {
 	auto& context = GraphicsContext::Begin("Scene");
 
+	// Render shadows
+	RenderShadows(context);
+
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
+	context.TransitionResource(m_shadowDepthBuffer, ResourceState::PixelShaderResource);
 	context.ClearColor(GetColorBuffer());
 	context.ClearDepthAndStencil(GetDepthBuffer());
 
@@ -107,6 +111,7 @@ void VariableRateShadingApp::Render()
 	context.SetVertexBuffer(0, m_vertexBuffer);
 
 	context.SetRootCBV(0, m_sceneConstantBuffer);
+	context.SetSRV(2, 2, m_shadowDepthBuffer);
 
 	for (int i = 0; i < _countof(SampleAssets::s_draws); ++i)
 	{
@@ -139,9 +144,10 @@ void VariableRateShadingApp::CreateDeviceDependentResources()
 	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
 	m_shadowConstantBuffer = CreateConstantBuffer("Shadow Constant Buffer", 1, sizeof(SceneConstants));
 
+	InitShadowDepthBuffer();
 	InitLights();
 	LoadAssets();
-	InitRootSignature();
+	InitRootSignatures();
 
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
@@ -156,10 +162,10 @@ void VariableRateShadingApp::CreateDeviceDependentResources()
 void VariableRateShadingApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
-	if (!m_pipelineCreated)
+	if (!m_pipelinesCreated)
 	{
-		InitPipeline();
-		m_pipelineCreated = true;
+		InitPipelines();
+		m_pipelinesCreated = true;
 	}
 
 	m_camera.SetPerspectiveMatrix(
@@ -172,6 +178,47 @@ void VariableRateShadingApp::CreateWindowSizeDependentResources()
 	{
 		m_lightCameras[i].SetPerspectiveMatrix(DirectX::XMConvertToRadians(90.0f), GetWindowAspectRatio(), 0.01f, 125.0f);
 	}
+}
+
+
+void VariableRateShadingApp::RenderShadows(GraphicsContext& context)
+{
+	context.TransitionResource(m_shadowDepthBuffer, ResourceState::DepthWrite);
+	context.ClearDepthAndStencil(m_shadowDepthBuffer);
+
+	context.BeginRendering(m_shadowDepthBuffer);
+
+	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
+	context.SetRootSignature(m_shadowRootSignature);
+	context.SetGraphicsPipeline(m_shadowGraphicsPipeline);
+
+	context.SetIndexBuffer(m_indexBuffer);
+	context.SetVertexBuffer(0, m_vertexBuffer);
+
+	context.SetRootCBV(0, m_shadowConstantBuffer);
+
+	for (int i = 0; i < _countof(SampleAssets::s_draws); ++i)
+	{
+		const SampleAssets::DrawParameters& drawArgs = SampleAssets::s_draws[i];
+		context.DrawIndexedInstanced(drawArgs.indexCount, 1, drawArgs.indexStart, drawArgs.vertexBase, 0);
+	}
+
+	context.EndRendering();
+}
+
+
+void VariableRateShadingApp::InitShadowDepthBuffer()
+{
+	DepthBufferDesc desc
+	{
+		.name					= "Shadow Depth Buffer",
+		.width					= GetWindowWidth(),
+		.height					= GetWindowHeight(),
+		.format					= Format::D32,
+		.createShaderResources	= true
+	};
+
+	m_shadowDepthBuffer = CreateDepthBuffer(desc);
 }
 
 
@@ -209,24 +256,33 @@ void VariableRateShadingApp::InitLights()
 }
 
 
-void VariableRateShadingApp::InitRootSignature()
+void VariableRateShadingApp::InitRootSignatures()
 {
-	RootSignatureDesc desc{
+	RootSignatureDesc shadowDesc{
+		.name = "Shadow Root Signature",
+		.rootParameters = {
+			RootCBV(0, ShaderStage::Vertex)
+		}
+	};
+	m_shadowRootSignature = CreateRootSignature(shadowDesc);
+
+	RootSignatureDesc sceneDesc{
 		.name				= "Scene Root Signature",
 		.rootParameters		= {
 			RootCBV(0, ShaderStage::Vertex | ShaderStage::Pixel),
-			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel)
+			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
+			Table({ TextureSRV(2) }, ShaderStage::Pixel)
 		},
 		.staticSamplers		= { 
 			StaticSampler(CommonStates::SamplerLinearClamp(), ShaderStage::Pixel), 
 			StaticSampler(CommonStates::SamplerLinearWrap(), ShaderStage::Pixel) 
 		}
 	};
-	m_sceneRootSignature = CreateRootSignature(desc);
+	m_sceneRootSignature = CreateRootSignature(sceneDesc);
 }
 
 
-void VariableRateShadingApp::InitPipeline()
+void VariableRateShadingApp::InitPipelines()
 {
 	VertexStreamDesc vertexStreamDesc{
 		.inputSlot				= 0,
@@ -234,8 +290,9 @@ void VariableRateShadingApp::InitPipeline()
 		.inputClassification	= InputClassification::PerVertexData
 	};
 
+	// Scene pipeline
 	GraphicsPipelineDesc desc{
-		.name				= "Graphics Pipeline",
+		.name				= "Scene Graphics Pipeline",
 		.blendState			= CommonStates::BlendDisable(),
 		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
 		.rasterizerState	= CommonStates::RasterizerDefaultCW(),
@@ -250,6 +307,15 @@ void VariableRateShadingApp::InitPipeline()
 	};
 
 	m_sceneGraphicsPipeline = CreateGraphicsPipeline(desc);
+
+	// Shadow pipeline
+	desc.name = "Shadow Graphics Pipeline";
+	desc.pixelShader = {};
+	desc.rtvFormats = {};
+	desc.dsvFormat = Format::D32;
+	desc.rootSignature = m_shadowRootSignature;
+
+	m_shadowGraphicsPipeline = CreateGraphicsPipeline(desc);
 }
 
 

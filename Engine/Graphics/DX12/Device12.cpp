@@ -638,6 +638,13 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 		staticSamplers.push_back(d3d12StaticSamplerDesc);
 	}
 
+	// Setup flags
+	auto flags = ShaderStageToRootSignatureFlags(combinedShaderStages);
+	if (rootSignatureDesc.allowStreamOut)
+	{
+		flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+	}
+
 	D3D12_VERSIONED_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
 		.Version			= D3D_ROOT_SIGNATURE_VERSION_1_1,
 		.Desc_1_1 = {
@@ -645,7 +652,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& root
 			.pParameters			= d3d12RootParameters.data(),
 			.NumStaticSamplers		= (uint32_t)staticSamplers.size(),
 			.pStaticSamplers		= staticSamplers.data(),
-			.Flags					= ShaderStageToRootSignatureFlags(combinedShaderStages)
+			.Flags					= flags
 		}
 	};
 

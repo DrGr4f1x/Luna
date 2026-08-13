@@ -32,9 +32,12 @@ protected:
 	void CreateDeviceDependentResources() final;
 	void CreateWindowSizeDependentResources() final;
 
+	void RenderShadows(Luna::GraphicsContext& context);
+
+	void InitShadowDepthBuffer();
 	void InitLights();
-	void InitRootSignature();
-	void InitPipeline();
+	void InitRootSignatures();
+	void InitPipelines();
 
 	void LoadAssets();
 
@@ -83,10 +86,12 @@ protected:
 	Luna::GpuBufferPtr m_vertexBuffer;
 	Luna::GpuBufferPtr m_indexBuffer;
 
+	Luna::RootSignaturePtr m_shadowRootSignature;
 	Luna::RootSignaturePtr m_sceneRootSignature;
 
+	Luna::GraphicsPipelinePtr m_shadowGraphicsPipeline;
 	Luna::GraphicsPipelinePtr m_sceneGraphicsPipeline;
-	bool m_pipelineCreated{ false };
+	bool m_pipelinesCreated{ false };
 
 	// Constant data
 	SceneConstants m_sceneConstants{};
@@ -99,6 +104,9 @@ protected:
 	// Lights
 	LightState m_lightState[m_numLights];
 	Luna::Camera m_lightCameras[m_numLights];
+
+	// Depth buffer for shadows
+	Luna::DepthBufferPtr m_shadowDepthBuffer;
 
 	Math::BoundingBox m_sceneBoundingBox{};
 

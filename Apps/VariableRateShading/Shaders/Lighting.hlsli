@@ -59,7 +59,6 @@ float4 CalcLightingColor(float3 lightPos, float3 lightDir, float4 color, float4 
 
 
 // Test how much pixel is in shadow, using 2x2 percentage-closer filtering.
-#if 0
 float4 CalcUnshadowedAmountPCF2x2(int lightIndex, float4 worldPos)
 {
     // Compute pixel position in light space.
@@ -103,4 +102,3 @@ float4 CalcUnshadowedAmountPCF2x2(int lightIndex, float4 worldPos)
     float4 shadowTests = select(shadowDepths >= lightSpaceDepth, 1.0f, 0.0f);
     return dot(bilinearWeights, shadowTests);
 }
-#endif

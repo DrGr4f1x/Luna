@@ -1,0 +1,108 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Profile" />
+    <BuildType Name="Release" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/Apps/">
+    <Project Path="Apps/EndCap/EndCap.vcxproj" />
+    <Project Path="Apps/StreamOut/StreamOut.vcxproj" />
+  </Folder>
+  <Folder Name="/Apps/Microsoft/">
+    <Project Path="Apps/DynamicIndexing/DynamicIndexing.vcxproj" />
+    <Project Path="Apps/MeshletCull/MeshletCull.vcxproj" />
+    <Project Path="Apps/MeshletInstancing/MeshletInstancing.vcxproj" />
+    <Project Path="Apps/MeshletRender/MeshletRender.vcxproj" />
+    <Project Path="Apps/VariableRateShading/VariableRateShading.vcxproj" />
+  </Folder>
+  <Folder Name="/Apps/SaschaWillems/">
+    <Project Path="Apps/Bloom/Bloom.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/ComputeCloth/ComputeCloth.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/ComputeNBody/ComputeNBody.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/ComputeParticles/ComputeParticles.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/ComputeShader/ComputeShader.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Deferred/Deferred.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/DescriptorIndexing/DescriptorIndexing.vcxproj" />
+    <Project Path="Apps/DirectConstants/DirectConstants.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Displacement/Displacement.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/DynamicUniformBuffer/DynamicUniformBuffer.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/GeometryShader/GeometryShader.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/IndirectDraw/IndirectDraw.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Instancing/Instancing.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/MeshShader/MeshShader.vcxproj" />
+    <Project Path="Apps/Multisampling/Multisampling.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/OcclusionQuery/OcclusionQuery.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Pipelines/Pipelines.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/PipelineStatistics/PipelineStatistics.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/RadialBlur/RadialBlur.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/ShadowMapping/ShadowMapping.vcxproj" />
+    <Project Path="Apps/SSAO/SSAO.vcxproj" />
+    <Project Path="Apps/StencilBuffer/StencilBuffer.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/TerrainTessellation/TerrainTessellation.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Texture/Texture.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Texture3d/Texture3d.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/TextureArray/TextureArray.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/TextureCubeMap/TextureCubeMap.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/TextureCubeMapArray/TextureCubeMapArray.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+    <Project Path="Apps/Triangle/Triangle.vcxproj">
+      <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+    </Project>
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/ShaderCompiler/ShaderCompiler.csproj">
+      <BuildType Project="Release" />
+    </Project>
+  </Folder>
+  <Project Path="Engine/Engine.vcxproj">
+    <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
+  </Project>
+</Solution>
