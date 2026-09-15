@@ -36,6 +36,7 @@ protected:
 	void RenderRefraction(Luna::GraphicsContext& context);
 
 	void InitShadowDepthBuffer();
+	void InitRefractionColorBuffer();
 	void InitLights();
 	void InitRootSignatures();
 	void InitPipelines();
@@ -97,6 +98,7 @@ protected:
 	Luna::RootSignaturePtr m_sceneRootSignature;
 
 	Luna::GraphicsPipelinePtr m_shadowGraphicsPipeline;
+	Luna::GraphicsPipelinePtr m_refractionGraphicsPipeline;
 	Luna::GraphicsPipelinePtr m_sceneGraphicsPipeline;
 	bool m_pipelinesCreated{ false };
 
@@ -116,6 +118,9 @@ protected:
 
 	// Depth buffer for shadows
 	Luna::DepthBufferPtr m_shadowDepthBuffer;
+
+	// Refraction color buffer
+	Luna::ColorBufferPtr m_refractionBuffer;
 
 	Math::BoundingBox m_sceneBoundingBox{};
 

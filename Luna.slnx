@@ -6,94 +6,94 @@
     <Platform Name="x64" />
   </Configurations>
   <Folder Name="/Apps/">
-    <Project Path="Apps/EndCap/EndCap.vcxproj" />
-    <Project Path="Apps/StreamOut/StreamOut.vcxproj" />
+    <Project Path="Apps/EndCap/EndCap.vcxproj" Id="97ff8360-7fa4-4f20-8504-e0229c3755de" />
+    <Project Path="Apps/StreamOut/StreamOut.vcxproj" Id="c6f104ad-0545-41e6-a714-1c93ae9afcda" />
   </Folder>
   <Folder Name="/Apps/Microsoft/">
-    <Project Path="Apps/DynamicIndexing/DynamicIndexing.vcxproj" />
-    <Project Path="Apps/MeshletCull/MeshletCull.vcxproj" />
-    <Project Path="Apps/MeshletInstancing/MeshletInstancing.vcxproj" />
-    <Project Path="Apps/MeshletRender/MeshletRender.vcxproj" />
-    <Project Path="Apps/VariableRateShading/VariableRateShading.vcxproj" />
+    <Project Path="Apps/DynamicIndexing/DynamicIndexing.vcxproj" Id="21c26184-f44d-4cda-b3d1-afab99c460b6" />
+    <Project Path="Apps/MeshletCull/MeshletCull.vcxproj" Id="cc17d821-d752-4c6f-aa6f-a55c5d713934" />
+    <Project Path="Apps/MeshletInstancing/MeshletInstancing.vcxproj" Id="2976af93-059c-4e36-bf24-3b6d5472d621" />
+    <Project Path="Apps/MeshletRender/MeshletRender.vcxproj" Id="c48c0411-36d3-40d4-8f91-54a85aed9640" />
+    <Project Path="Apps/VariableRateShading/VariableRateShading.vcxproj" Id="01efb9fd-d37d-476c-b622-57057f61a8a4" />
   </Folder>
   <Folder Name="/Apps/SaschaWillems/">
-    <Project Path="Apps/Bloom/Bloom.vcxproj">
+    <Project Path="Apps/Bloom/Bloom.vcxproj" Id="8f2201d5-a788-4c2e-be98-6ad608098d8d">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/ComputeCloth/ComputeCloth.vcxproj">
+    <Project Path="Apps/ComputeCloth/ComputeCloth.vcxproj" Id="84666709-10f1-4143-847a-804258534228">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/ComputeNBody/ComputeNBody.vcxproj">
+    <Project Path="Apps/ComputeNBody/ComputeNBody.vcxproj" Id="f51ee255-d6c7-48af-a79a-83d77d9136bb">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/ComputeParticles/ComputeParticles.vcxproj">
+    <Project Path="Apps/ComputeParticles/ComputeParticles.vcxproj" Id="ccf0aafa-250a-464e-b128-6edf55f0280e">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/ComputeShader/ComputeShader.vcxproj">
+    <Project Path="Apps/ComputeShader/ComputeShader.vcxproj" Id="52f31e4e-9537-4856-b82d-ed17dd2880ce">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Deferred/Deferred.vcxproj">
+    <Project Path="Apps/Deferred/Deferred.vcxproj" Id="0b914653-915c-41f2-a0c9-4569706172d2">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/DescriptorIndexing/DescriptorIndexing.vcxproj" />
-    <Project Path="Apps/DirectConstants/DirectConstants.vcxproj">
+    <Project Path="Apps/DescriptorIndexing/DescriptorIndexing.vcxproj" Id="317e7e09-9c6e-4e71-b993-27973a4f2b1b" />
+    <Project Path="Apps/DirectConstants/DirectConstants.vcxproj" Id="0fc2cb4e-2108-4c93-8152-44472311dde4">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Displacement/Displacement.vcxproj">
+    <Project Path="Apps/Displacement/Displacement.vcxproj" Id="1d0958f2-1ed8-4afa-b47b-a12318e0a5bd">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/DynamicUniformBuffer/DynamicUniformBuffer.vcxproj">
+    <Project Path="Apps/DynamicUniformBuffer/DynamicUniformBuffer.vcxproj" Id="7f8a6043-80df-4d0a-8e08-e08ea2dbe086">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/GeometryShader/GeometryShader.vcxproj">
+    <Project Path="Apps/GeometryShader/GeometryShader.vcxproj" Id="54d817db-38f4-4eff-a310-645fc0fc8791">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/IndirectDraw/IndirectDraw.vcxproj">
+    <Project Path="Apps/IndirectDraw/IndirectDraw.vcxproj" Id="31bb30b8-6b59-4849-93e4-a590ea8a48e8">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Instancing/Instancing.vcxproj">
+    <Project Path="Apps/Instancing/Instancing.vcxproj" Id="f30d25fd-b7f7-4079-93f7-3c094c1e16a8">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/MeshShader/MeshShader.vcxproj" />
-    <Project Path="Apps/Multisampling/Multisampling.vcxproj">
+    <Project Path="Apps/MeshShader/MeshShader.vcxproj" Id="5211391f-7221-4085-adbd-67abf9cb1e3d" />
+    <Project Path="Apps/Multisampling/Multisampling.vcxproj" Id="4904aa56-06d5-41a6-9199-85ecb129e588">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/OcclusionQuery/OcclusionQuery.vcxproj">
+    <Project Path="Apps/OcclusionQuery/OcclusionQuery.vcxproj" Id="04daa390-4b62-4b9d-a7a2-488f7a6447aa">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Pipelines/Pipelines.vcxproj">
+    <Project Path="Apps/Pipelines/Pipelines.vcxproj" Id="9f32e4f0-21d0-465e-8fc8-f4d1d4aaa06a">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/PipelineStatistics/PipelineStatistics.vcxproj">
+    <Project Path="Apps/PipelineStatistics/PipelineStatistics.vcxproj" Id="b9d9c2f7-6916-4922-823f-bce3b7952105">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/RadialBlur/RadialBlur.vcxproj">
+    <Project Path="Apps/RadialBlur/RadialBlur.vcxproj" Id="1cbe17fe-fdf7-447e-919d-e723e22ed819">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/ShadowMapping/ShadowMapping.vcxproj" />
-    <Project Path="Apps/SSAO/SSAO.vcxproj" />
-    <Project Path="Apps/StencilBuffer/StencilBuffer.vcxproj">
+    <Project Path="Apps/ShadowMapping/ShadowMapping.vcxproj" Id="c66bbe87-5785-4f20-bde1-e7763f6f6508" />
+    <Project Path="Apps/SSAO/SSAO.vcxproj" Id="7d24664b-531a-4d77-909d-cd81a82a0260" />
+    <Project Path="Apps/StencilBuffer/StencilBuffer.vcxproj" Id="bec22c52-8956-43a6-96d4-974ae4deac85">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/TerrainTessellation/TerrainTessellation.vcxproj">
+    <Project Path="Apps/TerrainTessellation/TerrainTessellation.vcxproj" Id="8031675a-6a78-43fd-841c-7d7cabf11522">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Texture/Texture.vcxproj">
+    <Project Path="Apps/Texture/Texture.vcxproj" Id="37958ca0-dd7d-43e8-8d99-c055677155e9">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Texture3d/Texture3d.vcxproj">
+    <Project Path="Apps/Texture3d/Texture3d.vcxproj" Id="df871a8f-0bb8-4db3-acab-17b0c51c5688">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/TextureArray/TextureArray.vcxproj">
+    <Project Path="Apps/TextureArray/TextureArray.vcxproj" Id="426538e6-9b9e-4169-a263-6bfd59e26786">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/TextureCubeMap/TextureCubeMap.vcxproj">
+    <Project Path="Apps/TextureCubeMap/TextureCubeMap.vcxproj" Id="e8842702-889d-453b-8ceb-5aa3e27bffa9">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/TextureCubeMapArray/TextureCubeMapArray.vcxproj">
+    <Project Path="Apps/TextureCubeMapArray/TextureCubeMapArray.vcxproj" Id="5a449fea-8fea-4106-b267-1509ecb89213">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
-    <Project Path="Apps/Triangle/Triangle.vcxproj">
+    <Project Path="Apps/Triangle/Triangle.vcxproj" Id="aa4007af-44cb-4d24-bb11-1e7aafd21795">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
   </Folder>
@@ -102,7 +102,7 @@
       <BuildType Project="Release" />
     </Project>
   </Folder>
-  <Project Path="Engine/Engine.vcxproj">
+  <Project Path="Engine/Engine.vcxproj" Id="ffe87dcb-69b8-4549-8d06-a681a29ef1d8">
     <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
   </Project>
 </Solution>

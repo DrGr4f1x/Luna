@@ -192,6 +192,8 @@ void VariableRateShadingApp::CreateWindowSizeDependentResources()
 	{
 		m_lightCameras[i].SetPerspectiveMatrix(DirectX::XMConvertToRadians(90.0f), GetWindowAspectRatio(), 0.01f, 125.0f);
 	}
+
+	InitRefractionColorBuffer();
 }
 
 
@@ -239,6 +241,20 @@ void VariableRateShadingApp::InitShadowDepthBuffer()
 	};
 
 	m_shadowDepthBuffer = CreateDepthBuffer(desc);
+}
+
+
+void VariableRateShadingApp::InitRefractionColorBuffer()
+{
+	ColorBufferDesc desc
+	{
+		.name		= "Refraction Color Buffer",
+		.width		= GetWindowWidth(),
+		.height		= GetWindowHeight(),
+		.format		= GetColorFormat()
+	};
+
+	m_refractionBuffer = CreateColorBuffer(desc);
 }
 
 
@@ -328,8 +344,15 @@ void VariableRateShadingApp::InitPipelines()
 
 	m_sceneGraphicsPipeline = CreateGraphicsPipeline(desc);
 
+	// Refraction pipeline
+	desc.name = "Refraction Graphics Pipeline";
+	desc.vertexShader = { .shaderFile = "ShadowsAndSceneVS_A490C853" };
+
+	m_refractionGraphicsPipeline = CreateGraphicsPipeline(desc);
+
 	// Shadow pipeline
 	desc.name = "Shadow Graphics Pipeline";
+	desc.vertexShader = { .shaderFile = "ShadowsAndSceneVS" };
 	desc.pixelShader = {};
 	desc.rtvFormats = {};
 	desc.dsvFormat = Format::D32;
@@ -440,6 +463,11 @@ void VariableRateShadingApp::UpdateConstantBuffers()
 
 	// Glass constants
 	const float glassZ = SampleAssets::Glass::zPosition * GetWorldScale();
+
+	// Set the clip plane for the scene constant buffer
+	Vector3 cameraPos = m_camera.GetPosition();
+	const float sign = (glassZ > cameraPos.GetZ()) ? 1.0f : -1.0f;
+	m_sceneConstants.clipPlane = Vector4(0.0f, 0.0f, sign, -sign * glassZ);
 
 	// Update the constant buffers
 	m_sceneConstantBuffer->Update(sizeof(SceneConstants), &m_sceneConstants);
