@@ -866,4 +866,38 @@ bool IsDescriptorBufferViewType(VkDescriptorType descriptorType)
 		descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
 }
 
+
+VkExtent2D ShadingRateToVulkan(ShadingRate shadingRate)
+{
+	using enum ShadingRate;
+
+	switch (shadingRate)
+	{
+	case ShadingRate1x2: return VkExtent2D{ 1, 2 }; break;
+	case ShadingRate2x1: return VkExtent2D{ 2, 1 }; break;
+	case ShadingRate2x2: return VkExtent2D{ 2, 2 }; break;
+	case ShadingRate2x4: return VkExtent2D{ 2, 4 }; break;
+	case ShadingRate4x2: return VkExtent2D{ 4, 2 }; break;
+	case ShadingRate4x4: return VkExtent2D{ 4, 4 }; break;
+	default:
+		return VkExtent2D{ 1, 1 }; 
+		break;
+	}
+}
+
+
+VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombiner shadingRateCombiner)
+{
+	switch (shadingRateCombiner)
+	{
+	case ShadingRateCombiner::Passthrough: return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR; break;
+	case ShadingRateCombiner::Override: return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR; break;
+	case ShadingRateCombiner::Min: return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MIN_KHR; break;
+	case ShadingRateCombiner::Max: return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MAX_KHR; break;
+	default:
+		return VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR; 
+		break;
+	}
+}
+
 } // Minimumnamespace Luna::VK

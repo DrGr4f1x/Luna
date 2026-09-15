@@ -80,6 +80,7 @@ void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, vector<VkDy
 	}
 	dynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
 	dynamicStates.push_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
+	dynamicStates.push_back(VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR);
 
 	createInfo = VkPipelineDynamicStateCreateInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,

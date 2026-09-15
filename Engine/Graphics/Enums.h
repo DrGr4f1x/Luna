@@ -770,6 +770,8 @@ enum class DepthStencilAspect
 };
 
 
+
+// TODO: Delete?
 enum class NativeObjectType : uint32_t
 {
 	// DX12
@@ -812,6 +814,27 @@ enum class StaticBorderColor : uint8_t
 	TransparentBlack,
 	OpaqueBlack,
 	OpaqueWhite
+};
+
+
+enum class ShadingRate : uint8_t
+{
+	ShadingRate1x1,
+	ShadingRate1x2,
+	ShadingRate2x1,
+	ShadingRate2x2,
+	ShadingRate2x4,
+	ShadingRate4x2,
+	ShadingRate4x4
+};
+
+
+enum class ShadingRateCombiner : uint8_t
+{
+	Passthrough,
+	Override,
+	Min,
+	Max
 };
 
 } // namespace Luna

@@ -17,6 +17,7 @@
 #include "Graphics\CommandContext.h"
 #include "Graphics\CommonStates.h"
 #include "Graphics\Device.h"
+#include "Graphics\DeviceCaps.h"
 
 #include "SquidRoom.h"
 
@@ -48,6 +49,12 @@ void VariableRateShadingApp::Configure()
 void VariableRateShadingApp::Startup()
 {
 	// Application initialization, after device creation
+
+	// Check for variable rate shading support at minimum of tier 1
+	if (GetDevice()->GetDeviceCaps().tiers.shadingRate < 1)
+	{
+		Utility::ExitFatal("This app requires at least Variable Rate Shading Tier 1", "Not Supported");
+	}
 }
 
 
@@ -94,10 +101,13 @@ void VariableRateShadingApp::Render()
 
 	// Render shadows
 	RenderShadows(context);
+	context.TransitionResource(m_shadowDepthBuffer, ResourceState::PixelShaderResource);
+
+	// Render refraction
+	RenderRefraction(context);
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
-	context.TransitionResource(m_shadowDepthBuffer, ResourceState::PixelShaderResource);
 	context.ClearColor(GetColorBuffer());
 	context.ClearDepthAndStencil(GetDepthBuffer());
 
@@ -106,6 +116,8 @@ void VariableRateShadingApp::Render()
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 	context.SetRootSignature(m_sceneRootSignature);
 	context.SetGraphicsPipeline(m_sceneGraphicsPipeline);
+
+	context.SetShadingRate(m_sceneShadingRate);
 
 	context.SetIndexBuffer(m_indexBuffer);
 	context.SetVertexBuffer(0, m_vertexBuffer);
@@ -141,8 +153,10 @@ void VariableRateShadingApp::CreateDeviceDependentResources()
 	Vector3 cameraPosition{ 0.0f, 17.1954231f, -28.555980f };
 	m_camera.SetPosition(cameraPosition);
 
+	// Create constant buffers
 	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
 	m_shadowConstantBuffer = CreateConstantBuffer("Shadow Constant Buffer", 1, sizeof(SceneConstants));
+	m_glassConstantBuffer = CreateConstantBuffer("Glass Constant Buffer", 1, sizeof(GlassConstants));
 
 	InitShadowDepthBuffer();
 	InitLights();
@@ -204,6 +218,12 @@ void VariableRateShadingApp::RenderShadows(GraphicsContext& context)
 	}
 
 	context.EndRendering();
+}
+
+
+void VariableRateShadingApp::RenderRefraction(GraphicsContext& context)
+{ 
+
 }
 
 
@@ -418,7 +438,11 @@ void VariableRateShadingApp::UpdateConstantBuffers()
 
 	m_shadowConstants.ambientColor = m_sceneConstants.ambientColor = { 0.1f, 0.2f, 0.3f, 1.0f };
 
+	// Glass constants
+	const float glassZ = SampleAssets::Glass::zPosition * GetWorldScale();
+
 	// Update the constant buffers
 	m_sceneConstantBuffer->Update(sizeof(SceneConstants), &m_sceneConstants);
 	m_shadowConstantBuffer->Update(sizeof(SceneConstants), &m_shadowConstants);
+	m_glassConstantBuffer->Update(sizeof(GlassConstants), &m_glassConstants);
 }

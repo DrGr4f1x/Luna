@@ -1050,6 +1050,16 @@ void CommandContextVK::SetDepthBias(float depthBiasConstantFactor, float depthBi
 }
 
 
+void CommandContextVK::SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2])
+{
+	const VkExtent2D shadingRateVK = ShadingRateToVulkan(shadingRate);
+	VkFragmentShadingRateCombinerOpKHR shadingRateCombinersVK[2];
+	shadingRateCombinersVK[0] = ShadingRateCombinerToVulkan(shadingRateCombiners[0]);
+	shadingRateCombinersVK[1] = ShadingRateCombinerToVulkan(shadingRateCombiners[1]);
+	vkCmdSetFragmentShadingRateKHR(m_commandBuffer, &shadingRateVK, shadingRateCombinersVK);
+}
+
+
 void CommandContextVK::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
 	vkCmdPushConstants(

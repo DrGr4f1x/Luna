@@ -698,6 +698,18 @@ void CommandContext12::SetDepthBias(float depthBiasConstantFactor, float depthBi
 }
 
 
+void CommandContext12::SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2])
+{
+	if (m_commandList5)
+	{
+		D3D12_SHADING_RATE_COMBINER shadingRateCombiners12[2];
+		shadingRateCombiners12[0] = ShadingRateCombinerToDX12(shadingRateCombiners[0]);
+		shadingRateCombiners12[1] = ShadingRateCombinerToDX12(shadingRateCombiners[1]);
+		m_commandList5->RSSetShadingRate(ShadingRateToDX12(shadingRate), shadingRateCombiners12);
+	}
+}
+
+
 void CommandContext12::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);

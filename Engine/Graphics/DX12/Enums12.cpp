@@ -783,4 +783,38 @@ D3D12_STATIC_BORDER_COLOR BorderColorToDX12(StaticBorderColor borderColor)
 	}
 }
 
+
+D3D12_SHADING_RATE ShadingRateToDX12(ShadingRate shadingRate)
+{
+	using enum ShadingRate;
+
+	switch (shadingRate)
+	{
+	case ShadingRate1x2: return D3D12_SHADING_RATE_1X2; break;
+	case ShadingRate2x1: return D3D12_SHADING_RATE_2X1; break;
+	case ShadingRate2x2: return D3D12_SHADING_RATE_2X2; break;
+	case ShadingRate2x4: return D3D12_SHADING_RATE_2X4; break;
+	case ShadingRate4x2: return D3D12_SHADING_RATE_4X2; break;
+	case ShadingRate4x4: return D3D12_SHADING_RATE_4X4; break;
+	default:				
+		return D3D12_SHADING_RATE_1X1; 
+		break;
+	}
+}
+
+
+D3D12_SHADING_RATE_COMBINER ShadingRateCombinerToDX12(ShadingRateCombiner shadingRateCombiner)
+{
+	switch (shadingRateCombiner)
+	{
+	case ShadingRateCombiner::Passthrough: return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH; break;
+	case ShadingRateCombiner::Override: return D3D12_SHADING_RATE_COMBINER_OVERRIDE; break;
+	case ShadingRateCombiner::Min: return D3D12_SHADING_RATE_COMBINER_MIN; break;
+	case ShadingRateCombiner::Max: return D3D12_SHADING_RATE_COMBINER_MAX; break;
+	default:
+		return D3D12_SHADING_RATE_COMBINER_PASSTHROUGH; 
+		break;
+	}
+}
+
 } // namespace Luna::DX12

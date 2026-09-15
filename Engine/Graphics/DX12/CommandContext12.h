@@ -94,6 +94,7 @@ public:
 	void SetBlendFactor(Color blendFactor) override;
 	void SetPrimitiveTopology(PrimitiveTopology topology) override;
 	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) override;
+	void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2]) override;
 
 	// Root constants
 	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;

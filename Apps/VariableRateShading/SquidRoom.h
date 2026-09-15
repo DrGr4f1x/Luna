@@ -1167,4 +1167,55 @@ const DrawParameters s_draws[] =
 	{  18,  19,  -1,   761115,     3096,   219093 }, // subset0_Back_Alley_box
 };
 
+namespace Glass
+{
+
+static const DrawParameters s_draws[] =
+{
+	{ 0,   1,  -1,        0,    4,        0 },
+};
+
+struct Vertex
+{
+	XMFLOAT3 position;
+	XMFLOAT3 normal;
+	XMFLOAT2 texcoord;
+	XMFLOAT3 tangent;
+};
+
+const float zPosition = -150.0f;
+static void GetVertexData(std::vector<Vertex>& vertexData)
+{
+	const float x = -150.0f;
+	const float y = 50.0f;
+	const float z = zPosition;
+	const float scale = 1.1f;
+	const float width = 266.66f * scale;
+	const float height = 150.0f * scale;
+
+	vertexData.clear();
+	vertexData.resize(4);
+
+	vertexData[0].position = { x, y, z };
+	vertexData[1].position = { x, y + height, z };
+	vertexData[2].position = { x + width, y, z };
+	vertexData[3].position = { x + width, y + height, z };
+
+	vertexData[0].texcoord = { 1.0f, 0.0f };
+	vertexData[1].texcoord = { 1.0f, 1.0f };
+	vertexData[2].texcoord = { 0.0f, 0.0f };
+	vertexData[3].texcoord = { 0.0f, 1.0f };
+
+	vertexData[0].normal = { 0.0f, 0.0f, 1.0f };
+	vertexData[1].normal = { 0.0f, 0.0f, 1.0f };
+	vertexData[2].normal = { 0.0f, 0.0f, 1.0f };
+	vertexData[3].normal = { 0.0f, 0.0f, 1.0f };
+
+	vertexData[0].tangent = { 1.0f, 1.0f, 0.0f };
+	vertexData[1].tangent = { 1.0f, 1.0f, 0.0f };
+	vertexData[2].tangent = { 1.0f, 1.0f, 0.0f };
+	vertexData[3].tangent = { 1.0f, 1.0f, 0.0f };
+}
+} // namespace Glass
+
 } // namespace SampleAssets

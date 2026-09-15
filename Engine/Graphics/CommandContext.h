@@ -112,6 +112,8 @@ public:
 	virtual void SetBlendFactor(Color blendFactor) = 0;
 	virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
 	virtual void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) = 0;
+	virtual void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2]) = 0;
+
 
 	// Root constants in DirectX, push constants in Vulkan
 	virtual void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
@@ -274,6 +276,8 @@ public:
 	void SetBlendFactor(Color blendFactor);
 	void SetPrimitiveTopology(PrimitiveTopology topology);
 	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor);
+	void SetShadingRate(ShadingRate shadingRate);
+	void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiner[2]);
 
 	// Root constants in DirectX, push constants in Vulkan
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
@@ -670,6 +674,19 @@ inline void GraphicsContext::SetPrimitiveTopology(PrimitiveTopology topology)
 inline void GraphicsContext::SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor)
 {
 	m_contextImpl->SetDepthBias(depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
+}
+
+
+inline void GraphicsContext::SetShadingRate(ShadingRate shadingRate)
+{
+	const ShadingRateCombiner shadingRateCombiners[2] = { ShadingRateCombiner::Passthrough, ShadingRateCombiner::Passthrough };
+	m_contextImpl->SetShadingRate(shadingRate, shadingRateCombiners);
+}
+
+
+inline void GraphicsContext::SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2])
+{
+	m_contextImpl->SetShadingRate(shadingRate, shadingRateCombiners);
 }
 
 

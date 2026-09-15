@@ -72,4 +72,8 @@ D3D12_HEAP_TYPE GetHeapType(MemoryAccess memoryAccess);
 
 D3D12_STATIC_BORDER_COLOR BorderColorToDX12(StaticBorderColor borderColor);
 
+D3D12_SHADING_RATE ShadingRateToDX12(ShadingRate shadingRate);
+
+D3D12_SHADING_RATE_COMBINER ShadingRateCombinerToDX12(ShadingRateCombiner shadingRateCombiner);
+
 } // namespace Luna::DX12

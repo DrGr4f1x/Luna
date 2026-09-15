@@ -22,6 +22,7 @@ namespace Luna
 // Forward declarations
 class CommandContext;
 class IDevice;
+struct DeviceCaps;
 
 
 struct DeviceManagerDesc

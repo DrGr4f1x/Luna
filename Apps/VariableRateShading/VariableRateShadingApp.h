@@ -33,6 +33,7 @@ protected:
 	void CreateWindowSizeDependentResources() final;
 
 	void RenderShadows(Luna::GraphicsContext& context);
+	void RenderRefraction(Luna::GraphicsContext& context);
 
 	void InitShadowDepthBuffer();
 	void InitLights();
@@ -83,6 +84,12 @@ protected:
 		Math::Vector4 clipPlane{};
 	};
 
+	struct GlassConstants
+	{
+		float refractionScale{ 0.01f };
+		bool flipNormal{ false };
+	};
+
 	Luna::GpuBufferPtr m_vertexBuffer;
 	Luna::GpuBufferPtr m_indexBuffer;
 
@@ -96,10 +103,12 @@ protected:
 	// Constant data
 	SceneConstants m_sceneConstants{};
 	SceneConstants m_shadowConstants{};
+	GlassConstants m_glassConstants{};
 
 	// Constant buffers
 	Luna::GpuBufferPtr m_sceneConstantBuffer;
 	Luna::GpuBufferPtr m_shadowConstantBuffer;
+	Luna::GpuBufferPtr m_glassConstantBuffer;
 
 	// Lights
 	LightState m_lightState[m_numLights];
@@ -112,10 +121,15 @@ protected:
 
 	// Textures for scene objects
 	std::vector<Luna::TexturePtr> m_textures;
+	Luna::TexturePtr m_glassDiffuseTexture;
+	Luna::TexturePtr m_glassNormalTexture;
 
 	// Camera controller
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 
 	// Application state
 	bool m_animate{ true };
+	Luna::ShadingRate m_sceneShadingRate{ Luna::ShadingRate::ShadingRate1x1 };
+	Luna::ShadingRate m_refractionShadingRate{ Luna::ShadingRate::ShadingRate1x1 };
+	Luna::ShadingRate m_postProcessingShadingRate{ Luna::ShadingRate::ShadingRate1x1 };
 };

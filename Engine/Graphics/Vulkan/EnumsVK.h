@@ -135,4 +135,8 @@ bool IsDescriptorImageInfoType(VkDescriptorType descriptorType);
 bool IsDescriptorBufferInfoType(VkDescriptorType descriptorType);
 bool IsDescriptorBufferViewType(VkDescriptorType descriptorType);
 
+VkExtent2D ShadingRateToVulkan(ShadingRate shadingRate);
+
+VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombiner shadingRateCombiner);
+
 } // namespace Luna::VK
