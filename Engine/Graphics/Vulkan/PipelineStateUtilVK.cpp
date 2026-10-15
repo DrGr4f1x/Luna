@@ -70,7 +70,7 @@ void FillDepthStencilState(VkPipelineDepthStencilStateCreateInfo& createInfo, co
 }
 
 
-void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, vector<VkDynamicState>& dynamicStates, bool isMeshletState)
+void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, vector<VkDynamicState>& dynamicStates, bool isMeshletState, bool allowFragmentShadingRate)
 {
 	dynamicStates.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 	dynamicStates.push_back(VK_DYNAMIC_STATE_SCISSOR);
@@ -80,7 +80,10 @@ void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, vector<VkDy
 	}
 	dynamicStates.push_back(VK_DYNAMIC_STATE_STENCIL_REFERENCE);
 	dynamicStates.push_back(VK_DYNAMIC_STATE_DEPTH_BIAS);
-	dynamicStates.push_back(VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR);
+	if (allowFragmentShadingRate)
+	{
+		dynamicStates.push_back(VK_DYNAMIC_STATE_FRAGMENT_SHADING_RATE_KHR);
+	}
 
 	createInfo = VkPipelineDynamicStateCreateInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,

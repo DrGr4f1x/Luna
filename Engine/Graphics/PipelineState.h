@@ -154,6 +154,7 @@ struct GraphicsPipelineDesc
 	Format dsvFormat;
 	uint32_t msaaCount{ 1 };
 	bool sampleRateShading{ false };
+	bool variableRateShading{ false };
 
 	PrimitiveTopology topology;
 	IndexBufferStripCutValue indexBufferStripCut{ IndexBufferStripCutValue::Disabled };
@@ -218,6 +219,7 @@ struct MeshletPipelineDesc
 	Format dsvFormat;
 	uint32_t msaaCount{ 1 };
 	bool sampleRateShading{ false };
+	bool variableRateShading{ false };
 
 	PrimitiveTopology topology;
 

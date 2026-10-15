@@ -328,18 +328,19 @@ void VariableRateShadingApp::InitPipelines()
 
 	// Scene pipeline
 	GraphicsPipelineDesc desc{
-		.name				= "Scene Graphics Pipeline",
-		.blendState			= CommonStates::BlendDisable(),
-		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
-		.rasterizerState	= CommonStates::RasterizerDefaultCW(),
-		.rtvFormats			= { GetColorFormat() },
-		.dsvFormat			= GetDepthFormat(),
-		.topology			= PrimitiveTopology::TriangleList,
-		.vertexShader		= { .shaderFile = "ShadowsAndSceneVS" },
-		.pixelShader		= { .shaderFile = "ShadowsAndScenePS" },
-		.vertexStreams		= { vertexStreamDesc },
-		.vertexElements		= SampleAssets::s_standardVertexElements,
-		.rootSignature		= m_sceneRootSignature
+		.name					= "Scene Graphics Pipeline",
+		.blendState				= CommonStates::BlendDisable(),
+		.depthStencilState		= CommonStates::DepthStateReadWriteReversed(),
+		.rasterizerState		= CommonStates::RasterizerDefaultCW(),
+		.rtvFormats				= { GetColorFormat() },
+		.dsvFormat				= GetDepthFormat(),
+		.variableRateShading	= true,
+		.topology				= PrimitiveTopology::TriangleList,
+		.vertexShader			= { .shaderFile = "ShadowsAndSceneVS" },
+		.pixelShader			= { .shaderFile = "ShadowsAndScenePS" },
+		.vertexStreams			= { vertexStreamDesc },
+		.vertexElements			= SampleAssets::s_standardVertexElements,
+		.rootSignature			= m_sceneRootSignature
 	};
 
 	m_sceneGraphicsPipeline = CreateGraphicsPipeline(desc);

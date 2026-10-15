@@ -827,7 +827,7 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	// Dynamic states
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	vector<VkDynamicState> dynamicStates;
-	FillDynamicStates(dynamicStateInfo, dynamicStates, false /*isMeshletState*/);
+	FillDynamicStates(dynamicStateInfo, dynamicStates, false /*isMeshletState*/, pipelineDesc.variableRateShading);
 
 	// TODO: Check for dynamic rendering support here.  Will need proper extension/feature system.
 	const uint32_t numRtvs = (uint32_t)pipelineDesc.rtvFormats.size();
@@ -989,7 +989,7 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 	// Dynamic states
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	vector<VkDynamicState> dynamicStates;
-	FillDynamicStates(dynamicStateInfo, dynamicStates, true /*isMeshletState*/);
+	FillDynamicStates(dynamicStateInfo, dynamicStates, true /*isMeshletState*/, pipelineDesc.variableRateShading);
 
 	// TODO: Check for dynamic rendering support here.  Will need proper extension/feature system.
 	const uint32_t numRtvs = (uint32_t)pipelineDesc.rtvFormats.size();

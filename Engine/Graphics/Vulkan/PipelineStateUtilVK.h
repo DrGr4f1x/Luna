@@ -65,7 +65,7 @@ void FillBlendState(VkPipelineColorBlendStateCreateInfo& createInfo, std::array<
 }
 
 
-void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, std::vector<VkDynamicState>& dynamicStates, bool isMeshletState);
+void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, std::vector<VkDynamicState>& dynamicStates, bool isMeshletState, bool allowFragmentShadingRate);
 
 template <class TPipelineStateDesc>
 void FillRenderTargetState(VkPipelineRenderingCreateInfo& createInfo, std::vector<VkFormat>& rtvFormats, const TPipelineStateDesc& desc)
