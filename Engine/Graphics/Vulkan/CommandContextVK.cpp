@@ -476,8 +476,6 @@ void CommandContextVK::InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlush
 
 void CommandContextVK::FlushResourceBarriers()
 {
-	BeginEvent("FlushResourceBarriers");
-
 	for (const auto& barrier : m_textureBarriers)
 	{
 		// TODO: use named initializers
@@ -537,8 +535,6 @@ void CommandContextVK::FlushResourceBarriers()
 
 	m_textureBarriers.clear();
 	m_bufferBarriers.clear();
-
-	EndEvent();
 }
 
 
