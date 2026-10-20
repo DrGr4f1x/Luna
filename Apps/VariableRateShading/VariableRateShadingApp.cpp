@@ -200,7 +200,7 @@ void VariableRateShadingApp::CreateWindowSizeDependentResources()
 void VariableRateShadingApp::RenderShadows(GraphicsContext& context)
 {
 	context.TransitionResource(m_shadowDepthBuffer, ResourceState::DepthWrite);
-	context.ClearDepthAndStencil(m_shadowDepthBuffer);
+	context.ClearDepth(m_shadowDepthBuffer);
 
 	context.BeginRendering(m_shadowDepthBuffer);
 
@@ -347,12 +347,13 @@ void VariableRateShadingApp::InitPipelines()
 
 	// Refraction pipeline
 	desc.name = "Refraction Graphics Pipeline";
-	desc.vertexShader = { .shaderFile = "ShadowsAndSceneVS_A490C853" };
+	desc.vertexShader = { .shaderFile = "ShadowsAndSceneVS_74898BDA" };
 
 	m_refractionGraphicsPipeline = CreateGraphicsPipeline(desc);
 
 	// Shadow pipeline
 	desc.name = "Shadow Graphics Pipeline";
+	desc.variableRateShading = false;
 	desc.vertexShader = { .shaderFile = "ShadowsAndSceneVS" };
 	desc.pixelShader = {};
 	desc.rtvFormats = {};
