@@ -13,16 +13,16 @@
 namespace Luna
 {
 
-void BeginEvent(const std::string& event);
+void BeginEvent(const char* event);
 void EndEvent();
 
-void SetMarker(const std::string& marker);
+void SetMarker(const char* marker);
 
 
 class ScopedEvent
 {
 public:
-	explicit ScopedEvent(const std::string& event);
+	explicit ScopedEvent(const char* event);
 	~ScopedEvent();
 
 #if FRAMEPRO_ENABLED

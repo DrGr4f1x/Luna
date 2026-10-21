@@ -149,7 +149,7 @@ CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 }
 
 
-void CommandContextVK::BeginEvent(const string& label)
+void CommandContextVK::BeginEvent(const char* label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
 	VkDebugUtilsLabelEXT labelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
@@ -157,10 +157,10 @@ void CommandContextVK::BeginEvent(const string& label)
 	labelInfo.color[1] = 0.0f;
 	labelInfo.color[2] = 0.0f;
 	labelInfo.color[3] = 0.0f;
-	labelInfo.pLabelName = label.c_str();
+	labelInfo.pLabelName = label;
 	vkCmdBeginDebugUtilsLabelEXT(m_commandBuffer, &labelInfo);
 
-	PIXBeginEvent(0, label.c_str());
+	PIXBeginEvent(0, label);
 #endif
 }
 
@@ -175,7 +175,7 @@ void CommandContextVK::EndEvent()
 }
 
 
-void CommandContextVK::SetMarker(const string& label)
+void CommandContextVK::SetMarker(const char* label)
 {
 #if ENABLE_VULKAN_DEBUG_MARKERS
 	VkDebugUtilsLabelEXT labelInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT };
@@ -183,10 +183,10 @@ void CommandContextVK::SetMarker(const string& label)
 	labelInfo.color[1] = 0.0f;
 	labelInfo.color[2] = 0.0f;
 	labelInfo.color[3] = 0.0f;
-	labelInfo.pLabelName = label.c_str();
+	labelInfo.pLabelName = label;
 	vkCmdInsertDebugUtilsLabelEXT(m_commandBuffer, &labelInfo);
 
-	PIXSetMarker(0, label.c_str());
+	PIXSetMarker(0, label);
 #endif
 }
 

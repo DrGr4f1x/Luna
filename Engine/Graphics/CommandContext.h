@@ -56,9 +56,9 @@ public:
 	virtual CommandListType GetType() const = 0;
 
 	// Debug events and markers
-	virtual void BeginEvent(const std::string& label) = 0;
+	virtual void BeginEvent(const char* label) = 0;
 	virtual void EndEvent() = 0;
-	virtual void SetMarker(const std::string& label) = 0;
+	virtual void SetMarker(const char* label) = 0;
 
 	virtual void Reset() = 0;
 	virtual void Initialize() = 0;
@@ -196,9 +196,9 @@ public:
 	CommandListType GetType() const;
 
 	// Debug events and markers
-	void BeginEvent(const std::string& label);
+	void BeginEvent(const char* label);
 	void EndEvent();
-	void SetMarker(const std::string& label);
+	void SetMarker(const char* label);
 
 	void Reset();
 	void Initialize();
@@ -390,8 +390,8 @@ public:
 class ScopedDrawEvent
 {
 public:
-	ScopedDrawEvent(CommandContext& context, const std::string& label);
-	ScopedDrawEvent(ICommandContext* context, const std::string& label);
+	ScopedDrawEvent(CommandContext& context, const char* label);
+	ScopedDrawEvent(ICommandContext* context, const char* label);
 	~ScopedDrawEvent();
 
 private:
@@ -416,7 +416,7 @@ inline CommandListType CommandContext::GetType() const
 }
 
 
-inline void CommandContext::BeginEvent(const std::string& label)
+inline void CommandContext::BeginEvent(const char* label)
 {
 	m_contextImpl->BeginEvent(label);
 }
@@ -428,7 +428,7 @@ inline void CommandContext::EndEvent()
 }
 
 
-inline void CommandContext::SetMarker(const std::string& label)
+inline void CommandContext::SetMarker(const char* label)
 {
 	m_contextImpl->SetMarker(label);
 }

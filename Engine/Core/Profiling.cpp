@@ -20,10 +20,10 @@
 namespace Luna
 {
 
-void BeginEvent(const std::string& event)
+void BeginEvent(const char* event)
 {
 #if ENABLE_DEBUG_MARKERS
-	PIXBeginEvent(0, event.c_str());
+	PIXBeginEvent(0, event);
 #endif
 }
 
@@ -36,21 +36,21 @@ void EndEvent()
 }
 
 
-void SetMarker(const std::string& marker)
+void SetMarker(const char* marker)
 {
 #if ENABLE_DEBUG_MARKERS
-	PIXSetMarker(0, marker.c_str());
+	PIXSetMarker(0, marker);
 #endif
 }
 
 
-ScopedEvent::ScopedEvent(const std::string& event)
+ScopedEvent::ScopedEvent(const char* event)
 {
 #if FRAMEPRO_ENABLED
 	if (IsFrameProRunning())
 	{
 		FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
-		m_stringId = FramePro::RegisterString(event.c_str());
+		m_stringId = FramePro::RegisterString(event);
 		m_eventStarted = true;
 	}
 #endif

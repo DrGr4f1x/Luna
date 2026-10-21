@@ -27,7 +27,7 @@ CommandContext& CommandContext::Begin(const string id)
 	CommandContext* newContext = GetDeviceManager()->AllocateContext(CommandListType::Graphics);
 	newContext->SetId(id);
 	newContext->BeginFrame();
-	newContext->BeginEvent(id);
+	newContext->BeginEvent(id.c_str());
 
 	// TODO
 #if 0
@@ -94,14 +94,14 @@ ComputeContext& ComputeContext::Begin(const string& id, bool bAsync)
 }
 
 
-ScopedDrawEvent::ScopedDrawEvent(CommandContext& context, const string& label)
+ScopedDrawEvent::ScopedDrawEvent(CommandContext& context, const char* label)
 	: m_context{ context.m_contextImpl.get() }
 {
 #if FRAMEPRO_ENABLED
 	if (IsFrameProRunning())
 	{
 		FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
-		m_stringId = FramePro::RegisterString(label.c_str());
+		m_stringId = FramePro::RegisterString(label);
 		m_eventStarted = true;
 	}
 #endif
@@ -110,14 +110,14 @@ ScopedDrawEvent::ScopedDrawEvent(CommandContext& context, const string& label)
 }
 
 
-ScopedDrawEvent::ScopedDrawEvent(ICommandContext* context, const std::string& label)
+ScopedDrawEvent::ScopedDrawEvent(ICommandContext* context, const char* label)
 	: m_context{ context }
 {
 #if FRAMEPRO_ENABLED
 	if (IsFrameProRunning())
 	{
 		FRAMEPRO_GET_CLOCK_COUNT(m_startTime);
-		m_stringId = FramePro::RegisterString(label.c_str());
+		m_stringId = FramePro::RegisterString(label);
 		m_eventStarted = true;
 	}
 #endif

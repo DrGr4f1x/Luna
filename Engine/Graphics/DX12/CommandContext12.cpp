@@ -100,10 +100,10 @@ CommandContext12::~CommandContext12()
 }
 
 
-void CommandContext12::BeginEvent(const string& label)
+void CommandContext12::BeginEvent(const char* label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
-	::PIXBeginEvent(m_commandList, 0, label.c_str());
+	::PIXBeginEvent(m_commandList, 0, label);
 #endif
 }
 
@@ -116,10 +116,10 @@ void CommandContext12::EndEvent()
 }
 
 
-void CommandContext12::SetMarker(const string& label)
+void CommandContext12::SetMarker(const char* label)
 {
 #if ENABLE_D3D12_DEBUG_MARKERS
-	::PIXSetMarker(m_commandList, 0, label.c_str());
+	::PIXSetMarker(m_commandList, 0, label);
 #endif
 }
 
