@@ -713,6 +713,7 @@ void DeviceManager::EnableDeviceExtensions()
 	RequestExtension(VK_NVX_IMAGE_VIEW_HANDLE_EXTENSION_NAME);
 	RequestExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
 	RequestExtension(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME);
+	RequestExtension(VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME);
 
 	m_vkbPhysicalDevice.enable_extensions_if_present(requestedExtensions);
 
@@ -914,6 +915,11 @@ void DeviceManager::EnableDeviceExtensions()
 		VK_APPEND_PNEXT(m_extFeatures.descriptorBufferFeatures);
 	}
 
+	if (IsExtensionRequested(VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME))
+	{
+		VK_APPEND_PNEXT(m_extFeatures.descriptorHeapFeatures);
+	}
+
 	vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice->Get(), &m_features);
 
 	m_supportedFeatures.descriptorIndexing = m_extFeatures.features12.descriptorIndexing;
@@ -932,6 +938,7 @@ void DeviceManager::EnableDeviceExtensions()
 	m_supportedFeatures.swapChainMaintenance1 = m_extFeatures.swapchainMaintenance1Features.swapchainMaintenance1;
 	m_supportedFeatures.fifoLatestReady = m_extFeatures.presentModeFifoLatestReadyFeaturesEXT.presentModeFifoLatestReady;
 	m_supportedFeatures.descriptorBuffers = m_extFeatures.descriptorBufferFeatures.descriptorBuffer;
+	m_supportedFeatures.descriptorHeaps = m_extFeatures.descriptorHeapFeatures.descriptorHeap;
 
 	// Memory props
 	{ 
@@ -1071,6 +1078,12 @@ void DeviceManager::EnableDeviceExtensions()
 			VK_APPEND_PNEXT(descriptorBufferProps);
 		}
 
+		VkPhysicalDeviceDescriptorHeapPropertiesEXT descriptorHeapProps = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_PROPERTIES_EXT };
+		if (IsExtensionRequested(VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME))
+		{
+			VK_APPEND_PNEXT(descriptorHeapProps);
+		}
+
 		vkGetPhysicalDeviceProperties2(m_vkPhysicalDevice->Get(), &props);
 
 		const VkPhysicalDeviceLimits& limits = props.properties.limits;
@@ -1187,6 +1200,26 @@ void DeviceManager::EnableDeviceExtensions()
 		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.inputAttachment);
 		largest = std::max(largest, m_caps.descriptorBuffer.descriptorSize.accelerationStructure);
 		m_caps.descriptorBuffer.descriptorSize.largest = largest;
+
+		m_caps.descriptorHeap.samplerHeapAlignment = descriptorHeapProps.samplerHeapAlignment;
+		m_caps.descriptorHeap.resourceHeapAlignment = descriptorHeapProps.resourceHeapAlignment;
+		m_caps.descriptorHeap.maxSamplerHeapSize = descriptorHeapProps.maxSamplerHeapSize;
+		m_caps.descriptorHeap.maxResourceHeapSize = descriptorHeapProps.maxResourceHeapSize;
+		m_caps.descriptorHeap.minSamplerHeapReservedRange = descriptorHeapProps.minSamplerHeapReservedRange;
+		m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded = descriptorHeapProps.minSamplerHeapReservedRangeWithEmbedded;
+		m_caps.descriptorHeap.minResourceHeapReservedRange = descriptorHeapProps.minResourceHeapReservedRange;
+		m_caps.descriptorHeap.samplerDescriptorSize = descriptorHeapProps.samplerDescriptorSize;
+		m_caps.descriptorHeap.imageDescriptorSize = descriptorHeapProps.imageDescriptorSize;
+		m_caps.descriptorHeap.bufferDescriptorSize = descriptorHeapProps.bufferDescriptorSize;
+		m_caps.descriptorHeap.samplerDescriptorAlignment = descriptorHeapProps.samplerDescriptorAlignment;
+		m_caps.descriptorHeap.imageDescriptorAlignment = descriptorHeapProps.imageDescriptorAlignment;
+		m_caps.descriptorHeap.bufferDescriptorAlignment = descriptorHeapProps.bufferDescriptorAlignment;
+		m_caps.descriptorHeap.maxPushDataSize = descriptorHeapProps.maxPushDataSize;
+		m_caps.descriptorHeap.imageCaptureReplayOpaqueDataSize = descriptorHeapProps.imageCaptureReplayOpaqueDataSize;
+		m_caps.descriptorHeap.maxDescriptorHeapEmbeddedSamplers = descriptorHeapProps.maxDescriptorHeapEmbeddedSamplers;
+		m_caps.descriptorHeap.samplerYcbcrConversionCount = descriptorHeapProps.samplerYcbcrConversionCount;
+		m_caps.descriptorHeap.sparseDescriptorHeaps = descriptorHeapProps.sparseDescriptorHeaps;
+		m_caps.descriptorHeap.protectedDescriptorHeaps = descriptorHeapProps.protectedDescriptorHeaps;
 
 		m_caps.shaderStage.descriptorSamplerMaxNum = limits.maxPerStageDescriptorSamplers;
 		m_caps.shaderStage.descriptorConstantBufferMaxNum = limits.maxPerStageDescriptorUniformBuffers;

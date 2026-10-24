@@ -325,6 +325,9 @@ void FillCaps(ID3D12Device* device, DeviceCaps& caps)
 	// Zero out caps.descriptorBuffer (Vulkan-only)
 	ZeroMemory(&caps.descriptorBuffer, sizeof(caps.descriptorBuffer));
 
+	// Zero out caps.descriptorHeap (Vulkan-only)
+	ZeroMemory(&caps.descriptorHeap, sizeof(caps.descriptorHeap));
+
 	caps.shaderStage.descriptorSamplerMaxNum = caps.descriptorSet.samplerMaxNum;
 	caps.shaderStage.descriptorConstantBufferMaxNum = caps.descriptorSet.constantBufferMaxNum;
 	caps.shaderStage.descriptorStorageBufferMaxNum = caps.descriptorSet.storageBufferMaxNum;

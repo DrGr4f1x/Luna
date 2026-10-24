@@ -118,6 +118,26 @@ void DeviceCaps::LogCaps() const
 	LogInfo(LogGraphics) << format(formatStr2, "inputAttachment", descriptorBuffer.descriptorSize.inputAttachment) << endl;
 	LogInfo(LogGraphics) << format(formatStr2, "accelerationStructure", descriptorBuffer.descriptorSize.accelerationStructure) << endl;
 
+	LogInfo(LogGraphics) << "  [Descriptor Heap]" << endl;
+	LogInfo(LogGraphics) << format(formatStr, "samplerHeapAlignment", descriptorHeap.samplerHeapAlignment) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "resourceHeapAlignment", descriptorHeap.resourceHeapAlignment) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxSamplerHeapSize", descriptorHeap.maxSamplerHeapSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxResourceHeapSize", descriptorHeap.maxResourceHeapSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "minSamplerHeapReservedRange", descriptorHeap.minSamplerHeapReservedRange) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "minSamplerHeapReservedRangeWithEmbedded", descriptorHeap.minSamplerHeapReservedRangeWithEmbedded) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "minResourceHeapReservedRange", descriptorHeap.minResourceHeapReservedRange) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "samplerDescriptorSize", descriptorHeap.samplerDescriptorSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "imageDescriptorSize", descriptorHeap.imageDescriptorSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "bufferDescriptorSize", descriptorHeap.bufferDescriptorSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "samplerDescriptorAlignment", descriptorHeap.samplerDescriptorAlignment) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "imageDescriptorAlignment", descriptorHeap.imageDescriptorAlignment) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "bufferDescriptorAlignment", descriptorHeap.bufferDescriptorAlignment) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxPushDataSize", descriptorHeap.maxPushDataSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "imageCaptureReplayOpaqueDataSize", descriptorHeap.imageCaptureReplayOpaqueDataSize) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "maxDescriptorHeapEmbeddedSamplers", descriptorHeap.maxDescriptorHeapEmbeddedSamplers) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "samplerYcbcrConversionCount", descriptorHeap.samplerYcbcrConversionCount) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "sparseDescriptorHeaps", descriptorHeap.sparseDescriptorHeaps) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "protectedDescriptorHeaps", descriptorHeap.protectedDescriptorHeaps) << endl;
 
 	LogInfo(LogGraphics) << "  [Shader Stage]" << endl;
 	LogInfo(LogGraphics) << format(formatStr, "descriptorSamplerMaxNum", shaderStage.descriptorSamplerMaxNum) << endl;

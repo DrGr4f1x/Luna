@@ -46,6 +46,7 @@ struct SupportedFeatures
 	uint32_t swapChainMaintenance1 : 1;
 	uint32_t fifoLatestReady : 1;
 	uint32_t descriptorBuffers : 1;
+	uint32_t descriptorHeaps : 1;
 };
 
 static_assert(sizeof(SupportedFeatures) == sizeof(uint32_t), "4 bytes expected");
@@ -91,6 +92,7 @@ struct ExtensionFeatures
 	VkPhysicalDevicePresentModeFifoLatestReadyFeaturesEXT presentModeFifoLatestReadyFeaturesEXT{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_MODE_FIFO_LATEST_READY_FEATURES_EXT };
 	VkPhysicalDeviceZeroInitializeDeviceMemoryFeaturesEXT zeroInitializeDeviceMemoryFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ZERO_INITIALIZE_DEVICE_MEMORY_FEATURES_EXT };
 	VkPhysicalDeviceDescriptorBufferFeaturesEXT descriptorBufferFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT };
+	VkPhysicalDeviceDescriptorHeapFeaturesEXT descriptorHeapFeatures{ VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_HEAP_FEATURES_EXT };
 };
 
 

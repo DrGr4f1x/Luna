@@ -143,6 +143,29 @@ struct DeviceCaps
 		} descriptorSize;
 	} descriptorBuffer;
 
+	struct
+	{
+		size_t		samplerHeapAlignment;
+		size_t      resourceHeapAlignment;
+		size_t      maxSamplerHeapSize;
+		size_t      maxResourceHeapSize;
+		size_t      minSamplerHeapReservedRange;
+		size_t      minSamplerHeapReservedRangeWithEmbedded;
+		size_t      minResourceHeapReservedRange;
+		size_t      samplerDescriptorSize;
+		size_t      imageDescriptorSize;
+		size_t      bufferDescriptorSize;
+		size_t      samplerDescriptorAlignment;
+		size_t      imageDescriptorAlignment;
+		size_t      bufferDescriptorAlignment;
+		size_t      maxPushDataSize;
+		size_t      imageCaptureReplayOpaqueDataSize;
+		uint32_t	maxDescriptorHeapEmbeddedSamplers;
+		uint32_t    samplerYcbcrConversionCount;
+		bool        sparseDescriptorHeaps;
+		bool        protectedDescriptorHeaps;
+	} descriptorHeap;
+
 	// Shader stages
 	struct 
 	{
