@@ -116,6 +116,24 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCa
 }
 
 
+DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
+{
+	// TODO: Implement me
+	assert(false);
+
+	return nullptr;
+}
+
+
+DescriptorHeapPtr Device::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
+{
+	// TODO: Implement me
+	assert(false);
+
+	return nullptr;
+}
+
+
 ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
 	// Create image

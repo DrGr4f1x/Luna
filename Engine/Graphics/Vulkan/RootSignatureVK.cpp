@@ -18,7 +18,7 @@
 namespace Luna::VK
 {
 
-Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamIndex) const
+Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
 {
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 

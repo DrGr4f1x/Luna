@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "Graphics\DX12\DescriptorAllocator12.h"
+#include "Graphics\DX12\DescriptorHandle12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 

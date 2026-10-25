@@ -47,6 +47,13 @@ void UIOverlay::Update()
 }
 
 
+void UIOverlay::SetDescriptorHeaps(DescriptorHeapPtr resourceDescriptorHeap, DescriptorHeapPtr samplerDescriptorHeap)
+{
+	m_resourceDescriptorHeap = resourceDescriptorHeap;
+	m_samplerDescriptorHeap = samplerDescriptorHeap;
+}
+
+
 void UIOverlay::CreateDeviceDependentResources()
 {
 	LogNotice(LogUI) << "Starting up UI overlay" << std::endl;
@@ -58,6 +65,7 @@ void UIOverlay::CreateDeviceDependentResources()
 	// Create constant buffer
 	m_vsConstantBuffer = CreateConstantBuffer("UIOverlay Constant Buffer", 1, sizeof(VSConstants));
 
+	InitDescriptorHeaps();
 	InitResourceSet();
 }
 
@@ -88,6 +96,7 @@ void UIOverlay::Render(GraphicsContext& context)
 
 	context.SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
+	context.BindDescriptorHeaps(m_resourceDescriptorHeap, m_samplerDescriptorHeap);
 	context.SetResources(m_resources);
 
 	// Gather dynamic vertices and indices
@@ -366,9 +375,23 @@ void UIOverlay::InitFontTex()
 }
 
 
+void UIOverlay::InitDescriptorHeaps()
+{
+	if (!m_resourceDescriptorHeap)
+	{
+		m_resourceDescriptorHeap = m_application->CreateResourceDescriptorHeap(1, 1);
+	}
+
+	if (!m_samplerDescriptorHeap)
+	{
+		m_samplerDescriptorHeap = m_application->CreateSamplerDescriptorHeap(1);
+	}
+}
+
+
 void UIOverlay::InitResourceSet()
 {
-	m_resources.Initialize(m_rootSignature);
+	m_resources.Initialize(m_resourceDescriptorHeap, m_samplerDescriptorHeap, m_rootSignature);
 	m_resources.SetCBV(0, 0, m_vsConstantBuffer);
 	m_resources.SetSRV(1, 0, m_fontTex);
 	m_resources.SetSampler(2, 0, m_fontSampler);

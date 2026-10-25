@@ -23,7 +23,9 @@
     <None Include="Shaders\SSAOPS.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\GBufferPS.hlsl" />
+    <None Include="Shaders\GBufferPS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -40,5 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

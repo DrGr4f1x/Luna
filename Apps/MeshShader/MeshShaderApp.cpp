@@ -80,6 +80,8 @@ void MeshShaderApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetMeshletPipeline(m_meshletPipeline);
 
+	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 	context.SetDescriptors(0, m_cbvDescriptorSet);
 
 	context.DispatchMesh(1, 1, 1);
@@ -163,7 +165,7 @@ void MeshShaderApp::InitPipeline()
 
 void MeshShaderApp::InitDescriptorSet()
 {
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 }
 

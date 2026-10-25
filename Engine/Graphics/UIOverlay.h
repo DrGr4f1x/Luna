@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Graphics\DescriptorHeap.h"
 #include "Graphics\GraphicsCommon.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\ResourceSet.h"
@@ -37,6 +38,8 @@ public:
 	void Update();
 	void Render(GraphicsContext& context);
 
+	void SetDescriptorHeaps(DescriptorHeapPtr resourceDescriptorHeap, DescriptorHeapPtr samplerDescriptorHeap);
+
 	void CreateDeviceDependentResources();
 	void CreateWindowSizeDependentResources();
 
@@ -57,6 +60,7 @@ protected:
 	void InitRootSignature();
 	void InitPipeline();
 	void InitFontTex();
+	void InitDescriptorHeaps();
 	void InitResourceSet();
 
 	void UpdateConstantBuffer();
@@ -85,6 +89,9 @@ protected:
 
 	VSConstants m_vsConstants{};
 	GpuBufferPtr m_vsConstantBuffer;
+
+	DescriptorHeapPtr m_resourceDescriptorHeap;
+	DescriptorHeapPtr m_samplerDescriptorHeap;
 
 	ResourceSet	m_resources;
 

@@ -18,6 +18,7 @@
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
+#include "DescriptorHeap12.h"
 #include "DescriptorSet12.h"
 #include "DeviceCaps12.h"
 #include "DeviceManager12.h"
@@ -49,6 +50,32 @@ Device::Device(ID3D12Device* device, D3D12MA::Allocator* allocator)
 
 	assert(g_d3d12Device == nullptr);
 	g_d3d12Device = this;
+}
+
+
+DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
+{
+	auto heap = CreateDescriptorHeap(numImageDescriptors + numBufferDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+
+	auto descriptorHeap = make_shared<DescriptorHeap>(DescriptorHeapType::Resource);
+	descriptorHeap->m_heap = heap;
+	descriptorHeap->m_numDescriptors = numImageDescriptors + numBufferDescriptors;
+	descriptorHeap->Initialize();
+
+	return descriptorHeap;
+}
+
+
+DescriptorHeapPtr Device::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
+{
+	auto heap = CreateDescriptorHeap(numSamplerDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true);
+
+	auto descriptorHeap = make_shared<DescriptorHeap>(DescriptorHeapType::Sampler);
+	descriptorHeap->m_heap = heap;
+	descriptorHeap->m_numDescriptors = numSamplerDescriptors;
+	descriptorHeap->Initialize();
+
+	return descriptorHeap;
 }
 
 
@@ -1251,6 +1278,24 @@ D3D12_CPU_DESCRIPTOR_HANDLE Device::GetDescriptorHandleCPU(const DescriptorHandl
 	D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandleCPU{ descriptorHeapDesc.basePointerCPU + handle.heapOffset * descriptorHeapDesc.descriptorSize };
 
 	return descriptorHandleCPU;
+}
+
+
+wil::com_ptr<ID3D12DescriptorHeap> Device::CreateDescriptorHeap(uint32_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shaderVisisble)
+{
+	auto desc = D3D12_DESCRIPTOR_HEAP_DESC{
+		.Type				= type,
+		.NumDescriptors		= numDescriptors,
+		.Flags				= shaderVisisble ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+		.NodeMask			= 1
+	};
+
+	wil::com_ptr<ID3D12DescriptorHeap> heap;
+	assert_succeeded(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&heap)));
+
+	SetDebugName(heap.get(), format("DescriptorAllocator [{}]", type));
+
+	return heap;
 }
 
 

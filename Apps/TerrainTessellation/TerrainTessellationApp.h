@@ -36,6 +36,7 @@ protected:
 	void InitRootSignatures();
 	void InitPipelines();
 	void InitConstantBuffers();
+	void InitDescriptorHeaps();
 	void InitResourceSets();
 	void InitTerrain();
 
@@ -90,6 +91,9 @@ protected:
 	Luna::TexturePtr m_terrainHeightMap;
 	Luna::SamplerPtr m_samplerLinearMirror;
 	Luna::SamplerPtr m_samplerLinearWrap;
+
+	Luna::DescriptorHeapPtr m_resourceDescriptorHeap;
+	Luna::DescriptorHeapPtr m_samplerDescriptorHeap;
 
 	Luna::ResourceSet m_skyResources;
 	Luna::ResourceSet m_terrainResources;

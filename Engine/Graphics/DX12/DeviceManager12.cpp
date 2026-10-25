@@ -266,8 +266,6 @@ DeviceManager::~DeviceManager()
 	assert(m_deferredResources.empty());
 
 	Shader::DestroyAll();
-	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Destroy();
-	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Destroy();
 	DynamicDescriptorHeap::DestroyAll();
 	LinearAllocator::DestroyAll();
 
@@ -430,9 +428,6 @@ void DeviceManager::CreateDeviceResources()
 	{
 		InstallDebugCallback();
 	}
-
-	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].Create("User Descriptor Heap, CBV_SRV_UAV");
-	g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].Create("User Descriptor Heap, SAMPLER");
 
 	// Create command signatures
 	CreateCommandSignatures();

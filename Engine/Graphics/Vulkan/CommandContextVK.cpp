@@ -1056,6 +1056,27 @@ void CommandContextVK::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 }
 
 
+void CommandContextVK::BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap)
+{
+	// TODO: Implement me
+	assert(false);
+}
+
+
+void CommandContextVK::BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap)
+{
+	// TODO: Implement me
+	assert(false);
+}
+
+
+void CommandContextVK::BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap)
+{
+	// TODO: Implement me
+	assert(false);
+}
+
+
 void CommandContextVK::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
 	vkCmdPushConstants(

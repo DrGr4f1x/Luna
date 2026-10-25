@@ -14,6 +14,7 @@
 
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
+#include "Graphics\DescriptorHeap.h"
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
@@ -38,6 +39,9 @@ public:
 	virtual ~IDevice() = default;
 
 	virtual const DeviceCaps& GetDeviceCaps() const = 0;
+
+	virtual DescriptorHeapPtr CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors) = 0;
+	virtual DescriptorHeapPtr CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors) = 0;
 
 	virtual ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
 	virtual DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;

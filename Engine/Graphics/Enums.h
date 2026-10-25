@@ -338,6 +338,13 @@ enum class DescriptorRangeFlags : uint8_t
 template <> struct EnableBitmaskOperators<DescriptorRangeFlags> { static const bool enable = true; };
 
 
+enum class DescriptorHeapType : uint8_t
+{
+	Resource,
+	Sampler
+};
+
+
 enum class TextureFilter
 {
 	MinMagMipPoint,

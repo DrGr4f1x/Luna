@@ -12,8 +12,8 @@
 
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\RootSignature.h"
+#include "Graphics\DX12\DescriptorHeap12.h"
 #include "Graphics\DX12\DirectXCommon.h"
-#include "Graphics\DX12\DescriptorAllocator12.h"
 
 
 namespace Luna::DX12

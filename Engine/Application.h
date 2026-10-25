@@ -15,6 +15,7 @@
 #include "Graphics\Camera.h"
 #include "Graphics\ColorBuffer.h"
 #include "Graphics\DepthBuffer.h"
+#include "Graphics\DescriptorHeap.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\Grid.h"
 #include "Graphics\Model.h"
@@ -112,11 +113,17 @@ public:
 	ColorBufferPtr GetColorBuffer() const;
 	DepthBufferPtr GetDepthBuffer() const { return m_depthBuffer; }
 
+	// Default descriptor heaps
+	DescriptorHeapPtr GetDefaultResourceDescriptorHeap() const;
+	DescriptorHeapPtr GetDefaultSamplerDescriptorHeap() const;
+
 	const Camera* GetCamera() const { return &m_camera; }
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 	// Wrappers for graphics resource creation
+	DescriptorHeapPtr CreateResourceDescriptorHeap(uint32_t numImageDescirptors, uint32_t numBufferDescriptors);
+	DescriptorHeapPtr CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors);
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
@@ -188,6 +195,10 @@ protected:
 
 	// Rendering resources
 	DepthBufferPtr m_depthBuffer;
+
+	// Default descriptor heaps
+	DescriptorHeapPtr m_defaultResourceDescriptorHeap;
+	DescriptorHeapPtr m_defaultSamplerDescriptorHeap;
 
 	Color m_gridColor{ DirectX::Colors::WhiteSmoke };
 

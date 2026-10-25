@@ -111,6 +111,7 @@ void TextureCubeMapApp::Render()
 #if APP_DYNAMIC_DESCRIPTORS
 		context.SetSRV(1, 0, m_skyboxTex);
 #else
+		context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
 		context.SetDescriptors(1, m_skyBoxSrvDescriptorSet);
 #endif
 
@@ -262,8 +263,8 @@ void TextureCubeMapApp::InitPipelines()
 #if !APP_DYNAMIC_DESCRIPTORS
 void TextureCubeMapApp::InitDescriptorSets()
 {
-	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1);
-	m_modelCbvSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1);
+	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_modelCbvSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTex);
 	m_modelCbvSrvDescriptorSet->SetCBV(0, m_psModelConstantBuffer);

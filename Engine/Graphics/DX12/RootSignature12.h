@@ -26,7 +26,7 @@ class RootSignature : public IRootSignature
 	friend class Device;
 
 public:
-	Luna::DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
+	Luna::DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
 
 	uint32_t GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const override;
 

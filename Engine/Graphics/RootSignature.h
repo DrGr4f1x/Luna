@@ -18,9 +18,11 @@ namespace Luna
 {
 
 // Forward declarations
+class IDescriptorHeap;
 class IDescriptorSet;
 class IResourceSet;
 
+using DescriptorHeapPtr = std::shared_ptr<IDescriptorHeap>;
 
 inline const uint32_t APPEND_REGISTER{ ~0u };
 
@@ -367,7 +369,7 @@ class IRootSignature
 public:
 	virtual ~IRootSignature() = default;
 
-	virtual DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const = 0;
+	virtual DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const = 0;
 
 	virtual uint32_t GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const = 0;
 

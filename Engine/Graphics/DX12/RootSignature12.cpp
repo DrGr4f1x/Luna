@@ -12,13 +12,14 @@
 
 #include "RootSignature12.h"
 
+#include "DescriptorHeap12.h"
 #include "Device12.h"
 
 
 namespace Luna::DX12
 {
 
-Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamIndex) const
+Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
 {
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 
@@ -26,20 +27,39 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamInde
 	assert(rootParam.parameterType == RootParameterType::Table);
 
 	const bool isRootBuffer = IsRootDescriptorType(rootParam.parameterType);
-
 	const bool isSamplerTable = rootParam.IsSamplerTable();
 
-	const D3D12_DESCRIPTOR_HEAP_TYPE heapType = isSamplerTable
-		? D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
-		: D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	if (!isRootBuffer)
+	{
+		assert(descriptorHeap);
+
+		if (isSamplerTable)
+		{
+			assert(descriptorHeap->GetType() == DescriptorHeapType::Sampler);
+		}
+		else
+		{
+			assert(descriptorHeap->GetType() == DescriptorHeapType::Resource);
+		}
+	}
 
 	const uint32_t numDescriptors = rootParam.GetNumDescriptors();
+
 	DescriptorSetDesc descriptorSetDesc{
-		.descriptorHandle	= isRootBuffer ? DescriptorHandle{} : AllocateUserDescriptor(heapType, numDescriptors),
-		.rootParameter		= rootParam,
-		.numDescriptors		= numDescriptors,
-		.isSamplerTable		= isSamplerTable
+		.rootParameter = rootParam,
+		.numDescriptors = numDescriptors,
+		.isSamplerTable = isSamplerTable
 	};
+
+	if (isRootBuffer)
+	{
+		descriptorSetDesc.descriptorHandle = DescriptorHandle{};
+	}
+	else
+	{
+		DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap.get();
+		descriptorSetDesc.descriptorHandle = descriptorHeap12->AllocateDescriptors(numDescriptors);
+	}
 
 	return m_device->CreateDescriptorSet(descriptorSetDesc);
 }

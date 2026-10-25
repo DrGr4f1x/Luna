@@ -86,6 +86,8 @@ void DisplacementApp::Render()
 
 	context.SetRootSignature(m_rootSignature);
 
+	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 	context.SetRootCBV(0, m_hsConstantBuffer);
 	context.SetDescriptors(1, m_dsCbvSrvDescriptorSet);
 	context.SetDescriptors(2, m_psSrvDescriptorSet);
@@ -222,11 +224,11 @@ void DisplacementApp::InitConstantBuffers()
 
 void DisplacementApp::InitDescriptorSets()
 {
-	m_dsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_dsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 	m_dsCbvSrvDescriptorSet->SetCBV(0, m_dsConstantBuffer);
 	m_dsCbvSrvDescriptorSet->SetSRV(0, m_texture);
 
-	m_psSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
+	m_psSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 2);
 	m_psSrvDescriptorSet->SetSRV(0, m_texture);
 }
 

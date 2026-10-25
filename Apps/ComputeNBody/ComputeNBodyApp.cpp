@@ -75,6 +75,8 @@ void ComputeNBodyApp::Render()
 		computeContext.SetRootSignature(m_computeRootSignature);
 		computeContext.SetComputePipeline(m_computeCalculatePipeline);
 
+		computeContext.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 		computeContext.SetDescriptors(0, m_computeCbvUavDescriptorSet);
 
 		computeContext.Dispatch1D(6 * PARTICLES_PER_ATTRACTOR, 256);
@@ -100,6 +102,8 @@ void ComputeNBodyApp::Render()
 	// Draw particles
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
+
+	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
 
 	context.SetDescriptors(0, m_graphicsVsCbvSrvDescriptorSet);
 	context.SetDescriptors(1, m_graphicsGsCbvDescriptorSet);
@@ -232,18 +236,18 @@ void ComputeNBodyApp::InitPipelines()
 
 void ComputeNBodyApp::InitDescriptorSets()
 {
-	m_graphicsVsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_graphicsVsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_graphicsVsCbvSrvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
 	m_graphicsVsCbvSrvDescriptorSet->SetSRV(0, m_particleBuffer);
 
-	m_graphicsGsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_graphicsGsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 	m_graphicsGsCbvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
 
-	m_graphicsPsSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2);
+	m_graphicsPsSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 2);
 	m_graphicsPsSrvDescriptorSet->SetSRV(0, m_colorTexture);
 	m_graphicsPsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
 
-	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0);
+	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_computeCbvUavDescriptorSet->SetCBV(0, m_computeConstantBuffer);
 	m_computeCbvUavDescriptorSet->SetUAV(0, m_particleBuffer);
 }

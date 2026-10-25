@@ -20,12 +20,14 @@ namespace Luna
 // Forward declarations
 class IColorBuffer;
 class IDepthBuffer;
+class IDescriptorHeap;
 class IGpuBuffer;
 class IRootSignature;
 class ISampler;
 class TexturePtr;
 
 using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
+using DescriptorHeapPtr = std::shared_ptr<IDescriptorHeap>;
 using DepthBufferPtr = std::shared_ptr<IDepthBuffer>;
 using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
@@ -34,7 +36,7 @@ using SamplerPtr = std::shared_ptr<ISampler>;
 class ResourceSet
 {
 public:
-	void Initialize(RootSignaturePtr rootSignature);
+	void Initialize(DescriptorHeapPtr resourceDescriptorHeap, DescriptorHeapPtr samplerDescriptorHeap, RootSignaturePtr rootSignature);
 
 	// TODO: change 'int param' and 'int slot' to uint32_t
 	void SetSRV(int param, int slot, ColorBufferPtr colorBuffer);

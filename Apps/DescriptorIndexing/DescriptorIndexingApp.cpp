@@ -76,6 +76,8 @@ void DescriptorIndexingApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
 
+	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 	context.SetDescriptors(0, m_vsDescriptorSet);
 	context.SetDescriptors(1, m_psDescriptorSet);
 
@@ -187,7 +189,7 @@ void DescriptorIndexingApp::InitPipeline()
 
 void DescriptorIndexingApp::InitDescriptorSets()
 {
-	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(0);
+	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_vsDescriptorSet->SetCBV(0, m_constantBuffer);
 
 	std::vector<const IDescriptor*> textureDescriptors{ m_numTextures };
@@ -196,7 +198,7 @@ void DescriptorIndexingApp::InitDescriptorSets()
 		textureDescriptors[i] = m_textures[i]->GetDescriptor();
 	}
 	
-	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 	m_psDescriptorSet->SetBindlessSRVs(0, textureDescriptors);
 }
 

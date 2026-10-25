@@ -85,6 +85,8 @@ void MultisamplingApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_sampleRateShading ? m_msaaSampleRatePipeline : m_msaaPipeline);
 
+	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 	// Render model
 	{
 		uint32_t meshIndex = 0;
@@ -253,7 +255,7 @@ void MultisamplingApp::InitDescriptorSets()
 		const uint32_t materialIndex = m_model->meshes[i]->materialIndex;
 		TexturePtr texture = m_model->materials[materialIndex].diffuseTexture;
 
-		auto srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
+		auto srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 		srvDescriptorSet->SetSRV(0, texture);
 
 		m_srvDescriptorSets.push_back(srvDescriptorSet);

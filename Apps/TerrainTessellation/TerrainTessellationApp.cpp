@@ -82,6 +82,7 @@ void TerrainTessellationApp::Render()
 	context.SetRootSignature(m_skyRootSignature);
 	context.SetGraphicsPipeline(m_skyPipeline);
 
+	context.BindDescriptorHeaps(m_resourceDescriptorHeap, m_samplerDescriptorHeap);
 	context.SetResources(m_skyResources);
 
 	m_skyModel->Render(context);
@@ -129,6 +130,7 @@ void TerrainTessellationApp::CreateDeviceDependentResources()
 
 	InitTerrain();
 
+	InitDescriptorHeaps();
 	InitResourceSets();
 }
 
@@ -249,14 +251,20 @@ void TerrainTessellationApp::InitConstantBuffers()
 }
 
 
+void TerrainTessellationApp::InitDescriptorHeaps()
+{
+	m_resourceDescriptorHeap = CreateResourceDescriptorHeap(5, 2);
+	m_samplerDescriptorHeap = CreateSamplerDescriptorHeap(5);
+}
+
+
 void TerrainTessellationApp::InitResourceSets()
 {
-	m_skyResources.Initialize(m_skyRootSignature);
-	m_skyResources.SetCBV(0, 0, m_skyConstantBuffer);
+	m_skyResources.Initialize(m_resourceDescriptorHeap, m_samplerDescriptorHeap, m_skyRootSignature);
 	m_skyResources.SetSRV(1, 0, m_skyTexture);
 	m_skyResources.SetSampler(2, 0, m_samplerLinearWrap);
 
-	m_terrainResources.Initialize(m_terrainRootSignature);
+	m_terrainResources.Initialize(m_resourceDescriptorHeap, m_samplerDescriptorHeap, m_terrainRootSignature);
 	m_terrainResources.SetCBV(0, 0, m_terrainConstantBuffer);
 	m_terrainResources.SetSRV(0, 1, m_terrainHeightMap);
 	m_terrainResources.SetSampler(1, 0, m_samplerLinearMirror);

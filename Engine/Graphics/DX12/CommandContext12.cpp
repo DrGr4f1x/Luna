@@ -16,6 +16,7 @@
 
 #include "ColorBuffer12.h"
 #include "DepthBuffer12.h"
+#include "DescriptorHeap12.h"
 #include "DescriptorSet12.h"
 #include "DeviceManager12.h"
 #include "DirectXCommon.h"
@@ -710,6 +711,40 @@ void CommandContext12::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 }
 
 
+void CommandContext12::BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap)
+{
+	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap;
+
+	SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, descriptorHeap12->GetHeap());
+}
+
+
+void CommandContext12::BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap)
+{
+	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap;
+
+	SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, descriptorHeap12->GetHeap());
+}
+
+
+void CommandContext12::BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap)
+{
+	DescriptorHeap* resourceDescriptorHeap12 = (DescriptorHeap*)resourceDescriptorHeap;
+	DescriptorHeap* samplerDescriptorHeap12 = (DescriptorHeap*)samplerDescriptorHeap;
+
+	D3D12_DESCRIPTOR_HEAP_TYPE heapTypes[] = {
+		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+		D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+	};
+
+	ID3D12DescriptorHeap* heaps[] = {
+		resourceDescriptorHeap12->GetHeap(),
+		samplerDescriptorHeap12->GetHeap()
+	};
+	SetDescriptorHeaps(2, heapTypes, heaps);
+}
+
+
 void CommandContext12::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
@@ -886,14 +921,6 @@ void CommandContext12::SetDescriptors(CommandListType type, uint32_t rootIndex, 
 void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceSet)
 {
 	FlushResourceBarriers();
-
-	// TODO: Need to rework this.  Should use a single shader-visible heap (of each type) for all descriptors.
-	// See the MSDN docs on SetDescriptorHeaps.  Should only set descriptor heaps once per frame.
-	ID3D12DescriptorHeap* heaps[] = {
-		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].GetHeapPointer(),
-		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].GetHeapPointer()
-	};
-	m_commandList->SetDescriptorHeaps(2, heaps);
 
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
@@ -1368,8 +1395,6 @@ void CommandContext12::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		return;
 	}
 
-	BindUserDescriptorHeaps();
-
 	auto gpuDescriptor = descriptorSet12->GetGpuDescriptorHandle();
 	if (gpuDescriptor.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
 	{
@@ -1422,21 +1447,6 @@ uint32_t CommandContext12::GetDescriptorOffset(CommandListType type, DescriptorR
 		assert(m_computeRootSignature);
 		return m_computeRootSignature->GetDescriptorOffsetForRegister(registerType, rootIndex, descriptorRegister);
 	}
-}
-
-
-void CommandContext12::BindUserDescriptorHeaps()
-{
-	D3D12_DESCRIPTOR_HEAP_TYPE heapTypes[] = {
-		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-		D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
-	};
-
-	ID3D12DescriptorHeap* heaps[] = {
-		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV].GetHeapPointer(),
-		g_userDescriptorHeap[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER].GetHeapPointer()
-	};
-	SetDescriptorHeaps(2, heapTypes, heaps);
 }
 
 

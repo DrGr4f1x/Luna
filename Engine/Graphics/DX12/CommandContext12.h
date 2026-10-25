@@ -96,6 +96,11 @@ public:
 	void SetDepthBias(float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) override;
 	void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2]) override;
 
+	// Descriptor heaps
+	void BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap);
+	void BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap);
+	void BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap);
+
 	// Root constants
 	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;
 	void SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val) override;
@@ -169,7 +174,6 @@ protected:
 	uint32_t GetDescriptorOffset(CommandListType type, DescriptorRegisterType registerType, uint32_t rootIndex, uint32_t descriptorOffset);
 
 private:
-	void BindUserDescriptorHeaps();
 	void BindDescriptorHeaps();
 	void BindRenderTargets();
 	void ResetRenderTargets();

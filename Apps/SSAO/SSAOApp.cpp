@@ -101,6 +101,10 @@ void SSAOApp::Render()
 
 		context.SetRootCBV(0, m_sceneConstantBuffer);
 
+#if !APP_DYNAMIC_DESCRIPTORS
+		context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+#endif
+
 		uint32_t numMeshes = (uint32_t)m_model->meshes.size();
 		for (uint32_t i = 0; i < numMeshes; ++i)
 		{
@@ -475,12 +479,12 @@ void SSAOApp::InitDescriptorSets()
 {
 	for (uint32_t i = 0; i < (uint32_t)m_model->materials.size(); ++i)
 	{
-		auto descriptorSet = m_gbufferRootSignature->CreateDescriptorSet(1);
+		auto descriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 		descriptorSet->SetSRV(0, m_model->materials[i].diffuseTexture);
 		m_sceneDescriptorSets.push_back(descriptorSet);
 	}
 
-	m_ssaoDescriptorSet = m_ssaoRootSignature->CreateDescriptorSet(0);
+	m_ssaoDescriptorSet = m_ssaoRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_ssaoDescriptorSet->SetSRV(0, m_positionBuffer);
 	m_ssaoDescriptorSet->SetSRV(1, m_depthBuffer);
 	m_ssaoDescriptorSet->SetSRV(2, m_normalBuffer);
@@ -488,10 +492,10 @@ void SSAOApp::InitDescriptorSets()
 	m_ssaoDescriptorSet->SetCBV(0, m_ssaoKernelConstantBuffer);
 	m_ssaoDescriptorSet->SetCBV(1, m_ssaoConstantBuffer);
 
-	m_ssaoBlurDescriptorSet = m_ssaoBlurRootSignature->CreateDescriptorSet(0);
+	m_ssaoBlurDescriptorSet = m_ssaoBlurRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_ssaoBlurDescriptorSet->SetSRV(0, m_ssaoRenderTarget);
 
-	m_compositionDescriptorSet = m_compositionRootSignature->CreateDescriptorSet(0);
+	m_compositionDescriptorSet = m_compositionRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 	m_compositionDescriptorSet->SetSRV(0, m_positionBuffer);
 	m_compositionDescriptorSet->SetSRV(1, m_normalBuffer);
 	m_compositionDescriptorSet->SetSRV(2, m_albedoBuffer);

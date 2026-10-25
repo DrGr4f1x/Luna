@@ -102,6 +102,8 @@ void RadialBlurApp::Render()
 		context.SetRootSignature(m_sceneRootSignature);
 		context.SetGraphicsPipeline(m_colorPassPipeline);
 
+		context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 		// Bind descriptor sets
 		context.SetRootCBV(0, m_sceneConstantBuffer);
 		context.SetDescriptors(1, m_sceneSrvDescriptorSet);
@@ -130,6 +132,8 @@ void RadialBlurApp::Render()
 
 		context.SetRootSignature(m_sceneRootSignature);
 		context.SetGraphicsPipeline(m_phongPassPipeline);
+
+		context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
 
 		// Bind descriptor sets
 		context.SetRootCBV(0, m_sceneConstantBuffer);
@@ -298,8 +302,8 @@ void RadialBlurApp::InitRenderTargets()
 
 void RadialBlurApp::InitDescriptorSets()
 {
-	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1);
-	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(0);
+	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
 
 	m_sceneSrvDescriptorSet->SetSRV(0, m_gradientTex);
 

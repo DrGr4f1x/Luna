@@ -14,7 +14,7 @@
 #include "Graphics\DeviceCaps.h"
 #include "Graphics\DX12\DirectXCommon.h"
 #include "Graphics\DX12\Descriptor12.h"
-#include "Graphics\DX12\DescriptorAllocator12.h"
+#include "Graphics\DX12\DescriptorHandle12.h"
 #include "Graphics\DX12\Sampler12.h"
 
 
@@ -40,6 +40,9 @@ public:
 	Device(ID3D12Device* device, D3D12MA::Allocator* allocator);
 
 	const DeviceCaps& GetDeviceCaps() const override { return m_caps; }
+
+	DescriptorHeapPtr CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors);
+	DescriptorHeapPtr CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors);
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -77,6 +80,8 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorHandleCPU(const DescriptorHandle2 handle);
 
 protected:
+	wil::com_ptr<ID3D12DescriptorHeap> CreateDescriptorHeap(uint32_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shaderVisible);
+
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 

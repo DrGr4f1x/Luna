@@ -78,6 +78,8 @@ void IndirectDrawApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
+	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+
 	// Sky sphere
 	{
 		context.SetRootSignature(m_skySphereRootSignature);
@@ -313,10 +315,10 @@ void IndirectDrawApp::InitPipelines()
 
 void IndirectDrawApp::InitDescriptorSets()
 {
-	m_groundSrvDescriptorSet = m_groundRootSignature->CreateDescriptorSet(1);
+	m_groundSrvDescriptorSet = m_groundRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 	m_groundSrvDescriptorSet->SetSRV(0, m_groundTexture);
 
-	m_plantsSrvDescriptorSet = m_plantsRootSignature->CreateDescriptorSet(1);
+	m_plantsSrvDescriptorSet = m_plantsRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
 	m_plantsSrvDescriptorSet->SetSRV(0, m_plantsTextureArray);
 }
 
