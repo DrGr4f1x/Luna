@@ -139,6 +139,8 @@ public:
 	CVkDevice* GetVulkanDevice() const;
 	CVmaAllocator* GetAllocator() const;
 
+	const SupportedFeatures& GetSupportedFeatures() const { return m_supportedFeatures; }
+
 private:
 	void SetupInstanceBuilder(vkb::InstanceBuilder& instanceBuilder);
 	bool TryCreateInstance_AMD();

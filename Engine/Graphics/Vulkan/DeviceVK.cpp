@@ -1427,6 +1427,15 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type
 #endif // USE_DESCRIPTOR_BUFFERS
 
 
+bool Device::UseDescriptorHeap() const
+{
+#if ALLOW_DESCRIPTOR_HEAP
+	return GetVulkanDeviceManager()->GetSupportedFeatures().descriptorHeap;
+#endif
+	return false;
+}
+
+
 wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 {
 	const bool isVolume = HasAnyFlag(imageDesc.resourceType, ResourceType::Texture3D);

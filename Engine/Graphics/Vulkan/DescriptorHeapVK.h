@@ -19,12 +19,14 @@ namespace Luna::VK
 
 class DescriptorHeap : public IDescriptorHeap
 {
+public:
 
 };
 
 
-class DescriptorBufferHeap : public IDescriptorHeap
+class DescriptorBuffer : public DescriptorHeap
 {
+public:
 
 };
 

@@ -90,6 +90,8 @@ public:
 
 	VkDevice GetVulkanDevice() const { return m_device->Get(); }
 
+	bool UseDescriptorHeap() const;
+
 protected:
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& imageDesc);
 	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& imageViewDesc);

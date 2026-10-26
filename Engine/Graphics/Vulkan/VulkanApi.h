@@ -32,5 +32,6 @@
 
 #define USE_DESCRIPTOR_BUFFERS 1
 #define USE_LEGACY_DESCRIPTOR_SETS (!USE_DESCRIPTOR_BUFFERS)
+#define ALLOW_DESCRIPTOR_HEAP 0
 
 static const size_t kMaxRawDescriptorSize = 64;
