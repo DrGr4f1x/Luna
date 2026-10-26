@@ -13,7 +13,6 @@
 #include "Graphics\Device.h"
 #include "Graphics\DeviceCaps.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
-#include "Graphics\Vulkan\DescriptorPoolVK.h"
 #include "Graphics\Vulkan\DescriptorSetLayoutVK.h"
 #include "Graphics\Vulkan\RootSignatureVK.h"
 
@@ -30,23 +29,11 @@ class Shader;
 namespace Luna::VK
 {
 
-#if USE_DESCRIPTOR_BUFFERS
 struct DescriptorSetDesc
 {
 	DescriptorSetLayoutPtr descriptorSetLayout;
 	RootParameter rootParameter{};
 };
-#endif // USE_DESCRIPTOR_BUFFERS
-
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-struct DescriptorSetDesc
-{
-	CVkDescriptorSetLayout* descriptorSetLayout{ nullptr };
-	RootParameter rootParameter{};
-	uint32_t numDescriptors{ 0 };
-};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 
 class Device : public IDevice
@@ -84,13 +71,12 @@ public:
 
 	ColorBufferPtr CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 
-#if USE_DESCRIPTOR_BUFFERS
 	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes);
-#endif // USE_DESCRIPTOR_BUFFERS
 
 	VkDevice GetVulkanDevice() const { return m_device->Get(); }
 
 	bool UseDescriptorHeap() const;
+	bool UseDescriptorBuffer() const { return !UseDescriptorHeap(); }
 
 protected:
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& imageDesc);
@@ -125,7 +111,6 @@ protected:
 
 	// Descriptor set cache
 	std::mutex m_descriptorSetMutex;
-	std::unordered_map<VkDescriptorSetLayout, std::unique_ptr<DescriptorPool>> m_setPoolMapping;
 
 	// Sampler state cache
 	std::mutex m_samplerMutex;

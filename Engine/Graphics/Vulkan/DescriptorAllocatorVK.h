@@ -16,7 +16,6 @@
 namespace Luna::VK
 {
 
-#if USE_DESCRIPTOR_BUFFERS
 struct DescriptorBufferAllocation
 {
 	std::byte* mem{ nullptr };
@@ -65,34 +64,5 @@ inline DescriptorBufferAllocation AllocateDescriptorBufferMemory(DescriptorBuffe
 {
 	return g_userDescriptorBufferAllocator[(uint32_t)bufferType].Allocate(layout);
 }
-#endif // USE_DESCRIPTOR_BUFFERS
-
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-class DescriptorSetAllocator
-{
-public:
-	VkDescriptorSet Allocate(VkDescriptorSetLayout layout);
-
-	static void DestroyAll();
-
-protected:
-	static const uint32_t sm_numDescriptorsPerPool = 256;
-	static std::mutex sm_allocationMutex;
-	static std::vector<VkDescriptorPool> sm_descriptorPoolList;
-	static VkDescriptorPool RequestNewPool();
-
-	VkDescriptorType m_type;
-	VkDescriptorPool m_descriptorPool{ VK_NULL_HANDLE };
-};
-
-
-// TODO: Refactor this.  Roll it entirely into GraphicsDevice?
-extern DescriptorSetAllocator g_descriptorSetAllocator;
-inline VkDescriptorSet AllocateDescriptorSet(VkDescriptorSetLayout layout)
-{
-	return g_descriptorSetAllocator.Allocate(layout);
-}
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 } // namespace Luna::VK

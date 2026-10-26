@@ -540,9 +540,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 	// Setup static samplers
 	vector<SamplerPtr> samplers;
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkDescriptorSet staticSamplerDescriptorSet = VK_NULL_HANDLE;
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 	uint32_t staticSamplerDescriptorSetIndex = ~0u;
 	if (!rootSignatureDesc.staticSamplers.empty())
 	{
@@ -593,9 +590,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		// Create the descriptor set layout for the static samplers
 		VkDescriptorSetLayoutCreateInfo createInfo{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-#if USE_DESCRIPTOR_BUFFERS
 			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
-#endif // USE_DESCRIPTOR_BUFFERS
 			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
 			.pBindings		= vkLayoutBindings.data()
 		};
@@ -609,10 +604,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
 		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
 		descriptorSetLayouts.push_back(descriptorSetLayout);
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-		staticSamplerDescriptorSet = AllocateDescriptorSet(vkDescriptorSetLayout);
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 	}
 	
 	// Setup push descriptor set
@@ -644,12 +635,7 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		// Create the descriptor set layout for the push descriptors
 		VkDescriptorSetLayoutCreateInfo createInfo{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-#if USE_DESCRIPTOR_BUFFERS
 			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
-#endif // USE_DESCRIPTOR_BUFFERs
-#if USE_LEGACY_DESCRIPTOR_SETS
-			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT,
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
 			.pBindings		= vkLayoutBindings.data()
 		};
@@ -722,9 +708,6 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 	rootSignature->m_descriptorSetLayouts = descriptorSetLayouts;
 	rootSignature->m_staticSamplers = samplers;
 	rootSignature->m_staticSamplerDescriptorSetIndex = staticSamplerDescriptorSetIndex;
-#if USE_LEGACY_DESCRIPTOR_SETS
-	rootSignature->m_staticSamplerDescriptorSet = staticSamplerDescriptorSet;
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 	rootSignature->m_pushDescriptorSetIndex = pushDescriptorSetIndex;
 	rootSignature->m_pushDescriptorBindingMap = pushDescriptorBindingMap;
 	rootSignature->m_resourceDescriptorSetLayoutSize = resourceDescriptorSetLayoutSize;
@@ -856,13 +839,7 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-#if USE_DESCRIPTOR_BUFFERS
 	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkPipelineCreateFlags flags{};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 	
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -921,13 +898,7 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-#if USE_DESCRIPTOR_BUFFERS
 	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkPipelineCreateFlags flags{};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	VkComputePipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
@@ -1018,13 +989,7 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-#if USE_DESCRIPTOR_BUFFERS
 	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkPipelineCreateFlags flags{};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 	
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -1120,7 +1085,6 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
-#if USE_DESCRIPTOR_BUFFERS
 	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->GetDescriptorSetLayout()->Get();
 	assert(vkDescriptorSetLayout != VK_NULL_HANDLE);
 
@@ -1132,41 +1096,6 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 	descriptorSet->m_layout = descriptorSetDesc.descriptorSetLayout;
 
 	return descriptorSet;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	// Find or create descriptor set pool
-	VkDescriptorSetLayout vkDescriptorSetLayout = descriptorSetDesc.descriptorSetLayout->Get();
-	DescriptorPool* pool{ nullptr };
-	auto it = m_setPoolMapping.find(vkDescriptorSetLayout);
-	if (it == m_setPoolMapping.end())
-	{
-		DescriptorPoolDesc descriptorPoolDesc{
-			.device						= m_device.get(),
-			.layout						= descriptorSetDesc.descriptorSetLayout,
-			.rootParameter				= descriptorSetDesc.rootParameter,
-			.poolSize					= MaxSetsPerPool,
-			.allowFreeDescriptorSets	= true
-		};
-
-		auto poolHandle = make_unique<DescriptorPool>(descriptorPoolDesc);
-		pool = poolHandle.get();
-		m_setPoolMapping.emplace(vkDescriptorSetLayout, std::move(poolHandle));
-	}
-	else
-	{
-		pool = it->second.get();
-	}
-
-	// Allocate descriptor set from pool
-	VkDescriptorSet vkDescriptorSet = pool->AllocateDescriptorSet();
-
-	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
-	descriptorSet->m_descriptorSet = vkDescriptorSet;
-	descriptorSet->m_numDescriptors = descriptorSetDesc.numDescriptors;
-
-	return descriptorSet;
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 }
 
 
@@ -1393,7 +1322,6 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 }
 
 
-#if USE_DESCRIPTOR_BUFFERS
 wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes)
 {
 	VkBufferUsageFlags extraFlags = type == DescriptorBufferType::Resource ?
@@ -1424,7 +1352,6 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type
 
 	return buffer;
 }
-#endif // USE_DESCRIPTOR_BUFFERS
 
 
 bool Device::UseDescriptorHeap() const
@@ -1633,25 +1560,13 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 		{
 			flags |= VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 		}
-#if USE_LEGACY_DESCRIPTOR_SETS
-		if (HasFlag(range.flags, DescriptorRangeFlags::AllowUpdateAfterSet))
-		{
-			flags |= VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
-			allowUpdateAfterSet = true;
-		}
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 		uint32_t numDescriptors = 1;
 		const bool isArray = HasAnyFlag(range.flags, DescriptorRangeFlags::Array | DescriptorRangeFlags::VariableSizedArray);
 
 		if (isArray)
 		{
-#if USE_LEGACY_DESCRIPTOR_SETS
-			if (HasFlag(range.flags, DescriptorRangeFlags::VariableSizedArray))
-			{
-				flags |= VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT;
-			}
-#endif // USE_LEGACY_DESCRIPTOR_SETS
+
 		}
 		else
 		{
@@ -1694,13 +1609,7 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 		.pBindingFlags	= bindingFlags.data()
 	};
 
-#if USE_DESCRIPTOR_BUFFERS
 	VkDescriptorSetLayoutCreateFlags layoutFlags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
-#endif // USE_DESCRIPTOR_BUFFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkDescriptorSetLayoutCreateFlags layoutFlags{};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	if (allowUpdateAfterSet)
 	{
@@ -1729,7 +1638,6 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 	descriptorSetLayout->m_hashcode = hashCode;
 	descriptorSetLayout->m_descriptorSetLayoutBindings = bindings;
 
-#if USE_DESCRIPTOR_BUFFERS
 	// Get info for descriptor buffer binding
 	{
 		VkDeviceSize layoutSize{ 0 };
@@ -1749,7 +1657,6 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 		descriptorSetLayout->m_layoutSize = Math::AlignUp(layoutSize, m_caps.descriptorBuffer.descriptorBufferOffsetAlignment);
 		descriptorSetLayout->m_bindingTemplate = bindingTemplate;
 	}
-#endif // USE_DESCRIPTOR_BUFFERS
 
 	return descriptorSetLayout;
 }
@@ -1764,9 +1671,7 @@ DescriptorSetLayoutPtr Device::GetOrCreateEmptyDescriptorSetLayout()
 		VkDescriptorSetLayoutCreateInfo info{
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 			.pNext			= nullptr,
-#if USE_DESCRIPTOR_BUFFERS
 			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
-#endif // USE_DESCRIPTOR_BUFFERS
 			.bindingCount	= 0,
 			.pBindings		= nullptr
 		};

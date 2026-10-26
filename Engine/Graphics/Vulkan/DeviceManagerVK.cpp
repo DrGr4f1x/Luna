@@ -129,14 +129,8 @@ DeviceManager::~DeviceManager()
 	ReleaseDeferredResources();
 	assert(m_deferredResources.empty());
 
-#if USE_DESCRIPTOR_BUFFERS
 	DescriptorBufferAllocator::DestroyAll();
 	DynamicDescriptorBuffer::DestroyAll();
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	DescriptorSetAllocator::DestroyAll();
-#endif // USE_LEGACY_DESCRIPTOR_BUFFERS
 
 	LinearAllocator::DestroyAll();
 
@@ -342,10 +336,8 @@ void DeviceManager::CreateDeviceResources()
 		}
 	}
 
-#if USE_DESCRIPTOR_BUFFERS
 	// Create user descriptor buffers
 	DescriptorBufferAllocator::CreateAll();
-#endif
 }
 
 

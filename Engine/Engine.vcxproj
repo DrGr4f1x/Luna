@@ -36,7 +36,6 @@
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Graphics\CommandContext.cpp" />
     <ClCompile Include="Graphics\CommonStates.cpp" />
-    <ClCompile Include="Graphics\DescriptorHeap.cpp" />
     <ClCompile Include="Graphics\DeviceCaps.cpp" />
     <ClCompile Include="Graphics\DX12\ColorBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp" />
@@ -78,7 +77,6 @@
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorHeapVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\DescriptorPoolVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetLayoutVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorVK.cpp" />
@@ -202,7 +200,6 @@
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorHeapVK.h" />
-    <ClInclude Include="Graphics\Vulkan\DescriptorPoolVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetLayoutVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorVK.h" />

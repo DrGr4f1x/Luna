@@ -182,11 +182,9 @@ public:
 	void DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
 	// Platform-specific methods
-#if USE_DESCRIPTOR_BUFFERS
 	void SetDescriptorBuffer(DescriptorBufferType bufferType, VkBuffer descriptorBuffer);
 	void SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers);
 	VkCommandBuffer GetCommandBuffer() const noexcept { return m_commandBuffer; }
-#endif // USE_DESCRIPTOR_BUFFERS
 
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
@@ -194,10 +192,8 @@ private:
 	void InitializeTexture_Internal(ITexture* texture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
-#if USE_DESCRIPTOR_BUFFERS
 	void BindUserDescriptorBuffers();
 	void BindDescriptorBuffers();
-#endif // USE_DESCRIPTOR_BUFFERS
 
 	void UpdateAndBindDynamicDescriptors(bool graphicsPipe);
 
@@ -222,15 +218,8 @@ private:
 	wil::com_ptr<CVkDevice> m_device;
 	CommandListType m_commandListType;
 
-#if USE_DESCRIPTOR_BUFFERS
 	DynamicDescriptorBuffer m_dynamicResourceDescriptorBuffer;
 	DynamicDescriptorBuffer m_dynamicSamplerDescriptorBuffer;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	// Dynamic descriptor heap
-	DynamicDescriptorSet m_dynamicDescriptorSet;
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	VkCommandBuffer m_commandBuffer{ VK_NULL_HANDLE };
 
@@ -262,10 +251,8 @@ private:
 	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
 	VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_MAX_ENUM };
 
-#if USE_DESCRIPTOR_BUFFERS
 	// Descriptor buffers
 	VkBuffer m_currentDescriptorBuffers[2];
-#endif // USE_DESCRIPTOR_BUFFERS
 
 	const IRootSignature* m_graphicsRootSignature{ nullptr };
 	const IRootSignature* m_computeRootSignature{ nullptr };

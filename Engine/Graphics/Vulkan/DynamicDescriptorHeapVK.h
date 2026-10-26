@@ -12,10 +12,8 @@
 
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\RootSignature.h"
-
-#if USE_DESCRIPTOR_BUFFERS
 #include "Graphics\Vulkan\DescriptorAllocatorVK.h"
-#endif // USE_DESCRIPTOR_BUFFERS
+
 
 namespace Luna
 {
@@ -34,17 +32,12 @@ namespace Luna::VK
 {
 
 // Forward declarations
-#if USE_LEGACY_DESCRIPTOR_SETS
-class DescriptorPoolCache;
-#endif // USE_LEGACY_DESCRIPTOR_SETS
-
 class CommandContextVK;
 class Descriptor;
 class DescriptorSetLayout;
 class RootSignature;
 
 
-#if USE_DESCRIPTOR_BUFFERS
 class DynamicDescriptorBuffer
 {
 public:
@@ -162,84 +155,5 @@ private:
 	void CopyDescriptors(DescriptorCache& descriptorCache, bool copyDirtyDescriptorsOnly);
 	void BindDescriptorSetOffsets(VkCommandBuffer commandBuffer, DescriptorCache& descriptorCache, bool bindDirtyDescriptorSetsOnly, bool graphicsPipe);
 };
-#endif // USE_DESCRIPTOR_BUFFERS
-
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-
-class DynamicDescriptorSet
-{
-public:
-	explicit DynamicDescriptorSet(CVkDevice* device);
-
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer);
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer, bool depthSrv);
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer);
-	void SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, uint32_t arrayIndex, const ITexture* texture);
-
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IColorBuffer* colorBuffer);
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IDepthBuffer* depthBuffer);
-	void SetUAV(CommandListType type, uint32_t rootIndex, uint32_t uavRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer);
-
-	void SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, uint32_t arrayIndex, const IGpuBuffer* gpuBuffer);
-
-	void SetSampler(CommandListType type, uint32_t rootIndex, uint32_t samplerRegister, uint32_t arrayIndex, const ISampler* sampler);
-
-	void CleanupUsedPools(uint64_t fenceValue);
-
-	void ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe = true);
-
-	void UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe = true);
-
-private:
-	DescriptorPoolCache* FindOrCreateDescriptorPoolCache(CVkDescriptorSetLayout* layout, const RootParameter& rootParameter);
-	void Reset();
-
-private:
-	struct DescriptorBinding
-	{
-		VkDescriptorType descriptorType;
-		uint32_t binding;
-		std::variant<VkDescriptorImageInfo, VkDescriptorBufferInfo, VkBufferView> descriptorInfo;
-	};
-
-	struct DescriptorCache
-	{
-		VkDevice device{ VK_NULL_HANDLE };
-		RootParameter rootParameter;
-		wil::com_ptr<CVkDescriptorSetLayout> descriptorSetLayout;
-		bool dirty{ false };
-
-		void SetDescriptorImageInfo(uint32_t binding, VkDescriptorImageInfo descriptorImageInfo);
-		void SetDescriptorBufferInfo(uint32_t binding, VkDescriptorBufferInfo descriptorBufferInfo);
-		void SetDescriptorBufferView(uint32_t binding, VkBufferView descriptorBufferView);
-
-		void Reset();
-		bool UpdateDescriptorSet(VkDescriptorSet descriptorSet);
-		void SetDescriptorBinding(uint32_t binding, VkDescriptorType descriptorType);
-
-		// TODO: Support dynamic offsets properly.
-		bool HasDynamicOffset() const { return hasDynamicOffset; }
-		uint32_t GetDynamicOffset() const { return dynamicOffset; }
-
-	private:
-		std::unordered_map<uint32_t, DescriptorBinding> descriptorBindings;
-		std::vector<VkWriteDescriptorSet> writeDescriptorSets;
-		bool hasDynamicOffset{ false };
-		uint32_t dynamicOffset{ 0 };
-	};
-
-private:
-	wil::com_ptr<CVkDevice> m_device;
-
-	// Pipeline layouts (index = 0 graphics, 1 = compute)
-	VkPipelineLayout m_pipelineLayout[2];
-
-	// Descriptor set caches (index = 0 graphics, 1 = compute)
-	std::array<DescriptorCache, MaxRootParameters> m_descriptorCaches[2];
-	
-	std::unordered_map<VkDescriptorSetLayout, std::shared_ptr<DescriptorPoolCache>> m_layoutToPoolMap;
-};
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 } // namespace Luna::VK

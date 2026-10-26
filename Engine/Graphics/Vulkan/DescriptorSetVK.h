@@ -13,10 +13,8 @@
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
-#if USE_DESCRIPTOR_BUFFERS
 #include "Graphics\Vulkan\DescriptorAllocatorVK.h"
 #include "Graphics\Vulkan\DescriptorSetLayoutVK.h"
-#endif // USE_DESCRIPTOR_BUFFERS
 
 namespace Luna::VK
 {
@@ -48,51 +46,24 @@ public:
 
 	void SetSampler(uint32_t samplerRegister, SamplerPtr sampler) override;
 
-#if USE_DESCRIPTOR_BUFFERS
 	size_t GetDescriptorBufferOffset() const;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	bool HasDescriptors() const;
-	VkDescriptorSet GetDescriptorSet() const { return m_descriptorSet; }
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 protected:
 	template <DescriptorRegisterType registerType>
 	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
 	
-#if USE_DESCRIPTOR_BUFFERS
 	size_t GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
 	size_t GetRegisterOffsetUAV(uint32_t uavRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
 	size_t GetRegisterOffsetCBV(uint32_t cbvRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
 	size_t GetRegisterOffsetSampler(uint32_t samplerRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	void UpdateDescriptorSet(const VkWriteDescriptorSet& writeDescriptorSet);
-	template<bool isSrv>
-	void SetSRVUAV(uint32_t srvUavRegister, const IDescriptor* descriptor);
-
-	void WriteSamplers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
-	void WriteBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
-	void WriteTextures(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
-	void WriteTypedBuffers(VkWriteDescriptorSet& writeDescriptorSet, std::byte* scratchData, std::span<const IDescriptor*> descriptors);
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 protected:
 	Device* m_device{ nullptr };
 
 	RootParameter m_rootParameter;
 
-#if USE_DESCRIPTOR_BUFFERS
 	DescriptorBufferAllocation m_allocation{};
 	DescriptorSetLayoutPtr m_layout;
-#endif // USE_DESCRIPTOR_BUFFERS
-
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkDescriptorSet m_descriptorSet{ VK_NULL_HANDLE };
-	uint32_t m_numDescriptors{ 0 };
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 };
 
 } // namespace Luna::VK

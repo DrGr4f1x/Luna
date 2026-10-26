@@ -32,13 +32,7 @@ public:
 	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
 	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;
 
-#if USE_DESCRIPTOR_BUFFERS
 	bool HasStaticSamplers() const noexcept { return m_staticSamplerDescriptorSetIndex != ~0u; }
-#endif // USE_DESCRIPTOR_BUFFERS
-	
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkDescriptorSet GetStaticSamplerDescriptorSet() const noexcept { return m_staticSamplerDescriptorSet; }
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	size_t GetResourceDescriptorSetLayoutSize() const noexcept { return m_resourceDescriptorSetLayoutSize; }
 	size_t GetSamplerDescriptorSetLayoutSize() const noexcept { return m_samplerDescriptorSetLayoutSize; }
@@ -60,9 +54,6 @@ protected:
 	// Static samplers
 	std::vector<SamplerPtr> m_staticSamplers;
 	uint32_t m_staticSamplerDescriptorSetIndex{ ~0u };
-#if USE_LEGACY_DESCRIPTOR_SETS
-	VkDescriptorSet m_staticSamplerDescriptorSet{ VK_NULL_HANDLE };
-#endif // USE_LEGACY_DESCRIPTOR_SETS
 
 	// Push descriptors
 	uint32_t m_pushDescriptorSetIndex{ (uint32_t)-1 };
