@@ -182,8 +182,8 @@ public:
 	void DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64_t argumentBufferOffset) override;
 
 	// Platform-specific methods
-	void SetDescriptorBuffer(DescriptorBufferType bufferType, VkBuffer descriptorBuffer);
-	void SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers);
+	void SetDescriptorBuffer(DescriptorHeapType bufferType, VkBuffer descriptorBuffer);
+	void SetDescriptorBuffers(std::span<DescriptorHeapType> bufferTypes, std::span<VkBuffer> buffers);
 	VkCommandBuffer GetCommandBuffer() const noexcept { return m_commandBuffer; }
 
 private:
@@ -192,7 +192,6 @@ private:
 	void InitializeTexture_Internal(ITexture* texture, const TextureInitializer& texInit) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
-	void BindUserDescriptorBuffers();
 	void BindDescriptorBuffers();
 
 	void UpdateAndBindDynamicDescriptors(bool graphicsPipe);

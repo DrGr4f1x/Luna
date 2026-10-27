@@ -129,7 +129,6 @@ DeviceManager::~DeviceManager()
 	ReleaseDeferredResources();
 	assert(m_deferredResources.empty());
 
-	DescriptorBufferAllocator::DestroyAll();
 	DynamicDescriptorBuffer::DestroyAll();
 
 	LinearAllocator::DestroyAll();
@@ -335,9 +334,6 @@ void DeviceManager::CreateDeviceResources()
 			SetDebugName(*m_vkDevice, fence->Get(), format("Present Fence {}", i));
 		}
 	}
-
-	// Create user descriptor buffers
-	DescriptorBufferAllocator::CreateAll();
 }
 
 

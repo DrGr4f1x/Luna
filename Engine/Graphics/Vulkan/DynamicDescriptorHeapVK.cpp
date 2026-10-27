@@ -32,17 +32,17 @@ std::queue<std::pair<uint64_t, CVkBuffer*>> DynamicDescriptorBuffer::sm_retiredD
 std::queue<CVkBuffer*> DynamicDescriptorBuffer::sm_availableDescriptorBuffers[2];
 
 
-static size_t GetDescriptorSize(DescriptorBufferType bufferType)
+static size_t GetDescriptorSize(DescriptorHeapType bufferType)
 {
 	auto device = GetVulkanDevice();
 
-	return (bufferType == DescriptorBufferType::Resource) ?
+	return (bufferType == DescriptorHeapType::Resource) ?
 		device->GetDeviceCaps().descriptorBuffer.descriptorSize.largest :
 		device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampler;
 }
 
 
-DynamicDescriptorBuffer::DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorBufferType bufferType)
+DynamicDescriptorBuffer::DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorHeapType bufferType)
 	: m_owningContext{ owningContext }
 	, m_bufferType{ bufferType }
 {
@@ -93,7 +93,7 @@ void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignat
 	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
 
 	m_rootSignatureSize = 0;
-	const bool isSamplerBuffer = m_bufferType == DescriptorBufferType::Sampler;
+	const bool isSamplerBuffer = m_bufferType == DescriptorHeapType::Sampler;
 
 	if (isSamplerBuffer)
 	{
@@ -255,11 +255,11 @@ void DynamicDescriptorBuffer::SetSampler(CommandListType type, uint32_t rootInde
 }
 
 
-/* static */ CVkBuffer* DynamicDescriptorBuffer::RequestDescriptorBuffer(DescriptorBufferType bufferType)
+/* static */ CVkBuffer* DynamicDescriptorBuffer::RequestDescriptorBuffer(DescriptorHeapType bufferType)
 {
 	lock_guard<mutex> CS(sm_mutex);
 
-	uint32_t idx = bufferType == DescriptorBufferType::Sampler ? 1 : 0;
+	uint32_t idx = bufferType == DescriptorHeapType::Sampler ? 1 : 0;
 
 	while (!sm_retiredDescriptorBuffers[idx].empty() && GetVulkanDeviceManager()->IsFenceComplete(sm_retiredDescriptorBuffers[idx].front().first))
 	{
@@ -283,9 +283,9 @@ void DynamicDescriptorBuffer::SetSampler(CommandListType type, uint32_t rootInde
 }
 
 
-/* static */ void DynamicDescriptorBuffer::DiscardDescriptorBuffers(DescriptorBufferType bufferType, uint64_t fenceValue, const vector<CVkBuffer*>& usedBuffers)
+/* static */ void DynamicDescriptorBuffer::DiscardDescriptorBuffers(DescriptorHeapType bufferType, uint64_t fenceValue, const vector<CVkBuffer*>& usedBuffers)
 {
-	const uint32_t idx = bufferType == DescriptorBufferType::Sampler ? 1 : 0;
+	const uint32_t idx = bufferType == DescriptorHeapType::Sampler ? 1 : 0;
 
 	lock_guard<mutex> CS(sm_mutex);
 
@@ -333,13 +333,13 @@ DescriptorBufferAllocation DynamicDescriptorBuffer::Allocate(size_t sizeInBytes)
 }
 
 
-size_t DynamicDescriptorBuffer::GetBufferSize(DescriptorBufferType bufferType)
+size_t DynamicDescriptorBuffer::GetBufferSize(DescriptorHeapType bufferType)
 {
 	auto device = GetVulkanDevice();
 
 	const size_t descriptorSize = GetDescriptorSize(bufferType);
 
-	const size_t numDescriptors = (bufferType == DescriptorBufferType::Resource) ?
+	const size_t numDescriptors = (bufferType == DescriptorHeapType::Resource) ?
 		sm_numResourceDescriptors :
 		sm_numSamplerDescriptors;
 
@@ -450,7 +450,7 @@ void DynamicDescriptorBuffer::BindDescriptorSetOffsets(VkCommandBuffer commandBu
 
 	// Bind the buffer offsets
 	VkPipelineLayout pipelineLayout = descriptorCache.pipelineLayout;
-	uint32_t bufferIndex = m_bufferType == DescriptorBufferType::Resource ? 0 : 1;
+	uint32_t bufferIndex = m_bufferType == DescriptorHeapType::Resource ? 0 : 1;
 
 	for (uint8_t i = 0; i < descriptorCache.numActiveTables; ++i)
 	{

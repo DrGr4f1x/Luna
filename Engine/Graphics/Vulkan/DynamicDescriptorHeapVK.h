@@ -41,7 +41,7 @@ class RootSignature;
 class DynamicDescriptorBuffer
 {
 public:
-	DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorBufferType bufferType);
+	DynamicDescriptorBuffer(CommandContextVK& owningContext, DescriptorHeapType bufferType);
 	~DynamicDescriptorBuffer();
 
 	static void DestroyAll();
@@ -67,8 +67,8 @@ public:
 
 private:
 	// Static methods
-	static CVkBuffer* RequestDescriptorBuffer(DescriptorBufferType bufferType);
-	static void DiscardDescriptorBuffers(DescriptorBufferType bufferType, uint64_t fenceValueForReset, const std::vector<CVkBuffer*>& usedBuffers);
+	static CVkBuffer* RequestDescriptorBuffer(DescriptorHeapType bufferType);
+	static void DiscardDescriptorBuffers(DescriptorHeapType bufferType, uint64_t fenceValueForReset, const std::vector<CVkBuffer*>& usedBuffers);
 
 	bool HasSpace(size_t neededSpace)
 	{
@@ -79,7 +79,7 @@ private:
 	void RetireUsedBuffers(uint64_t fenceValue);
 
 	DescriptorBufferAllocation Allocate(size_t sizeInBytes);
-	static size_t GetBufferSize(DescriptorBufferType bufferType);
+	static size_t GetBufferSize(DescriptorHeapType bufferType);
 
 private:
 	// Static members
@@ -94,7 +94,7 @@ private:
 	// Non-static members
 	CommandContextVK& m_owningContext;
 	CVkBuffer* m_currentBufferPtr{ nullptr };
-	const DescriptorBufferType m_bufferType;
+	const DescriptorHeapType m_bufferType;
 
 	std::byte* m_bufferStart{ nullptr };
 	size_t m_currentOffset{ 0 };

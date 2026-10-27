@@ -20,6 +20,7 @@
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
 #include "DescriptorAllocatorVK.h"
+#include "DescriptorHeapVK.h"
 #include "DescriptorSetVK.h"
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
@@ -118,19 +119,69 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCa
 
 DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
 {
-	// TODO: Implement me
-	assert(false);
+	// Descriptor heap
+	if (UseDescriptorHeap())
+	{
+		// TODO: Implement me
+		assert(false);
 
-	return nullptr;
+		return nullptr;
+	}
+	// Descriptor buffer (fallback)
+	else
+	{
+		auto descriptorHeap = make_shared<DescriptorHeap>();
+
+		auto impl = new DescriptorBufferImpl;
+
+		impl->m_device = this;
+		impl->m_alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
+		impl->m_bufferSize = m_caps.descriptorBuffer.descriptorSize.largest * (numImageDescriptors + numBufferDescriptors);
+		auto buffer = CreateDescriptorBuffer(DescriptorHeapType::Resource, impl->m_bufferSize);
+		ThrowIfFailed(vmaMapMemory(buffer->GetAllocator(), buffer->GetAllocation(), (void**)&impl->m_bufferHead));
+		impl->m_descriptorBuffer = buffer;
+		impl->m_initialHead = impl->m_bufferHead;
+		impl->m_freeSpace = impl->m_bufferSize;
+
+		descriptorHeap->m_type = DescriptorHeapType::Resource;
+		descriptorHeap->m_impl = impl;
+
+		return descriptorHeap;
+	}
 }
 
 
 DescriptorHeapPtr Device::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
 {
-	// TODO: Implement me
-	assert(false);
+	// Descriptor heap
+	if (UseDescriptorHeap())
+	{
+		// TODO: Implement me
+		assert(false);
 
-	return nullptr;
+		return nullptr;
+	}
+	// Descriptor buffer (fallback)
+	else
+	{
+		auto descriptorHeap = make_shared<DescriptorHeap>();
+
+		auto impl = new DescriptorBufferImpl;
+
+		impl->m_device = this;
+		impl->m_alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
+		impl->m_bufferSize = m_caps.descriptorBuffer.descriptorSize.sampler * numSamplerDescriptors;
+		auto buffer = CreateDescriptorBuffer(DescriptorHeapType::Sampler, impl->m_bufferSize);
+		ThrowIfFailed(vmaMapMemory(buffer->GetAllocator(), buffer->GetAllocation(), (void**)&impl->m_bufferHead));
+		impl->m_descriptorBuffer = buffer;
+		impl->m_initialHead = impl->m_bufferHead;
+		impl->m_freeSpace = impl->m_bufferSize;
+
+		descriptorHeap->m_type = DescriptorHeapType::Sampler;
+		descriptorHeap->m_impl = impl;
+
+		return descriptorHeap;
+	}
 }
 
 
@@ -1081,7 +1132,7 @@ QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 }
 
 
-DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc)
+DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, const DescriptorSetDesc& descriptorSetDesc)
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
@@ -1089,7 +1140,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(const DescriptorSetDesc& descriptor
 	assert(vkDescriptorSetLayout != VK_NULL_HANDLE);
 
 	// TODO: Handle sampler descriptor sets
-	DescriptorBufferAllocation allocation = AllocateDescriptorBufferMemory(DescriptorBufferType::Resource, vkDescriptorSetLayout);
+	DescriptorBufferAllocation allocation = descriptorHeap->AllocateDescriptorMemory(vkDescriptorSetLayout);
 
 	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
 	descriptorSet->m_allocation = allocation;
@@ -1322,9 +1373,9 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 }
 
 
-wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes)
+wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorHeapType type, size_t sizeInBytes)
 {
-	VkBufferUsageFlags extraFlags = type == DescriptorBufferType::Resource ?
+	VkBufferUsageFlags extraFlags = type == DescriptorHeapType::Resource ?
 		VK_BUFFER_USAGE_RESOURCE_DESCRIPTOR_BUFFER_BIT_EXT :
 		VK_BUFFER_USAGE_SAMPLER_DESCRIPTOR_BUFFER_BIT_EXT;
 	extraFlags |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;

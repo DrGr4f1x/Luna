@@ -29,6 +29,10 @@ class Shader;
 namespace Luna::VK
 {
 
+// Forward declarations
+class DescriptorHeap;
+
+
 struct DescriptorSetDesc
 {
 	DescriptorSetLayoutPtr descriptorSetLayout;
@@ -58,7 +62,7 @@ public:
 
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
 
-	DescriptorSetPtr CreateDescriptorSet(const DescriptorSetDesc& descriptorSetDesc);
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeap* descriptorHeap, const DescriptorSetDesc& descriptorSetDesc);
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 
@@ -71,7 +75,7 @@ public:
 
 	ColorBufferPtr CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 
-	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorBufferType type, size_t sizeInBytes);
+	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorHeapType type, size_t sizeInBytes);
 
 	VkDevice GetVulkanDevice() const { return m_device->Get(); }
 

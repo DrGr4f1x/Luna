@@ -11,23 +11,69 @@
 #pragma once
 
 #include "Graphics\DescriptorHeap.h"
+
+#include "Graphics\Vulkan\DescriptorAllocatorVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
 namespace Luna::VK
 {
 
-class DescriptorHeap : public IDescriptorHeap
-{
-public:
+// Forward declarations
+class Device;
 
+
+enum class VulkanDescriptorHeapClass
+{
+	Heap,
+	Buffer
 };
 
 
-class DescriptorBuffer : public DescriptorHeap
+class IDescriptorHeapImpl
 {
 public:
+	virtual DescriptorBufferAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
+	virtual VulkanDescriptorHeapClass GetClass() const = 0;
 
+	virtual VkBuffer GetBuffer() const = 0;
+};
+
+
+class DescriptorHeap : public IDescriptorHeap
+{
+	friend class Device;
+
+public:
+	virtual ~DescriptorHeap();
+	DescriptorBufferAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout);
+	VulkanDescriptorHeapClass GetClass() const;
+
+	VkBuffer GetBuffer() const;
+
+private:
+	IDescriptorHeapImpl* m_impl{ nullptr };
+};
+
+
+class DescriptorBufferImpl : public IDescriptorHeapImpl
+{
+	friend class Device;
+
+public:
+	DescriptorBufferAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) override;
+	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
+
+	VkBuffer GetBuffer() const { return m_descriptorBuffer->Get(); }
+
+protected:
+	Device* m_device{ nullptr };
+	size_t m_alignment{ 0 };
+	size_t m_bufferSize{ 0 };
+	size_t m_freeSpace{ 0 };
+	std::byte* m_bufferHead{ nullptr };
+	std::byte* m_initialHead{ nullptr };
+	wil::com_ptr<CVkBuffer> m_descriptorBuffer;
 };
 
 } // namespace Luna::VK

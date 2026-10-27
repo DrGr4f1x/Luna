@@ -12,6 +12,7 @@
 
 #include "RootSignatureVK.h"
 
+#include "DescriptorHeapVK.h"
 #include "DeviceVK.h"
 
 
@@ -30,7 +31,9 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 		.rootParameter			= rootParam
 	};
 
-	return m_device->CreateDescriptorSet(descriptorSetDesc);
+	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap.get();
+
+	return m_device->CreateDescriptorSet(descriptorHeapVK, descriptorSetDesc);
 }
 
 

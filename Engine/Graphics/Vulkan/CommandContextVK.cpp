@@ -17,6 +17,7 @@
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
+#include "DescriptorHeapVK.h"
 #include "DescriptorSetVK.h"
 #include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
@@ -135,8 +136,8 @@ VkBufferImageCopy TextureSubResourceDataToVulkan(const TextureSubresourceData& d
 CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 	: m_device{ device }
 	, m_commandListType{ type }
-	, m_dynamicResourceDescriptorBuffer{ *this, DescriptorBufferType::Resource }
-	, m_dynamicSamplerDescriptorBuffer{ *this, DescriptorBufferType::Sampler }
+	, m_dynamicResourceDescriptorBuffer{ *this, DescriptorHeapType::Resource }
+	, m_dynamicSamplerDescriptorBuffer{ *this, DescriptorHeapType::Sampler }
 {
 	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
 }
@@ -1007,22 +1008,66 @@ void CommandContextVK::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 
 void CommandContextVK::BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap)
 {
-	// TODO: Implement me
-	assert(false);
+	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap;
+	const auto heapClass = descriptorHeapVK->GetClass();
+
+	if (heapClass == VulkanDescriptorHeapClass::Heap)
+	{
+		// TODO: Implement me
+		assert(false);
+	}
+	else
+	{
+		assert(descriptorHeap->GetType() == DescriptorHeapType::Resource);
+
+		SetDescriptorBuffer(DescriptorHeapType::Resource, descriptorHeapVK->GetBuffer());
+	}
 }
 
 
 void CommandContextVK::BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap)
 {
-	// TODO: Implement me
-	assert(false);
+	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap;
+	const auto heapClass = descriptorHeapVK->GetClass();
+
+	if (heapClass == VulkanDescriptorHeapClass::Heap)
+	{
+		// TODO: Implement me
+		assert(false);
+	}
+	else
+	{
+		assert(descriptorHeap->GetType() == DescriptorHeapType::Sampler);
+
+		SetDescriptorBuffer(DescriptorHeapType::Sampler, descriptorHeapVK->GetBuffer());
+	}
 }
 
 
 void CommandContextVK::BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap)
 {
-	// TODO: Implement me
-	assert(false);
+	DescriptorHeap* resourceDescriptorHeapVK = (DescriptorHeap*)resourceDescriptorHeap;
+	DescriptorHeap* samplerDescriptorHeapVK = (DescriptorHeap*)samplerDescriptorHeap;
+
+	assert(resourceDescriptorHeapVK->GetClass() == samplerDescriptorHeapVK->GetClass());
+
+	const auto heapClass = resourceDescriptorHeapVK->GetClass();
+
+	if (heapClass == VulkanDescriptorHeapClass::Heap)
+	{
+		// TODO: Implement me
+		assert(false);
+	}
+	else
+	{
+		assert(resourceDescriptorHeap->GetType() == DescriptorHeapType::Resource);
+		assert(samplerDescriptorHeap->GetType() == DescriptorHeapType::Sampler);
+
+		DescriptorHeapType types[] = { DescriptorHeapType::Resource, DescriptorHeapType::Sampler };
+		VkBuffer buffers[] = { resourceDescriptorHeapVK->GetBuffer(), samplerDescriptorHeapVK->GetBuffer() };
+
+		SetDescriptorBuffers(types, buffers);
+	}
 }
 
 
@@ -1607,7 +1652,7 @@ void CommandContextVK::DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64
 }
 
 
-void CommandContextVK::SetDescriptorBuffer(DescriptorBufferType bufferType, VkBuffer descriptorBuffer)
+void CommandContextVK::SetDescriptorBuffer(DescriptorHeapType bufferType, VkBuffer descriptorBuffer)
 {
 	if (m_currentDescriptorBuffers[(uint32_t)bufferType] != descriptorBuffer)
 	{
@@ -1617,7 +1662,7 @@ void CommandContextVK::SetDescriptorBuffer(DescriptorBufferType bufferType, VkBu
 }
 
 
-void CommandContextVK::SetDescriptorBuffers(std::span<DescriptorBufferType> bufferTypes, std::span<VkBuffer> buffers)
+void CommandContextVK::SetDescriptorBuffers(std::span<DescriptorHeapType> bufferTypes, std::span<VkBuffer> buffers)
 {
 	bool anyChanged = false;
 
@@ -1713,11 +1758,8 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
-	// TODO: Try this with GetPlatformObject()
 	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
 	assert(descriptorSetVK != nullptr);
-
-	BindUserDescriptorBuffers();
 
 	// TODO: This refers to the Resource buffer.  Shouldn't hardcode index 0.
 	uint32_t bufferIndex = 0;
@@ -1732,22 +1774,6 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 		&bufferIndex,
 		&offset
 	);
-}
-
-
-void CommandContextVK::BindUserDescriptorBuffers()
-{
-	DescriptorBufferType types[] = {
-		DescriptorBufferType::Resource,
-		DescriptorBufferType::Sampler
-	};
-
-	VkBuffer buffers[] = {
-		g_userDescriptorBufferAllocator[(uint32_t)DescriptorBufferType::Resource].GetBuffer(),
-		g_userDescriptorBufferAllocator[(uint32_t)DescriptorBufferType::Sampler].GetBuffer()
-	};
-
-	SetDescriptorBuffers(types, buffers);
 }
 
 
