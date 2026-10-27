@@ -132,4 +132,6 @@ VkExtent2D ShadingRateToVulkan(ShadingRate shadingRate);
 
 VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombiner shadingRateCombiner);
 
+VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorType);
+
 } // namespace Luna::VK

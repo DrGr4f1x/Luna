@@ -509,6 +509,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		return nullptr;
 	}
 
+	ProcessRootSignatureForHeap(rootSignatureDesc);
+
 	vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
 	vector<DescriptorSetLayoutPtr> descriptorSetLayouts;
 	vector<VkPushConstantRange> vkPushConstantRanges;
@@ -1837,6 +1839,95 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 	InitializeTexture(texture.Get(), texInit);
 
 	return texture;
+}
+
+
+void ProcessRootConstants(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
+{
+	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
+
+	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
+	{
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+		.descriptorSet	= index,
+		.firstBinding	= binding,
+		.bindingCount	= 1,
+		.resourceMask	= VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT,
+		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT,
+		.sourceData = {
+			.pushDataOffset = pushDataOffset
+		}
+	};
+
+	pushDataOffset += 4 * rootParameter.num32BitConstants;
+	setAndBindingMappings.push_back(setAndBindingMapping);
+}
+
+
+void ProcessRootBuffers(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
+{
+	VkSpirvResourceTypeFlagBitsEXT spirvType{};
+	switch (rootParameter.parameterType)
+	{
+	case RootParameterType::RootCBV: spirvType = VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT; break;
+	case RootParameterType::RootSRV: spirvType = VK_SPIRV_RESOURCE_TYPE_READ_ONLY_STORAGE_BUFFER_BIT_EXT; break;
+	case RootParameterType::RootUAV: spirvType = VK_SPIRV_RESOURCE_TYPE_READ_WRITE_STORAGE_BUFFER_BIT_EXT; break;
+	}
+
+	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
+
+	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
+	{
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+		.descriptorSet	= index,
+		.firstBinding	= binding,
+		.bindingCount	= 1,
+		.resourceMask	= spirvType,
+		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT,
+		.sourceData = {
+			.pushAddressOffset = pushDataOffset
+		}
+	};
+
+	pushDataOffset += sizeof(uint64_t);
+	setAndBindingMappings.push_back(setAndBindingMapping);
+}
+
+
+void ProcessTable(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
+{
+
+}
+
+
+void Device::ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureDesc)
+{
+	vector<VkDescriptorSetAndBindingMappingEXT> setAndBindingMappings;
+	uint32_t rootParameterIndex = 0;
+	uint32_t pushDataOffset = 0;
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{ 
+		switch (rootParameter.parameterType)
+		{
+		case RootParameterType::RootConstants:
+			// Push data
+			// VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT
+			break;
+
+		case RootParameterType::RootCBV:
+		case RootParameterType::RootSRV:
+		case RootParameterType::RootUAV:
+			// Push address
+			// VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT
+			break;
+
+		case RootParameterType::Table:
+			// Everything else
+			break;
+		}
+
+		++rootParameterIndex;
+	}
 }
 
 

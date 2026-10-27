@@ -96,6 +96,8 @@ protected:
 
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
+	void ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureDesc);
+
 protected:
 	wil::com_ptr<CVkDevice> m_device;
 	wil::com_ptr<CVmaAllocator> m_allocator;

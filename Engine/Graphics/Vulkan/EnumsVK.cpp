@@ -900,4 +900,31 @@ VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombin
 	}
 }
 
+
+VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorType)
+{
+	using enum DescriptorType;
+
+	switch (descriptorType)
+	{
+	case ConstantBuffer:				return VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT; break;
+	case Sampler:						return VK_SPIRV_RESOURCE_TYPE_SAMPLER_BIT_EXT; break;
+	case TextureSRV:					return VK_SPIRV_RESOURCE_TYPE_SAMPLED_IMAGE_BIT_EXT; break;
+	case TextureUAV:					return VK_SPIRV_RESOURCE_TYPE_READ_WRITE_IMAGE_BIT_EXT; break;
+	case StructuredBufferSRV:			return VK_SPIRV_RESOURCE_TYPE_READ_ONLY_STORAGE_BUFFER_BIT_EXT; break;
+	case StructuredBufferUAV:			return VK_SPIRV_RESOURCE_TYPE_READ_WRITE_STORAGE_BUFFER_BIT_EXT; break;
+	case RawBufferSRV:					return VK_SPIRV_RESOURCE_TYPE_READ_ONLY_STORAGE_BUFFER_BIT_EXT; break;
+	case RawBufferUAV:					return VK_SPIRV_RESOURCE_TYPE_READ_WRITE_STORAGE_BUFFER_BIT_EXT; break;
+	case TypedBufferSRV:				return VK_SPIRV_RESOURCE_TYPE_READ_ONLY_STORAGE_BUFFER_BIT_EXT; break;
+	case TypedBufferUAV:				return VK_SPIRV_RESOURCE_TYPE_READ_WRITE_STORAGE_BUFFER_BIT_EXT; break;
+	case RayTracingAccelStruct:			return VK_SPIRV_RESOURCE_TYPE_ACCELERATION_STRUCTURE_BIT_EXT; break;
+	case PushConstants:					return VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT; break;
+	case SamplerFeedbackTextureUAV:		return VK_SPIRV_RESOURCE_TYPE_READ_WRITE_IMAGE_BIT_EXT; break;
+	default:
+		assert(false);
+		return VK_SPIRV_RESOURCE_TYPE_ALL_EXT;
+		break;
+	}
+}
+
 } // Minimumnamespace Luna::VK
