@@ -316,7 +316,7 @@ void DynamicDescriptorBuffer::RetireUsedBuffers(uint64_t fenceValue)
 }
 
 
-DescriptorBufferAllocation DynamicDescriptorBuffer::Allocate(size_t sizeInBytes)
+DescriptorAllocation DynamicDescriptorBuffer::Allocate(size_t sizeInBytes)
 {
 	size_t alignedSize = Math::AlignUp(sizeInBytes, m_offsetAlignment);
 	assert(m_freeSpace >= alignedSize);
@@ -326,7 +326,7 @@ DescriptorBufferAllocation DynamicDescriptorBuffer::Allocate(size_t sizeInBytes)
 
 	m_freeSpace -= alignedSize;
 
-	return DescriptorBufferAllocation{
+	return DescriptorAllocation{
 		.mem		= allocation,
 		.offset		= (size_t)(allocation - m_bufferStart)
 	};
@@ -373,7 +373,7 @@ void DynamicDescriptorBuffer::DescriptorCache::Allocate(uint32_t rootIndex, size
 
 	freeSpace -= alignedSize;
 
-	tableAllocations[rootIndex] = DescriptorBufferAllocation{
+	tableAllocations[rootIndex] = DescriptorAllocation{
 		.mem		= allocation,
 		.offset		= (size_t)(allocation - descriptorMemory)
 	};

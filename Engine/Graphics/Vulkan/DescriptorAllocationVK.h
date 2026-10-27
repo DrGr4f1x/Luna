@@ -16,7 +16,7 @@
 namespace Luna::VK
 {
 
-struct DescriptorBufferAllocation
+struct DescriptorAllocation
 {
 	std::byte* mem{ nullptr };
 	size_t offset{ 0 };

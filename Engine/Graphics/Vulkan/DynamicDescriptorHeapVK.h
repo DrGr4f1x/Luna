@@ -12,7 +12,7 @@
 
 #include "Graphics\Vulkan\VulkanCommon.h"
 #include "Graphics\RootSignature.h"
-#include "Graphics\Vulkan\DescriptorAllocatorVK.h"
+#include "Graphics\Vulkan\DescriptorAllocationVK.h"
 
 
 namespace Luna
@@ -78,7 +78,7 @@ private:
 	void RetireCurrentBuffer();
 	void RetireUsedBuffers(uint64_t fenceValue);
 
-	DescriptorBufferAllocation Allocate(size_t sizeInBytes);
+	DescriptorAllocation Allocate(size_t sizeInBytes);
 	static size_t GetBufferSize(DescriptorHeapType bufferType);
 
 private:
@@ -107,7 +107,7 @@ private:
 	struct DescriptorCache
 	{
 		// Pointers to mapped memory for writing descriptors with vkGetDescriptorEXT
-		std::array<DescriptorBufferAllocation, MaxRootParameters> tableAllocations;
+		std::array<DescriptorAllocation, MaxRootParameters> tableAllocations;
 
 		// Data dirty flags
 		std::array<bool, MaxRootParameters> hasActiveData;

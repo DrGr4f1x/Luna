@@ -13,7 +13,7 @@
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
-#include "Graphics\Vulkan\DescriptorAllocatorVK.h"
+#include "Graphics\Vulkan\DescriptorAllocationVK.h"
 #include "Graphics\Vulkan\DescriptorSetLayoutVK.h"
 
 namespace Luna::VK
@@ -62,7 +62,7 @@ protected:
 
 	RootParameter m_rootParameter;
 
-	DescriptorBufferAllocation m_allocation{};
+	DescriptorAllocation m_allocation{};
 	DescriptorSetLayoutPtr m_layout;
 };
 

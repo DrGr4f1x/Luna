@@ -75,7 +75,6 @@
     <ClCompile Include="Graphics\UIOverlay.cpp" />
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
-    <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorHeapVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetLayoutVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
@@ -198,7 +197,7 @@
     <ClInclude Include="Graphics\UIOverlay.h" />
     <ClInclude Include="Graphics\Vulkan\ColorBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
-    <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorAllocationVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetLayoutVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />

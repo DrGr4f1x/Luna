@@ -97,9 +97,6 @@
     <ClCompile Include="Graphics\CommonStates.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DescriptorAllocatorVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\Camera.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
@@ -419,7 +416,7 @@
     <ClInclude Include="Graphics\DescriptorSet.h">
       <Filter>Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DescriptorAllocatorVK.h">
+    <ClInclude Include="Graphics\Vulkan\DescriptorAllocationVK.h">
       <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\ResourceSet.h">

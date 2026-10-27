@@ -19,7 +19,7 @@
 
 #include "ColorBufferVK.h"
 #include "DepthBufferVK.h"
-#include "DescriptorAllocatorVK.h"
+#include "DescriptorAllocationVK.h"
 #include "DescriptorHeapVK.h"
 #include "DescriptorSetVK.h"
 #include "GpuBufferVK.h"
@@ -1140,7 +1140,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 	assert(vkDescriptorSetLayout != VK_NULL_HANDLE);
 
 	// TODO: Handle sampler descriptor sets
-	DescriptorBufferAllocation allocation = descriptorHeap->AllocateDescriptorMemory(vkDescriptorSetLayout);
+	DescriptorAllocation allocation = descriptorHeap->AllocateDescriptorMemory(vkDescriptorSetLayout);
 
 	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
 	descriptorSet->m_allocation = allocation;
@@ -1373,6 +1373,59 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 }
 
 
+wil::com_ptr<CVkBuffer> Device::CreateDescriptorHeapBuffer(DescriptorHeapType type, uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
+{
+	VkBufferUsageFlags extraFlags = VK_BUFFER_USAGE_DESCRIPTOR_HEAP_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+
+	// Calculate buffer size
+	size_t bufferSize = 0;
+	if (type == DescriptorHeapType::Resource)
+	{
+		size_t baseSize = numImageDescriptors * m_caps.descriptorHeap.imageDescriptorSize;
+		baseSize += numBufferDescriptors * m_caps.descriptorHeap.bufferDescriptorSize;
+		baseSize += m_caps.descriptorHeap.minResourceHeapReservedRange;
+		bufferSize = Math::AlignUp(baseSize, m_caps.descriptorHeap.resourceHeapAlignment);
+	}
+	else
+	{
+		size_t baseSize = numImageDescriptors * m_caps.descriptorHeap.samplerDescriptorSize + m_caps.descriptorHeap.minSamplerHeapReservedRange;
+		bufferSize = Math::AlignUp(baseSize, m_caps.descriptorHeap.samplerHeapAlignment);
+	}
+
+	VmaAllocationCreateInfo allocCreateInfo{};
+	const MemoryAccess memoryAccess = MemoryAccess::CpuWrite | MemoryAccess::GpuRead;
+	allocCreateInfo.flags = GetMemoryFlags(memoryAccess);
+	allocCreateInfo.usage = GetMemoryUsage(memoryAccess);
+
+	VkBuffer vkBuffer{ VK_NULL_HANDLE };
+	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
+
+	VkBufferCreateInfo bufferCreateInfo{
+		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size	= bufferSize,
+		.usage	= extraFlags
+	};
+
+	auto res = vmaCreateBuffer(*m_allocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+	assert(res == VK_SUCCESS);
+
+	if (type == DescriptorHeapType::Resource)
+	{
+		SetDebugName(*m_device, vkBuffer, "Descriptor Heap [Resource]");
+	}
+	else
+	{
+		SetDebugName(*m_device, vkBuffer, "Descriptor Heap [Sampler]");
+	}
+
+	uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
+
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferDeviceAddress);
+
+	return buffer;
+}
+
+
 wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorHeapType type, size_t sizeInBytes)
 {
 	VkBufferUsageFlags extraFlags = type == DescriptorHeapType::Resource ?
@@ -1399,7 +1452,9 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorHeapType type, 
 
 	SetDebugName(*m_device, vkBuffer, "Descriptor Buffer");
 
-	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation);
+	uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
+
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferDeviceAddress);
 
 	return buffer;
 }

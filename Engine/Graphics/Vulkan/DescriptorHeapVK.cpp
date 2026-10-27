@@ -24,7 +24,7 @@ DescriptorHeap::~DescriptorHeap()
 }
 
 
-DescriptorBufferAllocation DescriptorHeap::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
+DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	return m_impl->AllocateDescriptorMemory(vkDescriptorSetLayout);
 }
@@ -42,7 +42,7 @@ VkBuffer DescriptorHeap::GetBuffer() const
 }
 
 
-DescriptorBufferAllocation DescriptorBufferImpl::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
+DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	assert(m_bufferSize > 0);
 
@@ -57,7 +57,7 @@ DescriptorBufferAllocation DescriptorBufferImpl::AllocateDescriptorMemory(VkDesc
 
 	m_freeSpace -= alignedSize;
 
-	return DescriptorBufferAllocation{
+	return DescriptorAllocation{
 		.mem		= allocation,
 		.offset		= (size_t)(allocation - m_initialHead)
 	};

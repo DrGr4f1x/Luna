@@ -75,6 +75,7 @@ public:
 
 	ColorBufferPtr CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 
+	wil::com_ptr<CVkBuffer> CreateDescriptorHeapBuffer(DescriptorHeapType type, uint32_t numImageDescriptors, uint32_t numBufferDescriptors);
 	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorHeapType type, size_t sizeInBytes);
 
 	VkDevice GetVulkanDevice() const { return m_device->Get(); }

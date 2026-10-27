@@ -12,7 +12,7 @@
 
 #include "Graphics\DescriptorHeap.h"
 
-#include "Graphics\Vulkan\DescriptorAllocatorVK.h"
+#include "Graphics\Vulkan\DescriptorAllocationVK.h"
 #include "Graphics\Vulkan\VulkanCommon.h"
 
 
@@ -33,7 +33,7 @@ enum class VulkanDescriptorHeapClass
 class IDescriptorHeapImpl
 {
 public:
-	virtual DescriptorBufferAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
+	virtual DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
 	virtual VulkanDescriptorHeapClass GetClass() const = 0;
 
 	virtual VkBuffer GetBuffer() const = 0;
@@ -46,7 +46,7 @@ class DescriptorHeap : public IDescriptorHeap
 
 public:
 	virtual ~DescriptorHeap();
-	DescriptorBufferAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout);
+	DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout);
 	VulkanDescriptorHeapClass GetClass() const;
 
 	VkBuffer GetBuffer() const;
@@ -61,7 +61,7 @@ class DescriptorBufferImpl : public IDescriptorHeapImpl
 	friend class Device;
 
 public:
-	DescriptorBufferAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) override;
+	DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) override;
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
 
 	VkBuffer GetBuffer() const { return m_descriptorBuffer->Get(); }

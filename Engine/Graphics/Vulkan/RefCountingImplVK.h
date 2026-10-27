@@ -436,11 +436,12 @@ class __declspec(uuid("56B8DE36-FF52-40B2-A736-CD91EE48EAD0")) CVkBuffer
 {
 public:
 	CVkBuffer() noexcept = default;
-	CVkBuffer(CVkDevice* device, CVmaAllocator* allocator, VkBuffer buffer, VmaAllocation allocation) noexcept
+	CVkBuffer(CVkDevice* device, CVmaAllocator* allocator, VkBuffer buffer, VmaAllocation allocation, uint64_t bufferDeviceAddress = 0)
 		: m_device{ device }
 		, m_allocator{ allocator }
 		, m_buffer{ buffer }
 		, m_allocation{ allocation }
+		, m_bufferDeviceAddress{ bufferDeviceAddress }
 	{}
 	~CVkBuffer()
 	{
@@ -453,6 +454,7 @@ public:
 	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 	VmaAllocator GetAllocator() const noexcept { return m_allocator->Get(); }
 	VmaAllocation GetAllocation() const noexcept { return m_allocation; }
+	uint64_t GetBufferDeviceAddress() const noexcept { return m_bufferDeviceAddress; }
 
 	void Destroy();
 
@@ -461,6 +463,7 @@ private:
 	wil::com_ptr<CVmaAllocator> m_allocator;
 	VkBuffer m_buffer{ VK_NULL_HANDLE };
 	VmaAllocation m_allocation{ VK_NULL_HANDLE };
+	uint64_t m_bufferDeviceAddress{ 0 };
 };
 
 

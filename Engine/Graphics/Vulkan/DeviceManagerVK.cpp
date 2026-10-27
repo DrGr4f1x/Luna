@@ -13,7 +13,7 @@
 #include "DeviceManagerVK.h"
 
 #include "CommandContextVK.h"
-#include "DescriptorAllocatorVK.h"
+#include "DescriptorAllocationVK.h"
 #include "DeviceVK.h"
 #include "LinearAllocatorVK.h"
 #include "SemaphoreVK.h"
