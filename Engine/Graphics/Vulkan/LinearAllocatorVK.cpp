@@ -132,7 +132,7 @@ LinearAllocationPage* LinearAllocatorPageManager::CreateNewPage(size_t pageSize)
 
 	SetDebugName(device->Get(), vkBuffer, "Linear Allocator Page");
 
-	auto buffer = Create<CVkBuffer>(device, deviceManager->GetAllocator(), vkBuffer, vmaBufferAllocation);
+	auto buffer = Create<CVkBuffer>(device, deviceManager->GetAllocator(), vkBuffer, vmaBufferAllocation, bufferCreateInfo.size);
 
 	LinearAllocationPage* page = new LinearAllocationPage(buffer.get(), ResourceState::GenericRead);
 	return page;

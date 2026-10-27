@@ -63,4 +63,10 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(VkDescriptor
 	};
 }
 
+
+DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
+{
+	return DescriptorAllocation{};
+}
+
 } // namespace Luna::VK

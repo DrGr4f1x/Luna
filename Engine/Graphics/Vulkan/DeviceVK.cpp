@@ -119,69 +119,87 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCa
 
 DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
 {
+	auto descriptorHeap = make_shared<DescriptorHeap>();
+	descriptorHeap->m_type = DescriptorHeapType::Resource;
+
 	// Descriptor heap
 	if (UseDescriptorHeap())
 	{
-		// TODO: Implement me
-		assert(false);
+		auto impl = new DescriptorHeapImpl;
 
-		return nullptr;
+		impl->m_device = this;
+
+		impl->m_descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numImageDescriptors, numBufferDescriptors);
+
+		impl->m_bindInfo.heapRange.address = impl->m_descriptorHeap->GetBufferDeviceAddress();
+		impl->m_bindInfo.heapRange.size = impl->m_descriptorHeap->GetSize();
+		impl->m_bindInfo.reservedRangeOffset = impl->m_bindInfo.heapRange.size - m_caps.descriptorHeap.minResourceHeapReservedRange;
+		impl->m_bindInfo.reservedRangeSize = m_caps.descriptorHeap.minResourceHeapReservedRange;
+
+		descriptorHeap->m_impl = impl;
 	}
 	// Descriptor buffer (fallback)
 	else
 	{
-		auto descriptorHeap = make_shared<DescriptorHeap>();
-
 		auto impl = new DescriptorBufferImpl;
 
 		impl->m_device = this;
 		impl->m_alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
 		impl->m_bufferSize = m_caps.descriptorBuffer.descriptorSize.largest * (numImageDescriptors + numBufferDescriptors);
+
 		auto buffer = CreateDescriptorBuffer(DescriptorHeapType::Resource, impl->m_bufferSize);
 		ThrowIfFailed(vmaMapMemory(buffer->GetAllocator(), buffer->GetAllocation(), (void**)&impl->m_bufferHead));
+
 		impl->m_descriptorBuffer = buffer;
 		impl->m_initialHead = impl->m_bufferHead;
 		impl->m_freeSpace = impl->m_bufferSize;
 
-		descriptorHeap->m_type = DescriptorHeapType::Resource;
 		descriptorHeap->m_impl = impl;
-
-		return descriptorHeap;
 	}
+	return descriptorHeap;
 }
 
 
 DescriptorHeapPtr Device::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
 {
+	auto descriptorHeap = make_shared<DescriptorHeap>();
+	descriptorHeap->m_type = DescriptorHeapType::Sampler;
+
 	// Descriptor heap
 	if (UseDescriptorHeap())
 	{
-		// TODO: Implement me
-		assert(false);
+		auto impl = new DescriptorHeapImpl;
 
-		return nullptr;
+		impl->m_descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Sampler, numSamplerDescriptors, 0);
+
+		impl->m_bindInfo.heapRange.address = impl->m_descriptorHeap->GetBufferDeviceAddress();
+		impl->m_bindInfo.heapRange.size = impl->m_descriptorHeap->GetSize();
+		impl->m_bindInfo.reservedRangeOffset = impl->m_bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRange;
+		impl->m_bindInfo.reservedRangeSize = m_caps.descriptorHeap.minSamplerHeapReservedRange;
+
+		descriptorHeap->m_impl = impl;
 	}
 	// Descriptor buffer (fallback)
 	else
 	{
-		auto descriptorHeap = make_shared<DescriptorHeap>();
-
 		auto impl = new DescriptorBufferImpl;
 
 		impl->m_device = this;
 		impl->m_alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
 		impl->m_bufferSize = m_caps.descriptorBuffer.descriptorSize.sampler * numSamplerDescriptors;
+
 		auto buffer = CreateDescriptorBuffer(DescriptorHeapType::Sampler, impl->m_bufferSize);
 		ThrowIfFailed(vmaMapMemory(buffer->GetAllocator(), buffer->GetAllocation(), (void**)&impl->m_bufferHead));
+
 		impl->m_descriptorBuffer = buffer;
 		impl->m_initialHead = impl->m_bufferHead;
 		impl->m_freeSpace = impl->m_bufferSize;
 
-		descriptorHeap->m_type = DescriptorHeapType::Sampler;
+		
 		descriptorHeap->m_impl = impl;
-
-		return descriptorHeap;
 	}
+
+	return descriptorHeap;
 }
 
 
@@ -411,7 +429,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 	SetDebugName(*m_device, vkBuffer, gpuBufferDesc.name);
 
-	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation);
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferCreateInfo.size);
 
 	wil::com_ptr<CVkBufferView> bufferView;
 	if (isTypedBuffer)
@@ -1422,7 +1440,7 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorHeapBuffer(DescriptorHeapType ty
 
 	uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
 
-	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferDeviceAddress);
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferSize, bufferDeviceAddress);
 
 	return buffer;
 }
@@ -1456,7 +1474,7 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorHeapType type, 
 
 	uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
 
-	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferDeviceAddress);
+	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, sizeInBytes, bufferDeviceAddress);
 
 	return buffer;
 }
@@ -1842,6 +1860,34 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 }
 
 
+uint32_t ComputePushDataSize(const RootSignatureDesc& rootSignatureDesc)
+{
+	uint32_t pushDataSize = 0;
+
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{
+		switch (rootParameter.parameterType)
+		{
+		case RootParameterType::RootConstants:
+			pushDataSize += rootParameter.num32BitConstants / 4;
+			break;
+
+		case RootParameterType::RootCBV:
+		case RootParameterType::RootSRV:
+		case RootParameterType::RootUAV:
+			pushDataSize += sizeof(uint64_t);
+			break;
+
+		case RootParameterType::Table:
+			pushDataSize += 4 * (uint32_t)rootParameter.table.size();
+			break;
+		}
+	}
+
+	return pushDataSize;
+}
+
+
 void ProcessRootConstants(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
 {
 	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
@@ -1866,7 +1912,7 @@ void ProcessRootConstants(const RootParameter& rootParameter, const uint32_t ind
 
 void ProcessRootBuffers(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
 {
-	VkSpirvResourceTypeFlagBitsEXT spirvType{};
+	VkSpirvResourceTypeFlagsEXT spirvType{};
 	switch (rootParameter.parameterType)
 	{
 	case RootParameterType::RootCBV: spirvType = VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT; break;
@@ -1896,13 +1942,36 @@ void ProcessRootBuffers(const RootParameter& rootParameter, const uint32_t index
 
 void ProcessTable(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
 {
+	for (const auto& range : rootParameter.table)
+	{
+		const uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
 
+		const VkSpirvResourceTypeFlagsEXT spirvType = GetSpirvResourceType(range.descriptorType);
+
+		VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+			.descriptorSet = index,
+			.firstBinding = binding,
+			.bindingCount = range.numDescriptors,
+			.resourceMask = spirvType,
+			.source = VK_DESCRIPTOR_MAPPING_SOURCE_HEAP_WITH_PUSH_INDEX_EXT,
+			.sourceData = {
+				.pushAddressOffset = pushDataOffset
+			}
+		};
+	}
 }
 
 
 void Device::ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureDesc)
 {
+	// Compute required push data size
+	const uint32_t pushDataSize = ComputePushDataSize(rootSignatureDesc);
+	assert(pushDataSize <= m_caps.descriptorHeap.maxPushDataSize);
+
 	vector<VkDescriptorSetAndBindingMappingEXT> setAndBindingMappings;
+
 	uint32_t rootParameterIndex = 0;
 	uint32_t pushDataOffset = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
@@ -1912,6 +1981,7 @@ void Device::ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureD
 		case RootParameterType::RootConstants:
 			// Push data
 			// VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT
+			ProcessRootConstants(rootParameter, rootParameterIndex, setAndBindingMappings, pushDataOffset);
 			break;
 
 		case RootParameterType::RootCBV:
@@ -1919,10 +1989,12 @@ void Device::ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureD
 		case RootParameterType::RootUAV:
 			// Push address
 			// VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT
+			ProcessRootBuffers(rootParameter, rootParameterIndex, setAndBindingMappings, pushDataOffset);
 			break;
 
 		case RootParameterType::Table:
 			// Everything else
+			ProcessTable(rootParameter, rootParameterIndex, setAndBindingMappings, pushDataOffset);
 			break;
 		}
 
