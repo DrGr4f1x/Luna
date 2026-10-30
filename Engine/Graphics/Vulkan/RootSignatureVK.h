@@ -20,6 +20,29 @@ namespace Luna::VK
 class Device;
 
 
+struct PushDataEntry
+{
+	uint16_t offset{ 0 };
+	uint16_t size{ 0 };
+};
+
+using PushDataLayout = std::vector<std::vector<PushDataEntry>>;
+
+
+struct ShaderSetAndBindingMapping
+{
+	std::vector<VkDescriptorSetAndBindingMappingEXT> compute;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> vertex;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> hull;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> domain;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> geometry;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> pixel;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> amplification;
+	std::vector<VkDescriptorSetAndBindingMappingEXT> mesh;
+
+};
+
+
 class RootSignature : public IRootSignature
 {
 	friend class Device;
@@ -43,6 +66,13 @@ public:
 	uint32_t GetPushDescriptorSetIndex() const noexcept { return m_pushDescriptorSetIndex; }
 	uint32_t GetPushDescriptorBinding(uint32_t rootParamIndex) const noexcept;
 
+	// Push data (for DescriptorHeap)
+	const PushDataLayout& GetPushDataLayout() const noexcept { return m_pushDataLayout; }
+	const std::vector<PushDataEntry>& GetPushDataEntries(uint32_t index) const { return m_pushDataLayout[index]; }
+	uint32_t GetPushDataSize() const noexcept { return m_pushDataSize; }
+
+	// Shader set and binding mapping (for DescriptorHeap)
+	const ShaderSetAndBindingMapping& GetShaderSetAndBindingMapping() const { return m_shaderSetAndBindingMapping; }
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
@@ -58,6 +88,13 @@ protected:
 	// Push descriptors
 	uint32_t m_pushDescriptorSetIndex{ (uint32_t)-1 };
 	std::unordered_map<uint32_t, uint32_t> m_pushDescriptorBindingMap;
+
+	// Push data
+	PushDataLayout m_pushDataLayout;
+	uint32_t m_pushDataSize{ 0 };
+
+	// Shader set and binding mapping
+	ShaderSetAndBindingMapping m_shaderSetAndBindingMapping;
 };
 
 } // namespace Luna::VK

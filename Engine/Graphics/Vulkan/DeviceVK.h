@@ -96,7 +96,8 @@ protected:
 
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
-	void ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureDesc);
+	RootSignaturePtr CreateRootSignatureForDescriptorBuffer(const RootSignatureDesc& rootSignatureDesc);
+	RootSignaturePtr CreateRootSignatureForDescriptorHeap(const RootSignatureDesc& rootSignatureDesc);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

@@ -20,6 +20,7 @@
 #include "DescriptorHeapVK.h"
 #include "DescriptorSetVK.h"
 #include "DeviceManagerVK.h"
+#include "DeviceVK.h"
 #include "GpuBufferVK.h"
 #include "QueryHeapVK.h"
 #include "QueueVK.h"
@@ -139,7 +140,15 @@ CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 	, m_dynamicResourceDescriptorBuffer{ *this, DescriptorHeapType::Resource }
 	, m_dynamicSamplerDescriptorBuffer{ *this, DescriptorHeapType::Sampler }
 {
+	m_useDescriptorHeaps = GetVulkanDevice()->UseDescriptorHeap();
+
 	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
+	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
+
+	m_maxPushDataSize = GetVulkanDevice()->GetDeviceCaps().descriptorHeap.maxPushDataSize;
+	m_pushData = make_unique<std::byte[]>(m_maxPushDataSize);
+	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
+	m_currentPushDataSize = 0;
 }
 
 
@@ -210,6 +219,9 @@ void CommandContextVK::Reset()
 	m_renderingArea.extent.height = 0;
 
 	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
+	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
+	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
+	m_currentPushDataSize = 0;
 }
 
 
@@ -882,6 +894,9 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 		// TODO: Store this in the RootSignatureManager so we don't have to do this conversion every frame.
 		m_shaderStages[i] = ShaderStageToVulkan(rootParameter.shaderVisibility);
 	}
+
+	// Push data
+	m_currentPushDataSize = rootSignatureVK->GetPushDataSize();
 }
 
 

@@ -253,6 +253,17 @@ private:
 	// Descriptor buffers
 	VkBuffer m_currentDescriptorBuffers[2];
 
+	// Descriptor heaps
+	bool m_useDescriptorHeaps{ false };
+	VkBuffer m_currentDescriptorHeaps[2];
+	VkBindHeapInfoEXT m_currentDescriptorHeapBindings[2];
+
+	// Push data
+	std::unique_ptr<std::byte[]> m_pushData;
+	uint32_t m_maxPushDataSize{ 0 };
+	uint32_t m_currentPushDataSize{ 0 };
+	bool m_pushDataDirty{ false };
+
 	const IRootSignature* m_graphicsRootSignature{ nullptr };
 	const IRootSignature* m_computeRootSignature{ nullptr };
 	bool m_isComputeRootSignatureParsed{ false };

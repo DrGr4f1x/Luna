@@ -527,264 +527,15 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 		return nullptr;
 	}
 
-	ProcessRootSignatureForHeap(rootSignatureDesc);
-
-	vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
-	vector<DescriptorSetLayoutPtr> descriptorSetLayouts;
-	vector<VkPushConstantRange> vkPushConstantRanges;
-	uint32_t pushConstantOffset{ 0 };
-
-	vkDescriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
-	descriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
-
-	// Push descriptors
-	uint32_t pushDescriptorSetIndex = (uint32_t)-1;
-	vector<pair<uint32_t, RootParameter>> pushDescriptorRootParameters;
-	unordered_map<uint32_t, uint32_t> pushDescriptorBindingMap;
-
-	size_t hashCode = Utility::g_hashStart;
-	size_t resourceDescriptorSetLayoutSize = 0;
-	size_t samplerDescriptorSetLayoutSize = 0;
-
-	uint32_t rootParamIndex = 0;
-	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	if (UseDescriptorHeap())
 	{
-		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
-
-		uint32_t offset = 0;
-
-		DescriptorSetLayoutPtr descriptorSetLayout;
-
-		// Push constants
-		if (rootParameter.parameterType == RootParameterType::RootConstants)
-		{
-			VkPushConstantRange& vkPushConstantRange = vkPushConstantRanges.emplace_back();
-			vkPushConstantRange.offset = pushConstantOffset;
-			vkPushConstantRange.size = rootParameter.num32BitConstants * 4;
-			vkPushConstantRange.stageFlags = shaderStageFlags;
-			pushConstantOffset += rootParameter.num32BitConstants * 4;
-
-			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
-
-			auto emptySetLayout = GetOrCreateEmptyDescriptorSetLayout();
-			vkDescriptorSetLayouts[rootParamIndex] = emptySetLayout->GetDescriptorSetLayout()->Get();
-			descriptorSetLayouts[rootParamIndex] = emptySetLayout;
-		}
-		// Push descriptors
-		else if (IsRootDescriptorType(rootParameter.parameterType))
-		{
-			if (pushDescriptorSetIndex == (uint32_t)-1)
-			{
-				pushDescriptorSetIndex = rootParamIndex;
-			}
-
-			pushDescriptorRootParameters.push_back(make_pair(rootParamIndex, rootParameter));
-
-			pushDescriptorBindingMap[rootParamIndex] = rootParameter.startRegister;
-
-			auto emptySetLayout = GetOrCreateEmptyDescriptorSetLayout();
-			vkDescriptorSetLayouts[rootParamIndex] = emptySetLayout->GetDescriptorSetLayout()->Get();
-			descriptorSetLayouts[rootParamIndex] = emptySetLayout;
-		}
-		// Regular descriptor sets
-		else if (rootParameter.parameterType == RootParameterType::Table)
-		{
-			descriptorSetLayout = CreateDescriptorSetLayout(rootParameter);
-
-			hashCode = Utility::HashMerge(hashCode, descriptorSetLayout->GetHashCode());
-			if (rootParameter.IsSamplerTable())
-			{
-				samplerDescriptorSetLayoutSize += descriptorSetLayout->GetDescriptorSetSize();
-			}
-			else
-			{
-				resourceDescriptorSetLayoutSize += descriptorSetLayout->GetDescriptorSetSize();
-			}
-
-
-			vkDescriptorSetLayouts[rootParamIndex] = descriptorSetLayout->GetDescriptorSetLayout()->Get();
-			descriptorSetLayouts[rootParamIndex] = descriptorSetLayout;
-		}
-
-		++rootParamIndex;
-	}
-
-	// Setup static samplers
-	vector<SamplerPtr> samplers;
-	uint32_t staticSamplerDescriptorSetIndex = ~0u;
-	if (!rootSignatureDesc.staticSamplers.empty())
-	{
-		vector<VkSampler> vkSamplers;
-		vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
-
-		// First, loop over the StaticSamplerDescs to create the Samplers and store off the 
-		// internal VkSamplers, which we need to populate the VkDescriptorSetLayoutBindings
-		// in the second pass
-		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
-		{
-			auto sampler = CreateSampler(staticSamplerDesc.samplerDesc);
-			samplers.push_back(sampler);
-
-			Sampler* samplerVK = (Sampler*)sampler.get();
-
-			vkSamplers.push_back(samplerVK->GetSampler());
-		}
-
-		// Now, loop over the StaticSamplerDescs again to create the VkDescriptorSetLayoutBindings
-		uint32_t currentBinding = 0;
-		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
-		{
-			VkDescriptorSetLayoutBinding vkBinding{
-				.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
-				.descriptorCount = 1,
-				.stageFlags = VK_SHADER_STAGE_ALL,
-				.pImmutableSamplers = &vkSamplers[currentBinding]
-			};
-
-			if (staticSamplerDesc.shaderRegister == APPEND_REGISTER)
-			{
-				vkBinding.binding = currentBinding++;
-			}
-			else
-			{
-				vkBinding.binding = staticSamplerDesc.shaderRegister;
-				currentBinding = vkBinding.binding + 1;
-			}
-
-			vkBinding.binding += GetRegisterShift(DescriptorType::Sampler);
-
-			vkLayoutBindings.push_back(vkBinding);
-
-			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
-		}
-
-		// Create the descriptor set layout for the static samplers
-		VkDescriptorSetLayoutCreateInfo createInfo{
-			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
-			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
-			.pBindings		= vkLayoutBindings.data()
-		};
-
-		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
-		vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
-		vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
-
-		staticSamplerDescriptorSetIndex = (uint32_t)descriptorSetLayouts.size();
-
-		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
-		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
-		descriptorSetLayouts.push_back(descriptorSetLayout);
-	}
-	
-	// Setup push descriptor set
-	if (!pushDescriptorRootParameters.empty())
-	{
-		assert(pushDescriptorSetIndex != (uint32_t)-1);
-
-		vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
-
-		for (const auto& rootParameterPair : pushDescriptorRootParameters)
-		{
-			uint32_t rootIndex = rootParameterPair.first;
-			const auto& rootParameter = rootParameterPair.second;
-
-			const uint32_t regShift = GetRegisterShift(rootParameter.parameterType);
-
-			VkDescriptorSetLayoutBinding vkBinding{
-				.binding				= regShift + rootParameter.startRegister,
-				.descriptorType			= RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
-				.descriptorCount		= 1,
-				.stageFlags				= ShaderStageToVulkan(rootParameter.shaderVisibility),
-				.pImmutableSamplers		= nullptr
-			};
-			vkLayoutBindings.push_back(vkBinding);
-
-			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
-		}
-
-		// Create the descriptor set layout for the push descriptors
-		VkDescriptorSetLayoutCreateInfo createInfo{
-			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
-			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
-			.pBindings		= vkLayoutBindings.data()
-		};
-
-		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
-		vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
-
-		vkDescriptorSetLayouts[pushDescriptorSetIndex] = vkDescriptorSetLayout;
-
-		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
-		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
-		descriptorSetLayouts[pushDescriptorSetIndex] = descriptorSetLayout;
-	}
-
-	// Finally, create the VkPipelineLayout
-	CVkPipelineLayout** pipelineLayoutRef = nullptr;
-	bool firstCompile = false;
-	{
-		lock_guard<mutex> CS(m_pipelineLayoutMutex);
-
-		auto iter = m_pipelineLayoutHashMap.find(hashCode);
-
-		// Reserve space so the next inquiry will find that someone got here first.
-		if (iter == m_pipelineLayoutHashMap.end())
-		{
-			pipelineLayoutRef = m_pipelineLayoutHashMap[hashCode].addressof();
-			firstCompile = true;
-		}
-		else
-		{
-			pipelineLayoutRef = iter->second.addressof();
-		}
-	}
-
-	wil::com_ptr<CVkPipelineLayout> pPipelineLayout;
-
-	if (firstCompile)
-	{
-		VkPipelineLayoutCreateInfo createInfo{
-			.sType						= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount				= (uint32_t)vkDescriptorSetLayouts.size(),
-			.pSetLayouts				= vkDescriptorSetLayouts.data(),
-			.pushConstantRangeCount		= (uint32_t)vkPushConstantRanges.size(),
-			.pPushConstantRanges		= vkPushConstantRanges.data()
-		};
-
-		VkPipelineLayout vkPipelineLayout{ VK_NULL_HANDLE };
-		vkCreatePipelineLayout(*m_device, &createInfo, nullptr, &vkPipelineLayout);
-
-		pPipelineLayout = Create<CVkPipelineLayout>(m_device.get(), vkPipelineLayout);
-
-		m_pipelineLayoutHashMap[hashCode] = pPipelineLayout;
-
-		assert(*pipelineLayoutRef == pPipelineLayout);
+		assert(false);
+		return CreateRootSignatureForDescriptorHeap(rootSignatureDesc);
 	}
 	else
 	{
-		while (*pipelineLayoutRef == nullptr)
-		{
-			this_thread::yield();
-		}
-		pPipelineLayout = *pipelineLayoutRef;
+		return CreateRootSignatureForDescriptorBuffer(rootSignatureDesc);
 	}
-
-	auto rootSignature = std::make_shared<RootSignature>();
-
-	rootSignature->m_device = this;
-	rootSignature->m_desc = rootSignatureDesc;
-	rootSignature->m_pipelineLayout = pPipelineLayout;
-	rootSignature->m_descriptorSetLayouts = descriptorSetLayouts;
-	rootSignature->m_staticSamplers = samplers;
-	rootSignature->m_staticSamplerDescriptorSetIndex = staticSamplerDescriptorSetIndex;
-	rootSignature->m_pushDescriptorSetIndex = pushDescriptorSetIndex;
-	rootSignature->m_pushDescriptorBindingMap = pushDescriptorBindingMap;
-	rootSignature->m_resourceDescriptorSetLayoutSize = resourceDescriptorSetLayoutSize;
-	rootSignature->m_samplerDescriptorSetLayoutSize = samplerDescriptorSetLayoutSize;
-
-	return rootSignature;
 }
 
 
@@ -1860,27 +1611,341 @@ TexturePtr Device::CreateTextureSimple(TextureDimension dimension, const Texture
 }
 
 
-uint32_t ComputePushDataSize(const RootSignatureDesc& rootSignatureDesc)
+RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignatureDesc& rootSignatureDesc)
 {
-	uint32_t pushDataSize = 0;
+	vector<VkDescriptorSetLayout> vkDescriptorSetLayouts;
+	vector<DescriptorSetLayoutPtr> descriptorSetLayouts;
+	vector<VkPushConstantRange> vkPushConstantRanges;
+	uint32_t pushConstantOffset{ 0 };
 
+	vkDescriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
+	descriptorSetLayouts.resize(rootSignatureDesc.rootParameters.size());
+
+	// Push descriptors
+	uint32_t pushDescriptorSetIndex = (uint32_t)-1;
+	vector<pair<uint32_t, RootParameter>> pushDescriptorRootParameters;
+	unordered_map<uint32_t, uint32_t> pushDescriptorBindingMap;
+
+	size_t hashCode = Utility::g_hashStart;
+	size_t resourceDescriptorSetLayoutSize = 0;
+	size_t samplerDescriptorSetLayoutSize = 0;
+
+	uint32_t rootParamIndex = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
-		switch (rootParameter.parameterType)
+		VkShaderStageFlags shaderStageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility);
+
+		uint32_t offset = 0;
+
+		DescriptorSetLayoutPtr descriptorSetLayout;
+
+		// Push constants
+		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
-		case RootParameterType::RootConstants:
-			pushDataSize += rootParameter.num32BitConstants / 4;
-			break;
+			VkPushConstantRange& vkPushConstantRange = vkPushConstantRanges.emplace_back();
+			vkPushConstantRange.offset = pushConstantOffset;
+			vkPushConstantRange.size = rootParameter.num32BitConstants * 4;
+			vkPushConstantRange.stageFlags = shaderStageFlags;
+			pushConstantOffset += rootParameter.num32BitConstants * 4;
 
-		case RootParameterType::RootCBV:
-		case RootParameterType::RootSRV:
-		case RootParameterType::RootUAV:
-			pushDataSize += sizeof(uint64_t);
-			break;
+			hashCode = Utility::HashState(&vkPushConstantRange, 1, hashCode);
 
-		case RootParameterType::Table:
-			pushDataSize += 4 * (uint32_t)rootParameter.table.size();
-			break;
+			auto emptySetLayout = GetOrCreateEmptyDescriptorSetLayout();
+			vkDescriptorSetLayouts[rootParamIndex] = emptySetLayout->GetDescriptorSetLayout()->Get();
+			descriptorSetLayouts[rootParamIndex] = emptySetLayout;
+		}
+		// Push descriptors
+		else if (IsRootDescriptorType(rootParameter.parameterType))
+		{
+			if (pushDescriptorSetIndex == (uint32_t)-1)
+			{
+				pushDescriptorSetIndex = rootParamIndex;
+			}
+
+			pushDescriptorRootParameters.push_back(make_pair(rootParamIndex, rootParameter));
+
+			pushDescriptorBindingMap[rootParamIndex] = rootParameter.startRegister;
+
+			auto emptySetLayout = GetOrCreateEmptyDescriptorSetLayout();
+			vkDescriptorSetLayouts[rootParamIndex] = emptySetLayout->GetDescriptorSetLayout()->Get();
+			descriptorSetLayouts[rootParamIndex] = emptySetLayout;
+		}
+		// Regular descriptor sets
+		else if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			descriptorSetLayout = CreateDescriptorSetLayout(rootParameter);
+
+			hashCode = Utility::HashMerge(hashCode, descriptorSetLayout->GetHashCode());
+			if (rootParameter.IsSamplerTable())
+			{
+				samplerDescriptorSetLayoutSize += descriptorSetLayout->GetDescriptorSetSize();
+			}
+			else
+			{
+				resourceDescriptorSetLayoutSize += descriptorSetLayout->GetDescriptorSetSize();
+			}
+
+
+			vkDescriptorSetLayouts[rootParamIndex] = descriptorSetLayout->GetDescriptorSetLayout()->Get();
+			descriptorSetLayouts[rootParamIndex] = descriptorSetLayout;
+		}
+
+		++rootParamIndex;
+	}
+
+	// Setup static samplers
+	vector<SamplerPtr> samplers;
+	uint32_t staticSamplerDescriptorSetIndex = ~0u;
+	if (!rootSignatureDesc.staticSamplers.empty())
+	{
+		vector<VkSampler> vkSamplers;
+		vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
+
+		// First, loop over the StaticSamplerDescs to create the Samplers and store off the 
+		// internal VkSamplers, which we need to populate the VkDescriptorSetLayoutBindings
+		// in the second pass
+		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
+		{
+			auto sampler = CreateSampler(staticSamplerDesc.samplerDesc);
+			samplers.push_back(sampler);
+
+			Sampler* samplerVK = (Sampler*)sampler.get();
+
+			vkSamplers.push_back(samplerVK->GetSampler());
+		}
+
+		// Now, loop over the StaticSamplerDescs again to create the VkDescriptorSetLayoutBindings
+		uint32_t currentBinding = 0;
+		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
+		{
+			VkDescriptorSetLayoutBinding vkBinding{
+				.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+				.descriptorCount = 1,
+				.stageFlags = VK_SHADER_STAGE_ALL,
+				.pImmutableSamplers = &vkSamplers[currentBinding]
+			};
+
+			if (staticSamplerDesc.shaderRegister == APPEND_REGISTER)
+			{
+				vkBinding.binding = currentBinding++;
+			}
+			else
+			{
+				vkBinding.binding = staticSamplerDesc.shaderRegister;
+				currentBinding = vkBinding.binding + 1;
+			}
+
+			vkBinding.binding += GetRegisterShift(DescriptorType::Sampler);
+
+			vkLayoutBindings.push_back(vkBinding);
+
+			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
+		}
+
+		// Create the descriptor set layout for the static samplers
+		VkDescriptorSetLayoutCreateInfo createInfo{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
+			.bindingCount = (uint32_t)vkLayoutBindings.size(),
+			.pBindings = vkLayoutBindings.data()
+		};
+
+		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
+		vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
+		vkDescriptorSetLayouts.push_back(vkDescriptorSetLayout);
+
+		staticSamplerDescriptorSetIndex = (uint32_t)descriptorSetLayouts.size();
+
+		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
+		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
+		descriptorSetLayouts.push_back(descriptorSetLayout);
+	}
+
+	// Setup push descriptor set
+	if (!pushDescriptorRootParameters.empty())
+	{
+		assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+		vector<VkDescriptorSetLayoutBinding> vkLayoutBindings;
+
+		for (const auto& rootParameterPair : pushDescriptorRootParameters)
+		{
+			uint32_t rootIndex = rootParameterPair.first;
+			const auto& rootParameter = rootParameterPair.second;
+
+			const uint32_t regShift = GetRegisterShift(rootParameter.parameterType);
+
+			VkDescriptorSetLayoutBinding vkBinding{
+				.binding = regShift + rootParameter.startRegister,
+				.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
+				.descriptorCount = 1,
+				.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility),
+				.pImmutableSamplers = nullptr
+			};
+			vkLayoutBindings.push_back(vkBinding);
+
+			hashCode = Utility::HashState(&vkBinding, 1, hashCode);
+		}
+
+		// Create the descriptor set layout for the push descriptors
+		VkDescriptorSetLayoutCreateInfo createInfo{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
+			.bindingCount = (uint32_t)vkLayoutBindings.size(),
+			.pBindings = vkLayoutBindings.data()
+		};
+
+		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
+		vkCreateDescriptorSetLayout(*m_device, &createInfo, nullptr, &vkDescriptorSetLayout);
+
+		vkDescriptorSetLayouts[pushDescriptorSetIndex] = vkDescriptorSetLayout;
+
+		auto descriptorSetLayout = make_shared<DescriptorSetLayout>();
+		descriptorSetLayout->m_descriptorSetLayout = Create<CVkDescriptorSetLayout>(m_device.get(), vkDescriptorSetLayout);
+		descriptorSetLayouts[pushDescriptorSetIndex] = descriptorSetLayout;
+	}
+
+	// Finally, create the VkPipelineLayout
+	CVkPipelineLayout** pipelineLayoutRef = nullptr;
+	bool firstCompile = false;
+	{
+		lock_guard<mutex> CS(m_pipelineLayoutMutex);
+
+		auto iter = m_pipelineLayoutHashMap.find(hashCode);
+
+		// Reserve space so the next inquiry will find that someone got here first.
+		if (iter == m_pipelineLayoutHashMap.end())
+		{
+			pipelineLayoutRef = m_pipelineLayoutHashMap[hashCode].addressof();
+			firstCompile = true;
+		}
+		else
+		{
+			pipelineLayoutRef = iter->second.addressof();
+		}
+	}
+
+	wil::com_ptr<CVkPipelineLayout> pPipelineLayout;
+
+	if (firstCompile)
+	{
+		VkPipelineLayoutCreateInfo createInfo{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+			.setLayoutCount = (uint32_t)vkDescriptorSetLayouts.size(),
+			.pSetLayouts = vkDescriptorSetLayouts.data(),
+			.pushConstantRangeCount = (uint32_t)vkPushConstantRanges.size(),
+			.pPushConstantRanges = vkPushConstantRanges.data()
+		};
+
+		VkPipelineLayout vkPipelineLayout{ VK_NULL_HANDLE };
+		vkCreatePipelineLayout(*m_device, &createInfo, nullptr, &vkPipelineLayout);
+
+		pPipelineLayout = Create<CVkPipelineLayout>(m_device.get(), vkPipelineLayout);
+
+		m_pipelineLayoutHashMap[hashCode] = pPipelineLayout;
+
+		assert(*pipelineLayoutRef == pPipelineLayout);
+	}
+	else
+	{
+		while (*pipelineLayoutRef == nullptr)
+		{
+			this_thread::yield();
+		}
+		pPipelineLayout = *pipelineLayoutRef;
+	}
+
+	auto rootSignature = std::make_shared<RootSignature>();
+
+	rootSignature->m_device = this;
+	rootSignature->m_desc = rootSignatureDesc;
+	rootSignature->m_pipelineLayout = pPipelineLayout;
+	rootSignature->m_descriptorSetLayouts = descriptorSetLayouts;
+	rootSignature->m_staticSamplers = samplers;
+	rootSignature->m_staticSamplerDescriptorSetIndex = staticSamplerDescriptorSetIndex;
+	rootSignature->m_pushDescriptorSetIndex = pushDescriptorSetIndex;
+	rootSignature->m_pushDescriptorBindingMap = pushDescriptorBindingMap;
+	rootSignature->m_resourceDescriptorSetLayoutSize = resourceDescriptorSetLayoutSize;
+	rootSignature->m_samplerDescriptorSetLayoutSize = samplerDescriptorSetLayoutSize;
+
+	return rootSignature;
+}
+
+
+static uint32_t ComputePushDataLayout(PushDataLayout& layout, const RootSignatureDesc& rootSignatureDesc)
+{
+	// Initialize layout
+	layout.clear();
+	for (size_t i = 0; i < rootSignatureDesc.rootParameters.size(); ++i)
+	{
+		layout.push_back({ PushDataEntry{} });
+	}
+
+	uint32_t i = 0;
+	uint16_t offset = 0;
+
+	// Process root descriptors
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{
+		if (IsRootDescriptorType(rootParameter.parameterType))
+		{
+			uint16_t size = (uint16_t)sizeof(uint64_t);
+			PushDataEntry entry{ .offset = offset, .size = size };
+			offset += size;
+
+			layout[i] = { entry };
+		}
+		++i;
+	}
+
+	// Process root constants
+	i = 0;
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{
+		if (rootParameter.parameterType == RootParameterType::RootConstants)
+		{
+			uint16_t size = rootParameter.num32BitConstants * 4;
+			PushDataEntry entry{ .offset = offset, .size = size };
+			offset += size;
+
+			layout[i] = { entry };
+		}
+		++i;
+	}
+
+	// Process tables
+	i = 0;
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{
+		if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			vector<PushDataEntry> entries;
+			for (const auto& range : rootParameter.table)
+			{
+				uint16_t size = (uint16_t)sizeof(uint32_t);
+				PushDataEntry entry{ .offset = offset, .size = size };
+				offset += size;
+
+				entries.push_back(entry);
+			}
+
+			layout[i] = entries;
+		}
+		++i;
+	}
+
+	// Compute total size of push data
+	uint32_t pushDataSize = 0;
+	uint16_t maxOffset = 0;
+	for (const auto& entries : layout)
+	{
+		for (const auto& entry : entries)
+		{
+			if (entry.offset >= maxOffset)
+			{
+				maxOffset = entry.offset;
+				pushDataSize = maxOffset + entry.size;
+			}
 		}
 	}
 
@@ -1888,29 +1953,50 @@ uint32_t ComputePushDataSize(const RootSignatureDesc& rootSignatureDesc)
 }
 
 
-void ProcessRootConstants(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
+static void AddShaderSetAndBindingMapping(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, VkDescriptorSetAndBindingMappingEXT setAndBindingMapping, ShaderStage shaderStage)
+{
+	auto AddMapping = [setAndBindingMapping, shaderStage](std::vector<VkDescriptorSetAndBindingMappingEXT>& shaderSet, const ShaderStage target)
+		{
+			if (HasFlag(shaderStage, target))
+			{
+				shaderSet.push_back(setAndBindingMapping);
+			}
+		};
+
+	AddMapping(shaderSetAndBindingMapping.compute, ShaderStage::Compute);
+	AddMapping(shaderSetAndBindingMapping.vertex, ShaderStage::Vertex);
+	AddMapping(shaderSetAndBindingMapping.hull, ShaderStage::Hull);
+	AddMapping(shaderSetAndBindingMapping.domain, ShaderStage::Domain);
+	AddMapping(shaderSetAndBindingMapping.geometry, ShaderStage::Geometry);
+	AddMapping(shaderSetAndBindingMapping.pixel, ShaderStage::Pixel);
+	AddMapping(shaderSetAndBindingMapping.amplification, ShaderStage::Amplification);
+	AddMapping(shaderSetAndBindingMapping.mesh, ShaderStage::Mesh);
+}
+
+
+static void ProcessRootConstants(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const RootParameter& rootParameter, const uint32_t index, const PushDataLayout& pushDataLayout)
 {
 	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
+	const uint32_t pushDataOffset = pushDataLayout[index][0].offset;
 
 	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
 	{
-		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
-		.descriptorSet	= index,
-		.firstBinding	= binding,
-		.bindingCount	= 1,
-		.resourceMask	= VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT,
-		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT,
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+		.descriptorSet = index,
+		.firstBinding = binding,
+		.bindingCount = 1,
+		.resourceMask = VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT,
+		.source = VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT,
 		.sourceData = {
 			.pushDataOffset = pushDataOffset
 		}
 	};
 
-	pushDataOffset += 4 * rootParameter.num32BitConstants;
-	setAndBindingMappings.push_back(setAndBindingMapping);
+	AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
 }
 
 
-void ProcessRootBuffers(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
+static void ProcessRootBuffers(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const RootParameter& rootParameter, const uint32_t index, const PushDataLayout& pushDataLayout)
 {
 	VkSpirvResourceTypeFlagsEXT spirvType{};
 	switch (rootParameter.parameterType)
@@ -1921,22 +2007,69 @@ void ProcessRootBuffers(const RootParameter& rootParameter, const uint32_t index
 	}
 
 	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
+	const uint32_t pushDataOffset = pushDataLayout[index][0].offset;
 
 	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
 	{
-		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
-		.descriptorSet	= index,
-		.firstBinding	= binding,
-		.bindingCount	= 1,
-		.resourceMask	= spirvType,
-		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT,
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+		.descriptorSet = index,
+		.firstBinding = binding,
+		.bindingCount = 1,
+		.resourceMask = spirvType,
+		.source = VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT,
 		.sourceData = {
 			.pushAddressOffset = pushDataOffset
 		}
 	};
 
-	pushDataOffset += sizeof(uint64_t);
-	setAndBindingMappings.push_back(setAndBindingMapping);
+	AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
+}
+
+
+static void ComputeShaderSetAndBindingMappings(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const PushDataLayout& pushDataLayout, const RootSignatureDesc& rootSignatureDesc)
+{ 
+	uint32_t index = 0;
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{
+		switch (rootParameter.parameterType)
+		{
+		case RootParameterType::RootConstants:
+			ProcessRootConstants(shaderSetAndBindingMapping, rootParameter, index, pushDataLayout);
+			break;
+
+		case RootParameterType::RootCBV:
+		case RootParameterType::RootSRV:
+		case RootParameterType::RootUAV:
+			ProcessRootBuffers(shaderSetAndBindingMapping, rootParameter, index, pushDataLayout);
+			break;
+
+		case RootParameterType::Table:
+			assert(false);
+			// TODO - This is where we left off.
+			break;
+		}
+
+		++index;
+	}
+}
+
+
+RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const RootSignatureDesc& rootSignatureDesc)
+{
+	auto rootSignature = std::make_shared<RootSignature>();
+
+	rootSignature->m_device = this;
+	rootSignature->m_desc = rootSignatureDesc;
+
+	// Compute push data layout
+	uint32_t pushDataSize = ComputePushDataLayout(rootSignature->m_pushDataLayout, rootSignatureDesc);
+	assert(pushDataSize <= m_caps.descriptorHeap.maxPushDataSize);
+	rootSignature->m_pushDataSize = pushDataSize;
+
+	// Compute shader set and binding mappings
+	ComputeShaderSetAndBindingMappings(rootSignature->m_shaderSetAndBindingMapping, rootSignature->m_pushDataLayout, rootSignatureDesc);
+
+	return rootSignature;
 }
 
 
@@ -1960,45 +2093,6 @@ void ProcessTable(const RootParameter& rootParameter, const uint32_t index, vect
 				.pushAddressOffset = pushDataOffset
 			}
 		};
-	}
-}
-
-
-void Device::ProcessRootSignatureForHeap(const RootSignatureDesc& rootSignatureDesc)
-{
-	// Compute required push data size
-	const uint32_t pushDataSize = ComputePushDataSize(rootSignatureDesc);
-	assert(pushDataSize <= m_caps.descriptorHeap.maxPushDataSize);
-
-	vector<VkDescriptorSetAndBindingMappingEXT> setAndBindingMappings;
-
-	uint32_t rootParameterIndex = 0;
-	uint32_t pushDataOffset = 0;
-	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
-	{ 
-		switch (rootParameter.parameterType)
-		{
-		case RootParameterType::RootConstants:
-			// Push data
-			// VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT
-			ProcessRootConstants(rootParameter, rootParameterIndex, setAndBindingMappings, pushDataOffset);
-			break;
-
-		case RootParameterType::RootCBV:
-		case RootParameterType::RootSRV:
-		case RootParameterType::RootUAV:
-			// Push address
-			// VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT
-			ProcessRootBuffers(rootParameter, rootParameterIndex, setAndBindingMappings, pushDataOffset);
-			break;
-
-		case RootParameterType::Table:
-			// Everything else
-			ProcessTable(rootParameter, rootParameterIndex, setAndBindingMappings, pushDataOffset);
-			break;
-		}
-
-		++rootParameterIndex;
 	}
 }
 
