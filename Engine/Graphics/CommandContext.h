@@ -117,9 +117,7 @@ public:
 	virtual void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2]) = 0;
 
 	// Descriptor heaps
-	virtual void BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap) = 0;
-	virtual void BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap) = 0;
-	virtual void BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap) = 0;
+	virtual void BindDescriptorHeap(IDescriptorHeap* descriptorHeap) = 0;
 
 	// Root constants in DirectX, push constants in Vulkan
 	virtual void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) = 0;
@@ -286,9 +284,7 @@ public:
 	void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiner[2]);
 
 	// Descriptor heaps
-	void BindResourceDescriptorHeap(const DescriptorHeapPtr& descriptorHeap);
-	void BindSamplerDescriptorHeap(const DescriptorHeapPtr& descriptorHeap);
-	void BindDescriptorHeaps(const DescriptorHeapPtr& resourceDescriptorHeap, const DescriptorHeapPtr& samplerDescriptorHeap);
+	void BindDescriptorHeap(const DescriptorHeapPtr& descriptorHeap);
 
 	// Root constants in DirectX, push constants in Vulkan
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
@@ -356,9 +352,7 @@ public:
 	void SetComputePipeline(const ComputePipelinePtr& computePipeline);
 
 	// Descriptor heaps
-	void BindResourceDescriptorHeap(const DescriptorHeapPtr& descriptorHeap);
-	void BindSamplerDescriptorHeap(const DescriptorHeapPtr& descriptorHeap);
-	void BindDescriptorHeaps(const DescriptorHeapPtr& resourceDescriptorHeap, const DescriptorHeapPtr& samplerDescriptorHeap);
+	void BindDescriptorHeap(const DescriptorHeapPtr& descriptorHeap);
 
 	// Root constants in DirectX, push constants in Vulkan
 	void SetConstantArray(uint32_t rootIndex, uint32_t numConstants, const void* constants);
@@ -706,21 +700,9 @@ inline void GraphicsContext::SetShadingRate(ShadingRate shadingRate, const Shadi
 }
 
 
-inline void GraphicsContext::BindResourceDescriptorHeap(const DescriptorHeapPtr& descriptorHeap)
+inline void GraphicsContext::BindDescriptorHeap(const DescriptorHeapPtr& descriptorHeap)
 {
-	m_contextImpl->BindResourceDescriptorHeap(descriptorHeap.get());
-}
-
-
-inline void GraphicsContext::BindSamplerDescriptorHeap(const DescriptorHeapPtr& descriptorHeap)
-{
-	m_contextImpl->BindSamplerDescriptorHeap(descriptorHeap.get());
-}
-
-
-inline void GraphicsContext::BindDescriptorHeaps(const DescriptorHeapPtr& resourceDescriptorHeap, const DescriptorHeapPtr& samplerDescriptorHeap)
-{
-	m_contextImpl->BindDescriptorHeaps(resourceDescriptorHeap.get(), samplerDescriptorHeap.get());
+	m_contextImpl->BindDescriptorHeap(descriptorHeap.get());
 }
 
 
@@ -948,21 +930,9 @@ inline void ComputeContext::SetComputePipeline(const ComputePipelinePtr& compute
 }
 
 
-inline void ComputeContext::BindResourceDescriptorHeap(const DescriptorHeapPtr& descriptorHeap)
+inline void ComputeContext::BindDescriptorHeap(const DescriptorHeapPtr& descriptorHeap)
 {
-	m_contextImpl->BindResourceDescriptorHeap(descriptorHeap.get());
-}
-
-
-inline void ComputeContext::BindSamplerDescriptorHeap(const DescriptorHeapPtr& descriptorHeap)
-{
-	m_contextImpl->BindSamplerDescriptorHeap(descriptorHeap.get());
-}
-
-
-inline void ComputeContext::BindDescriptorHeaps(const DescriptorHeapPtr& resourceDescriptorHeap, const DescriptorHeapPtr& samplerDescriptorHeap)
-{
-	m_contextImpl->BindDescriptorHeaps(resourceDescriptorHeap.get(), samplerDescriptorHeap.get());
+	m_contextImpl->BindDescriptorHeap(descriptorHeap.get());
 }
 
 

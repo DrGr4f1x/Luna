@@ -256,15 +256,9 @@ ColorBufferPtr Application::GetColorBuffer() const
 }
 
 
-DescriptorHeapPtr Application::GetDefaultResourceDescriptorHeap() const
+DescriptorHeapPtr Application::GetDefaultDescriptorHeap() const
 {
-	return m_defaultResourceDescriptorHeap;
-}
-
-
-DescriptorHeapPtr Application::GetDefaultSamplerDescriptorHeap() const
-{
-	return m_defaultSamplerDescriptorHeap;
+	return m_defaultDescriptorHeap;
 }
 
 
@@ -301,9 +295,8 @@ void Application::SetDefaultSearchPaths()
 
 void Application::CreateDeviceDependentResources()
 {
-	// Create default descriptor heaps
-	m_defaultResourceDescriptorHeap = CreateResourceDescriptorHeap(1024, 1024);
-	m_defaultSamplerDescriptorHeap = CreateSamplerDescriptorHeap(1024);
+	// Create default descriptor heap
+	m_defaultDescriptorHeap = CreateDescriptorHeap(m_numImageDescriptors, m_numBufferDescriptors, m_numSamplerDescriptors);
 
 	if (m_grid)
 	{
@@ -312,7 +305,7 @@ void Application::CreateDeviceDependentResources()
 
 	if (m_uiOverlay)
 	{
-		m_uiOverlay->SetDescriptorHeaps(m_defaultResourceDescriptorHeap, m_defaultSamplerDescriptorHeap);
+		m_uiOverlay->SetDescriptorHeap(m_defaultDescriptorHeap);
 		m_uiOverlay->CreateDeviceDependentResources();
 	}
 }
@@ -372,15 +365,9 @@ void Application::UpdateWindowSize()
 }
 
 
-DescriptorHeapPtr Application::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
+DescriptorHeapPtr Application::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
-	return m_deviceManager->GetDevice()->CreateResourceDescriptorHeap(numImageDescriptors, numBufferDescriptors);
-}
-
-
-DescriptorHeapPtr Application::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
-{
-	return m_deviceManager->GetDevice()->CreateSamplerDescriptorHeap(numSamplerDescriptors);
+	return m_deviceManager->GetDevice()->CreateDescriptorHeap(numImages, numBuffers, numSamplers);
 }
 
 

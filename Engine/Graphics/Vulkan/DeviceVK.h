@@ -47,8 +47,7 @@ public:
 
 	const Luna::DeviceCaps& GetDeviceCaps() const override { return m_caps; }
 
-	DescriptorHeapPtr CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors);
-	DescriptorHeapPtr CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors);
+	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers) override;
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;

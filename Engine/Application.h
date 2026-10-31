@@ -113,17 +113,15 @@ public:
 	ColorBufferPtr GetColorBuffer() const;
 	DepthBufferPtr GetDepthBuffer() const { return m_depthBuffer; }
 
-	// Default descriptor heaps
-	DescriptorHeapPtr GetDefaultResourceDescriptorHeap() const;
-	DescriptorHeapPtr GetDefaultSamplerDescriptorHeap() const;
+	// Default descriptor heap
+	DescriptorHeapPtr GetDefaultDescriptorHeap() const;
 
 	const Camera* GetCamera() const { return &m_camera; }
 
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 	// Wrappers for graphics resource creation
-	DescriptorHeapPtr CreateResourceDescriptorHeap(uint32_t numImageDescirptors, uint32_t numBufferDescriptors);
-	DescriptorHeapPtr CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors);
+	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers);
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
@@ -196,9 +194,11 @@ protected:
 	// Rendering resources
 	DepthBufferPtr m_depthBuffer;
 
-	// Default descriptor heaps
-	DescriptorHeapPtr m_defaultResourceDescriptorHeap;
-	DescriptorHeapPtr m_defaultSamplerDescriptorHeap;
+	// Default descriptor heap
+	DescriptorHeapPtr m_defaultDescriptorHeap;
+	uint32_t m_numImageDescriptors{ 1024 };
+	uint32_t m_numBufferDescriptors{ 1024 };
+	uint32_t m_numSamplerDescriptors{ 64 };
 
 	Color m_gridColor{ DirectX::Colors::WhiteSmoke };
 

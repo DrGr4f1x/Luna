@@ -33,12 +33,12 @@ enum class VulkanDescriptorHeapClass
 class IDescriptorHeapImpl
 {
 public:
-	virtual DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
+	virtual DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
 	virtual VulkanDescriptorHeapClass GetClass() const = 0;
 
-	virtual VkBuffer GetBuffer() const = 0;
+	virtual VkBuffer GetBuffer(DescriptorHeapType heapType) const = 0;
 
-	virtual VkBindHeapInfoEXT GetBindInfo() const = 0;
+	virtual VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const = 0;
 };
 
 
@@ -48,10 +48,10 @@ class DescriptorHeap : public IDescriptorHeap
 
 public:
 	virtual ~DescriptorHeap();
-	DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout);
+	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout);
 	VulkanDescriptorHeapClass GetClass() const;
 
-	VkBuffer GetBuffer() const;
+	VkBuffer GetBuffer(DescriptorHeapType heapType) const;
 
 private:
 	IDescriptorHeapImpl* m_impl{ nullptr };
@@ -63,21 +63,28 @@ class DescriptorBufferImpl : public IDescriptorHeapImpl
 	friend class Device;
 
 public:
-	DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) override;
+	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) override;
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
 
-	VkBuffer GetBuffer() const override { return m_descriptorBuffer->Get(); }
+	VkBuffer GetBuffer(DescriptorHeapType heapType) const override;
 
-	VkBindHeapInfoEXT GetBindInfo() const override { return VkBindHeapInfoEXT{ .sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT }; }
+	VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const override { return VkBindHeapInfoEXT{ .sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT }; }
 
 protected:
 	Device* m_device{ nullptr };
-	size_t m_alignment{ 0 };
-	size_t m_bufferSize{ 0 };
-	size_t m_freeSpace{ 0 };
-	std::byte* m_bufferHead{ nullptr };
-	std::byte* m_initialHead{ nullptr };
-	wil::com_ptr<CVkBuffer> m_descriptorBuffer;
+
+	struct BufferState
+	{
+		size_t alignment{ 0 };
+		size_t bufferSize{ 0 };
+		size_t freeSpace{ 0 };
+		std::byte* bufferHead{ nullptr };
+		std::byte* initialHead{ nullptr };
+		wil::com_ptr<CVkBuffer> descriptorBuffer;
+	};
+
+	BufferState m_resourceBuffer;
+	BufferState m_samplerBuffer;
 };
 
 
@@ -86,12 +93,12 @@ class DescriptorHeapImpl : public IDescriptorHeapImpl
 	friend class Device;
 
 public:
-	DescriptorAllocation AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout) override;
+	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) override;
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Heap; }
 
-	VkBuffer GetBuffer() const { return m_descriptorHeap->Get(); }
+	VkBuffer GetBuffer(DescriptorHeapType heapType) const override;
 
-	VkBindHeapInfoEXT GetBindInfo() const override { return m_bindInfo; }
+	VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const override;
 
 protected:
 	Device* m_device{ nullptr };

@@ -53,26 +53,16 @@ Device::Device(ID3D12Device* device, D3D12MA::Allocator* allocator)
 }
 
 
-DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
+DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
-	auto heap = CreateDescriptorHeap(numImageDescriptors + numBufferDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+	auto descriptorHeap = make_shared<DescriptorHeap>();
 
-	auto descriptorHeap = make_shared<DescriptorHeap>(DescriptorHeapType::Resource);
-	descriptorHeap->m_heap = heap;
-	descriptorHeap->m_numDescriptors = numImageDescriptors + numBufferDescriptors;
-	descriptorHeap->Initialize();
+	descriptorHeap->m_resourceHeap.heap = CreateDescriptorHeapInternal(numImages + numBuffers, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+	descriptorHeap->m_resourceHeap.numDescriptors = numImages + numBuffers;
+	
+	descriptorHeap->m_samplerHeap.heap = CreateDescriptorHeapInternal(numSamplers, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true);
+	descriptorHeap->m_samplerHeap.numDescriptors = numSamplers;
 
-	return descriptorHeap;
-}
-
-
-DescriptorHeapPtr Device::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
-{
-	auto heap = CreateDescriptorHeap(numSamplerDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true);
-
-	auto descriptorHeap = make_shared<DescriptorHeap>(DescriptorHeapType::Sampler);
-	descriptorHeap->m_heap = heap;
-	descriptorHeap->m_numDescriptors = numSamplerDescriptors;
 	descriptorHeap->Initialize();
 
 	return descriptorHeap;
@@ -1281,7 +1271,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE Device::GetDescriptorHandleCPU(const DescriptorHandl
 }
 
 
-wil::com_ptr<ID3D12DescriptorHeap> Device::CreateDescriptorHeap(uint32_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shaderVisisble)
+wil::com_ptr<ID3D12DescriptorHeap> Device::CreateDescriptorHeapInternal(uint32_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shaderVisisble)
 {
 	auto desc = D3D12_DESCRIPTOR_HEAP_DESC{
 		.Type				= type,

@@ -23,26 +23,36 @@ class DescriptorHeap : public IDescriptorHeap
 public:
 	friend class Device;
 
-	explicit DescriptorHeap(DescriptorHeapType type);
+	bool HasAvailableSpace(DescriptorHeapType type, uint32_t count) const;
+	uint32_t GetNumFreeDescriptors(DescriptorHeapType type) const;
 
-	bool HasAvailableSpace(uint32_t count) const { return count <= m_numFreeDescriptors; }
-	uint32_t GetNumFreeDescriptors() const { return m_numFreeDescriptors; }
+	ID3D12DescriptorHeap* GetHeap(DescriptorHeapType type) const;
 
-	ID3D12DescriptorHeap* GetHeap() const { return m_heap.get(); }
-
-	DescriptorHandle AllocateDescriptors(uint32_t numDescriptors);
+	DescriptorHandle AllocateDescriptors(DescriptorHeapType type, uint32_t numDescriptors);
 
 protected:
 	void Initialize();
 
 protected:
-	wil::com_ptr<ID3D12DescriptorHeap> m_heap;
-	D3D12_CPU_DESCRIPTOR_HANDLE m_currentHandle{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
-	uint32_t m_numDescriptors;
-	uint32_t m_descriptorSize{ 0 };
-	uint32_t m_numFreeDescriptors;
-	DescriptorHandle m_firstHandle;
-	DescriptorHandle m_nextFreeHandle;
+
+	struct HeapState
+	{
+		wil::com_ptr<ID3D12DescriptorHeap> heap;
+
+		D3D12_CPU_DESCRIPTOR_HANDLE currentHandle{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
+		uint32_t numDescriptors;
+		uint32_t descriptorSize{ 0 };
+		uint32_t numFreeDescriptors;
+		DescriptorHandle firstHandle;
+		DescriptorHandle nextFreeHandle;
+	};
+
+	HeapState m_resourceHeap;
+	HeapState m_samplerHeap;
+
+protected:
+	HeapState& GetHeapState(DescriptorHeapType type) { return (type == DescriptorHeapType::Resource) ? m_resourceHeap : m_samplerHeap; }
+	const HeapState& GetHeapState(DescriptorHeapType type) const { return (type == DescriptorHeapType::Resource) ? m_resourceHeap : m_samplerHeap; }
 };
 
 } // namespace Luna::DX12

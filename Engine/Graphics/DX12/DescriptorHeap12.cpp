@@ -15,32 +15,55 @@
 namespace Luna::DX12
 {
 
-DescriptorHeap::DescriptorHeap(DescriptorHeapType type)
+bool DescriptorHeap::HasAvailableSpace(DescriptorHeapType type, uint32_t count) const
 {
-	m_type = type;
+	const HeapState& heapState = GetHeapState(type);
+	return count <= heapState.numFreeDescriptors;
 }
 
 
-DescriptorHandle DescriptorHeap::AllocateDescriptors(uint32_t numDescriptors)
+uint32_t DescriptorHeap::GetNumFreeDescriptors(DescriptorHeapType type) const
 {
-	assert_msg(HasAvailableSpace(numDescriptors), "Descriptor Heap out of space.  Increase heap size.");
-	DescriptorHandle ret = m_nextFreeHandle;
-	m_nextFreeHandle += numDescriptors * m_descriptorSize;
-	m_numFreeDescriptors -= numDescriptors;
+	return GetHeapState(type).numFreeDescriptors;
+}
+
+
+ID3D12DescriptorHeap* DescriptorHeap::GetHeap(DescriptorHeapType type) const
+{
+	return GetHeapState(type).heap.get();
+}
+
+
+DescriptorHandle DescriptorHeap::AllocateDescriptors(DescriptorHeapType type, uint32_t numDescriptors)
+{
+	assert_msg(HasAvailableSpace(type, numDescriptors), "Descriptor Heap out of space.  Increase heap size.");
+
+	HeapState& heapState = GetHeapState(type);
+
+	DescriptorHandle ret = heapState.nextFreeHandle;
+	heapState.nextFreeHandle += numDescriptors * heapState.descriptorSize;
+	heapState.numFreeDescriptors -= numDescriptors;
 	return ret;
 }
 
 
 void DescriptorHeap::Initialize()
 {
-	D3D12_DESCRIPTOR_HEAP_TYPE heapType = m_type == DescriptorHeapType::Resource ?
-		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV :
-		D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+	// Resource heap
+	{
+		m_resourceHeap.descriptorSize = GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_resourceHeap.numFreeDescriptors = m_resourceHeap.numDescriptors;
+		m_resourceHeap.firstHandle = DescriptorHandle(m_resourceHeap.heap->GetCPUDescriptorHandleForHeapStart(), m_resourceHeap.heap->GetGPUDescriptorHandleForHeapStart());
+		m_resourceHeap.nextFreeHandle = m_resourceHeap.firstHandle;
+	}
 
-	m_descriptorSize = GetDescriptorHandleIncrementSize(heapType);
-	m_numFreeDescriptors = m_numDescriptors;
-	m_firstHandle = DescriptorHandle(m_heap->GetCPUDescriptorHandleForHeapStart(), m_heap->GetGPUDescriptorHandleForHeapStart());
-	m_nextFreeHandle = m_firstHandle;
+	// Sampler heap
+	{
+		m_samplerHeap.descriptorSize = GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+		m_samplerHeap.numFreeDescriptors = m_samplerHeap.numDescriptors;
+		m_samplerHeap.firstHandle = DescriptorHandle(m_samplerHeap.heap->GetCPUDescriptorHandleForHeapStart(), m_samplerHeap.heap->GetGPUDescriptorHandleForHeapStart());
+		m_samplerHeap.nextFreeHandle = m_samplerHeap.firstHandle;
+	}
 }
 
 } // namespace Luna::DX12

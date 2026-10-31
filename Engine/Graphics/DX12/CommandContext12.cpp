@@ -711,26 +711,9 @@ void CommandContext12::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 }
 
 
-void CommandContext12::BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap)
+void CommandContext12::BindDescriptorHeap(IDescriptorHeap* descriptorHeap)
 {
 	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap;
-
-	SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, descriptorHeap12->GetHeap());
-}
-
-
-void CommandContext12::BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap)
-{
-	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap;
-
-	SetDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, descriptorHeap12->GetHeap());
-}
-
-
-void CommandContext12::BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap)
-{
-	DescriptorHeap* resourceDescriptorHeap12 = (DescriptorHeap*)resourceDescriptorHeap;
-	DescriptorHeap* samplerDescriptorHeap12 = (DescriptorHeap*)samplerDescriptorHeap;
 
 	D3D12_DESCRIPTOR_HEAP_TYPE heapTypes[] = {
 		D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
@@ -738,8 +721,8 @@ void CommandContext12::BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHe
 	};
 
 	ID3D12DescriptorHeap* heaps[] = {
-		resourceDescriptorHeap12->GetHeap(),
-		samplerDescriptorHeap12->GetHeap()
+		descriptorHeap12->GetHeap(DescriptorHeapType::Resource),
+		descriptorHeap12->GetHeap(DescriptorHeapType::Sampler)
 	};
 	SetDescriptorHeaps(2, heapTypes, heaps);
 }

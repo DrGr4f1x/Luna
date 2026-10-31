@@ -1021,7 +1021,7 @@ void CommandContextVK::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 }
 
 
-void CommandContextVK::BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap)
+void CommandContextVK::BindDescriptorHeap(IDescriptorHeap* descriptorHeap)
 {
 	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap;
 	const auto heapClass = descriptorHeapVK->GetClass();
@@ -1033,53 +1033,11 @@ void CommandContextVK::BindResourceDescriptorHeap(IDescriptorHeap* descriptorHea
 	}
 	else
 	{
-		assert(descriptorHeap->GetType() == DescriptorHeapType::Resource);
-
-		SetDescriptorBuffer(DescriptorHeapType::Resource, descriptorHeapVK->GetBuffer());
-	}
-}
-
-
-void CommandContextVK::BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap)
-{
-	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap;
-	const auto heapClass = descriptorHeapVK->GetClass();
-
-	if (heapClass == VulkanDescriptorHeapClass::Heap)
-	{
-		// TODO: Implement me
-		assert(false);
-	}
-	else
-	{
-		assert(descriptorHeap->GetType() == DescriptorHeapType::Sampler);
-
-		SetDescriptorBuffer(DescriptorHeapType::Sampler, descriptorHeapVK->GetBuffer());
-	}
-}
-
-
-void CommandContextVK::BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap)
-{
-	DescriptorHeap* resourceDescriptorHeapVK = (DescriptorHeap*)resourceDescriptorHeap;
-	DescriptorHeap* samplerDescriptorHeapVK = (DescriptorHeap*)samplerDescriptorHeap;
-
-	assert(resourceDescriptorHeapVK->GetClass() == samplerDescriptorHeapVK->GetClass());
-
-	const auto heapClass = resourceDescriptorHeapVK->GetClass();
-
-	if (heapClass == VulkanDescriptorHeapClass::Heap)
-	{
-		// TODO: Implement me
-		assert(false);
-	}
-	else
-	{
-		assert(resourceDescriptorHeap->GetType() == DescriptorHeapType::Resource);
-		assert(samplerDescriptorHeap->GetType() == DescriptorHeapType::Sampler);
-
 		DescriptorHeapType types[] = { DescriptorHeapType::Resource, DescriptorHeapType::Sampler };
-		VkBuffer buffers[] = { resourceDescriptorHeapVK->GetBuffer(), samplerDescriptorHeapVK->GetBuffer() };
+		VkBuffer buffers[] = { 
+			descriptorHeapVK->GetBuffer(DescriptorHeapType::Resource), 
+			descriptorHeapVK->GetBuffer(DescriptorHeapType::Sampler) 
+		};
 
 		SetDescriptorBuffers(types, buffers);
 	}

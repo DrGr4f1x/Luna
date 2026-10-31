@@ -26,22 +26,8 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 	// Only create a descriptor set for tables
 	assert(rootParam.parameterType == RootParameterType::Table);
 
-	const bool isRootBuffer = IsRootDescriptorType(rootParam.parameterType);
 	const bool isSamplerTable = rootParam.IsSamplerTable();
-
-	if (!isRootBuffer)
-	{
-		assert(descriptorHeap);
-
-		if (isSamplerTable)
-		{
-			assert(descriptorHeap->GetType() == DescriptorHeapType::Sampler);
-		}
-		else
-		{
-			assert(descriptorHeap->GetType() == DescriptorHeapType::Resource);
-		}
-	}
+	const DescriptorHeapType heapType = isSamplerTable ? DescriptorHeapType::Sampler : DescriptorHeapType::Resource;
 
 	const uint32_t numDescriptors = rootParam.GetNumDescriptors();
 
@@ -51,15 +37,9 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 		.isSamplerTable = isSamplerTable
 	};
 
-	if (isRootBuffer)
-	{
-		descriptorSetDesc.descriptorHandle = DescriptorHandle{};
-	}
-	else
-	{
-		DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap.get();
-		descriptorSetDesc.descriptorHandle = descriptorHeap12->AllocateDescriptors(numDescriptors);
-	}
+	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap.get();
+	descriptorSetDesc.descriptorHandle = descriptorHeap12->AllocateDescriptors(heapType, numDescriptors);
+	
 
 	return m_device->CreateDescriptorSet(descriptorSetDesc);
 }

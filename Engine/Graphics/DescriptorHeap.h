@@ -19,11 +19,7 @@ namespace Luna
 class IDescriptorHeap
 {
 public:
-
-	DescriptorHeapType GetType() const { return m_type; }
-
-protected:
-	DescriptorHeapType m_type;
+	virtual ~IDescriptorHeap() {}
 };
 
 using DescriptorHeapPtr = std::shared_ptr<IDescriptorHeap>;

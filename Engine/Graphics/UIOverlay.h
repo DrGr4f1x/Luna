@@ -38,7 +38,7 @@ public:
 	void Update();
 	void Render(GraphicsContext& context);
 
-	void SetDescriptorHeaps(DescriptorHeapPtr resourceDescriptorHeap, DescriptorHeapPtr samplerDescriptorHeap);
+	void SetDescriptorHeap(DescriptorHeapPtr descriptorHeap);
 
 	void CreateDeviceDependentResources();
 	void CreateWindowSizeDependentResources();
@@ -60,7 +60,7 @@ protected:
 	void InitRootSignature();
 	void InitPipeline();
 	void InitFontTex();
-	void InitDescriptorHeaps();
+	void InitDescriptorHeap();
 	void InitResourceSet();
 
 	void UpdateConstantBuffer();
@@ -90,8 +90,7 @@ protected:
 	VSConstants m_vsConstants{};
 	GpuBufferPtr m_vsConstantBuffer;
 
-	DescriptorHeapPtr m_resourceDescriptorHeap;
-	DescriptorHeapPtr m_samplerDescriptorHeap;
+	DescriptorHeapPtr m_descriptorHeap;
 
 	ResourceSet	m_resources;
 

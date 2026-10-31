@@ -117,10 +117,9 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCa
 }
 
 
-DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors)
+DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
 	auto descriptorHeap = make_shared<DescriptorHeap>();
-	descriptorHeap->m_type = DescriptorHeapType::Resource;
 
 	// Descriptor heap
 	if (UseDescriptorHeap())
@@ -129,7 +128,7 @@ DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescript
 
 		impl->m_device = this;
 
-		impl->m_descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numImageDescriptors, numBufferDescriptors);
+		impl->m_descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numImages, numBuffers);
 
 		impl->m_bindInfo.heapRange.address = impl->m_descriptorHeap->GetBufferDeviceAddress();
 		impl->m_bindInfo.heapRange.size = impl->m_descriptorHeap->GetSize();
@@ -144,61 +143,31 @@ DescriptorHeapPtr Device::CreateResourceDescriptorHeap(uint32_t numImageDescript
 		auto impl = new DescriptorBufferImpl;
 
 		impl->m_device = this;
-		impl->m_alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
-		impl->m_bufferSize = m_caps.descriptorBuffer.descriptorSize.largest * (numImageDescriptors + numBufferDescriptors);
 
-		auto buffer = CreateDescriptorBuffer(DescriptorHeapType::Resource, impl->m_bufferSize);
-		ThrowIfFailed(vmaMapMemory(buffer->GetAllocator(), buffer->GetAllocation(), (void**)&impl->m_bufferHead));
+		// Resource buffer
+		impl->m_resourceBuffer.alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
+		impl->m_resourceBuffer.bufferSize = m_caps.descriptorBuffer.descriptorSize.largest * (numImages + numBuffers);
 
-		impl->m_descriptorBuffer = buffer;
-		impl->m_initialHead = impl->m_bufferHead;
-		impl->m_freeSpace = impl->m_bufferSize;
+		auto resourceBuffer = CreateDescriptorBuffer(DescriptorHeapType::Resource, impl->m_resourceBuffer.bufferSize);
+		ThrowIfFailed(vmaMapMemory(resourceBuffer->GetAllocator(), resourceBuffer->GetAllocation(), (void**)&impl->m_resourceBuffer.bufferHead));
 
-		descriptorHeap->m_impl = impl;
-	}
-	return descriptorHeap;
-}
+		impl->m_resourceBuffer.descriptorBuffer = resourceBuffer;
+		impl->m_resourceBuffer.initialHead = impl->m_resourceBuffer.bufferHead;
+		impl->m_resourceBuffer.freeSpace = impl->m_resourceBuffer.bufferSize;
 
+		// Sampler buffer
+		impl->m_samplerBuffer.alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
+		impl->m_samplerBuffer.bufferSize = m_caps.descriptorBuffer.descriptorSize.sampler * numSamplers;
 
-DescriptorHeapPtr Device::CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors)
-{
-	auto descriptorHeap = make_shared<DescriptorHeap>();
-	descriptorHeap->m_type = DescriptorHeapType::Sampler;
+		auto samplerBuffer = CreateDescriptorBuffer(DescriptorHeapType::Sampler, impl->m_samplerBuffer.bufferSize);
+		ThrowIfFailed(vmaMapMemory(samplerBuffer->GetAllocator(), samplerBuffer->GetAllocation(), (void**)&impl->m_samplerBuffer.bufferHead));
 
-	// Descriptor heap
-	if (UseDescriptorHeap())
-	{
-		auto impl = new DescriptorHeapImpl;
-
-		impl->m_descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Sampler, numSamplerDescriptors, 0);
-
-		impl->m_bindInfo.heapRange.address = impl->m_descriptorHeap->GetBufferDeviceAddress();
-		impl->m_bindInfo.heapRange.size = impl->m_descriptorHeap->GetSize();
-		impl->m_bindInfo.reservedRangeOffset = impl->m_bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRange;
-		impl->m_bindInfo.reservedRangeSize = m_caps.descriptorHeap.minSamplerHeapReservedRange;
+		impl->m_samplerBuffer.descriptorBuffer = samplerBuffer;
+		impl->m_samplerBuffer.initialHead = impl->m_samplerBuffer.bufferHead;
+		impl->m_samplerBuffer.freeSpace = impl->m_samplerBuffer.bufferSize;
 
 		descriptorHeap->m_impl = impl;
 	}
-	// Descriptor buffer (fallback)
-	else
-	{
-		auto impl = new DescriptorBufferImpl;
-
-		impl->m_device = this;
-		impl->m_alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
-		impl->m_bufferSize = m_caps.descriptorBuffer.descriptorSize.sampler * numSamplerDescriptors;
-
-		auto buffer = CreateDescriptorBuffer(DescriptorHeapType::Sampler, impl->m_bufferSize);
-		ThrowIfFailed(vmaMapMemory(buffer->GetAllocator(), buffer->GetAllocation(), (void**)&impl->m_bufferHead));
-
-		impl->m_descriptorBuffer = buffer;
-		impl->m_initialHead = impl->m_bufferHead;
-		impl->m_freeSpace = impl->m_bufferSize;
-
-		
-		descriptorHeap->m_impl = impl;
-	}
-
 	return descriptorHeap;
 }
 
@@ -911,7 +880,9 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 	assert(vkDescriptorSetLayout != VK_NULL_HANDLE);
 
 	// TODO: Handle sampler descriptor sets
-	DescriptorAllocation allocation = descriptorHeap->AllocateDescriptorMemory(vkDescriptorSetLayout);
+	const bool isSamplerSet = descriptorSetDesc.rootParameter.IsSamplerTable();
+	const DescriptorHeapType heapType = isSamplerSet ? DescriptorHeapType::Sampler : DescriptorHeapType::Resource;
+	DescriptorAllocation allocation = descriptorHeap->AllocateDescriptorMemory(heapType, vkDescriptorSetLayout);
 
 	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
 	descriptorSet->m_allocation = allocation;

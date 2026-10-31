@@ -97,9 +97,7 @@ public:
 	void SetShadingRate(ShadingRate shadingRate, const ShadingRateCombiner shadingRateCombiners[2]) override;
 
 	// Descriptor heaps
-	void BindResourceDescriptorHeap(IDescriptorHeap* descriptorHeap);
-	void BindSamplerDescriptorHeap(IDescriptorHeap* descriptorHeap);
-	void BindDescriptorHeaps(IDescriptorHeap* resourceDescriptorHeap, IDescriptorHeap* samplerDescriptorHeap);
+	void BindDescriptorHeap(IDescriptorHeap* descriptorHeap) override;
 
 	// Root constants
 	void SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset) override;

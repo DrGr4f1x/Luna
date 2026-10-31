@@ -24,9 +24,9 @@ DescriptorHeap::~DescriptorHeap()
 }
 
 
-DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
+DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
-	return m_impl->AllocateDescriptorMemory(vkDescriptorSetLayout);
+	return m_impl->AllocateDescriptorMemory(heapType, vkDescriptorSetLayout);
 }
 
 
@@ -36,37 +36,61 @@ VulkanDescriptorHeapClass DescriptorHeap::GetClass() const
 }
 
 
-VkBuffer DescriptorHeap::GetBuffer() const
+VkBuffer DescriptorHeap::GetBuffer(DescriptorHeapType heapType) const
 {
-	return m_impl->GetBuffer();
+	return m_impl->GetBuffer(heapType);
 }
 
 
-DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
+DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
-	assert(m_bufferSize > 0);
+	BufferState& bufferState = (heapType == DescriptorHeapType::Resource) ?
+		m_resourceBuffer :
+		m_samplerBuffer;
+
+	assert(bufferState.bufferSize > 0);
 
 	VkDeviceSize size{ 0 };
 	vkGetDescriptorSetLayoutSizeEXT(m_device->GetVulkanDevice(), vkDescriptorSetLayout, &size);
 
-	size_t alignedSize = Math::AlignUp(size, m_alignment);
-	assert(m_freeSpace >= alignedSize);
+	size_t alignedSize = Math::AlignUp(size, bufferState.alignment);
+	assert(bufferState.freeSpace >= alignedSize);
 
-	std::byte* allocation = m_bufferHead;
-	m_bufferHead += alignedSize;
+	std::byte* allocation = bufferState.bufferHead;
+	bufferState.bufferHead += alignedSize;
 
-	m_freeSpace -= alignedSize;
+	bufferState.freeSpace -= alignedSize;
 
 	return DescriptorAllocation{
 		.mem		= allocation,
-		.offset		= (size_t)(allocation - m_initialHead)
+		.offset		= (size_t)(allocation - bufferState.initialHead)
 	};
 }
 
 
-DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(VkDescriptorSetLayout vkDescriptorSetLayout)
+VkBuffer DescriptorBufferImpl::GetBuffer(DescriptorHeapType heapType) const
+{
+	return (heapType == DescriptorHeapType::Resource) ? 
+		m_resourceBuffer.descriptorBuffer->Get() :
+		m_samplerBuffer.descriptorBuffer->Get();
+}
+
+
+DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	return DescriptorAllocation{};
+}
+
+
+VkBuffer DescriptorHeapImpl::GetBuffer(DescriptorHeapType heapType) const
+{
+	return m_descriptorHeap->Get();
+}
+
+
+VkBindHeapInfoEXT DescriptorHeapImpl::GetBindInfo(DescriptorHeapType heapType) const
+{
+	return m_bindInfo;
 }
 
 } // namespace Luna::VK

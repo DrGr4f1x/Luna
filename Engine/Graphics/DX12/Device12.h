@@ -41,8 +41,7 @@ public:
 
 	const DeviceCaps& GetDeviceCaps() const override { return m_caps; }
 
-	DescriptorHeapPtr CreateResourceDescriptorHeap(uint32_t numImageDescriptors, uint32_t numBufferDescriptors);
-	DescriptorHeapPtr CreateSamplerDescriptorHeap(uint32_t numSamplerDescriptors);
+	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers);
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -80,7 +79,7 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorHandleCPU(const DescriptorHandle2 handle);
 
 protected:
-	wil::com_ptr<ID3D12DescriptorHeap> CreateDescriptorHeap(uint32_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shaderVisible);
+	wil::com_ptr<ID3D12DescriptorHeap> CreateDescriptorHeapInternal(uint32_t numDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool shaderVisible);
 
 	wil::com_ptr<D3D12MA::Allocation> AllocateBuffer(const GpuBufferDesc& gpuBufferDesc) const;
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);

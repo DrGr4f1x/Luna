@@ -92,7 +92,7 @@ void DeferredApp::Render()
 		context.SetRootSignature(m_gbufferRootSignature);
 		context.SetGraphicsPipeline(m_gbufferPipeline);
 
-		context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+		context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 		// Render floor
 		context.SetRootCBV(0, m_gbufferConstantBuffer);
@@ -307,15 +307,15 @@ void DeferredApp::InitConstantBuffers()
 
 void DeferredApp::InitDescriptorSets()
 {
-	m_armorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_armorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_armorSrvDescriptorSet->SetSRV(0, m_armorColorTexture);
 	m_armorSrvDescriptorSet->SetSRV(1, m_armorNormalTexture);
 
-	m_floorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_floorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_floorSrvDescriptorSet->SetSRV(0, m_floorColorTexture);
 	m_floorSrvDescriptorSet->SetSRV(1, m_floorNormalTexture);
 
-	m_lightingCbvSrvDescriptorSet = m_lightingRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_lightingCbvSrvDescriptorSet = m_lightingRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_lightingCbvSrvDescriptorSet->SetSRV(0, m_positionBuffer);
 	m_lightingCbvSrvDescriptorSet->SetSRV(1, m_normalBuffer);
 	m_lightingCbvSrvDescriptorSet->SetSRV(2, m_albedoBuffer);
