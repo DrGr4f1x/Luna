@@ -41,6 +41,7 @@
     <ClCompile Include="Graphics\DX12\DepthBuffer12.cpp" />
     <ClCompile Include="Graphics\DX12\Descriptor12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorHeap12.cpp" />
+    <ClCompile Include="Graphics\DX12\DescriptorOffsetTable12.cpp" />
     <ClCompile Include="Graphics\DX12\DescriptorSet12.cpp" />
     <ClCompile Include="Graphics\DX12\Device12.cpp" />
     <ClCompile Include="Graphics\DX12\DeviceCaps12.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="Graphics\DX12\Descriptor12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorHandle12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorHeap12.h" />
+    <ClInclude Include="Graphics\DX12\DescriptorOffsetTable12.h" />
     <ClInclude Include="Graphics\DX12\DescriptorSet12.h" />
     <ClInclude Include="Graphics\DX12\Device12.h" />
     <ClInclude Include="Graphics\DX12\DeviceCaps12.h" />

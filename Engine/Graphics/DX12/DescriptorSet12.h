@@ -13,6 +13,7 @@
 #include "Graphics\DescriptorSet.h"
 #include "Graphics\RootSignature.h"
 #include "Graphics\DX12\DescriptorHeap12.h"
+#include "Graphics\DX12\DescriptorOffsetTable12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 

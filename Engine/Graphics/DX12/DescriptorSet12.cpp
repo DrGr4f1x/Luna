@@ -180,25 +180,25 @@ void DescriptorSet::UpdateDescriptor(uint32_t slot, D3D12_CPU_DESCRIPTOR_HANDLE 
 
 uint32_t DescriptorSet::GetSrvOffset(uint32_t srvRegister) const
 {
-	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::SRV, srvRegister);
+	return m_descriptorOffsetTable.GetSrvDescriptorOffset(srvRegister);
 }
 
 
 uint32_t DescriptorSet::GetCbvOffset(uint32_t cbvRegister) const
 {
-	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::CBV, cbvRegister);
+	return m_descriptorOffsetTable.GetCbvDescriptorOffset(cbvRegister);
 }
 
 
 uint32_t DescriptorSet::GetUavOffset(uint32_t uavRegister) const
 {
-	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::UAV, uavRegister);
+	return m_descriptorOffsetTable.GetUavDescriptorOffset(uavRegister);
 }
 
 
 uint32_t DescriptorSet::GetSamplerOffset(uint32_t samplerRegister) const
 {
-	return m_descriptorOffsetTable.GetDescriptorOffset(DescriptorRegisterType::Sampler, samplerRegister);
+	return m_descriptorOffsetTable.GetSamplerDescriptorOffset(samplerRegister);
 }
 
 } // namespace Luna::DX12

@@ -37,13 +37,6 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 }
 
 
-uint32_t RootSignature::GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const
-{
-	assert(false);
-	return (uint32_t)-1;
-}
-
-
 DescriptorSetLayout* RootSignature::GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept
 {
 	if (rootParamIndex < m_descriptorSetLayouts.size())

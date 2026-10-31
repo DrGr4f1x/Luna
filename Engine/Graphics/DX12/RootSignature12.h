@@ -11,6 +11,7 @@
 #pragma once
 
 #include "Graphics\RootSignature.h"
+#include "Graphics\DX12\DescriptorOffsetTable12.h"
 #include "Graphics\DX12\DirectXCommon.h"
 
 
@@ -28,7 +29,10 @@ class RootSignature : public IRootSignature
 public:
 	Luna::DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
 
-	uint32_t GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const override;
+	uint32_t GetSrvDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const;
+	uint32_t GetUavDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const;
+	uint32_t GetCbvDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const;
+	uint32_t GetSamplerDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const;
 
 	ID3D12RootSignature* GetRootSignature() const noexcept { return m_rootSignature.get(); }
 	uint32_t GetDescriptorTableBitmap() const noexcept { return m_descriptorTableBitmap; }

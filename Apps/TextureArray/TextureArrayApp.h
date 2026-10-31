@@ -10,7 +10,7 @@
 
 #pragma once
 
-#define APP_DYNAMIC_DESCRIPTORS 0
+#define APP_DYNAMIC_DESCRIPTORS 1
 
 #include "Application.h"
 #include "CameraController.h"

@@ -291,7 +291,6 @@ void CommandContextVK::TransitionResource(IColorBuffer* colorBuffer, ResourceSta
 {
 	BeginEvent("TransitionResource");
 
-	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
@@ -325,7 +324,6 @@ void CommandContextVK::TransitionResource(IDepthBuffer* depthBuffer, ResourceSta
 {
 	BeginEvent("TransitionResource");
 
-	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
@@ -359,7 +357,6 @@ void CommandContextVK::TransitionResource(IGpuBuffer* gpuBuffer, ResourceState n
 {
 	BeginEvent("TransitionResource");
 
-	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* gpuBufferVK = (GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
@@ -387,7 +384,6 @@ void CommandContextVK::TransitionResource(ITexture* texture, ResourceState newSt
 {
 	BeginEvent("TransitionResource");
 
-	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)texture;
 	assert(textureVK != nullptr);
 
@@ -422,7 +418,6 @@ void CommandContextVK::TransitionResource(ITexture* texture, ResourceState newSt
 
 void CommandContextVK::InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bFlushImmediate)
 {
-	// TODO: Try this with GetPlatformObject()
 	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
@@ -451,7 +446,6 @@ void CommandContextVK::InsertUAVBarrier(const IColorBuffer* colorBuffer, bool bF
 
 void CommandContextVK::InsertUAVBarrier(const IGpuBuffer* gpuBuffer, bool bFlushImmediate)
 {
-	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
@@ -578,7 +572,6 @@ void CommandContextVK::ClearColor(IColorBuffer* colorBuffer, Color clearColor)
 		.layerCount			= colorBuffer->GetArraySize()
 	};
 
-	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBufferVK = (ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
@@ -625,7 +618,6 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 		.layerCount			= depthBuffer->GetArraySize()
 	};
 
-	// TODO: Try this with GetPlatformObject()
 	DepthBuffer* depthBufferVK = (DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
@@ -639,7 +631,6 @@ void CommandContextVK::BeginRendering(const IColorBuffer* colorBuffer)
 {
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
 	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
@@ -657,7 +648,6 @@ void CommandContextVK::BeginRendering(const IColorBuffer* colorBuffer, const IDe
 {
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
 	const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 	assert(colorBufferVK != nullptr);
 
@@ -683,7 +673,6 @@ void CommandContextVK::BeginRendering(const IDepthBuffer* depthBuffer, DepthSten
 {
 	ResetRenderTargets();
 
-	// TODO: Try this with GetPlatformObject()
 	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
@@ -705,7 +694,6 @@ void CommandContextVK::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	uint32_t i = 0;
 	for (const IColorBuffer* colorBuffer : colorBuffers)
 	{
-		// TODO: Try this with GetPlatformObject()
 		const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 		assert(colorBufferVK != nullptr);
 
@@ -730,7 +718,6 @@ void CommandContextVK::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	uint32_t i = 0;
 	for (const IColorBuffer* colorBuffer : colorBuffers)
 	{
-		// TODO: Try this with GetPlatformObject()
 		const ColorBuffer* colorBufferVK = (const ColorBuffer*)colorBuffer;
 		assert(colorBufferVK != nullptr);
 
@@ -743,7 +730,6 @@ void CommandContextVK::BeginRendering(std::span<const IColorBuffer*> colorBuffer
 	}
 	m_numRtvs = (uint32_t)colorBuffers.size();
 
-	// TODO: Try this with GetPlatformObject()
 	const DepthBuffer* depthBufferVK = (const DepthBuffer*)depthBuffer;
 	assert(depthBufferVK != nullptr);
 
@@ -828,7 +814,6 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
-	// TODO: Try this with GetPlatformObject()
 	const RootSignature* rootSignatureVK = (const RootSignature*)rootSignature;
 	assert(rootSignatureVK != nullptr);
 
@@ -904,7 +889,6 @@ void CommandContextVK::SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipe
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	// TODO: Try this with GetPlatformObject()
 	const GraphicsPipeline* graphicsPipelineVK = (const GraphicsPipeline*)graphicsPipeline;
 	assert(graphicsPipelineVK != nullptr);
 
@@ -924,7 +908,6 @@ void CommandContextVK::SetComputePipeline(const IComputePipeline* computePipelin
 {
 	m_graphicsPipelineLayout = VK_NULL_HANDLE;
 
-	// TODO: Try this with GetPlatformObject()
 	const ComputePipeline* computePipelineVK = (const ComputePipeline*)computePipeline;
 	assert(computePipelineVK != nullptr);
 
@@ -942,7 +925,6 @@ void CommandContextVK::SetMeshletPipeline(const IMeshletPipeline* meshletPipelin
 {
 	m_computePipelineLayout = VK_NULL_HANDLE;
 
-	// TODO: Try this with GetPlatformObject()
 	const MeshletPipeline* meshletPipelineVK = (const MeshletPipeline*)meshletPipeline;
 	assert(meshletPipelineVK != nullptr);
 
@@ -1359,7 +1341,6 @@ void CommandContextVK::SetSampler(CommandListType type, uint32_t rootIndex, uint
 
 void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
@@ -1371,7 +1352,6 @@ void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 
 void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
@@ -1675,7 +1655,6 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 	// Copy from the upload buffer to the destination buffer
 	TransitionResource(destBuffer, ResourceState::CopyDest, true);
 
-	// TODO: Try this with GetPlatformObject()
 	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer;
 	assert(destBufferVK != nullptr);
 
@@ -1708,7 +1687,6 @@ void CommandContextVK::InitializeTexture_Internal(ITexture* destTexture, const T
 		memcpy(dynAlloc.dataPtr, texInit.baseData, texInit.totalBytes);
 	}
 
-	// TODO: Try this with GetPlatformObject()
 	Texture* textureVK = (Texture*)destTexture;
 	assert(textureVK != nullptr);
 

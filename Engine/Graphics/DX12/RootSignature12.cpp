@@ -45,11 +45,35 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 }
 
 
-uint32_t RootSignature::GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const
+uint32_t RootSignature::GetSrvDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const
 {
 	assert(rootIndex < MaxRootParameters);
 	assert(m_descriptorOffsetTables[rootIndex]);
-	return m_descriptorOffsetTables[rootIndex]->GetDescriptorOffset(type, descriptorRegister);
+	return m_descriptorOffsetTables[rootIndex]->GetSrvDescriptorOffset(descriptorRegister);
+}
+
+
+uint32_t RootSignature::GetUavDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const
+{
+	assert(rootIndex < MaxRootParameters);
+	assert(m_descriptorOffsetTables[rootIndex]);
+	return m_descriptorOffsetTables[rootIndex]->GetUavDescriptorOffset(descriptorRegister);
+}
+
+
+uint32_t RootSignature::GetCbvDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const
+{
+	assert(rootIndex < MaxRootParameters);
+	assert(m_descriptorOffsetTables[rootIndex]);
+	return m_descriptorOffsetTables[rootIndex]->GetCbvDescriptorOffset(descriptorRegister);
+}
+
+
+uint32_t RootSignature::GetSamplerDescriptorOffset(uint32_t rootIndex, uint32_t descriptorRegister) const
+{
+	assert(rootIndex < MaxRootParameters);
+	assert(m_descriptorOffsetTables[rootIndex]);
+	return m_descriptorOffsetTables[rootIndex]->GetSamplerDescriptorOffset(descriptorRegister);
 }
 
 } // namespace Luna::DX12

@@ -50,8 +50,6 @@ class RootSignature : public IRootSignature
 public:
 	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
 
-	uint32_t GetDescriptorOffsetForRegister(DescriptorRegisterType type, uint32_t rootIndex, uint32_t descriptorRegister) const override;
-
 	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
 	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;
 
