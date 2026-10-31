@@ -76,7 +76,6 @@ public:
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
-	std::unordered_map<uint32_t, uint32_t> m_rootParameterIndexToDescriptorSetMap;
 	std::vector<DescriptorSetLayoutPtr> m_descriptorSetLayouts;
 	size_t m_resourceDescriptorSetLayoutSize{ 0 };
 	size_t m_samplerDescriptorSetLayoutSize{ 0 };

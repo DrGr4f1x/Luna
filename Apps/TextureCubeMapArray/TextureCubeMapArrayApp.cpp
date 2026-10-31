@@ -112,7 +112,7 @@ void TextureCubeMapArrayApp::Render()
 		context.SetGraphicsPipeline(m_skyboxPipeline);
 
 		// Bind descriptor sets
-		context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+		context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 		context.SetRootCBV(0, m_vsSkyboxConstantBuffer);
 		context.SetDescriptors(1, m_psCbvSrvDescriptorSet);
 
@@ -240,7 +240,7 @@ void TextureCubeMapArrayApp::InitPipelines()
 
 void TextureCubeMapArrayApp::InitDescriptorSet()
 {
-	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 
 	m_psCbvSrvDescriptorSet->SetCBV(0, m_psConstantBuffer);
 	m_psCbvSrvDescriptorSet->SetSRV(0, m_skyboxTex);

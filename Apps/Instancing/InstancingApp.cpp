@@ -81,7 +81,7 @@ void InstancingApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 	// Starfield
 	{
@@ -338,10 +338,10 @@ void InstancingApp::InitInstanceBuffer()
 
 void InstancingApp::InitDescriptorSets()
 {
-	m_rockSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_rockSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_rockSrvDescriptorSet->SetSRV(0, m_rockTexture);
 
-	m_planetSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_planetSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_planetSrvDescriptorSet->SetSRV(0, m_planetTexture);
 }
 

@@ -95,7 +95,7 @@ void ComputeParticlesApp::Render()
 		computeContext.SetRootSignature(m_computeRootSignature);
 		computeContext.SetComputePipeline(m_computePipeline);
 
-		computeContext.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+		computeContext.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 		computeContext.SetDescriptors(0, m_computeUavCbvDescriptorSet);
 
@@ -117,7 +117,7 @@ void ComputeParticlesApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 	context.SetDescriptors(0, m_graphicsSrvCbvDescriptorSet);
 	context.SetDescriptors(1, m_graphicsSrvDescriptorSet);
@@ -251,15 +251,15 @@ void ComputeParticlesApp::InitParticles()
 
 void ComputeParticlesApp::InitDescriptorSets()
 {
-	m_computeUavCbvDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_computeUavCbvDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_computeUavCbvDescriptorSet->SetUAV(0, m_particleBuffer);
 	m_computeUavCbvDescriptorSet->SetCBV(0, m_csConstantBuffer);
 
-	m_graphicsSrvCbvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_graphicsSrvCbvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_graphicsSrvCbvDescriptorSet->SetSRV(0, m_particleBuffer);
 	m_graphicsSrvCbvDescriptorSet->SetCBV(0, m_vsConstantBuffer);
 
-	m_graphicsSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_graphicsSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_graphicsSrvDescriptorSet->SetSRV(0, m_colorTexture);
 	m_graphicsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
 }

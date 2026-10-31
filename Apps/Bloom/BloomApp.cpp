@@ -119,7 +119,7 @@ void BloomApp::Render()
 			context.SetRootSignature(m_blurRootSignature);
 			context.SetGraphicsPipeline(m_blurVertPipeline);
 
-			context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+			context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 			context.SetDescriptors(0, m_blurVertDescriptorSet);
 
@@ -146,7 +146,7 @@ void BloomApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 	// Skybox
 	{
@@ -433,14 +433,14 @@ void BloomApp::InitConstantBuffers()
 
 void BloomApp::InitDescriptorSets()
 {
-	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture);
 
-	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_blurHorizDescriptorSet->SetSRV(0, m_offscreenColorBuffer[1]);
 	m_blurHorizDescriptorSet->SetCBV(0, m_blurHorizConstantBuffer);
 
-	m_blurVertDescriptorSet = m_blurRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_blurVertDescriptorSet = m_blurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_blurVertDescriptorSet->SetSRV(0, m_offscreenColorBuffer[0]);
 	m_blurVertDescriptorSet->SetCBV(0, m_blurVertConstantBuffer);
 }

@@ -920,7 +920,6 @@ void CommandContext12::SetResources(CommandListType type, ResourceSet& resourceS
 
 void CommandContext12::SetSRV(CommandListType type, uint32_t rootIndex, uint32_t srvRegister, const IColorBuffer* colorBuffer)
 {
-	// TODO: Try this with GetPlatformObject()
 	ColorBuffer* colorBuffer12 = (ColorBuffer*)colorBuffer;
 	assert(colorBuffer12 != nullptr);
 

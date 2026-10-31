@@ -126,7 +126,7 @@ void ComputeShaderApp::Render()
 			computeContext.SetComputePipeline(m_sharpenPipeline);
 		}
 
-		computeContext.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+		computeContext.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 		computeContext.SetDescriptors(0, m_computeSrvUavDescriptorSet);
 
@@ -147,7 +147,7 @@ void ComputeShaderApp::Render()
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth() / 2, GetWindowHeight());
 
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 	context.SetRootSignature(m_graphicsRootSignature);
 	context.SetGraphicsPipeline(m_graphicsPipeline);
@@ -340,14 +340,14 @@ void ComputeShaderApp::InitPipelines()
 
 void ComputeShaderApp::InitDescriptorSets()
 {
-	m_computeSrvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_computeSrvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_computeSrvUavDescriptorSet->SetSRV(0, m_texture);
 	m_computeSrvUavDescriptorSet->SetUAV(0, m_computeScratchBuffer);
 
-	m_graphicsLeftSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_graphicsLeftSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_graphicsLeftSrvDescriptorSet->SetSRV(0, m_texture);
 
-	m_graphicsRightSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_graphicsRightSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_graphicsRightSrvDescriptorSet->SetSRV(0, m_computeScratchBuffer);
 }
 

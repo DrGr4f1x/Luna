@@ -82,7 +82,7 @@ void DynamicIndexingApp::Render()
 	context.SetIndexBuffer(m_indexBuffer);
 	context.SetVertexBuffer(0, m_vertexBuffer);
 
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 	for (uint32_t i = 0; i < m_cityMaterialCount; ++i)
 	{
@@ -206,7 +206,7 @@ void DynamicIndexingApp::InitConstantBuffer()
 
 void DynamicIndexingApp::InitDescriptorSets()
 {
-	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_psDescriptorSet->SetSRV(0, m_diffuseTexture);
 
 	vector<const IDescriptor*> bindlessDescriptors;

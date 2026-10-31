@@ -145,7 +145,7 @@ CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 
-	m_maxPushDataSize = GetVulkanDevice()->GetDeviceCaps().descriptorHeap.maxPushDataSize;
+	m_maxPushDataSize = uint32_t(GetVulkanDevice()->GetDeviceCaps().descriptorHeap.maxPushDataSize);
 	m_pushData = make_unique<std::byte[]>(m_maxPushDataSize);
 	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
 	m_currentPushDataSize = 0;

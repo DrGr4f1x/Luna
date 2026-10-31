@@ -86,7 +86,7 @@ void ComputeClothApp::Render()
 		uint32_t readIndex = 0;
 		uint32_t writeIndex = 1;
 
-		computeContext.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+		computeContext.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 		const uint32_t iterations = 64;
 		for (uint32_t j = 0; j < iterations; ++j)
@@ -425,20 +425,20 @@ void ComputeClothApp::InitCloth()
 
 void ComputeClothApp::InitDescriptorSets()
 {
-	m_clothSrvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_clothSrvDescriptorSet = m_clothRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_clothSrvDescriptorSet->SetSRV(0, m_texture);
 
-	m_computeDescriptorSet[0] = m_computeRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_computeDescriptorSet[0] = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_computeDescriptorSet[0]->SetSRV(0, m_clothBuffer[0]);
 	m_computeDescriptorSet[0]->SetUAV(0, m_clothBuffer[1]);
 	m_computeDescriptorSet[0]->SetCBV(0, m_csConstantBuffer);
 
-	m_computeDescriptorSet[1] = m_computeRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_computeDescriptorSet[1] = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_computeDescriptorSet[1]->SetSRV(0, m_clothBuffer[1]);
 	m_computeDescriptorSet[1]->SetUAV(0, m_clothBuffer[0]);
 	m_computeDescriptorSet[1]->SetCBV(0, m_csConstantBuffer);
 
-	m_computeNormalDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_computeNormalDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_computeNormalDescriptorSet->SetSRV(0, m_clothBuffer[1]);
 	m_computeNormalDescriptorSet->SetUAV(0, m_clothBuffer[0]);
 	m_computeNormalDescriptorSet->SetCBV(0, m_csNormalConstantBuffer);

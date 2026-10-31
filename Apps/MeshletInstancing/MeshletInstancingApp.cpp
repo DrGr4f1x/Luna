@@ -119,7 +119,7 @@ void MeshletInstancingApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetMeshletPipeline(m_meshletPipeline);
 
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 
 	context.SetDescriptors(0, m_cbvDescriptorSet);
 	context.SetDescriptors(3, m_instanceDescriptorSet);
@@ -250,7 +250,7 @@ void MeshletInstancingApp::InitPipeline()
 
 void MeshletInstancingApp::InitDescriptorSets()
 {
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 0);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
 
 	m_srvDescriptorSets.resize(m_model.GetMeshCount());
@@ -258,7 +258,7 @@ void MeshletInstancingApp::InitDescriptorSets()
 	{
 		const auto& mesh = m_model.GetMesh(i);
 
-		m_srvDescriptorSets[i] = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 2);
+		m_srvDescriptorSets[i] = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 2);
 		m_srvDescriptorSets[i]->SetSRV(0, mesh.vertexResources[0]);
 		m_srvDescriptorSets[i]->SetSRV(1, mesh.meshletResource);
 		m_srvDescriptorSets[i]->SetSRV(2, mesh.uniqueVertexIndexResource);
@@ -266,7 +266,7 @@ void MeshletInstancingApp::InitDescriptorSets()
 	}
 
 
-	m_instanceDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 3);
+	m_instanceDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 3);
 }
 
 

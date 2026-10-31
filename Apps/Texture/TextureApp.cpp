@@ -98,7 +98,7 @@ void TextureApp::Render()
 #if APP_DYNAMIC_DESCRIPTORS
 	context.SetSRV(1, 0, m_texture);
 #else
-	context.BindResourceDescriptorHeap(GetDefaultResourceDescriptorHeap());
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
 	context.SetDescriptors(1, m_srvDescriptorSet);
 #endif	
 
@@ -215,7 +215,7 @@ void TextureApp::InitPipelineState()
 #if !APP_DYNAMIC_DESCRIPTORS
 void TextureApp::InitDescriptorSet()
 {
-	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultResourceDescriptorHeap(), 1);
+	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_srvDescriptorSet->SetSRV(0, m_texture);
 }
 #endif // !APP_DYNAMIC_DESCRIPTORS
