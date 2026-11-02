@@ -39,6 +39,10 @@ public:
 	virtual VkBuffer GetBuffer(DescriptorHeapType heapType) const = 0;
 
 	virtual VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const = 0;
+
+	virtual uint32_t GetImageDescriptorOffset() const = 0;
+	virtual uint32_t GetBufferDescriptorOffset() const = 0;
+	virtual uint32_t GetSamplerDescriptorOffset() const = 0;
 };
 
 
@@ -52,6 +56,10 @@ public:
 	VulkanDescriptorHeapClass GetClass() const;
 
 	VkBuffer GetBuffer(DescriptorHeapType heapType) const;
+
+	uint32_t GetImageDescriptorOffset() const;
+	uint32_t GetBufferDescriptorOffset() const;
+	uint32_t GetSamplerDescriptorOffset() const;
 
 private:
 	IDescriptorHeapImpl* m_impl{ nullptr };
@@ -67,6 +75,10 @@ public:
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
 
 	VkBuffer GetBuffer(DescriptorHeapType heapType) const override;
+
+	uint32_t GetImageDescriptorOffset() const override { return 0; }
+	uint32_t GetBufferDescriptorOffset() const override { return 0; }
+	uint32_t GetSamplerDescriptorOffset() const override { return 0; }
 
 	VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const override { return VkBindHeapInfoEXT{ .sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT }; }
 
@@ -98,11 +110,18 @@ public:
 
 	VkBuffer GetBuffer(DescriptorHeapType heapType) const override;
 
+	uint32_t GetImageDescriptorOffset() const override;
+	uint32_t GetBufferDescriptorOffset() const override;
+	uint32_t GetSamplerDescriptorOffset() const override;
+
 	VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const override;
 
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkBuffer> m_descriptorHeap;
+	uint32_t m_imageDescriptorOffset{ 0 };
+	uint32_t m_bufferDescriptorOffset{ 0 };
+	uint32_t m_samplerDescriptorOffset{ 0 };
 	VkBindHeapInfoEXT m_bindInfo{};
 };
 

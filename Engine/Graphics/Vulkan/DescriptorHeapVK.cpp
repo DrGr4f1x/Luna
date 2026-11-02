@@ -42,6 +42,24 @@ VkBuffer DescriptorHeap::GetBuffer(DescriptorHeapType heapType) const
 }
 
 
+uint32_t DescriptorHeap::GetImageDescriptorOffset() const
+{
+	return m_impl->GetImageDescriptorOffset();
+}
+
+
+uint32_t DescriptorHeap::GetBufferDescriptorOffset() const
+{
+	return m_impl->GetBufferDescriptorOffset();
+}
+
+
+uint32_t DescriptorHeap::GetSamplerDescriptorOffset() const
+{
+	return m_impl->GetSamplerDescriptorOffset();
+}
+
+
 DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	BufferState& bufferState = (heapType == DescriptorHeapType::Resource) ?
@@ -85,6 +103,24 @@ DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeap
 VkBuffer DescriptorHeapImpl::GetBuffer(DescriptorHeapType heapType) const
 {
 	return m_descriptorHeap->Get();
+}
+
+
+uint32_t DescriptorHeapImpl::GetImageDescriptorOffset() const
+{
+	return m_imageDescriptorOffset;
+}
+
+
+uint32_t DescriptorHeapImpl::GetBufferDescriptorOffset() const
+{
+	return m_bufferDescriptorOffset;
+}
+
+
+uint32_t DescriptorHeapImpl::GetSamplerDescriptorOffset() const
+{
+	return m_samplerDescriptorOffset;
 }
 
 

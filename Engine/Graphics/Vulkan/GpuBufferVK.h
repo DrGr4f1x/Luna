@@ -38,12 +38,15 @@ public:
 	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_cbvDescriptor; }
 
 	VkBuffer GetBuffer() const noexcept;
+	VkDeviceAddress GetBufferDeviceAddress() const noexcept { return m_deviceAddress; }
 
 protected:
 	wil::com_ptr<CVkBuffer> m_buffer;
 	Descriptor m_srvDescriptor;
 	Descriptor m_uavDescriptor;
 	Descriptor m_cbvDescriptor;
+
+	VkDeviceAddress m_deviceAddress{ 0 };
 
 	bool m_isCpuWriteable{ false };
 };

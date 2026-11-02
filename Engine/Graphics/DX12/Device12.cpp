@@ -520,7 +520,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 }
 
 
-Luna::RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+Luna::RootSignaturePtr Device::CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc)
 {
 	std::vector<D3D12_ROOT_PARAMETER1> d3d12RootParameters;
 

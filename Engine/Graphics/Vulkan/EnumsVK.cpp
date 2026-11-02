@@ -927,4 +927,23 @@ VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorTyp
 	}
 }
 
+
+bool IsImageDescriptorType(DescriptorType descriptorType)
+{
+	using enum DescriptorType;
+
+	if (descriptorType == TextureSRV || descriptorType == TextureUAV)
+		return true;
+
+	return false;
+}
+
+
+bool IsBufferDescriptorType(DescriptorType descriptorType)
+{
+	using enum DescriptorType;
+
+	return !IsImageDescriptorType(descriptorType) && (descriptorType != Sampler);
+}
+
 } // Minimumnamespace Luna::VK

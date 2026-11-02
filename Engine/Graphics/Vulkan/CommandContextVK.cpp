@@ -146,9 +146,11 @@ CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
 
 	m_maxPushDataSize = uint32_t(GetVulkanDevice()->GetDeviceCaps().descriptorHeap.maxPushDataSize);
+
 	m_pushData = make_unique<std::byte[]>(m_maxPushDataSize);
 	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
-	m_currentPushDataSize = 0;
+	m_pushDataCurrentSize = 0;
+	m_pushDataDirty = false;
 }
 
 
@@ -220,8 +222,10 @@ void CommandContextVK::Reset()
 
 	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
+
 	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
-	m_currentPushDataSize = 0;
+	m_pushDataCurrentSize = 0;
+	m_pushDataDirty = false;
 }
 
 
@@ -881,7 +885,8 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 	}
 
 	// Push data
-	m_currentPushDataSize = rootSignatureVK->GetPushDataSize();
+	m_pushDataCurrentSize = rootSignatureVK->GetPushDataSize();
+	m_pushDataDirty = false;
 }
 
 
@@ -1112,32 +1117,14 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 
 	FlushResourceBarriers();
 
-	VkDescriptorBufferInfo info{
-		.buffer		= gpuBufferVK->GetBuffer(),
-		.offset		= offsetInBytes,
-		.range		= VK_WHOLE_SIZE
-	};
-
-	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
-	assert(binding != (uint32_t)-1);
-
-	VkWriteDescriptorSet writeDescriptor{
-		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootCBV),
-		.dstArrayElement	= 0,
-		.descriptorCount	= 1,
-		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.pBufferInfo		= &info
-	};
-
-	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
-		VK_PIPELINE_BIND_POINT_GRAPHICS :
-		VK_PIPELINE_BIND_POINT_COMPUTE;
-
-	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
-	assert(pushDescriptorSetIndex != (uint32_t)-1);
-
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+	if (m_useDescriptorHeaps)
+	{
+		SetRootCBVForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+	}
+	else
+	{
+		SetRootCBVForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+	}
 }
 
 
@@ -1409,14 +1396,7 @@ void CommandContextVK::SetDynamicIndexBuffer(uint32_t indexCount, bool indexSize
 void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t instanceCount,
 	uint32_t startVertexLocation, uint32_t startInstanceLocation)
 {
-	FlushResourceBarriers();
-	
-	if (HasDirtyDescriptors(CommandListType::Graphics))
-	{
-		const bool graphicsPipe = true;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Graphics);
-	}
+	PreDraw();
 
 	vkCmdDraw(m_commandBuffer, vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation);
 }
@@ -1425,14 +1405,7 @@ void CommandContextVK::DrawInstanced(uint32_t vertexCountPerInstance, uint32_t i
 void CommandContextVK::DrawIndexedInstanced(uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation,
 	int32_t baseVertexLocation, uint32_t startInstanceLocation)
 {
-	FlushResourceBarriers();
-
-	if (HasDirtyDescriptors(CommandListType::Graphics))
-	{
-		const bool graphicsPipe = true;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Graphics);
-	}
+	PreDraw();
 
 	vkCmdDrawIndexed(m_commandBuffer, indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
@@ -1446,14 +1419,7 @@ void CommandContextVK::DrawIndirect(const IGpuBuffer* argumentBuffer, uint64_t a
 	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
 	assert(argumentBufferVK != nullptr);
 
-	FlushResourceBarriers();
-
-	if (HasDirtyDescriptors(CommandListType::Graphics))
-	{
-		const bool graphicsPipe = true;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Graphics);
-	}
+	PreDraw();
 
 	// TODO: support multi-draw indirect	
 	vkCmdDrawIndexedIndirect(
@@ -1473,14 +1439,7 @@ void CommandContextVK::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uin
 	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
 	assert(argumentBufferVK != nullptr);
 
-	FlushResourceBarriers();
-
-	if (HasDirtyDescriptors(CommandListType::Graphics))
-	{
-		const bool graphicsPipe = true;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Graphics);
-	}
+	PreDraw();
 
 	// TODO: support multi-draw indirect
 	vkCmdDrawIndexedIndirect(
@@ -1494,14 +1453,7 @@ void CommandContextVK::DrawIndexedIndirect(const IGpuBuffer* argumentBuffer, uin
 
 void CommandContextVK::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
-	FlushResourceBarriers();
-
-	if (HasDirtyDescriptors(CommandListType::Graphics))
-	{
-		const bool graphicsPipe = true;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Graphics);
-	}
+	PreDraw();
 
 	vkCmdDrawMeshTasksEXT(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
 }
@@ -1548,14 +1500,7 @@ void CommandContextVK::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer
 
 void CommandContextVK::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
 {
-	FlushResourceBarriers();
-
-	if (HasDirtyDescriptors(CommandListType::Compute))
-	{
-		const bool graphicsPipe = false;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Compute);
-	}
+	PreDispatch();
 	
 	vkCmdDispatch(m_commandBuffer, groupCountX, groupCountY, groupCountZ);
 }
@@ -1592,14 +1537,7 @@ void CommandContextVK::DispatchIndirect(const IGpuBuffer* argumentBuffer, uint64
 	const GpuBuffer* argumentBufferVK = (const GpuBuffer*)argumentBuffer;
 	assert(argumentBufferVK != nullptr);
 
-	FlushResourceBarriers();
-
-	if (HasDirtyDescriptors(CommandListType::Compute))
-	{
-		const bool graphicsPipe = false;
-		UpdateAndBindDynamicDescriptors(graphicsPipe);
-		ClearDirtyDescriptors(CommandListType::Compute);
-	}
+	PreDispatch();
 
 	vkCmdDispatchIndirect(m_commandBuffer, argumentBufferVK->GetBuffer(), argumentBufferOffset);
 }
@@ -1918,6 +1856,68 @@ void CommandContextVK::ClearDirtyDescriptors(CommandListType type)
 }
 
 
+void CommandContextVK::SetPushData()
+{
+	if (m_pushDataDirty)
+	{
+		VkPushDataInfoEXT info
+		{
+			.sType		= VK_STRUCTURE_TYPE_PUSH_DATA_INFO_EXT,
+			.pNext		= nullptr,
+			.offset		= 0,
+			.data		= {
+				.address	= m_pushData.get(),
+				.size		= m_pushDataCurrentSize
+			}
+		};
+
+		vkCmdPushDataEXT(m_commandBuffer, &info);
+
+		m_pushDataDirty = false;
+	}
+}
+
+
+void CommandContextVK::PreDraw()
+{
+	FlushResourceBarriers();
+
+	if (m_useDescriptorHeaps)
+	{
+		SetPushData();
+	}
+	else
+	{
+		if (HasDirtyDescriptors(CommandListType::Graphics))
+		{
+			const bool graphicsPipe = true;
+			UpdateAndBindDynamicDescriptors(graphicsPipe);
+			ClearDirtyDescriptors(CommandListType::Graphics);
+		}
+	}
+}
+
+
+void CommandContextVK::PreDispatch()
+{
+	FlushResourceBarriers();
+
+	if (m_useDescriptorHeaps)
+	{
+		SetPushData();
+	}
+	else
+	{
+		if (HasDirtyDescriptors(CommandListType::Compute))
+		{
+			const bool graphicsPipe = false;
+			UpdateAndBindDynamicDescriptors(graphicsPipe);
+			ClearDirtyDescriptors(CommandListType::Compute);
+		}
+	}
+}
+
+
 RootSignature* CommandContextVK::GetRootSignature(CommandListType type)
 {
 	if (type == CommandListType::Graphics)
@@ -1928,6 +1928,52 @@ RootSignature* CommandContextVK::GetRootSignature(CommandListType type)
 	{
 		return (RootSignature*)m_computeRootSignature;
 	}
+}
+
+
+void CommandContextVK::SetRootCBVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+{
+	VkDescriptorBufferInfo info{
+		.buffer		= gpuBuffer->GetBuffer(),
+		.offset		= offsetInBytes,
+		.range		= VK_WHOLE_SIZE
+	};
+
+	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
+	assert(binding != (uint32_t)-1);
+
+	VkWriteDescriptorSet writeDescriptor{
+		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootCBV),
+		.dstArrayElement	= 0,
+		.descriptorCount	= 1,
+		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.pBufferInfo		= &info
+	};
+
+	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
+	assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
+		VK_PIPELINE_BIND_POINT_GRAPHICS :
+		VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+}
+
+
+void CommandContextVK::SetRootCBVForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+{
+	assert(offsetInBytes == 0);
+
+	// Update push data
+	uint32_t offset = rootSignature->GetPushDataEntry(rootIndex, 0).offset;
+	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetBufferDeviceAddress();
+	assert(bufferDeviceAddress != 0);
+
+	std::byte* dataPtr = m_pushData.get();
+	memcpy(dataPtr + offset, &bufferDeviceAddress, sizeof(VkDeviceAddress));
+	m_pushDataDirty = true;
 }
 
 } // namespace Luna::VK

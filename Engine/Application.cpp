@@ -391,7 +391,13 @@ GpuBufferPtr Application::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 
 RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
-	return m_deviceManager->GetDevice()->CreateRootSignature(rootSignatureDesc);
+	return m_deviceManager->GetDevice()->CreateRootSignature(m_defaultDescriptorHeap, rootSignatureDesc);
+}
+
+
+RootSignaturePtr Application::CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc)
+{
+	return m_deviceManager->GetDevice()->CreateRootSignature(descriptorHeap, rootSignatureDesc);
 }
 
 

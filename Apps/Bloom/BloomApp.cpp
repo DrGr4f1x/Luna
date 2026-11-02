@@ -433,14 +433,16 @@ void BloomApp::InitConstantBuffers()
 
 void BloomApp::InitDescriptorSets()
 {
-	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
+	auto* descriptorHeap = GetDefaultDescriptorHeap();
+
+	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(descriptorHeap, 1);
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture);
 
-	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
+	m_blurHorizDescriptorSet = m_blurRootSignature->CreateDescriptorSet(descriptorHeap, 0);
 	m_blurHorizDescriptorSet->SetSRV(0, m_offscreenColorBuffer[1]);
 	m_blurHorizDescriptorSet->SetCBV(0, m_blurHorizConstantBuffer);
 
-	m_blurVertDescriptorSet = m_blurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
+	m_blurVertDescriptorSet = m_blurRootSignature->CreateDescriptorSet(descriptorHeap, 0);
 	m_blurVertDescriptorSet->SetSRV(0, m_offscreenColorBuffer[0]);
 	m_blurVertDescriptorSet->SetCBV(0, m_blurVertConstantBuffer);
 }

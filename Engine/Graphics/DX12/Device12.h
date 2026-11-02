@@ -47,7 +47,7 @@ public:
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
-	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	RootSignaturePtr CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc) override;
 
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) override;

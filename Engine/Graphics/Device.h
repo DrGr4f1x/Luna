@@ -46,7 +46,7 @@ public:
 	virtual DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;
 	virtual GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) = 0;
 
-	virtual RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) = 0;
+	virtual RootSignaturePtr CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc) = 0;
 
 	virtual GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) = 0;
 	virtual ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) = 0;

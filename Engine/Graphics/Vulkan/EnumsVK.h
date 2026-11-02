@@ -134,4 +134,8 @@ VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombin
 
 VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorType);
 
+bool IsImageDescriptorType(DescriptorType descriptorType);
+
+bool IsBufferDescriptorType(DescriptorType descriptorType);
+
 } // namespace Luna::VK

@@ -126,6 +126,7 @@ public:
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
 	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc);
+	RootSignaturePtr CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc);
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc);
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc);
 	MeshletPipelinePtr CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc);

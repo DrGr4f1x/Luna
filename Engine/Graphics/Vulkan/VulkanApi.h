@@ -30,6 +30,6 @@
 
 #include "VkBootstrap.h"
 
-#define ALLOW_DESCRIPTOR_HEAP 0
+#define ALLOW_DESCRIPTOR_HEAP 1
 
 static const size_t kMaxRawDescriptorSize = 64;

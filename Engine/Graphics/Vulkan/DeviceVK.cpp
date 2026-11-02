@@ -22,6 +22,7 @@
 #include "DescriptorAllocationVK.h"
 #include "DescriptorHeapVK.h"
 #include "DescriptorSetVK.h"
+#include "DeviceManagerVK.h"
 #include "GpuBufferVK.h"
 #include "PipelineStateVK.h"
 #include "PipelineStateUtilVK.h"
@@ -93,7 +94,12 @@ Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry
 }
 
 
-void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo, VkShaderModule shaderModule, const Shader* shader)
+void FillShaderStageCreateInfo(
+	VkPipelineShaderStageCreateInfo& createInfo, 
+	VkShaderModule shaderModule, 
+	const Shader* shader, 
+	bool useBindMappings, 
+	const VkShaderDescriptorSetAndBindingMappingInfoEXT& bindMappingInfo)
 {
 	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	createInfo.pNext = nullptr;
@@ -102,6 +108,11 @@ void FillShaderStageCreateInfo(VkPipelineShaderStageCreateInfo& createInfo, VkSh
 	createInfo.pName = shader->GetEntry().c_str();
 	createInfo.module = shaderModule;
 	createInfo.pSpecializationInfo = nullptr;
+
+	if (useBindMappings)
+	{
+		createInfo.pNext = &bindMappingInfo;
+	}
 }
 
 
@@ -426,6 +437,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
 	gpuBuffer->m_buffer = buffer;
 	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
+	gpuBuffer->m_deviceAddress = GetBufferDeviceAddress(m_device->Get(), buffer->Get());
 
 	// Descriptor setup
 	
@@ -487,7 +499,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 }
 
 
-RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
+RootSignaturePtr Device::CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc)
 {
 	// Validate RootSignatureDesc
 	if (!rootSignatureDesc.Validate())
@@ -498,8 +510,8 @@ RootSignaturePtr Device::CreateRootSignature(const RootSignatureDesc& rootSignat
 
 	if (UseDescriptorHeap())
 	{
-		assert(false);
-		return CreateRootSignatureForDescriptorHeap(rootSignatureDesc);
+		DescriptorHeap* descriptorHeapVk = (DescriptorHeap*)descriptorHeap.get();
+		return CreateRootSignatureForDescriptorHeap(descriptorHeapVk, rootSignatureDesc);
 	}
 	else
 	{
@@ -513,7 +525,7 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
-	auto AddShaderStageCreateInfo = [this, &shaderStages](ShaderType type, const ShaderNameAndEntry& shaderAndEntry)
+	auto AddShaderStageCreateInfo = [this, &shaderStages](ShaderType type, const ShaderNameAndEntry& shaderAndEntry, const VkShaderDescriptorSetAndBindingMappingInfoEXT& bindMappingInfo)
 		{
 			if (shaderAndEntry)
 			{
@@ -522,16 +534,19 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 				auto shaderModule = CreateShaderModule(shader);
 
 				VkPipelineShaderStageCreateInfo createInfo{};
-				FillShaderStageCreateInfo(createInfo, *shaderModule, shader);
+				FillShaderStageCreateInfo(createInfo, *shaderModule, shader, UseDescriptorHeap(), bindMappingInfo);
 				shaderStages.push_back(createInfo);
 			}
 		};
 
-	AddShaderStageCreateInfo(ShaderType::Vertex, pipelineDesc.vertexShader);
-	AddShaderStageCreateInfo(ShaderType::Pixel, pipelineDesc.pixelShader);
-	AddShaderStageCreateInfo(ShaderType::Geometry, pipelineDesc.geometryShader);
-	AddShaderStageCreateInfo(ShaderType::Hull, pipelineDesc.hullShader);
-	AddShaderStageCreateInfo(ShaderType::Domain, pipelineDesc.domainShader);
+	const RootSignature* rootSignatureVK = (const RootSignature*)pipelineDesc.rootSignature.get();
+	const ShaderSetAndBindingMapping& shaderSetAndBindingMapping = rootSignatureVK->GetShaderSetAndBindingMapping();
+
+	AddShaderStageCreateInfo(ShaderType::Vertex, pipelineDesc.vertexShader, shaderSetAndBindingMapping.vertex.info);
+	AddShaderStageCreateInfo(ShaderType::Pixel, pipelineDesc.pixelShader, shaderSetAndBindingMapping.pixel.info);
+	AddShaderStageCreateInfo(ShaderType::Geometry, pipelineDesc.geometryShader, shaderSetAndBindingMapping.geometry.info);
+	AddShaderStageCreateInfo(ShaderType::Hull, pipelineDesc.hullShader, shaderSetAndBindingMapping.hull.info);
+	AddShaderStageCreateInfo(ShaderType::Domain, pipelineDesc.domainShader, shaderSetAndBindingMapping.domain.info);
 
 	// Vertex streams
 	vector<VkVertexInputBindingDescription> vertexInputBindings;
@@ -684,7 +699,11 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 	assert(shader);
 	auto shaderModule = CreateShaderModule(shader);
 
-	FillShaderStageCreateInfo(shaderStage, *shaderModule, shader);
+	// Setup bind mapping info for descriptor heaps
+	const RootSignature* rootSignatureVK = (const RootSignature*)pipelineDesc.rootSignature.get();
+	const ShaderSetAndBindingMapping& shaderSetAndBindingMapping = rootSignatureVK->GetShaderSetAndBindingMapping();
+
+	FillShaderStageCreateInfo(shaderStage, *shaderModule, shader, UseDescriptorHeap(), shaderSetAndBindingMapping.compute.info);
 
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
@@ -727,7 +746,7 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 	// Shaders
 	vector<VkPipelineShaderStageCreateInfo> shaderStages;
 
-	auto AddShaderStageCreateInfo = [this, &shaderStages](ShaderType type, const ShaderNameAndEntry& shaderAndEntry)
+	auto AddShaderStageCreateInfo = [this, &shaderStages](ShaderType type, const ShaderNameAndEntry& shaderAndEntry, const VkShaderDescriptorSetAndBindingMappingInfoEXT& bindMappingInfo)
 		{
 			if (shaderAndEntry)
 			{
@@ -736,14 +755,17 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 				auto shaderModule = CreateShaderModule(shader);
 
 				VkPipelineShaderStageCreateInfo createInfo{};
-				FillShaderStageCreateInfo(createInfo, *shaderModule, shader);
+				FillShaderStageCreateInfo(createInfo, *shaderModule, shader, UseDescriptorHeap(), bindMappingInfo);
 				shaderStages.push_back(createInfo);
 			}
 		};
 
-	AddShaderStageCreateInfo(ShaderType::Amplification, pipelineDesc.amplificationShader);
-	AddShaderStageCreateInfo(ShaderType::Mesh, pipelineDesc.meshShader);
-	AddShaderStageCreateInfo(ShaderType::Pixel, pipelineDesc.pixelShader);
+	const RootSignature* rootSignatureVK = (const RootSignature*)pipelineDesc.rootSignature.get();
+	const ShaderSetAndBindingMapping& shaderSetAndBindingMapping = rootSignatureVK->GetShaderSetAndBindingMapping();
+
+	AddShaderStageCreateInfo(ShaderType::Amplification, pipelineDesc.amplificationShader, shaderSetAndBindingMapping.amplification.info);
+	AddShaderStageCreateInfo(ShaderType::Mesh, pipelineDesc.meshShader, shaderSetAndBindingMapping.mesh.info);
+	AddShaderStageCreateInfo(ShaderType::Pixel, pipelineDesc.pixelShader, shaderSetAndBindingMapping.pixel.info);
 
 	// Viewport state
 	VkPipelineViewportStateCreateInfo viewportStateInfo{};
@@ -1205,7 +1227,7 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorBuffer(DescriptorHeapType type, 
 bool Device::UseDescriptorHeap() const
 {
 #if ALLOW_DESCRIPTOR_HEAP
-	return GetVulkanDeviceManager()->GetSupportedFeatures().descriptorHeap;
+	return GetVulkanDeviceManager()->GetSupportedFeatures().descriptorHeaps;
 #endif
 	return false;
 }
@@ -1934,14 +1956,14 @@ static void AddShaderSetAndBindingMapping(ShaderSetAndBindingMapping& shaderSetA
 			}
 		};
 
-	AddMapping(shaderSetAndBindingMapping.compute, ShaderStage::Compute);
-	AddMapping(shaderSetAndBindingMapping.vertex, ShaderStage::Vertex);
-	AddMapping(shaderSetAndBindingMapping.hull, ShaderStage::Hull);
-	AddMapping(shaderSetAndBindingMapping.domain, ShaderStage::Domain);
-	AddMapping(shaderSetAndBindingMapping.geometry, ShaderStage::Geometry);
-	AddMapping(shaderSetAndBindingMapping.pixel, ShaderStage::Pixel);
-	AddMapping(shaderSetAndBindingMapping.amplification, ShaderStage::Amplification);
-	AddMapping(shaderSetAndBindingMapping.mesh, ShaderStage::Mesh);
+	AddMapping(shaderSetAndBindingMapping.compute.bindings, ShaderStage::Compute);
+	AddMapping(shaderSetAndBindingMapping.vertex.bindings, ShaderStage::Vertex);
+	AddMapping(shaderSetAndBindingMapping.hull.bindings, ShaderStage::Hull);
+	AddMapping(shaderSetAndBindingMapping.domain.bindings, ShaderStage::Domain);
+	AddMapping(shaderSetAndBindingMapping.geometry.bindings, ShaderStage::Geometry);
+	AddMapping(shaderSetAndBindingMapping.pixel.bindings, ShaderStage::Pixel);
+	AddMapping(shaderSetAndBindingMapping.amplification.bindings, ShaderStage::Amplification);
+	AddMapping(shaderSetAndBindingMapping.mesh.bindings, ShaderStage::Mesh);
 }
 
 
@@ -1997,7 +2019,72 @@ static void ProcessRootBuffers(ShaderSetAndBindingMapping& shaderSetAndBindingMa
 }
 
 
-static void ComputeShaderSetAndBindingMappings(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const PushDataLayout& pushDataLayout, const RootSignatureDesc& rootSignatureDesc)
+static void ProcessTable(const DeviceCaps& caps, const DescriptorHeap* descriptorHeap, ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const RootParameter& rootParameter, const uint32_t index, const PushDataLayout& pushDataLayout)
+{
+	uint32_t rangeIndex = 0;
+
+	uint32_t heapOffset = 0;
+	if (rootParameter.IsSamplerTable())
+	{
+		heapOffset = descriptorHeap->GetSamplerDescriptorOffset();
+	}
+
+	uint32_t heapIndexStride = 0;
+	uint32_t heapArrayStride = 0;
+
+	for (const auto& range : rootParameter.table)
+	{
+		const uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
+
+		const VkSpirvResourceTypeFlagsEXT spirvType = GetSpirvResourceType(range.descriptorType);
+
+		// Offset of this descriptor type in the heap
+		if (IsImageDescriptorType(range.descriptorType))
+		{
+			heapOffset = descriptorHeap->GetImageDescriptorOffset();
+		}
+		else if(IsBufferDescriptorType(range.descriptorType))
+		{
+			heapOffset = descriptorHeap->GetBufferDescriptorOffset();
+		}
+
+		// Stride of this descriptor type in the heap
+		if (rootParameter.IsSamplerTable())
+		{
+			heapIndexStride = (uint32_t)caps.descriptorHeap.samplerDescriptorSize;
+			heapArrayStride = (uint32_t)caps.descriptorHeap.samplerDescriptorSize;
+		}
+		else if (IsImageDescriptorType(range.descriptorType))
+		{
+			heapIndexStride = (uint32_t)caps.descriptorHeap.imageDescriptorSize;
+			heapArrayStride = (uint32_t)caps.descriptorHeap.imageDescriptorSize;
+		}
+		else
+		{
+			heapIndexStride = (uint32_t)caps.descriptorHeap.bufferDescriptorSize;
+			heapArrayStride = (uint32_t)caps.descriptorHeap.bufferDescriptorSize;
+		}
+
+		VkDescriptorSetAndBindingMappingEXT setAndBindingMapping{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT };
+		setAndBindingMapping.descriptorSet			= index;
+		setAndBindingMapping.firstBinding			= binding;
+		setAndBindingMapping.bindingCount			= range.numDescriptors;
+		setAndBindingMapping.resourceMask			= spirvType;
+		setAndBindingMapping.source					= VK_DESCRIPTOR_MAPPING_SOURCE_HEAP_WITH_PUSH_INDEX_EXT;
+		setAndBindingMapping.sourceData.pushIndex	= {};
+		setAndBindingMapping.sourceData.pushIndex.heapOffset = heapOffset;
+		setAndBindingMapping.sourceData.pushIndex.pushOffset = pushDataLayout[index][rangeIndex].offset;
+		setAndBindingMapping.sourceData.pushIndex.heapIndexStride = heapIndexStride;
+		setAndBindingMapping.sourceData.pushIndex.heapArrayStride = heapArrayStride;
+		
+		AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
+
+		++rangeIndex;
+	}
+}
+
+
+static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const DescriptorHeap* descriptorHeap, ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const PushDataLayout& pushDataLayout, const RootSignatureDesc& rootSignatureDesc)
 { 
 	uint32_t index = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
@@ -2015,17 +2102,33 @@ static void ComputeShaderSetAndBindingMappings(ShaderSetAndBindingMapping& shade
 			break;
 
 		case RootParameterType::Table:
-			assert(false);
-			// TODO - This is where we left off.
+			ProcessTable(caps, descriptorHeap, shaderSetAndBindingMapping, rootParameter, index, pushDataLayout);
 			break;
 		}
 
 		++index;
 	}
+
+	auto FinalizeMappingInfo = [](BindingMappingAndInfo& bindingInfo)
+		{
+			bindingInfo.info.sType = VK_STRUCTURE_TYPE_SHADER_DESCRIPTOR_SET_AND_BINDING_MAPPING_INFO_EXT;
+			bindingInfo.info.pNext = nullptr;
+			bindingInfo.info.mappingCount = (uint32_t)bindingInfo.bindings.size();
+			bindingInfo.info.pMappings = bindingInfo.bindings.data();
+		};
+
+	FinalizeMappingInfo(shaderSetAndBindingMapping.compute);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.vertex);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.hull);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.domain);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.geometry);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.pixel);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.amplification);
+	FinalizeMappingInfo(shaderSetAndBindingMapping.mesh);
 }
 
 
-RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const RootSignatureDesc& rootSignatureDesc)
+RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const DescriptorHeap* descriptorHeap, const RootSignatureDesc& rootSignatureDesc)
 {
 	auto rootSignature = std::make_shared<RootSignature>();
 
@@ -2038,33 +2141,9 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const RootSignatur
 	rootSignature->m_pushDataSize = pushDataSize;
 
 	// Compute shader set and binding mappings
-	ComputeShaderSetAndBindingMappings(rootSignature->m_shaderSetAndBindingMapping, rootSignature->m_pushDataLayout, rootSignatureDesc);
+	ComputeShaderSetAndBindingMappings(m_caps, descriptorHeap, rootSignature->m_shaderSetAndBindingMapping, rootSignature->m_pushDataLayout, rootSignatureDesc);
 
 	return rootSignature;
-}
-
-
-void ProcessTable(const RootParameter& rootParameter, const uint32_t index, vector<VkDescriptorSetAndBindingMappingEXT>& setAndBindingMappings, uint32_t& pushDataOffset)
-{
-	for (const auto& range : rootParameter.table)
-	{
-		const uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
-
-		const VkSpirvResourceTypeFlagsEXT spirvType = GetSpirvResourceType(range.descriptorType);
-
-		VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
-			.descriptorSet = index,
-			.firstBinding = binding,
-			.bindingCount = range.numDescriptors,
-			.resourceMask = spirvType,
-			.source = VK_DESCRIPTOR_MAPPING_SOURCE_HEAP_WITH_PUSH_INDEX_EXT,
-			.sourceData = {
-				.pushAddressOffset = pushDataOffset
-			}
-		};
-	}
 }
 
 

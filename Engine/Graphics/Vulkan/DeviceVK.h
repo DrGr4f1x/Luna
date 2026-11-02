@@ -53,7 +53,7 @@ public:
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc) override;
 
-	RootSignaturePtr CreateRootSignature(const RootSignatureDesc& rootSignatureDesc) override;
+	RootSignaturePtr CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc) override;
 
 	GraphicsPipelinePtr CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc) override;
 	ComputePipelinePtr CreateComputePipeline(const ComputePipelineDesc& pipelineDesc) override;
@@ -96,7 +96,7 @@ protected:
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
 	RootSignaturePtr CreateRootSignatureForDescriptorBuffer(const RootSignatureDesc& rootSignatureDesc);
-	RootSignaturePtr CreateRootSignatureForDescriptorHeap(const RootSignatureDesc& rootSignatureDesc);
+	RootSignaturePtr CreateRootSignatureForDescriptorHeap(const DescriptorHeap* descriptorHeap, const RootSignatureDesc& rootSignatureDesc);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

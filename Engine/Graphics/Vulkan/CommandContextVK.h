@@ -204,11 +204,31 @@ private:
 	bool HasDirtyDescriptors(CommandListType type);
 	void ClearDirtyDescriptors(CommandListType type);
 
+	void SetPushData();
+
+	// Pre-draw, pre-dispatch
+	void PreDraw();
+	void PreDispatch();
+
 	RootSignature* GetRootSignature(CommandListType type);
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
 
-	VkPipelineLayout GetPipelineLayout(CommandListType type) const noexcept { return (type == CommandListType::Compute) ? m_computePipelineLayout : m_graphicsPipelineLayout; }
+	VkPipelineBindPoint GetBindPoint(CommandListType type) const noexcept 
+	{
+		return type == CommandListType::Compute ? VK_PIPELINE_BIND_POINT_COMPUTE : VK_PIPELINE_BIND_POINT_GRAPHICS;
+	}
+
+	VkPipelineLayout GetPipelineLayout(CommandListType type) const noexcept 
+	{ 
+		return (type == CommandListType::Compute) ? m_computePipelineLayout : m_graphicsPipelineLayout; 
+	}
+
+	// Descriptor buffer
+	void SetRootCBVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+
+	// Descriptor heap
+	void SetRootCBVForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 private:
 	std::string m_id;
@@ -257,9 +277,10 @@ private:
 	VkBindHeapInfoEXT m_currentDescriptorHeapBindings[2];
 
 	// Push data
-	std::unique_ptr<std::byte[]> m_pushData;
 	uint32_t m_maxPushDataSize{ 0 };
-	uint32_t m_currentPushDataSize{ 0 };
+
+	std::unique_ptr<std::byte[]> m_pushData;
+	uint32_t m_pushDataCurrentSize{ 0 };
 	bool m_pushDataDirty{ false };
 
 	const IRootSignature* m_graphicsRootSignature{ nullptr };

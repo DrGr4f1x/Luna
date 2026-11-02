@@ -29,17 +29,22 @@ struct PushDataEntry
 using PushDataLayout = std::vector<std::vector<PushDataEntry>>;
 
 
+struct BindingMappingAndInfo
+{
+	std::vector<VkDescriptorSetAndBindingMappingEXT> bindings;
+	VkShaderDescriptorSetAndBindingMappingInfoEXT info;
+};
+
 struct ShaderSetAndBindingMapping
 {
-	std::vector<VkDescriptorSetAndBindingMappingEXT> compute;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> vertex;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> hull;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> domain;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> geometry;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> pixel;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> amplification;
-	std::vector<VkDescriptorSetAndBindingMappingEXT> mesh;
-
+	BindingMappingAndInfo compute;
+	BindingMappingAndInfo vertex;
+	BindingMappingAndInfo hull;
+	BindingMappingAndInfo domain;
+	BindingMappingAndInfo geometry;
+	BindingMappingAndInfo pixel;
+	BindingMappingAndInfo amplification;
+	BindingMappingAndInfo mesh;
 };
 
 
@@ -58,7 +63,6 @@ public:
 	size_t GetResourceDescriptorSetLayoutSize() const noexcept { return m_resourceDescriptorSetLayoutSize; }
 	size_t GetSamplerDescriptorSetLayoutSize() const noexcept { return m_samplerDescriptorSetLayoutSize; }
 
-
 	uint32_t GetStaticSamplerDescriptorSetIndex() const noexcept { return m_staticSamplerDescriptorSetIndex; }
 
 	uint32_t GetPushDescriptorSetIndex() const noexcept { return m_pushDescriptorSetIndex; }
@@ -67,10 +71,12 @@ public:
 	// Push data (for DescriptorHeap)
 	const PushDataLayout& GetPushDataLayout() const noexcept { return m_pushDataLayout; }
 	const std::vector<PushDataEntry>& GetPushDataEntries(uint32_t index) const { return m_pushDataLayout[index]; }
+	const PushDataEntry& GetPushDataEntry(uint32_t index, uint32_t entryIndex) const { return m_pushDataLayout[index][entryIndex]; }
 	uint32_t GetPushDataSize() const noexcept { return m_pushDataSize; }
 
 	// Shader set and binding mapping (for DescriptorHeap)
 	const ShaderSetAndBindingMapping& GetShaderSetAndBindingMapping() const { return m_shaderSetAndBindingMapping; }
+
 protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
