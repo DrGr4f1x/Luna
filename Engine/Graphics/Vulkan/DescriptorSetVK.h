@@ -62,8 +62,14 @@ protected:
 
 	RootParameter m_rootParameter;
 
+	// Descriptor buffer
 	DescriptorAllocation m_allocation{};
 	DescriptorSetLayoutPtr m_layout;
+
+	// Push data values
+
+	// Is using descriptor heap
+	bool m_useDescriptorHeap{ false };
 };
 
 } // namespace Luna::VK

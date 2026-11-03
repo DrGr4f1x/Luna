@@ -47,6 +47,8 @@ public:
 	size_t CopyRawDescriptor(void* dest) const;
 	size_t GetRawDescriptorSize() const noexcept { return m_rawDescriptorSize; }
 
+	// 
+
 private:
 	union 
 	{

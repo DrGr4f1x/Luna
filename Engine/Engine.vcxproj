@@ -77,6 +77,7 @@
     <ClCompile Include="Graphics\Vulkan\ColorBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DepthBufferVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorHeapVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\DescriptorSetHeapLayoutVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetLayoutVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorSetVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\DescriptorVK.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="Graphics\Vulkan\DepthBufferVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorAllocationVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorHeapVK.h" />
+    <ClInclude Include="Graphics\Vulkan\DescriptorSetHeapLayoutVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetLayoutVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorSetVK.h" />
     <ClInclude Include="Graphics\Vulkan\DescriptorVK.h" />

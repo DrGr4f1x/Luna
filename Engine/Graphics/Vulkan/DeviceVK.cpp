@@ -914,6 +914,15 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 }
 
 
+DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter)
+{
+	for (const auto& range : rootParameter.table)
+	{
+
+	}
+}
+
+
 SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 {
 	VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
@@ -1860,6 +1869,7 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignat
 	rootSignature->m_pushDescriptorBindingMap = pushDescriptorBindingMap;
 	rootSignature->m_resourceDescriptorSetLayoutSize = resourceDescriptorSetLayoutSize;
 	rootSignature->m_samplerDescriptorSetLayoutSize = samplerDescriptorSetLayoutSize;
+	rootSignature->m_useDescriptorHeap = false;
 
 	return rootSignature;
 }
@@ -2109,22 +2119,7 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const Des
 		++index;
 	}
 
-	auto FinalizeMappingInfo = [](BindingMappingAndInfo& bindingInfo)
-		{
-			bindingInfo.info.sType = VK_STRUCTURE_TYPE_SHADER_DESCRIPTOR_SET_AND_BINDING_MAPPING_INFO_EXT;
-			bindingInfo.info.pNext = nullptr;
-			bindingInfo.info.mappingCount = (uint32_t)bindingInfo.bindings.size();
-			bindingInfo.info.pMappings = bindingInfo.bindings.data();
-		};
-
-	FinalizeMappingInfo(shaderSetAndBindingMapping.compute);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.vertex);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.hull);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.domain);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.geometry);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.pixel);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.amplification);
-	FinalizeMappingInfo(shaderSetAndBindingMapping.mesh);
+	shaderSetAndBindingMapping.Finalize();
 }
 
 
@@ -2134,6 +2129,7 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const DescriptorHe
 
 	rootSignature->m_device = this;
 	rootSignature->m_desc = rootSignatureDesc;
+	rootSignature->m_useDescriptorHeap = true;
 
 	// Compute push data layout
 	uint32_t pushDataSize = ComputePushDataLayout(rootSignature->m_pushDataLayout, rootSignatureDesc);

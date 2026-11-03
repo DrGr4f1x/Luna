@@ -33,6 +33,8 @@ struct BindingMappingAndInfo
 {
 	std::vector<VkDescriptorSetAndBindingMappingEXT> bindings;
 	VkShaderDescriptorSetAndBindingMappingInfoEXT info;
+
+	void Finalize();
 };
 
 struct ShaderSetAndBindingMapping
@@ -45,6 +47,8 @@ struct ShaderSetAndBindingMapping
 	BindingMappingAndInfo pixel;
 	BindingMappingAndInfo amplification;
 	BindingMappingAndInfo mesh;
+
+	void Finalize();
 };
 
 
@@ -98,6 +102,9 @@ protected:
 
 	// Shader set and binding mapping
 	ShaderSetAndBindingMapping m_shaderSetAndBindingMapping;
+
+	// Is using descriptor heaps?
+	bool m_useDescriptorHeap{ false };
 };
 
 } // namespace Luna::VK

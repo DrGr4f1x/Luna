@@ -62,6 +62,7 @@ public:
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
 
 	DescriptorSetPtr CreateDescriptorSet(DescriptorHeap* descriptorHeap, const DescriptorSetDesc& descriptorSetDesc);
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeap* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter);
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 

@@ -34,21 +34,44 @@ DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
 
 void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
 {
-	SetDescriptors_Internal<DescriptorRegisterType::SRV>(srvRegister, descriptors);
+	if (m_useDescriptorHeap)
+	{
+		assert(false);
+	}
+	else
+	{
+		SetDescriptors_Internal<DescriptorRegisterType::SRV>(srvRegister, descriptors);
+	}
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
 	const auto descriptor = (const Descriptor*)colorBuffer->GetSrvDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+
+	if (m_useDescriptorHeap)
+	{
+		VkHostAddressRangeEXT dst{};
+
+	}
+	else
+	{
+		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	}
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	const auto descriptor = (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv);
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	if (m_useDescriptorHeap)
+	{
+		const auto descriptor = (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv);
+		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	}
+	else
+	{
+
+	}
 }
 
 
