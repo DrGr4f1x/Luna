@@ -27,46 +27,29 @@ public:
 	Descriptor();
 	~Descriptor() override {}
 
-	DescriptorClass GetDescriptorClass() const noexcept { return m_descriptorClass; }
+	void ReadSampledImageDescriptor(bool useDescriptorHeap, Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView);
+	void ReadStorageImageDescriptor(bool useDescriptorHeap, Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView);
 
-	VkImageView GetImageView() const { return m_imageView->Get(); }
-	VkBufferView GetBufferView() const { return m_bufferView->Get(); }
-	VkSampler GetSampler() const { return m_sampler->Get(); }
+	void ReadUniformBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
+	void ReadUniformTexelBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format);
+	void ReadStorageTexelBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format);
+	void ReadStorageBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
+	void ReadAccelerationStructureDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
 
-	VkImage GetImage() const;
-	VkBuffer GetBuffer() const;
-	size_t GetElementSize() const noexcept { return m_elementSize; }
-	size_t GetBufferSize() const noexcept { return m_bufferSize; }
-	VkFormat GetFormat() const noexcept { return m_format; }
+	void ReadSamplerDescriptor(bool useDescriptorHeap, Device* device, VkSampler sampler, const VkSamplerCreateInfo& info);
 
-	void SetImageView(CVkImage* image, CVkImageView* imageView);
-	void SetBufferView(CVkBuffer* buffer, CVkBufferView* bufferView, size_t elementSize, size_t bufferSize, VkFormat format);
-	void SetSampler(CVkSampler* sampler);
-
-	void ReadRawDescriptor(Device* device, DescriptorType descriptorType);
 	size_t CopyRawDescriptor(void* dest) const;
 	size_t GetRawDescriptorSize() const noexcept { return m_rawDescriptorSize; }
 
-	// 
+private:
+	// Descriptor heap
+	void ReadImageDescriptorForHeap(VkDevice device, size_t descriptorSize, VkImageLayout layout, VkDescriptorType descriptorType, const VkImageViewCreateInfo& viewInfo);
+	void ReadBufferDescriptorForHeap(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType);
+	void ReadTexelBufferDescriptorForHeap(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType, VkFormat format);
 
 private:
-	union 
-	{
-		wil::com_ptr<CVkImageView> m_imageView{};
-		wil::com_ptr<CVkBufferView> m_bufferView;
-		wil::com_ptr<CVkSampler> m_sampler;
-	};
-
-	wil::com_ptr<CVkImage> m_image;
-	wil::com_ptr<CVkBuffer> m_buffer;
-	size_t m_elementSize{ 0 };
-	size_t m_bufferSize{ 0 };
-	VkFormat m_format{ VK_FORMAT_UNDEFINED };
-
 	std::array<std::byte, kMaxRawDescriptorSize> m_rawDescriptor;
 	size_t m_rawDescriptorSize{ 0 };
-
-	DescriptorClass m_descriptorClass{ DescriptorClass::None };
 };
 
 } // namespace Luna::VK

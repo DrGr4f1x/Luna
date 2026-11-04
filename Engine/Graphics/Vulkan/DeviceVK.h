@@ -85,6 +85,8 @@ public:
 
 protected:
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& imageDesc);
+
+	VkImageViewCreateInfo GetImageViewCreateInfo(const ImageViewDesc& imageViewDesc);
 	wil::com_ptr<CVkImageView> CreateImageView(const ImageViewDesc& imageViewDesc);
 
 	wil::com_ptr<CVkShaderModule> CreateShaderModule(Shader* shader);

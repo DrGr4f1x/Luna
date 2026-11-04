@@ -251,11 +251,24 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = image;
-	colorBuffer->m_rtvDescriptor.SetImageView(image.get(), imageViewRtv.get());
-	colorBuffer->m_srvDescriptor.SetImageView(image.get(), imageViewSrv.get());
-	colorBuffer->m_uavDescriptor.SetImageView(image.get(), imageViewSrv.get());
-	colorBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
-	colorBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::TextureUAV);
+
+	colorBuffer->SetRtvImageView(image.get(), imageViewRtv.get());
+
+	// Setup descriptors
+	const bool useDescriptorHeap = UseDescriptorHeap();
+	auto imageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
+
+	colorBuffer->m_srvDescriptor.ReadSampledImageDescriptor(
+		useDescriptorHeap, 
+		this,
+		imageViewCreateInfo, 
+		imageViewSrv->Get());
+	colorBuffer->m_uavDescriptor.ReadStorageImageDescriptor(
+		useDescriptorHeap, 
+		this,
+		imageViewCreateInfo, 
+		imageViewSrv->Get());
+
 	return colorBuffer;
 }
 
@@ -340,9 +353,9 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
 	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
 	depthBuffer->m_image = image;
-	depthBuffer->m_depthStencilDescriptor.SetImageView(image.get(), imageViewDepthStencil.get());
-	depthBuffer->m_depthOnlyDescriptor.SetImageView(image.get(), imageViewDepthOnly.get());
-	depthBuffer->m_stencilOnlyDescriptor.SetImageView(image.get(), imageViewStencilOnly.get());
+	depthBuffer->SetDepthStencilDsvImageView(image.get(), imageViewDepthStencil.get());
+	depthBuffer->SetDepthOnlyDsvImageView(image.get(), imageViewDepthOnly.get());
+	depthBuffer->SetStencilOnlyImageView(image.get(), imageViewStencilOnly.get());
 	depthBuffer->m_depthStencilDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
 	depthBuffer->m_depthOnlyDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
 	depthBuffer->m_stencilOnlyDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
@@ -975,8 +988,8 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 
 	// Create Sampler
 	auto samplerPtr = std::make_shared<Sampler>();
-	samplerPtr->m_descriptor.SetSampler(pSampler.get());
-	samplerPtr->m_descriptor.ReadRawDescriptor(this, DescriptorType::Sampler);
+	samplerPtr->m_sampler = pSampler;
+	samplerPtr->m_descriptor.ReadSamplerDescriptor(UseDescriptorHeap(), this, pSampler->Get(), createInfo);
 
 	return samplerPtr;
 };
@@ -1069,9 +1082,15 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		.arraySize			= isVolume ? 1 : texInit.arraySizeOrDepth
 	};
 	auto imageView = CreateImageView(imageViewDesc);
+	auto imageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
 
-	textureVK->m_descriptor.SetImageView(textureVK->m_image.get(), imageView.get());
-	textureVK->m_descriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
+	// Setup descriptor
+	const bool useDescriptorHeap = UseDescriptorHeap();
+	textureVK->m_descriptor.ReadSampledImageDescriptor(
+		useDescriptorHeap, 
+		this,  
+		imageViewCreateInfo, 
+		imageView->Get());
 
 	// Copy initial data
 	TexturePtr temp = texture;
@@ -1138,7 +1157,7 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = swapChainImage;
-	colorBuffer->m_rtvDescriptor.SetImageView(swapChainImage, imageViewRtv.get());
+	colorBuffer-SetRtvImageView(swapChainImage, imageViewRtv.get());
 	colorBuffer->m_srvDescriptor.SetImageView(swapChainImage, imageViewSrv.get());
 	colorBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
 
@@ -1296,7 +1315,7 @@ wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 }
 
 
-wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageViewDesc)
+VkImageViewCreateInfo Device::GetImageViewCreateInfo(const ImageViewDesc& imageViewDesc)
 {
 	VkImageViewCreateInfo createInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	createInfo.viewType = GetImageViewType(imageViewDesc.resourceType, imageViewDesc.imageUsage);
@@ -1316,6 +1335,14 @@ wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageVie
 	createInfo.subresourceRange.layerCount = imageViewDesc.arraySize;
 	createInfo.image = imageViewDesc.image->Get();
 
+	return createInfo;
+}
+
+
+wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageViewDesc)
+{
+	auto createInfo = GetImageViewCreateInfo(imageViewDesc);
+	
 	VkImageView vkImageView{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateImageView(*m_device, &createInfo, nullptr, &vkImageView)))
 	{

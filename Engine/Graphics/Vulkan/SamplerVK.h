@@ -28,9 +28,10 @@ class Sampler : public ISampler
 public:
 	const IDescriptor* GetDescriptor() const noexcept override { return &m_descriptor; }
 
-	VkSampler GetSampler() const { return m_descriptor.GetSampler(); }
+	VkSampler GetSampler() const { return m_sampler->Get(); }
 
 protected:
+	wil::com_ptr<CVkSampler> m_sampler;
 	Descriptor m_descriptor;
 };
 
