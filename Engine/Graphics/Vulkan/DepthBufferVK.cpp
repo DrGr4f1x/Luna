@@ -46,7 +46,6 @@ void DepthBuffer::InitializeDescriptors(Device* device)
 {
 	const bool useDescriptorHeap = device->UseDescriptorHeap();
 
-	m_depthStencilDescriptor.ReadSampledImageDescriptor(device, m_depthStencilImageView->GetCreateInfo(), m_depthStencilImageView->Get());
 	m_depthOnlyDescriptor.ReadSampledImageDescriptor(device, m_depthOnlyImageView->GetCreateInfo(), m_depthOnlyImageView->Get());
 	m_stencilOnlyDescriptor.ReadSampledImageDescriptor(device, m_stencilOnlyImageView->GetCreateInfo(), m_stencilOnlyImageView->Get());
 }

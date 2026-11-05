@@ -52,7 +52,6 @@ public:
 
 protected:
 	wil::com_ptr<CVkImage> m_image;
-	Descriptor m_depthStencilDescriptor;
 	Descriptor m_depthOnlyDescriptor;
 	Descriptor m_stencilOnlyDescriptor;
 

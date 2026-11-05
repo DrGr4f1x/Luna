@@ -30,9 +30,9 @@ DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType
 }
 
 
-DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes)
 {
-	return m_impl->AllocateDescriptors(heapType, numDescriptors, imageDescriptors);
+	return m_impl->AllocateDescriptors(heapType, sizeInBytes);
 }
 
 
@@ -74,7 +74,7 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHe
 }
 
 
-DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes)
 {
 	assert(false);
 	return DescriptorAllocation{};
@@ -96,10 +96,26 @@ DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeap
 }
 
 
-DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes)
 {
-	assert(false);
-	return DescriptorAllocation{};
+	const auto& caps = m_device->GetDeviceCaps();
+
+	HeapState& heapState = (heapType == DescriptorHeapType::Resource) ?
+		m_resourceState :
+		m_samplerState;
+
+	size_t alignedSize = Math::AlignUp(sizeInBytes, caps.descriptorHeap.largestResourceDescriptorAlignment);
+	assert(heapState.freeSpace >= alignedSize);
+
+	std::byte* allocation = heapState.bufferHead;
+	heapState.bufferHead += alignedSize;
+
+	heapState.freeSpace -= alignedSize;
+
+	return DescriptorAllocation{
+		.mem = allocation,
+		.offset = (size_t)(allocation - heapState.initialHead)
+	};
 }
 
 

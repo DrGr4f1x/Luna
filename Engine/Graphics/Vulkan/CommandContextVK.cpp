@@ -821,7 +821,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 	const RootSignature* rootSignatureVK = (const RootSignature*)rootSignature;
 	assert(rootSignatureVK != nullptr);
 
-	VkPipelineLayout pipelineLayout = rootSignatureVK->GetPipelineLayout();
+	VkPipelineLayout pipelineLayout = m_useDescriptorHeaps ? VK_NULL_HANDLE : rootSignatureVK->GetPipelineLayout();
 
 	if (type == CommandListType::Graphics)
 	{
@@ -1274,7 +1274,7 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 
 void CommandContextVK::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, const IGpuBuffer* gpuBuffer)
 {
-	ParseRootSignature(type);
+	//ParseRootSignature(type);
 
 	m_dynamicResourceDescriptorBuffer.SetCBV(type, rootIndex, cbvRegister, 0, gpuBuffer);
 

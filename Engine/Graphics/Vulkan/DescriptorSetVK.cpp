@@ -49,29 +49,14 @@ void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
 	const auto descriptor = (const Descriptor*)colorBuffer->GetSrvDescriptor();
 
-	if (m_useDescriptorHeap)
-	{
-		VkHostAddressRangeEXT dst{};
-
-	}
-	else
-	{
-		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
-	}
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv)
 {
-	if (m_useDescriptorHeap)
-	{
-		const auto descriptor = (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv);
-		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
-	}
-	else
-	{
-
-	}
+	const auto descriptor = (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv);
+	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 }
 
 
@@ -178,29 +163,69 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 
 size_t DescriptorSet::GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	const uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
-	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	if (m_useDescriptorHeap)
+	{
+		auto res = m_srvRegisterOffsetMap.find(srvRegister);
+		assert(res != m_srvRegisterOffsetMap.end());
+
+		return res->second;
+	}
+	else
+	{
+		const uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
+		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	}
 }
 
 
 size_t DescriptorSet::GetRegisterOffsetUAV(uint32_t uavRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	const uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
-	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	if (m_useDescriptorHeap)
+	{
+		auto res = m_uavRegisterOffsetMap.find(uavRegister);
+		assert(res != m_uavRegisterOffsetMap.end());
+
+		return res->second;
+	}
+	else
+	{
+		const uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
+		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	}
 }
 
 
 size_t DescriptorSet::GetRegisterOffsetCBV(uint32_t cbvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	const uint32_t bindingIndex = GetRegisterShiftCBV() + cbvRegister;
-	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	if (m_useDescriptorHeap)
+	{
+		auto res = m_cbvRegisterOffsetMap.find(cbvRegister);
+		assert(res != m_cbvRegisterOffsetMap.end());
+
+		return res->second;
+	}
+	else
+	{
+		const uint32_t bindingIndex = GetRegisterShiftCBV() + cbvRegister;
+		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	}
 }
 
 
 size_t DescriptorSet::GetRegisterOffsetSampler(uint32_t samplerRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
-	const uint32_t bindingIndex = GetRegisterShiftSampler() + samplerRegister;
-	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	if (m_useDescriptorHeap)
+	{
+		auto res = m_samplerRegisterOffsetMap.find(samplerRegister);
+		assert(res != m_samplerRegisterOffsetMap.end());
+
+		return res->second;
+	}
+	else
+	{
+		const uint32_t bindingIndex = GetRegisterShiftSampler() + samplerRegister;
+		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+	}
 }
 
 } // namespace Luna::VK

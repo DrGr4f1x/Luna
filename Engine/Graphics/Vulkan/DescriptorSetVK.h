@@ -80,6 +80,14 @@ protected:
 
 	// Is using descriptor heap
 	bool m_useDescriptorHeap{ false };
+
+	// Maps for registers to heap memory offsets
+	// TODO: put this in another structure and cache/share between sets
+	std::unordered_map<uint32_t, uint32_t> m_srvRegisterOffsetMap;
+	std::unordered_map<uint32_t, uint32_t> m_uavRegisterOffsetMap;
+	std::unordered_map<uint32_t, uint32_t> m_cbvRegisterOffsetMap;
+	std::unordered_map<uint32_t, uint32_t> m_samplerRegisterOffsetMap;
+
 };
 
 } // namespace Luna::VK

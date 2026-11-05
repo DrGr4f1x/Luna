@@ -140,22 +140,34 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_device = this;
 
 		// Resource heap
-		impl->m_resourceState.descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numResources);
-		impl->m_resourceState.descriptorSize = m_caps.descriptorHeap.largestResourceDescriptorSize;
-		impl->m_resourceState.descriptorAlignment = m_caps.descriptorHeap.largestResourceDescriptorAlignment;
+		auto resourceHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numResources);
+		ThrowIfFailed(vmaMapMemory(resourceHeap->GetAllocator(), resourceHeap->GetAllocation(), (void**)&impl->m_resourceState.bufferHead));
+
+		impl->m_resourceState.descriptorHeap = resourceHeap;
+
 		impl->m_resourceState.bindInfo.heapRange.address = impl->m_resourceState.descriptorHeap->GetBufferDeviceAddress();
 		impl->m_resourceState.bindInfo.heapRange.size = impl->m_resourceState.descriptorHeap->GetSize();
 		impl->m_resourceState.bindInfo.reservedRangeOffset = impl->m_resourceState.bindInfo.heapRange.size - m_caps.descriptorHeap.minResourceHeapReservedRange;
 		impl->m_resourceState.bindInfo.reservedRangeSize = m_caps.descriptorHeap.minResourceHeapReservedRange;
 
+		impl->m_resourceState.bufferSize = m_caps.descriptorHeap.largestResourceDescriptorSize * numResources;
+		impl->m_resourceState.initialHead = impl->m_resourceState.bufferHead;
+		impl->m_resourceState.freeSpace = impl->m_resourceState.bufferSize;
+
 		// Sampler heap
-		impl->m_samplerState.descriptorHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Sampler, numSamplers);
-		impl->m_samplerState.descriptorSize = m_caps.descriptorHeap.samplerDescriptorSize;
-		impl->m_samplerState.descriptorAlignment = m_caps.descriptorHeap.samplerDescriptorAlignment;
+		auto samplerHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Sampler, numSamplers);
+		ThrowIfFailed(vmaMapMemory(samplerHeap->GetAllocator(), samplerHeap->GetAllocation(), (void**)&impl->m_samplerState.bufferHead));
+
+		impl->m_samplerState.descriptorHeap = samplerHeap;
+
 		impl->m_samplerState.bindInfo.heapRange.address = impl->m_samplerState.descriptorHeap->GetBufferDeviceAddress();
 		impl->m_samplerState.bindInfo.heapRange.size = impl->m_samplerState.descriptorHeap->GetSize();
 		impl->m_samplerState.bindInfo.reservedRangeOffset = impl->m_samplerState.bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRange;
 		impl->m_samplerState.bindInfo.reservedRangeSize = m_caps.descriptorHeap.minSamplerHeapReservedRange;
+
+		impl->m_samplerState.bufferSize = m_caps.descriptorHeap.samplerDescriptorSize * numSamplers;
+		impl->m_samplerState.initialHead = impl->m_samplerState.bufferHead;
+		impl->m_samplerState.freeSpace = impl->m_samplerState.bufferSize;
 
 		descriptorHeap->m_impl = impl;
 	}
@@ -624,10 +636,20 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	VkPipelineRenderingCreateInfo dynamicRenderingInfo{};
 	FillRenderTargetState(dynamicRenderingInfo, rtvFormats, pipelineDesc);
 
+	if (UseDescriptorHeap())
+	{
+		VkPipelineCreateFlags2CreateInfo pipelineCreateFlags2CI{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+		};
+		dynamicRenderingInfo.pNext = &pipelineCreateFlags2CI;
+	}
+
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+	VkPipelineCreateFlags flags = UseDescriptorBuffer() ? VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT : 0;
 	
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -644,12 +666,16 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 		.pDepthStencilState		= &depthStencilInfo,
 		.pColorBlendState		= &blendStateInfo,
 		.pDynamicState			= &dynamicStateInfo,
-		.layout					= rootSignature->GetPipelineLayout(),
 		.renderPass				= VK_NULL_HANDLE,
 		.subpass				= 0,
 		.basePipelineHandle		= VK_NULL_HANDLE,
 		.basePipelineIndex		= 0
 	};
+
+	if (UseDescriptorBuffer())
+	{
+		pipelineCreateInfo.layout = rootSignature->GetPipelineLayout();
+	}
 
 	VkPipeline vkPipeline{ VK_NULL_HANDLE };
 	wil::com_ptr<CVkPipeline> pipeline;
@@ -896,13 +922,105 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 }
 
 
+static size_t ComputeRootParameterHeapSize(const DeviceCaps& caps, const RootParameter& rootParameter)
+{
+	size_t size = 0;
+
+	for (const auto& range : rootParameter.table)
+	{
+		if (rootParameter.IsSamplerTable())
+		{
+			size += range.numDescriptors * caps.descriptorHeap.samplerDescriptorSize;
+			size = Math::AlignUp(size, caps.descriptorHeap.samplerDescriptorAlignment);
+		}
+		else
+		{
+			if (IsImageDescriptorType(range.descriptorType))
+			{
+				size += range.numDescriptors * caps.descriptorHeap.imageDescriptorSize;
+			}
+			else
+			{
+				size += range.numDescriptors * caps.descriptorHeap.bufferDescriptorSize;
+			}
+			size = Math::AlignUp(size, caps.descriptorHeap.largestResourceDescriptorAlignment);
+		}
+	}
+
+	return size;
+}
+
+
 DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter)
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
 	auto descriptorSet = std::make_shared<DescriptorSet>(this, rootParameter);
 
+	const auto descriptorHeapType = rootParameter.IsSamplerTable() ? DescriptorHeapType::Sampler : DescriptorHeapType::Resource;
 
+#if 0
+	uint32_t i = 0;
+	for (const auto& range : rootParameter.table)
+	{
+		const bool isImageDescriptor = IsImageDescriptorType(range.descriptorType);
+
+		DescriptorAllocation allocation = descriptorHeap->AllocateDescriptors(descriptorHeapType, range.numDescriptors, isImageDescriptor);
+		PushData pushData{ .offset = pushDataEntries[i].offset, .value = allocation.offset };
+		descriptorSet->m_pushData.push_back(pushData);
+
+		++i;
+	}
+#endif
+
+	size_t offset = 0;
+
+	for (const auto& range : rootParameter.table)
+	{
+		if (rootParameter.IsSamplerTable())
+		{
+			for (uint32_t i = 0; i < range.numDescriptors; ++i)
+			{
+				PushData pushData{ .offset = pushDataEntries[i].offset, .value = (uint32_t)offset };
+				descriptorSet->m_pushData.push_back(pushData);
+
+				descriptorSet->m_samplerRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+				offset += m_caps.descriptorHeap.samplerDescriptorSize;
+			}
+		}
+		else
+		{
+			const size_t descriptorSize = IsImageDescriptorType(range.descriptorType) ?
+				m_caps.descriptorHeap.imageDescriptorSize :
+				m_caps.descriptorHeap.bufferDescriptorSize;
+
+			for (uint32_t i = 0; i < range.numDescriptors; ++i)
+			{
+				PushData pushData{ .offset = pushDataEntries[i].offset, .value = (uint32_t)offset };
+				descriptorSet->m_pushData.push_back(pushData);
+
+				if (IsDescriptorTypeSRV(range.descriptorType))
+				{
+					descriptorSet->m_srvRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+				}
+				else if (IsDescriptorTypeUAV(range.descriptorType))
+				{
+					descriptorSet->m_uavRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+				}
+				else
+				{
+					assert(range.descriptorType == DescriptorType::ConstantBuffer);
+					descriptorSet->m_cbvRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+				}
+				offset += descriptorSize;
+			}
+
+			offset = Math::AlignUp(offset, m_caps.descriptorHeap.largestResourceDescriptorAlignment);
+		}
+	}
+
+	descriptorSet->m_useDescriptorHeap = UseDescriptorHeap();
+	descriptorSet->m_allocation = descriptorHeap->AllocateDescriptors(descriptorHeapType, offset);
 
 	return descriptorSet;
 }

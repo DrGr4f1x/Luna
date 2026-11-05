@@ -34,7 +34,9 @@ class IDescriptorHeapImpl
 {
 public:
 	virtual DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
-	virtual DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors) = 0;
+
+	virtual DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes) = 0;
+
 	virtual VulkanDescriptorHeapClass GetClass() const = 0;
 
 	virtual VkBuffer GetBuffer(DescriptorHeapType heapType) const = 0;
@@ -51,7 +53,7 @@ public:
 	virtual ~DescriptorHeap();
 	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout);
 
-	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors);
+	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes);
 
 	VulkanDescriptorHeapClass GetClass() const;
 
@@ -68,7 +70,7 @@ class DescriptorBufferImpl : public IDescriptorHeapImpl
 
 public:
 	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) override;
-	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors) override;
+	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes) override;
 
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
 
@@ -100,7 +102,7 @@ class DescriptorHeapImpl : public IDescriptorHeapImpl
 
 public:
 	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) override;
-	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors) override;
+	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes) override;
 
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Heap; }
 
@@ -114,8 +116,10 @@ protected:
 	struct HeapState
 	{
 		wil::com_ptr<CVkBuffer> descriptorHeap;
-		size_t descriptorSize{ 0 };
-		size_t descriptorAlignment{ 0 };
+		size_t bufferSize{ 0 };
+		size_t freeSpace{ 0 };
+		std::byte* bufferHead{ nullptr };
+		std::byte* initialHead{ nullptr };
 		VkBindHeapInfoEXT bindInfo{};
 	};
 	HeapState m_resourceState;
