@@ -1119,7 +1119,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootCBVForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
@@ -1137,32 +1137,14 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 
 	FlushResourceBarriers();
 
-	VkDescriptorBufferInfo info{
-		.buffer		= gpuBufferVK->GetBuffer(),
-		.offset		= offsetInBytes,
-		.range		= VK_WHOLE_SIZE
-	};
-
-	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
-	assert(binding != (uint32_t)-1);
-
-	VkWriteDescriptorSet writeDescriptor{
-		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootSRV),
-		.dstArrayElement	= 0,
-		.descriptorCount	= 1,
-		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		.pBufferInfo		= &info
-	};
-
-	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
-		VK_PIPELINE_BIND_POINT_GRAPHICS :
-		VK_PIPELINE_BIND_POINT_COMPUTE;
-
-	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
-	assert(pushDescriptorSetIndex != (uint32_t)-1);
-
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+	if (m_useDescriptorHeaps)
+	{
+		SetRootBufferForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+	}
+	else
+	{
+		SetRootSRVForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+	}
 }
 
 
@@ -1175,32 +1157,14 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 
 	FlushResourceBarriers();
 
-	VkDescriptorBufferInfo info{
-		.buffer		= gpuBufferVK->GetBuffer(),
-		.offset		= offsetInBytes,
-		.range		= VK_WHOLE_SIZE
-	};
-
-	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
-	assert(binding != (uint32_t)-1);
-
-	VkWriteDescriptorSet writeDescriptor{
-		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootUAV),
-		.dstArrayElement	= 0,
-		.descriptorCount	= 1,
-		.descriptorType		= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		.pBufferInfo		= &info
-	};
-
-	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
-		VK_PIPELINE_BIND_POINT_GRAPHICS :
-		VK_PIPELINE_BIND_POINT_COMPUTE;
-
-	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
-	assert(pushDescriptorSetIndex != (uint32_t)-1);
-
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+	if (m_useDescriptorHeaps)
+	{
+		SetRootBufferForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+	}
+	else
+	{
+		SetRootUAVForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+	}
 }
 
 
@@ -1217,7 +1181,7 @@ void CommandContextVK::SetResources(CommandListType type, ResourceSet& resourceS
 	const uint32_t numDescriptorSets = resourceSet.GetNumDescriptorSets();
 	for (uint32_t i = 0; i < numDescriptorSets; ++i)
 	{
-		// Skip null entries, which are for root constants
+		// Skip null entries, which are for root constants or buffers
 		if (resourceSet[i] == nullptr)
 		{
 			continue;
@@ -1650,19 +1614,32 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
 	assert(descriptorSetVK != nullptr);
 
-	// TODO: This refers to the Resource buffer.  Shouldn't hardcode index 0.
-	uint32_t bufferIndex = 0;
-	VkDeviceSize offset = descriptorSetVK->GetDescriptorBufferOffset();
+	if (m_useDescriptorHeaps)
+	{
+		const auto& pushData = descriptorSetVK->GetPushData();
+		for (const auto data : pushData)
+		{
+			assert(data.offset != ~0u);
+			assert(data.value != ~0u);
+			SetPushData(data.offset, &data.value, sizeof(data.value));
+		}
+	}
+	else
+	{
+		// TODO: This refers to the Resource buffer.  Shouldn't hardcode index 0.
+		uint32_t bufferIndex = 0;
+		VkDeviceSize offset = descriptorSetVK->GetDescriptorBufferOffset();
 
-	vkCmdSetDescriptorBufferOffsetsEXT(
-		m_commandBuffer,
-		(type == CommandListType::Graphics) ? VK_PIPELINE_BIND_POINT_GRAPHICS : VK_PIPELINE_BIND_POINT_COMPUTE,
-		(type == CommandListType::Graphics) ? m_graphicsPipelineLayout : m_computePipelineLayout,
-		rootIndex,
-		1,
-		&bufferIndex,
-		&offset
-	);
+		vkCmdSetDescriptorBufferOffsetsEXT(
+			m_commandBuffer,
+			GetBindPoint(type),
+			GetPipelineLayout(type),
+			rootIndex,
+			1,
+			&bufferIndex,
+			&offset
+		);
+	}
 }
 
 
@@ -1856,7 +1833,15 @@ void CommandContextVK::ClearDirtyDescriptors(CommandListType type)
 }
 
 
-void CommandContextVK::SetPushData()
+void CommandContextVK::SetPushData(uint32_t offset, const void* data, size_t size)
+{
+	assert(offset + size <= m_pushDataCurrentSize);
+	memcpy(m_pushData.get() + offset, data, size);
+	m_pushDataDirty = true;
+}
+
+
+void CommandContextVK::CommitPushData()
 {
 	if (m_pushDataDirty)
 	{
@@ -1884,7 +1869,7 @@ void CommandContextVK::PreDraw()
 
 	if (m_useDescriptorHeaps)
 	{
-		SetPushData();
+		CommitPushData();
 	}
 	else
 	{
@@ -1904,7 +1889,7 @@ void CommandContextVK::PreDispatch()
 
 	if (m_useDescriptorHeaps)
 	{
-		SetPushData();
+		CommitPushData();
 	}
 	else
 	{
@@ -1962,7 +1947,69 @@ void CommandContextVK::SetRootCBVForDescriptorBuffer(CommandListType type, const
 }
 
 
-void CommandContextVK::SetRootCBVForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+void CommandContextVK::SetRootSRVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+{
+	VkDescriptorBufferInfo info{
+		.buffer = gpuBuffer->GetBuffer(),
+		.offset = offsetInBytes,
+		.range = VK_WHOLE_SIZE
+	};
+
+	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
+	assert(binding != (uint32_t)-1);
+
+	VkWriteDescriptorSet writeDescriptor{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding = binding + GetRegisterShift(RootParameterType::RootSRV),
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		.pBufferInfo = &info
+	};
+
+	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
+	assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
+		VK_PIPELINE_BIND_POINT_GRAPHICS :
+		VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+}
+
+
+void CommandContextVK::SetRootUAVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+{
+	VkDescriptorBufferInfo info{
+		.buffer = gpuBuffer->GetBuffer(),
+		.offset = offsetInBytes,
+		.range = VK_WHOLE_SIZE
+	};
+
+	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
+	assert(binding != (uint32_t)-1);
+
+	VkWriteDescriptorSet writeDescriptor{
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstBinding = binding + GetRegisterShift(RootParameterType::RootUAV),
+		.dstArrayElement = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		.pBufferInfo = &info
+	};
+
+	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
+	assert(pushDescriptorSetIndex != (uint32_t)-1);
+
+	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
+		VK_PIPELINE_BIND_POINT_GRAPHICS :
+		VK_PIPELINE_BIND_POINT_COMPUTE;
+
+	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+}
+
+
+void CommandContextVK::SetRootBufferForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	assert(offsetInBytes == 0);
 
@@ -1971,9 +2018,7 @@ void CommandContextVK::SetRootCBVForDescriptorHeap(CommandListType type, const R
 	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetBufferDeviceAddress();
 	assert(bufferDeviceAddress != 0);
 
-	std::byte* dataPtr = m_pushData.get();
-	memcpy(dataPtr + offset, &bufferDeviceAddress, sizeof(VkDeviceAddress));
-	m_pushDataDirty = true;
+	SetPushData(offset, &bufferDeviceAddress, sizeof(VkDeviceAddress));
 }
 
 } // namespace Luna::VK

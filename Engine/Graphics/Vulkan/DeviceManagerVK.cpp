@@ -1208,6 +1208,8 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.descriptorHeap.samplerYcbcrConversionCount = descriptorHeapProps.samplerYcbcrConversionCount;
 		m_caps.descriptorHeap.sparseDescriptorHeaps = descriptorHeapProps.sparseDescriptorHeaps;
 		m_caps.descriptorHeap.protectedDescriptorHeaps = descriptorHeapProps.protectedDescriptorHeaps;
+		m_caps.descriptorHeap.largestResourceDescriptorSize = std::max(m_caps.descriptorHeap.bufferDescriptorSize, m_caps.descriptorHeap.imageDescriptorSize);
+		m_caps.descriptorHeap.largestResourceDescriptorAlignment = std::max(m_caps.descriptorHeap.bufferDescriptorAlignment, m_caps.descriptorHeap.imageDescriptorAlignment);
 
 		m_caps.shaderStage.descriptorSamplerMaxNum = limits.maxPerStageDescriptorSamplers;
 		m_caps.shaderStage.descriptorConstantBufferMaxNum = limits.maxPerStageDescriptorUniformBuffers;

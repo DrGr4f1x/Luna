@@ -30,6 +30,12 @@ DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType
 }
 
 
+DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+{
+	return m_impl->AllocateDescriptors(heapType, numDescriptors, imageDescriptors);
+}
+
+
 VulkanDescriptorHeapClass DescriptorHeap::GetClass() const
 {
 	return m_impl->GetClass();
@@ -39,24 +45,6 @@ VulkanDescriptorHeapClass DescriptorHeap::GetClass() const
 VkBuffer DescriptorHeap::GetBuffer(DescriptorHeapType heapType) const
 {
 	return m_impl->GetBuffer(heapType);
-}
-
-
-uint32_t DescriptorHeap::GetImageDescriptorOffset() const
-{
-	return m_impl->GetImageDescriptorOffset();
-}
-
-
-uint32_t DescriptorHeap::GetBufferDescriptorOffset() const
-{
-	return m_impl->GetBufferDescriptorOffset();
-}
-
-
-uint32_t DescriptorHeap::GetSamplerDescriptorOffset() const
-{
-	return m_impl->GetSamplerDescriptorOffset();
 }
 
 
@@ -86,6 +74,13 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHe
 }
 
 
+DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+{
+	assert(false);
+	return DescriptorAllocation{};
+}
+
+
 VkBuffer DescriptorBufferImpl::GetBuffer(DescriptorHeapType heapType) const
 {
 	return (heapType == DescriptorHeapType::Resource) ? 
@@ -96,37 +91,31 @@ VkBuffer DescriptorBufferImpl::GetBuffer(DescriptorHeapType heapType) const
 
 DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
+	assert(false);
+	return DescriptorAllocation{};
+}
+
+
+DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+{
+	assert(false);
 	return DescriptorAllocation{};
 }
 
 
 VkBuffer DescriptorHeapImpl::GetBuffer(DescriptorHeapType heapType) const
 {
-	return m_descriptorHeap->Get();
-}
-
-
-uint32_t DescriptorHeapImpl::GetImageDescriptorOffset() const
-{
-	return m_imageDescriptorOffset;
-}
-
-
-uint32_t DescriptorHeapImpl::GetBufferDescriptorOffset() const
-{
-	return m_bufferDescriptorOffset;
-}
-
-
-uint32_t DescriptorHeapImpl::GetSamplerDescriptorOffset() const
-{
-	return m_samplerDescriptorOffset;
+	return (heapType == DescriptorHeapType::Resource) ?
+		m_resourceState.descriptorHeap->Get() :
+		m_samplerState.descriptorHeap->Get();
 }
 
 
 VkBindHeapInfoEXT DescriptorHeapImpl::GetBindInfo(DescriptorHeapType heapType) const
 {
-	return m_bindInfo;
+	return (heapType == DescriptorHeapType::Resource) ?
+		m_resourceState.bindInfo :
+		m_samplerState.bindInfo;
 }
 
 } // namespace Luna::VK

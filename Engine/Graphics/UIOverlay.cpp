@@ -378,7 +378,7 @@ void UIOverlay::InitDescriptorHeap()
 {
 	if (!m_descriptorHeap)
 	{
-		m_descriptorHeap = m_application->CreateDescriptorHeap(1, 1, 1);
+		m_descriptorHeap = m_application->CreateDescriptorHeap(1, 1);
 	}
 }
 

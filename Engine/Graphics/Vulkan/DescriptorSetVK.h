@@ -24,6 +24,13 @@ class DescriptorBindingTemplate;
 class Device;
 
 
+struct PushData
+{
+	uint32_t offset{ ~0u };
+	uint32_t value{ ~0u };
+};
+
+
 class DescriptorSet : public IDescriptorSet
 {
 	friend class Device;
@@ -48,6 +55,8 @@ public:
 
 	size_t GetDescriptorBufferOffset() const;
 
+	const std::vector<PushData>& GetPushData() const { return m_pushData; }
+
 protected:
 	template <DescriptorRegisterType registerType>
 	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
@@ -67,6 +76,7 @@ protected:
 	DescriptorSetLayoutPtr m_layout;
 
 	// Push data values
+	std::vector<PushData> m_pushData;
 
 	// Is using descriptor heap
 	bool m_useDescriptorHeap{ false };

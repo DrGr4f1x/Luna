@@ -164,6 +164,8 @@ struct DeviceCaps
 		uint32_t    samplerYcbcrConversionCount;
 		bool        sparseDescriptorHeaps;
 		bool        protectedDescriptorHeaps;
+		size_t		largestResourceDescriptorSize;
+		size_t		largestResourceDescriptorAlignment;
 	} descriptorHeap;
 
 	// Shader stages

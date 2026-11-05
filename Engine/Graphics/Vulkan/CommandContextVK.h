@@ -204,7 +204,8 @@ private:
 	bool HasDirtyDescriptors(CommandListType type);
 	void ClearDirtyDescriptors(CommandListType type);
 
-	void SetPushData();
+	void SetPushData(uint32_t offset, const void* data, size_t size);
+	void CommitPushData();
 
 	// Pre-draw, pre-dispatch
 	void PreDraw();
@@ -226,9 +227,11 @@ private:
 
 	// Descriptor buffer
 	void SetRootCBVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootSRVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootUAVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 	// Descriptor heap
-	void SetRootCBVForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootBufferForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 private:
 	std::string m_id;

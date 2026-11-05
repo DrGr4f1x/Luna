@@ -40,7 +40,7 @@ public:
 
 	virtual const DeviceCaps& GetDeviceCaps() const = 0;
 
-	virtual DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers) = 0;
+	virtual DescriptorHeapPtr CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers) = 0;
 
 	virtual ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) = 0;
 	virtual DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) = 0;

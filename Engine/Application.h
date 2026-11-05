@@ -121,7 +121,7 @@ public:
 	const ApplicationInfo& GetInfo() const { return m_appInfo; }
 
 	// Wrappers for graphics resource creation
-	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers);
+	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers);
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc);
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc);
 	GpuBufferPtr CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc);
@@ -197,8 +197,7 @@ protected:
 
 	// Default descriptor heap
 	DescriptorHeapPtr m_defaultDescriptorHeap;
-	uint32_t m_numImageDescriptors{ 1024 };
-	uint32_t m_numBufferDescriptors{ 1024 };
+	uint32_t m_numResourceDescriptors{ 1024 };
 	uint32_t m_numSamplerDescriptors{ 64 };
 
 	Color m_gridColor{ DirectX::Colors::WhiteSmoke };
