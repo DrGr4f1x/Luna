@@ -12,6 +12,8 @@
 
 #include "GpuBufferVK.h"
 
+#include "DeviceVK.h"
+
 
 namespace Luna::VK
 {
@@ -54,6 +56,40 @@ void GpuBuffer::Unmap()
 VkBuffer GpuBuffer::GetBuffer() const noexcept
 {
 	return m_buffer ? m_buffer->Get() : VK_NULL_HANDLE;
+}
+
+
+void GpuBuffer::InitializeDescriptors(Device* device, bool hasSrv, bool hasUav)
+{
+	if (hasSrv)
+	{
+		if (HasAnyFlag(m_type, ResourceType::TypedBuffer))
+		{
+			m_srvDescriptor.ReadUniformTexelBufferDescriptor(device, m_deviceAddress, m_bufferSize, FormatToVulkan(m_format));
+		}
+		else
+		{
+			m_srvDescriptor.ReadStorageBufferDescriptor(device, m_deviceAddress, m_bufferSize);
+
+		}
+	}
+
+	if (hasUav)
+	{
+		if (HasAnyFlag(m_type, ResourceType::TypedBuffer))
+		{
+			m_uavDescriptor.ReadStorageTexelBufferDescriptor(device, m_deviceAddress, m_bufferSize, FormatToVulkan(m_format));
+		}
+		else
+		{
+			m_uavDescriptor.ReadStorageBufferDescriptor(device, m_deviceAddress, m_bufferSize);
+		}
+	}
+
+	if (HasAnyFlag(m_type, ResourceType::ConstantBuffer))
+	{
+		m_cbvDescriptor.ReadUniformBufferDescriptor(device, m_deviceAddress, m_bufferSize);
+	}
 }
 
 } // namespace Luna::VK

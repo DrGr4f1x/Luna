@@ -27,16 +27,16 @@ public:
 	Descriptor();
 	~Descriptor() override {}
 
-	void ReadSampledImageDescriptor(bool useDescriptorHeap, Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView);
-	void ReadStorageImageDescriptor(bool useDescriptorHeap, Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView);
+	void ReadSampledImageDescriptor(Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView);
+	void ReadStorageImageDescriptor(Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView);
 
-	void ReadUniformBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
-	void ReadUniformTexelBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format);
-	void ReadStorageTexelBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format);
-	void ReadStorageBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
-	void ReadAccelerationStructureDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
+	void ReadUniformBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
+	void ReadUniformTexelBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format);
+	void ReadStorageTexelBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format);
+	void ReadStorageBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
+	void ReadAccelerationStructureDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize);
 
-	void ReadSamplerDescriptor(bool useDescriptorHeap, Device* device, VkSampler sampler, const VkSamplerCreateInfo& info);
+	void ReadSamplerDescriptor(Device* device, VkSampler sampler, const VkSamplerCreateInfo& info);
 
 	size_t CopyRawDescriptor(void* dest) const;
 	size_t GetRawDescriptorSize() const noexcept { return m_rawDescriptorSize; }

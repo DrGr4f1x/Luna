@@ -356,11 +356,7 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	depthBuffer->SetDepthOnlyImageView(imageViewDepthOnly.get());
 	depthBuffer->SetStencilOnlyImageView(imageViewStencilOnly.get());
 
-	// Setup descriptors
-	const bool useDescriptorHeap = UseDescriptorHeap();
-	depthBuffer->m_depthStencilDescriptor.ReadSampledImageDescriptor(useDescriptorHeap, this, depthStencilImageViewCreateInfo, imageViewDepthStencil->Get());
-	depthBuffer->m_depthOnlyDescriptor.ReadSampledImageDescriptor(useDescriptorHeap, this, depthOnlyImageViewCreateInfo, imageViewDepthOnly->Get());
-	depthBuffer->m_stencilOnlyDescriptor.ReadSampledImageDescriptor(useDescriptorHeap, this, stencilOnlyImageViewCreateInfo, imageViewStencilOnly->Get());
+	depthBuffer->InitializeDescriptors(this);
 
 	return depthBuffer;
 }
@@ -454,43 +450,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 	gpuBuffer->m_deviceAddress = GetBufferDeviceAddress(m_device->Get(), buffer->Get());
 
-	// Descriptor setup
-	const bool useDescriptorHeap = UseDescriptorHeap();
-	if (gpuBufferDesc.bAllowShaderResource)
-	{
-		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
-		{
-			gpuBuffer->m_srvDescriptor.ReadUniformTexelBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize, FormatToVulkan(gpuBuffer->m_format));
-		}
-		else if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ByteAddressBuffer))
-		{
-			gpuBuffer->m_srvDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
-		}
-		else
-		{
-			gpuBuffer->m_srvDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
-
-		}
-	}
-	if (gpuBufferDesc.bAllowUnorderedAccess)
-	{
-		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
-		{
-			gpuBuffer->m_uavDescriptor.ReadStorageTexelBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize, FormatToVulkan(gpuBuffer->m_format));
-		}
-		else if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ByteAddressBuffer))
-		{
-			gpuBuffer->m_uavDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
-		}
-		else
-		{
-			gpuBuffer->m_uavDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
-		}
-	}
-	if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ConstantBuffer))
-	{
-		gpuBuffer->m_cbvDescriptor.ReadUniformBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
-	}
+	gpuBuffer->InitializeDescriptors(this, gpuBufferDesc.bAllowShaderResource, gpuBufferDesc.bAllowUnorderedAccess);
 	
 	if (gpuBufferDesc.initialData)
 	{
@@ -985,7 +945,7 @@ SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 	// Create Sampler
 	auto samplerPtr = std::make_shared<Sampler>();
 	samplerPtr->m_sampler = pSampler;
-	samplerPtr->m_descriptor.ReadSamplerDescriptor(UseDescriptorHeap(), this, pSampler->Get(), createInfo);
+	samplerPtr->m_descriptor.ReadSamplerDescriptor(this, pSampler->Get(), createInfo);
 
 	return samplerPtr;
 };
@@ -1083,7 +1043,6 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	// Setup descriptor
 	const bool useDescriptorHeap = UseDescriptorHeap();
 	textureVK->m_descriptor.ReadSampledImageDescriptor(
-		useDescriptorHeap, 
 		this,  
 		imageViewCreateInfo, 
 		imageView->Get());

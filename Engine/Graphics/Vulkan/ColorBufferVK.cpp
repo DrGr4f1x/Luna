@@ -30,7 +30,6 @@ void ColorBuffer::InitializeDescriptors(Device* device, bool initUavDescriptor)
 	const bool useDescriptorHeap = device->UseDescriptorHeap();
 
 	m_srvDescriptor.ReadSampledImageDescriptor(
-		useDescriptorHeap,
 		device,
 		m_srvImageView->GetCreateInfo(),
 		m_srvImageView->Get());
@@ -38,7 +37,6 @@ void ColorBuffer::InitializeDescriptors(Device* device, bool initUavDescriptor)
 	if (initUavDescriptor)
 	{
 		m_uavDescriptor.ReadStorageImageDescriptor(
-			useDescriptorHeap,
 			device,
 			m_srvImageView->GetCreateInfo(),
 			m_srvImageView->Get());

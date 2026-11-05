@@ -24,11 +24,11 @@ Descriptor::Descriptor()
 }
 
 
-void Descriptor::ReadSampledImageDescriptor(bool useDescriptorHeap, Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView)
+void Descriptor::ReadSampledImageDescriptor(Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadImageDescriptorForHeap(
 			vkDevice,
@@ -49,11 +49,11 @@ void Descriptor::ReadSampledImageDescriptor(bool useDescriptorHeap, Device* devi
 }
 
 
-void Descriptor::ReadStorageImageDescriptor(bool useDescriptorHeap, Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView)
+void Descriptor::ReadStorageImageDescriptor(Device* device, VkImageViewCreateInfo viewInfo, VkImageView imageView)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadImageDescriptorForHeap(
 			vkDevice,
@@ -74,11 +74,11 @@ void Descriptor::ReadStorageImageDescriptor(bool useDescriptorHeap, Device* devi
 }
 
 
-void Descriptor::ReadUniformBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize)
+void Descriptor::ReadUniformBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadBufferDescriptorForHeap(
 			vkDevice,
@@ -99,11 +99,11 @@ void Descriptor::ReadUniformBufferDescriptor(bool useDescriptorHeap, Device* dev
 }
 
 
-void Descriptor::ReadUniformTexelBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format)
+void Descriptor::ReadUniformTexelBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadTexelBufferDescriptorForHeap(
 			vkDevice,
@@ -126,11 +126,11 @@ void Descriptor::ReadUniformTexelBufferDescriptor(bool useDescriptorHeap, Device
 }
 
 
-void Descriptor::ReadStorageTexelBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format)
+void Descriptor::ReadStorageTexelBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkFormat format)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadTexelBufferDescriptorForHeap(
 			vkDevice,
@@ -153,11 +153,11 @@ void Descriptor::ReadStorageTexelBufferDescriptor(bool useDescriptorHeap, Device
 }
 
 
-void Descriptor::ReadStorageBufferDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize)
+void Descriptor::ReadStorageBufferDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadBufferDescriptorForHeap(
 			vkDevice,
@@ -178,11 +178,11 @@ void Descriptor::ReadStorageBufferDescriptor(bool useDescriptorHeap, Device* dev
 }
 
 
-void Descriptor::ReadAccelerationStructureDescriptor(bool useDescriptorHeap, Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize)
+void Descriptor::ReadAccelerationStructureDescriptor(Device* device, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		ReadBufferDescriptorForHeap(
 			vkDevice,
@@ -203,11 +203,11 @@ void Descriptor::ReadAccelerationStructureDescriptor(bool useDescriptorHeap, Dev
 }
 
 
-void Descriptor::ReadSamplerDescriptor(bool useDescriptorHeap, Device* device, VkSampler sampler, const VkSamplerCreateInfo& info)
+void Descriptor::ReadSamplerDescriptor(Device* device, VkSampler sampler, const VkSamplerCreateInfo& info)
 {
 	VkDevice vkDevice = device->GetVulkanDevice();
 
-	if (useDescriptorHeap)
+	if (device->UseDescriptorHeap())
 	{
 		m_rawDescriptorSize = device->GetDeviceCaps().descriptorHeap.samplerDescriptorSize;
 		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);

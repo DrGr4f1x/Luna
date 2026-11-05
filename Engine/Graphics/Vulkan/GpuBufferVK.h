@@ -40,6 +40,8 @@ public:
 	VkBuffer GetBuffer() const noexcept;
 	VkDeviceAddress GetBufferDeviceAddress() const noexcept { return m_deviceAddress; }
 
+	void InitializeDescriptors(Device* device, bool hasSrv, bool hasUav);
+
 protected:
 	wil::com_ptr<CVkBuffer> m_buffer;
 	Descriptor m_srvDescriptor;

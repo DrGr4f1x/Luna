@@ -48,6 +48,8 @@ public:
 
 	VkImage GetImage() const noexcept { return m_image->Get(); }
 
+	void InitializeDescriptors(Device* device);
+
 protected:
 	wil::com_ptr<CVkImage> m_image;
 	Descriptor m_depthStencilDescriptor;
