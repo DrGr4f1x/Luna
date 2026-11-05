@@ -34,11 +34,17 @@ public:
 	VkImageView GetRtvImageView() const { return m_rtvImageView->Get(); }
 	void SetRtvImageView(CVkImageView* rtvImageView) { m_rtvImageView = rtvImageView; }
 
+	VkImageView GetSrvImageView() const { return m_srvImageView->Get(); }
+	void SetSrvImageView(CVkImageView* srvImageView) { m_srvImageView = srvImageView; }
+
 	VkImage GetImage() const noexcept { return m_image->Get(); }
+
+	void InitializeDescriptors(Device* device, bool initUavDescriptor);
 
 protected:
 	wil::com_ptr<CVkImage> m_image;
 	wil::com_ptr<CVkImageView> m_rtvImageView;
+	wil::com_ptr<CVkImageView> m_srvImageView;
 	Descriptor m_srvDescriptor;
 	Descriptor m_uavDescriptor;
 };

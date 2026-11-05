@@ -400,10 +400,11 @@ class __declspec(uuid("D97705D7-0380-4DF4-89B9-167EF8355085")) CVkImageView
 {
 public:
 	CVkImageView() noexcept = default;
-	CVkImageView(CVkDevice* device, CVkImage* image, VkImageView imageView) noexcept
+	CVkImageView(CVkDevice* device, CVkImage* image, VkImageView imageView, const VkImageViewCreateInfo& createInfo) noexcept
 		: m_device{ device }
 		, m_image{ image }
 		, m_imageView{ imageView }
+		, m_createInfo{ createInfo }
 	{
 	}
 
@@ -417,6 +418,7 @@ public:
 
 	VkDevice GetDevice() const noexcept { return m_device->Get(); }
 	VkImage GetImage() const noexcept { return m_image->Get(); }
+	VkImageViewCreateInfo GetCreateInfo() const noexcept { return m_createInfo; }
 
 	void Destroy();
 
@@ -424,6 +426,7 @@ private:
 	wil::com_ptr<CVkDevice> m_device;
 	wil::com_ptr<CVkImage> m_image;
 	VkImageView m_imageView{ VK_NULL_HANDLE };
+	VkImageViewCreateInfo m_createInfo{};
 };
 
 

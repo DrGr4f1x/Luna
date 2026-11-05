@@ -253,21 +253,9 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	colorBuffer->m_image = image;
 
 	colorBuffer->SetRtvImageView(imageViewRtv.get());
+	colorBuffer->SetSrvImageView(imageViewSrv.get());
 
-	// Setup descriptors
-	const bool useDescriptorHeap = UseDescriptorHeap();
-	auto imageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
-
-	colorBuffer->m_srvDescriptor.ReadSampledImageDescriptor(
-		useDescriptorHeap, 
-		this,
-		imageViewCreateInfo, 
-		imageViewSrv->Get());
-	colorBuffer->m_uavDescriptor.ReadStorageImageDescriptor(
-		useDescriptorHeap, 
-		this,
-		imageViewCreateInfo, 
-		imageViewSrv->Get());
+	colorBuffer->InitializeDescriptors(this, true);
 
 	return colorBuffer;
 }
@@ -1148,10 +1136,6 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 
 	auto imageViewSrv = CreateImageView(imageViewDesc);
 
-	// Descriptors
-	VkDescriptorImageInfo imageInfoSrv{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::PixelShaderResource) };
-	VkDescriptorImageInfo imageInfoUav{ VK_NULL_HANDLE, *imageViewSrv, GetImageLayout(ResourceState::UnorderedAccess) };
-
 	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
 
 	colorBuffer->m_type = colorBufferDesc.resourceType;
@@ -1166,16 +1150,9 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = swapChainImage;
 	colorBuffer->SetRtvImageView(imageViewRtv.get());
+	colorBuffer->SetSrvImageView(imageViewSrv.get());
 
-	// Setup descriptor
-	const bool useDescriptorHeap = UseDescriptorHeap();
-	auto imageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
-
-	colorBuffer->m_srvDescriptor.ReadSampledImageDescriptor(
-		useDescriptorHeap,
-		this,
-		imageViewCreateInfo,
-		imageViewSrv->Get());
+	colorBuffer->InitializeDescriptors(this, false);
 
 	return colorBuffer;
 }
@@ -1362,7 +1339,7 @@ wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageVie
 	VkImageView vkImageView{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateImageView(*m_device, &createInfo, nullptr, &vkImageView)))
 	{
-		return Create<CVkImageView>(m_device.get(), imageViewDesc.image, vkImageView);
+		return Create<CVkImageView>(m_device.get(), imageViewDesc.image, vkImageView, createInfo);
 	}
 	else
 	{

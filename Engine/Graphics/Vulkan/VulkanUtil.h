@@ -47,8 +47,6 @@ struct ImageDesc
 	constexpr ImageDesc& SetMemoryAccess(MemoryAccess value) noexcept { memoryAccess = value; return *this; }
 };
 
-wil::com_ptr<CVkImage> CreateImage(CVkDevice* device, CVmaAllocator* allocator, const ImageDesc& desc);
-
 
 struct ImageViewDesc
 {
@@ -94,8 +92,6 @@ struct BufferData
 bool QueryLinearTilingFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags);
 bool QueryOptimalTilingFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags);
 bool QueryBufferFeature(VkFormatProperties properties, VkFormatFeatureFlagBits flags);
-
-wil::com_ptr<CVkImageView> CreateImageView(CVkDevice* device, const ImageViewDesc& desc);
 
 wil::com_ptr<CVkFence> CreateFence(CVkDevice* device, bool bSignalled);
 
