@@ -39,21 +39,12 @@ void Descriptor::ReadSampledImageDescriptor(bool useDescriptorHeap, Device* devi
 	}
 	else
 	{
-		VkDescriptorImageInfo info{
-			.imageView		= imageView,
-			.imageLayout	= VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-		};
-
-		VkDescriptorGetInfoEXT descriptorGetInfo{ 
-			.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type	= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
-			.data	= { .pSampledImage = &info }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampledImage;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadImageDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.sampledImage,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+			imageView);
 	}
 }
 
@@ -73,21 +64,12 @@ void Descriptor::ReadStorageImageDescriptor(bool useDescriptorHeap, Device* devi
 	}
 	else
 	{
-		VkDescriptorImageInfo info{
-			.imageView		= imageView,
-			.imageLayout	= VK_IMAGE_LAYOUT_GENERAL
-		};
-
-		VkDescriptorGetInfoEXT descriptorGetInfo{
-			.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type	= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
-			.data	= { .pStorageImage = &info }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageImage;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadImageDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageImage,
+			VK_IMAGE_LAYOUT_GENERAL,
+			VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+			imageView);
 	}
 }
 
@@ -107,23 +89,12 @@ void Descriptor::ReadUniformBufferDescriptor(bool useDescriptorHeap, Device* dev
 	}
 	else
 	{
-		VkDescriptorAddressInfoEXT addressInfo{
-			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-			.address	= bufferAddress,
-			.range		= bufferSize,
-			.format		= VK_FORMAT_UNDEFINED
-		};
-
-		VkDescriptorGetInfoEXT descriptorGetInfo{
-			.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-			.data	= { .pUniformBuffer = &addressInfo }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformBuffer;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadBufferDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformBuffer,
+			bufferAddress,
+			bufferSize,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 	}
 }
 
@@ -144,23 +115,13 @@ void Descriptor::ReadUniformTexelBufferDescriptor(bool useDescriptorHeap, Device
 	}
 	else
 	{
-		VkDescriptorAddressInfoEXT addressInfo{
-			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-			.address	= bufferAddress,
-			.range		= bufferSize,
-			.format		= format
-		};
-
-		VkDescriptorGetInfoEXT descriptorGetInfo{
-			.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type	= VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
-			.data	= { .pUniformTexelBuffer = &addressInfo }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformTexelBuffer;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadBufferDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformTexelBuffer,
+			bufferAddress,
+			bufferSize,
+			VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
+			format);
 	}
 }
 
@@ -181,23 +142,13 @@ void Descriptor::ReadStorageTexelBufferDescriptor(bool useDescriptorHeap, Device
 	}
 	else
 	{
-		VkDescriptorAddressInfoEXT addressInfo{
-			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-			.address	= bufferAddress,
-			.range		= bufferSize,
-			.format		= format
-		};
-
-		VkDescriptorGetInfoEXT descriptorGetInfo{
-			.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type	= VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
-			.data	= { .pStorageTexelBuffer = &addressInfo }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformTexelBuffer;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadBufferDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageTexelBuffer,
+			bufferAddress,
+			bufferSize,
+			VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
+			format);
 	}
 }
 
@@ -217,23 +168,12 @@ void Descriptor::ReadStorageBufferDescriptor(bool useDescriptorHeap, Device* dev
 	}
 	else
 	{
-		VkDescriptorAddressInfoEXT addressInfo{
-			.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
-			.address	= bufferAddress,
-			.range		= bufferSize,
-			.format		= VK_FORMAT_UNDEFINED
-		};
-
-		VkDescriptorGetInfoEXT descriptorGetInfo{
-			.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-			.data	= { .pStorageBuffer = &addressInfo }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformBuffer;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadBufferDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.storageBuffer,
+			bufferAddress,
+			bufferSize,
+			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 	}
 }
 
@@ -253,16 +193,12 @@ void Descriptor::ReadAccelerationStructureDescriptor(bool useDescriptorHeap, Dev
 	}
 	else
 	{
-		VkDescriptorGetInfoEXT descriptorGetInfo{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
-			.type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR,
-			.data = { .accelerationStructure = bufferAddress }
-		};
-
-		m_rawDescriptorSize = device->GetDeviceCaps().descriptorBuffer.descriptorSize.uniformBuffer;
-		assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-		vkGetDescriptorEXT(vkDevice, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+		ReadBufferDescriptorForBuffer(
+			vkDevice,
+			device->GetDeviceCaps().descriptorBuffer.descriptorSize.accelerationStructure,
+			bufferAddress,
+			bufferSize,
+			VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
 	}
 }
 
@@ -323,13 +259,7 @@ void Descriptor::ReadImageDescriptorForHeap(VkDevice device, size_t descriptorSi
 		.data	= { .pImage = &imageDescInfo }
 	};
 
-	m_rawDescriptorSize = descriptorSize;
-	assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-	VkHostAddressRangeEXT dst{};
-	dst.address = (void*)&m_rawDescriptor[0];
-	dst.size = m_rawDescriptorSize;
-	vkWriteResourceDescriptorsEXT(device, 1, &resInfo, &dst);
+	SetSizeAndReadDescriptorForHeap(device, descriptorSize, resInfo);
 }
 
 
@@ -346,13 +276,7 @@ void Descriptor::ReadBufferDescriptorForHeap(VkDevice device, size_t descriptorS
 		.data = {.pAddressRange = &addressRange }
 	};
 
-	m_rawDescriptorSize = descriptorSize;
-	assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
-
-	VkHostAddressRangeEXT dst{};
-	dst.address = (void*)&m_rawDescriptor[0];
-	dst.size = m_rawDescriptorSize;
-	vkWriteResourceDescriptorsEXT(device, 1, &resInfo, &dst);
+	SetSizeAndReadDescriptorForHeap(device, descriptorSize, resInfo);
 }
 
 void Descriptor::ReadTexelBufferDescriptorForHeap(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType, VkFormat format)
@@ -369,13 +293,98 @@ void Descriptor::ReadTexelBufferDescriptorForHeap(VkDevice device, size_t descri
 		.data = { .pTexelBuffer = &texelBufferInfo }
 	};
 
+	SetSizeAndReadDescriptorForHeap(device, descriptorSize, resInfo);
+}
+
+
+void Descriptor::SetSizeAndReadDescriptorForHeap(VkDevice device, size_t descriptorSize, const VkResourceDescriptorInfoEXT& resInfo)
+{
 	m_rawDescriptorSize = descriptorSize;
 	assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
 
-	VkHostAddressRangeEXT dst{};
-	dst.address = (void*)&m_rawDescriptor[0];
-	dst.size = m_rawDescriptorSize;
-	vkWriteResourceDescriptorsEXT(device, 1, &resInfo, &dst);
+	VkHostAddressRangeEXT range{ .address = (void*)&m_rawDescriptor[0], .size = m_rawDescriptorSize };
+	vkWriteResourceDescriptorsEXT(device, 1, &resInfo, &range);
+}
+
+void Descriptor::ReadImageDescriptorForBuffer(VkDevice device, size_t descriptorSize, VkImageLayout layout, VkDescriptorType descriptorType, VkImageView imageView)
+{
+	VkDescriptorImageInfo info{
+		.imageView		= imageView,
+		.imageLayout	= layout
+	};
+
+	VkDescriptorGetInfoEXT descriptorGetInfo{
+		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
+		.type	= descriptorType
+	};
+
+	switch (descriptorType)
+	{
+	case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+		descriptorGetInfo.data.pSampledImage = &info;
+		break;
+
+	case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+		descriptorGetInfo.data.pStorageImage = &info;
+		break;
+
+	default:
+		assert(false);
+		break;
+	}
+
+	m_rawDescriptorSize = descriptorSize;
+	assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
+
+	vkGetDescriptorEXT(device, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
+}
+
+
+void Descriptor::ReadBufferDescriptorForBuffer(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType, VkFormat format)
+{
+	VkDescriptorAddressInfoEXT addressInfo{
+		.sType		= VK_STRUCTURE_TYPE_DESCRIPTOR_ADDRESS_INFO_EXT,
+		.address	= bufferAddress,
+		.range		= bufferSize,
+		.format		= VK_FORMAT_UNDEFINED
+	};
+
+	VkDescriptorGetInfoEXT descriptorGetInfo{
+		.sType	= VK_STRUCTURE_TYPE_DESCRIPTOR_GET_INFO_EXT,
+		.type	= descriptorType
+	};
+
+	switch (descriptorType)
+	{
+	case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+		descriptorGetInfo.data.pUniformBuffer = &addressInfo;
+		break;
+
+	case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+		descriptorGetInfo.data.pStorageBuffer = &addressInfo;
+		break;
+
+	case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+		descriptorGetInfo.data.pUniformTexelBuffer = &addressInfo;
+		break;
+
+	case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+		descriptorGetInfo.data.pStorageTexelBuffer = &addressInfo;
+		break;
+
+	case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+		descriptorGetInfo.data.accelerationStructure = bufferAddress;
+		break;
+
+	default:
+		assert(false);
+		break;
+	}
+
+	m_rawDescriptorSize = descriptorSize;
+	assert(m_rawDescriptorSize <= kMaxRawDescriptorSize);
+
+	vkGetDescriptorEXT(device, &descriptorGetInfo, m_rawDescriptorSize, (void*)(&m_rawDescriptor[0]));
 }
 
 } // namespace Luna::VK

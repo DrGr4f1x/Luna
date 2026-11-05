@@ -16,20 +16,28 @@
 namespace Luna::VK
 {
 
-const IDescriptor* DepthBuffer::GetDsvDescriptor(DepthStencilAspect depthStencilAspect) const noexcept
-{ 
-	switch (depthStencilAspect)
-	{
-	case DepthStencilAspect::DepthReadOnly:		return &m_depthOnlyDescriptor;
-	case DepthStencilAspect::StencilReadOnly:	return &m_stencilOnlyDescriptor;
-	default:									return &m_depthStencilDescriptor;
-	}
-}
-
-
 const IDescriptor* DepthBuffer::GetSrvDescriptor(bool depthSrv) const noexcept
 {
 	return depthSrv ? &m_depthOnlyDescriptor : &m_stencilOnlyDescriptor;
+}
+
+
+VkImageView DepthBuffer::GetDsvImageView(DepthStencilAspect aspect) const
+{
+	switch (aspect)
+	{
+	case DepthStencilAspect::DepthReadOnly:
+		return m_depthOnlyImageView->Get();
+		break;
+
+	case DepthStencilAspect::StencilReadOnly:
+		return m_stencilOnlyImageView->Get();
+		break;
+
+	default:
+		return m_depthStencilImageView->Get();
+		break;
+	}
 }
 
 } // namespace Luna::VK

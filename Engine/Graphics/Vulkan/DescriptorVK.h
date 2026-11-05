@@ -46,6 +46,11 @@ private:
 	void ReadImageDescriptorForHeap(VkDevice device, size_t descriptorSize, VkImageLayout layout, VkDescriptorType descriptorType, const VkImageViewCreateInfo& viewInfo);
 	void ReadBufferDescriptorForHeap(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType);
 	void ReadTexelBufferDescriptorForHeap(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType, VkFormat format);
+	void SetSizeAndReadDescriptorForHeap(VkDevice device, size_t descriptorSize, const VkResourceDescriptorInfoEXT& resInfo);
+
+	// Descriptor buffer
+	void ReadImageDescriptorForBuffer(VkDevice device, size_t descriptorSize, VkImageLayout layout, VkDescriptorType descriptorType, VkImageView imageView);
+	void ReadBufferDescriptorForBuffer(VkDevice device, size_t descriptorSize, VkDeviceAddress bufferAddress, VkDeviceSize bufferSize, VkDescriptorType descriptorType, VkFormat format = VK_FORMAT_UNDEFINED);
 
 private:
 	std::array<std::byte, kMaxRawDescriptorSize> m_rawDescriptor;

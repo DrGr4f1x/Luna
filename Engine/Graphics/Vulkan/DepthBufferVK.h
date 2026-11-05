@@ -26,8 +26,25 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
-	const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept override;
+	const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept override { return nullptr; }
 	const IDescriptor* GetSrvDescriptor(bool depthSrv) const noexcept override;
+
+	void SetDepthStencilImageView(CVkImageView* imageView)
+	{
+		m_depthStencilImageView = imageView;
+	}
+
+	void SetDepthOnlyImageView(CVkImageView* imageView)
+	{
+		m_depthOnlyImageView = imageView;
+	}
+
+	void SetStencilOnlyImageView(CVkImageView* imageView)
+	{
+		m_stencilOnlyImageView = imageView;
+	}
+
+	VkImageView GetDsvImageView(DepthStencilAspect aspect) const;
 
 	VkImage GetImage() const noexcept { return m_image->Get(); }
 
@@ -36,6 +53,10 @@ protected:
 	Descriptor m_depthStencilDescriptor;
 	Descriptor m_depthOnlyDescriptor;
 	Descriptor m_stencilOnlyDescriptor;
+
+	wil::com_ptr<CVkImageView> m_depthStencilImageView;
+	wil::com_ptr<CVkImageView> m_depthOnlyImageView;
+	wil::com_ptr<CVkImageView> m_stencilOnlyImageView;
 };
 
 } // namespace Luna::VK

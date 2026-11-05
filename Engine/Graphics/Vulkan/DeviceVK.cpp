@@ -252,7 +252,7 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = image;
 
-	colorBuffer->SetRtvImageView(image.get(), imageViewRtv.get());
+	colorBuffer->SetRtvImageView(imageViewRtv.get());
 
 	// Setup descriptors
 	const bool useDescriptorHeap = UseDescriptorHeap();
@@ -300,6 +300,10 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 		imageAspect |= ImageAspect::Stencil;
 	}
 
+	VkImageViewCreateInfo depthStencilImageViewCreateInfo{};
+	VkImageViewCreateInfo depthOnlyImageViewCreateInfo{};
+	VkImageViewCreateInfo stencilOnlyImageViewCreateInfo{};
+
 	ImageViewDesc imageViewDesc{
 		.image				= image.get(),
 		.name				= depthBufferDesc.name,
@@ -313,7 +317,9 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 		.arraySize			= depthBufferDesc.arraySizeOrDepth
 	};
 
+	depthStencilImageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
 	auto imageViewDepthStencil = CreateImageView(imageViewDesc);
+
 	wil::com_ptr<CVkImageView> imageViewDepthOnly;
 	wil::com_ptr<CVkImageView> imageViewStencilOnly;
 
@@ -324,6 +330,7 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 			.SetImageAspect(ImageAspect::Depth)
 			.SetViewType(TextureSubresourceViewType::DepthOnly);
 
+		depthOnlyImageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
 		imageViewDepthOnly = CreateImageView(imageViewDesc);
 
 		imageViewDesc
@@ -331,12 +338,16 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 			.SetImageAspect(ImageAspect::Stencil)
 			.SetViewType(TextureSubresourceViewType::StencilOnly);
 
+		stencilOnlyImageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
 		imageViewStencilOnly = CreateImageView(imageViewDesc);
 	}
 	else
 	{
 		imageViewDepthOnly = imageViewDepthStencil;
 		imageViewStencilOnly = imageViewDepthStencil;
+
+		depthOnlyImageViewCreateInfo = depthStencilImageViewCreateInfo;
+		stencilOnlyImageViewCreateInfo = depthStencilImageViewCreateInfo;
 	}
 
 	// Create DepthBuffer
@@ -353,12 +364,15 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
 	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
 	depthBuffer->m_image = image;
-	depthBuffer->SetDepthStencilDsvImageView(image.get(), imageViewDepthStencil.get());
-	depthBuffer->SetDepthOnlyDsvImageView(image.get(), imageViewDepthOnly.get());
-	depthBuffer->SetStencilOnlyImageView(image.get(), imageViewStencilOnly.get());
-	depthBuffer->m_depthStencilDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
-	depthBuffer->m_depthOnlyDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
-	depthBuffer->m_stencilOnlyDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
+	depthBuffer->SetDepthStencilImageView(imageViewDepthStencil.get());
+	depthBuffer->SetDepthOnlyImageView(imageViewDepthOnly.get());
+	depthBuffer->SetStencilOnlyImageView(imageViewStencilOnly.get());
+
+	// Setup descriptors
+	const bool useDescriptorHeap = UseDescriptorHeap();
+	depthBuffer->m_depthStencilDescriptor.ReadSampledImageDescriptor(useDescriptorHeap, this, depthStencilImageViewCreateInfo, imageViewDepthStencil->Get());
+	depthBuffer->m_depthOnlyDescriptor.ReadSampledImageDescriptor(useDescriptorHeap, this, depthOnlyImageViewCreateInfo, imageViewDepthOnly->Get());
+	depthBuffer->m_stencilOnlyDescriptor.ReadSampledImageDescriptor(useDescriptorHeap, this, stencilOnlyImageViewCreateInfo, imageViewStencilOnly->Get());
 
 	return depthBuffer;
 }
@@ -453,45 +467,41 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 	gpuBuffer->m_deviceAddress = GetBufferDeviceAddress(m_device->Get(), buffer->Get());
 
 	// Descriptor setup
-	
+	const bool useDescriptorHeap = UseDescriptorHeap();
 	if (gpuBufferDesc.bAllowShaderResource)
 	{
-		gpuBuffer->m_srvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, gpuBuffer->GetBufferSize(), FormatToVulkan(gpuBufferDesc.format));
-
 		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
 		{
-			gpuBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TypedBufferSRV);
+			gpuBuffer->m_srvDescriptor.ReadUniformTexelBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize, FormatToVulkan(gpuBuffer->m_format));
 		}
 		else if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ByteAddressBuffer))
 		{
-			gpuBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::RawBufferSRV);
+			gpuBuffer->m_srvDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
 		}
 		else
 		{
-			gpuBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::StructuredBufferSRV);
+			gpuBuffer->m_srvDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
+
 		}
 	}
 	if (gpuBufferDesc.bAllowUnorderedAccess)
 	{
-		gpuBuffer->m_uavDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, gpuBuffer->GetBufferSize(), FormatToVulkan(gpuBufferDesc.format));
-
 		if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::TypedBuffer))
 		{
-			gpuBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::TypedBufferUAV);
+			gpuBuffer->m_uavDescriptor.ReadStorageTexelBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize, FormatToVulkan(gpuBuffer->m_format));
 		}
 		else if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ByteAddressBuffer))
 		{
-			gpuBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::RawBufferUAV);
+			gpuBuffer->m_uavDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
 		}
 		else
 		{
-			gpuBuffer->m_uavDescriptor.ReadRawDescriptor(this, DescriptorType::StructuredBufferUAV);
+			gpuBuffer->m_uavDescriptor.ReadStorageBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
 		}
 	}
 	if (HasAnyFlag(gpuBufferDesc.resourceType, ResourceType::ConstantBuffer))
 	{
-		gpuBuffer->m_cbvDescriptor.SetBufferView(buffer.get(), bufferView.get(), gpuBufferDesc.elementSize, gpuBuffer->GetBufferSize(), FormatToVulkan(gpuBufferDesc.format));
-		gpuBuffer->m_cbvDescriptor.ReadRawDescriptor(this, DescriptorType::ConstantBuffer);
+		gpuBuffer->m_cbvDescriptor.ReadUniformBufferDescriptor(useDescriptorHeap, this, gpuBuffer->m_deviceAddress, gpuBuffer->m_bufferSize);
 	}
 	
 	if (gpuBufferDesc.initialData)
@@ -929,10 +939,8 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 
 DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter)
 {
-	for (const auto& range : rootParameter.table)
-	{
-
-	}
+	assert(false);
+	return nullptr;
 }
 
 
@@ -1157,9 +1165,17 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
 	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
 	colorBuffer->m_image = swapChainImage;
-	colorBuffer-SetRtvImageView(swapChainImage, imageViewRtv.get());
-	colorBuffer->m_srvDescriptor.SetImageView(swapChainImage, imageViewSrv.get());
-	colorBuffer->m_srvDescriptor.ReadRawDescriptor(this, DescriptorType::TextureSRV);
+	colorBuffer->SetRtvImageView(imageViewRtv.get());
+
+	// Setup descriptor
+	const bool useDescriptorHeap = UseDescriptorHeap();
+	auto imageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
+
+	colorBuffer->m_srvDescriptor.ReadSampledImageDescriptor(
+		useDescriptorHeap,
+		this,
+		imageViewCreateInfo,
+		imageViewSrv->Get());
 
 	return colorBuffer;
 }

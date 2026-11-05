@@ -61,7 +61,7 @@ VkClearValue GetDepthStencilClearValue(float depth, uint32_t stencil)
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTarget)
 {
-	VkImageView imageView = ((const Descriptor*)renderTarget.GetRtvDescriptor())->GetImageView();
+	VkImageView imageView = renderTarget.GetRtvImageView();
 
 	VkRenderingAttachmentInfo info{
 		.sType			= VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
@@ -79,7 +79,7 @@ VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const ColorBuffer& renderTa
 
 VkRenderingAttachmentInfo GetRenderingAttachmentInfo(const DepthBuffer& depthTarget, DepthStencilAspect depthStencilAspect)
 {
-	VkImageView imageView = ((const Descriptor*)depthTarget.GetDsvDescriptor(depthStencilAspect))->GetImageView();
+	VkImageView imageView = depthTarget.GetDsvImageView(depthStencilAspect);
 
 	VkImageLayout imageLayout{ VK_IMAGE_LAYOUT_UNDEFINED };
 	switch (depthStencilAspect)
