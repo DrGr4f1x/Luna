@@ -100,15 +100,10 @@ struct DispatchIndirectArgs
 };
 
 
-// Helper functions for describing and creating basic GpuBuffer types
-GpuBufferDesc DescribeConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize);
+// Helper functions for creating basic GpuBuffer types
 GpuBufferPtr CreateConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
-
-GpuBufferDesc DescribeIndexBuffer(const std::string& name, size_t elementCount, size_t elementSize);
 GpuBufferPtr CreateIndexBuffer(const std::string& name, std::span<uint16_t> indexData);
 GpuBufferPtr CreateIndexBuffer(const std::string& name, std::span<uint32_t> indexData);
-
-GpuBufferDesc DescribeVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize);
 GpuBufferPtr CreateVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
 
 template <typename T>

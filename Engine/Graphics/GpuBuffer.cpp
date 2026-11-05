@@ -20,18 +20,6 @@ using namespace std;
 namespace Luna
 {
 
-GpuBufferDesc DescribeConstantBuffer(const string& name, size_t elementCount, size_t elementSize)
-{
-	return GpuBufferDesc{
-		.name			= name,
-		.resourceType	= ResourceType::ConstantBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead | MemoryAccess::CpuWrite,
-		.elementCount	= elementCount,
-		.elementSize	= elementSize
-	};
-}
-
-
 GpuBufferPtr CreateConstantBuffer(const string& name, size_t elementCount, size_t elementSize, const void* initialData)
 {
 	GpuBufferDesc desc{
@@ -44,18 +32,6 @@ GpuBufferPtr CreateConstantBuffer(const string& name, size_t elementCount, size_
 	};
 
 	return GetDevice()->CreateGpuBuffer(desc);
-}
-
-
-GpuBufferDesc DescribeIndexBuffer(const string& name, size_t elementCount, size_t elementSize)
-{
-	return GpuBufferDesc{
-		.name			= name,
-		.resourceType	= ResourceType::IndexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= elementCount,
-		.elementSize	= elementSize
-	};
 }
 
 
@@ -89,18 +65,6 @@ GpuBufferPtr CreateIndexBuffer(const string& name, std::span<uint32_t> indexData
 }
 
 
-GpuBufferDesc DescribeVertexBuffer(const string& name, size_t elementCount, size_t elementSize)
-{
-	return GpuBufferDesc{
-		.name			= name,
-		.resourceType	= ResourceType::VertexBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= elementCount,
-		.elementSize	= elementSize
-	};
-}
-
-
 GpuBufferPtr CreateVertexBuffer(const string& name, size_t elementCount, size_t elementSize, const void* initialData)
 {
 	GpuBufferDesc desc{
@@ -113,18 +77,6 @@ GpuBufferPtr CreateVertexBuffer(const string& name, size_t elementCount, size_t 
 	};
 
 	return GetDevice()->CreateGpuBuffer(desc);
-}
-
-
-GpuBufferDesc DescribeDrawIndirectArgsBuffer(const std::string& name, size_t elementCount)
-{
-	return GpuBufferDesc{
-		.name			= name,
-		.resourceType	= ResourceType::IndirectArgsBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= elementCount,
-		.elementSize	= sizeof(DrawIndirectArgs)
-	};
 }
 
 
@@ -142,18 +94,6 @@ GpuBufferPtr CreateDrawIndirectArgsBuffer(const std::string& name, size_t elemen
 }
 
 
-GpuBufferDesc DescribeDrawIndexedIndirectArgsBuffer(const std::string& name, size_t elementCount)
-{
-	return GpuBufferDesc{
-		.name			= name,
-		.resourceType	= ResourceType::IndirectArgsBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= elementCount,
-		.elementSize	= sizeof(DrawIndirectArgs)
-	};
-}
-
-
 GpuBufferPtr CreateDrawIndexedIndirectArgsBuffer(const std::string& name, size_t elementCount, const void* initialData)
 {
 	GpuBufferDesc desc{
@@ -165,18 +105,6 @@ GpuBufferPtr CreateDrawIndexedIndirectArgsBuffer(const std::string& name, size_t
 		.initialData	= initialData
 	};
 	return GetDevice()->CreateGpuBuffer(desc);
-}
-
-
-GpuBufferDesc DescribeDispatchIndirectArgsBuffer(const std::string& name, size_t elementCount)
-{
-	return GpuBufferDesc{
-		.name			= name,
-		.resourceType	= ResourceType::IndirectArgsBuffer,
-		.memoryAccess	= MemoryAccess::GpuRead,
-		.elementCount	= elementCount,
-		.elementSize	= sizeof(DispatchIndirectArgs)
-	};
 }
 
 

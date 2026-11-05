@@ -40,11 +40,11 @@ protected:
 		wil::com_ptr<ID3D12DescriptorHeap> heap;
 
 		D3D12_CPU_DESCRIPTOR_HANDLE currentHandle{ D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN };
-		uint32_t numDescriptors;
+		uint32_t numDescriptors{ 0 };
 		uint32_t descriptorSize{ 0 };
-		uint32_t numFreeDescriptors;
-		DescriptorHandle firstHandle;
-		DescriptorHandle nextFreeHandle;
+		uint32_t numFreeDescriptors{ 0 };
+		DescriptorHandle firstHandle{};
+		DescriptorHandle nextFreeHandle{};
 	};
 
 	HeapState m_resourceHeap;
