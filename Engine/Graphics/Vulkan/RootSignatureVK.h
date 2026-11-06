@@ -48,6 +48,8 @@ struct ShaderSetAndBindingMapping
 	BindingMappingAndInfo amplification;
 	BindingMappingAndInfo mesh;
 
+	std::vector<VkSamplerCreateInfo> staticSamplers;
+
 	void Finalize();
 };
 

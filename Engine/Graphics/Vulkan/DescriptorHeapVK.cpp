@@ -48,6 +48,12 @@ VkBuffer DescriptorHeap::GetBuffer(DescriptorHeapType heapType) const
 }
 
 
+VkBindHeapInfoEXT DescriptorHeap::GetBindInfo(DescriptorHeapType heapType) const
+{
+	return m_impl->GetBindInfo(heapType);
+}
+
+
 DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	BufferState& bufferState = (heapType == DescriptorHeapType::Resource) ?

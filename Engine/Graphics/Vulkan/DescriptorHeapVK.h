@@ -59,6 +59,8 @@ public:
 
 	VkBuffer GetBuffer(DescriptorHeapType heapType) const;
 
+	VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const;
+
 private:
 	IDescriptorHeapImpl* m_impl{ nullptr };
 };

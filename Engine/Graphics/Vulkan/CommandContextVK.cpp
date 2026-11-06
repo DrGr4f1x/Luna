@@ -39,6 +39,16 @@ using namespace std;
 namespace Luna::VK
 {
 
+static bool Compare(const VkBindHeapInfoEXT& A, const VkBindHeapInfoEXT& B)
+{
+	return 
+		A.heapRange.address == B.heapRange.address &&
+		A.heapRange.size == B.heapRange.size &&
+		A.reservedRangeOffset == B.reservedRangeOffset &&
+		A.reservedRangeSize == B.reservedRangeSize;
+}
+
+
 VkClearValue GetColorClearValue(Color color)
 {
 	VkClearValue clearValue{};
@@ -151,6 +161,10 @@ CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
 	m_pushDataCurrentSize = 0;
 	m_pushDataDirty = false;
+
+	ZeroMemory(m_currentDescriptorHeapBindings, sizeof(m_currentDescriptorHeapBindings));
+	m_currentDescriptorHeapBindings[0].sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
+	m_currentDescriptorHeapBindings[1].sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
 }
 
 
@@ -226,6 +240,10 @@ void CommandContextVK::Reset()
 	ZeroMemory(m_pushData.get(), m_maxPushDataSize);
 	m_pushDataCurrentSize = 0;
 	m_pushDataDirty = false;
+
+	ZeroMemory(m_currentDescriptorHeapBindings, sizeof(m_currentDescriptorHeapBindings));
+	m_currentDescriptorHeapBindings[0].sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
+	m_currentDescriptorHeapBindings[1].sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
 }
 
 
@@ -1015,15 +1033,20 @@ void CommandContextVK::BindDescriptorHeap(IDescriptorHeap* descriptorHeap)
 
 	if (heapClass == VulkanDescriptorHeapClass::Heap)
 	{
-		// TODO: Implement me
-		assert(false);
+		DescriptorHeapType types[] = { DescriptorHeapType::Resource, DescriptorHeapType::Sampler };
+		VkBindHeapInfoEXT bindInfos[] = {
+			descriptorHeapVK->GetBindInfo(types[0]),
+			descriptorHeapVK->GetBindInfo(types[1])
+		};
+
+		SetDescriptorHeaps(types, bindInfos);
 	}
 	else
 	{
 		DescriptorHeapType types[] = { DescriptorHeapType::Resource, DescriptorHeapType::Sampler };
 		VkBuffer buffers[] = { 
-			descriptorHeapVK->GetBuffer(DescriptorHeapType::Resource), 
-			descriptorHeapVK->GetBuffer(DescriptorHeapType::Sampler) 
+			descriptorHeapVK->GetBuffer(types[0]),
+			descriptorHeapVK->GetBuffer(types[1])
 		};
 
 		SetDescriptorBuffers(types, buffers);
@@ -1541,6 +1564,40 @@ void CommandContextVK::SetDescriptorBuffers(std::span<DescriptorHeapType> buffer
 }
 
 
+void CommandContextVK::SetDescriptorHeap(DescriptorHeapType type, VkBindHeapInfoEXT bindInfo)
+{
+	if (!Compare(m_currentDescriptorHeapBindings[(uint32_t)type], bindInfo))
+	{
+		m_currentDescriptorHeapBindings[(uint32_t)type] = bindInfo;
+		BindDescriptorHeaps();
+	}
+}
+
+
+void CommandContextVK::SetDescriptorHeaps(std::span<DescriptorHeapType> types, std::span<VkBindHeapInfoEXT> bindInfos)
+{
+	bool anyChanged = false;
+
+	assert(types.size() == bindInfos.size());
+
+	for (size_t i = 0; i < bindInfos.size(); ++i)
+	{
+		const uint32_t index = (uint32_t)types[i];
+
+		if (!Compare(m_currentDescriptorHeapBindings[index], bindInfos[i]))
+		{
+			m_currentDescriptorHeapBindings[index] = bindInfos[index];
+			anyChanged = true;
+		}
+	}
+
+	if (anyChanged)
+	{
+		BindDescriptorHeaps();
+	}
+}
+
+
 void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset)
 {
 	DynAlloc dynAlloc = ReserveUploadMemory(numBytes);
@@ -1674,6 +1731,14 @@ void CommandContextVK::BindDescriptorBuffers()
 		vkCmdBindDescriptorBuffersEXT(m_commandBuffer, numBuffers, &bindingInfos[startBuffer]);
 	}
 }
+
+
+void CommandContextVK::BindDescriptorHeaps()
+{
+	vkCmdBindResourceHeapEXT(m_commandBuffer, &m_currentDescriptorHeapBindings[0]);
+	vkCmdBindSamplerHeapEXT(m_commandBuffer, &m_currentDescriptorHeapBindings[1]);
+}
+
 
 
 void CommandContextVK::UpdateAndBindDynamicDescriptors(bool graphicsPipe)

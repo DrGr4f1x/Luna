@@ -145,6 +145,7 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 
 		impl->m_resourceState.descriptorHeap = resourceHeap;
 
+		impl->m_resourceState.bindInfo.sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
 		impl->m_resourceState.bindInfo.heapRange.address = impl->m_resourceState.descriptorHeap->GetBufferDeviceAddress();
 		impl->m_resourceState.bindInfo.heapRange.size = impl->m_resourceState.descriptorHeap->GetSize();
 		impl->m_resourceState.bindInfo.reservedRangeOffset = impl->m_resourceState.bindInfo.heapRange.size - m_caps.descriptorHeap.minResourceHeapReservedRange;
@@ -160,6 +161,7 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 
 		impl->m_samplerState.descriptorHeap = samplerHeap;
 
+		impl->m_samplerState.bindInfo.sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
 		impl->m_samplerState.bindInfo.heapRange.address = impl->m_samplerState.descriptorHeap->GetBufferDeviceAddress();
 		impl->m_samplerState.bindInfo.heapRange.size = impl->m_samplerState.descriptorHeap->GetSize();
 		impl->m_samplerState.bindInfo.reservedRangeOffset = impl->m_samplerState.bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRange;
@@ -984,7 +986,9 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 				PushData pushData{ .offset = pushDataEntries[i].offset, .value = (uint32_t)offset };
 				descriptorSet->m_pushData.push_back(pushData);
 
-				descriptorSet->m_samplerRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+				uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
+
+				descriptorSet->m_samplerRegisterOffsetMap[binding + i] = (uint32_t)offset;
 				offset += m_caps.descriptorHeap.samplerDescriptorSize;
 			}
 		}
@@ -999,18 +1003,20 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 				PushData pushData{ .offset = pushDataEntries[i].offset, .value = (uint32_t)offset };
 				descriptorSet->m_pushData.push_back(pushData);
 
+				uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
+
 				if (IsDescriptorTypeSRV(range.descriptorType))
 				{
-					descriptorSet->m_srvRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+					descriptorSet->m_srvRegisterOffsetMap[binding + i] = (uint32_t)offset;
 				}
 				else if (IsDescriptorTypeUAV(range.descriptorType))
 				{
-					descriptorSet->m_uavRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+					descriptorSet->m_uavRegisterOffsetMap[binding + i] = (uint32_t)offset;
 				}
 				else
 				{
 					assert(range.descriptorType == DescriptorType::ConstantBuffer);
-					descriptorSet->m_cbvRegisterOffsetMap[range.startRegister + i] = (uint32_t)offset;
+					descriptorSet->m_cbvRegisterOffsetMap[binding + i] = (uint32_t)offset;
 				}
 				offset += descriptorSize;
 			}
@@ -1021,6 +1027,30 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 
 	descriptorSet->m_useDescriptorHeap = UseDescriptorHeap();
 	descriptorSet->m_allocation = descriptorHeap->AllocateDescriptors(descriptorHeapType, offset);
+
+	// Add allocation offset to push data offsets
+	for (auto& pushData : descriptorSet->m_pushData)
+	{
+		pushData.value += (uint32_t)descriptorSet->m_allocation.offset;
+	}
+
+	// Add allocation offset to register offsets
+	for (auto& kvp : descriptorSet->m_srvRegisterOffsetMap)
+	{
+		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
+	}
+	for (auto& kvp : descriptorSet->m_uavRegisterOffsetMap)
+	{
+		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
+	}
+	for (auto& kvp : descriptorSet->m_cbvRegisterOffsetMap)
+	{
+		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
+	}
+	for (auto& kvp : descriptorSet->m_samplerRegisterOffsetMap)
+	{
+		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
+	}
 
 	return descriptorSet;
 }
@@ -2214,8 +2244,126 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const Des
 		++index;
 	}
 
+	// Process static samplers
+	for (const auto& staticSampler : rootSignatureDesc.staticSamplers)
+	{
+		const SamplerDesc& samplerDesc = staticSampler.samplerDesc;
+		const VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
+
+		VkSamplerCreateInfo createInfo{
+			.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.magFilter = filterMapping.magFilter,
+			.minFilter = filterMapping.minFilter,
+			.mipmapMode = filterMapping.mipFilter,
+			.addressModeU = TextureAddressToVulkan(samplerDesc.addressU),
+			.addressModeV = TextureAddressToVulkan(samplerDesc.addressV),
+			.addressModeW = TextureAddressToVulkan(samplerDesc.addressW),
+			.mipLodBias = samplerDesc.mipLODBias,
+			.anisotropyEnable = filterMapping.isAnisotropic,
+			.maxAnisotropy = (float)samplerDesc.maxAnisotropy,
+			.compareEnable = filterMapping.isComparisonEnabled,
+			.compareOp = ComparisonFuncToVulkan(samplerDesc.comparisonFunc),
+			.minLod = samplerDesc.minLOD,
+			.maxLod = samplerDesc.maxLOD,
+			.borderColor = BorderColorToVulkan(samplerDesc.staticBorderColor),
+			.unnormalizedCoordinates = VK_FALSE
+		};
+
+		shaderSetAndBindingMapping.staticSamplers.push_back(createInfo);
+	}
+
+	uint32_t staticSamplerIndex = 0;
+	uint32_t currentRegister = 0;
+	for (const auto& staticSampler : rootSignatureDesc.staticSamplers)
+	{
+		VkDescriptorSetAndBindingMappingEXT setAndBindingMapping{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT };
+		setAndBindingMapping.descriptorSet = index;
+		if (staticSampler.shaderRegister == APPEND_REGISTER)
+		{
+			uint32_t temp = currentRegister++;
+			setAndBindingMapping.firstBinding = temp + GetRegisterShift(DescriptorType::Sampler);
+		}
+		else
+		{
+			setAndBindingMapping.firstBinding = staticSampler.shaderRegister;
+			currentRegister = staticSampler.shaderRegister + 1;
+		}
+		setAndBindingMapping.bindingCount = 1;
+		setAndBindingMapping.resourceMask = VK_SPIRV_RESOURCE_TYPE_SAMPLER_BIT_EXT;
+		setAndBindingMapping.source = VK_DESCRIPTOR_MAPPING_SOURCE_HEAP_WITH_CONSTANT_OFFSET_EXT;
+		setAndBindingMapping.sourceData.constantOffset = {};
+		setAndBindingMapping.sourceData.constantOffset.pEmbeddedSampler = &shaderSetAndBindingMapping.staticSamplers[staticSamplerIndex];
+
+		AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, staticSampler.shaderStage);
+	}
+
 	shaderSetAndBindingMapping.Finalize();
 }
+
+
+#if 0
+static void LogRootSignature(const RootSignatureDesc& rootSignatureDesc, const ShaderSetAndBindingMapping& shaderSetAndBindingMapping)
+{
+	LogInfo(LogVulkan) << "=== RootSignature ===" << endl;
+	LogInfo(LogVulkan) << "  Name: " << rootSignatureDesc.name << endl;
+
+	LogInfo(LogVulkan) << "  Root Parameters:" << endl;
+	uint32_t index = 0;
+	for (const auto& rootParam : rootSignatureDesc.rootParameters)
+	{
+		LogInfo(LogVulkan) << "    Index: " << index << endl;
+		if (rootParam.parameterType == RootParameterType::RootConstants)
+		{
+			LogInfo(LogVulkan) << "      Type: RootConstants" << endl;
+			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
+			LogInfo(LogVulkan) << "      Num 32bit Constants: " << rootParam.num32BitConstants << endl;
+			LogInfo(LogVulkan) << "      Shader Visibility: " << rootParam.shaderVisibility << endl;
+		}
+		else if (rootParam.parameterType == RootParameterType::RootCBV)
+		{
+			LogInfo(LogVulkan) << "      Type: RootCBV" << endl;
+			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
+		}
+		else if (rootParam.parameterType == RootParameterType::RootSRV)
+		{
+			LogInfo(LogVulkan) << "      Type: RootSRV" << endl;
+			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
+		}
+		else if (rootParam.parameterType == RootParameterType::RootUAV)
+		{
+			LogInfo(LogVulkan) << "      Type: RootUAV" << endl;
+			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
+		}
+		else
+		{
+			LogInfo(LogVulkan) << "      Type: Table" << endl;
+			LogInfo(LogVulkan) << "      Descriptor Ranges:" << endl;
+			uint32_t rangeIndex = 0;
+			uint32_t currentRegister = 0;
+			for (const auto& range : rootParam.table)
+			{
+				LogInfo(LogVulkan) << "        Descriptor Type:" << range.descriptorType << endl;
+				if (range.startRegister == APPEND_REGISTER)
+				{
+					uint32_t temp = currentRegister++;
+					LogInfo(LogVulkan) << "        Start Register [APPEND]: " << temp << ", with offset: " << temp + GetRegisterShift(range.descriptorType) << endl;
+				}
+				else
+				{
+					LogInfo(LogVulkan) << "        Start Register [APPEND]: " << range.startRegister << ", with offset: " << range.startRegister + GetRegisterShift(range.descriptorType) << endl;
+					currentRegister = range.startRegister + range.numDescriptors;
+				}
+
+				++rangeIndex;
+			}
+		}
+
+		++index;
+	}
+}
+#endif
 
 
 RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const DescriptorHeap* descriptorHeap, const RootSignatureDesc& rootSignatureDesc)

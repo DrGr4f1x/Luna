@@ -182,6 +182,10 @@ public:
 	// Platform-specific methods
 	void SetDescriptorBuffer(DescriptorHeapType bufferType, VkBuffer descriptorBuffer);
 	void SetDescriptorBuffers(std::span<DescriptorHeapType> bufferTypes, std::span<VkBuffer> buffers);
+
+	void SetDescriptorHeap(DescriptorHeapType heapType, VkBindHeapInfoEXT bindInfo);
+	void SetDescriptorHeaps(std::span<DescriptorHeapType> heapTypes, std::span<VkBindHeapInfoEXT> bindInfos);
+
 	VkCommandBuffer GetCommandBuffer() const noexcept { return m_commandBuffer; }
 
 private:
@@ -191,6 +195,7 @@ private:
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
 	void BindDescriptorBuffers();
+	void BindDescriptorHeaps();
 
 	void UpdateAndBindDynamicDescriptors(bool graphicsPipe);
 
