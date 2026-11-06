@@ -82,6 +82,7 @@ void FillRenderTargetState(VkPipelineRenderingCreateInfo& createInfo, std::vecto
 	const Format dsvFormat = desc.dsvFormat;
 	createInfo = VkPipelineRenderingCreateInfo{
 		.sType						= VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+		.pNext						= nullptr,
 		.viewMask					= 0,
 		.colorAttachmentCount		= (uint32_t)rtvFormats.size(),
 		.pColorAttachmentFormats	= rtvFormats.data(),

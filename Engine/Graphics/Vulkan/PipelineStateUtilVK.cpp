@@ -87,6 +87,7 @@ void FillDynamicStates(VkPipelineDynamicStateCreateInfo& createInfo, vector<VkDy
 
 	createInfo = VkPipelineDynamicStateCreateInfo{
 		.sType				= VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.pNext				= nullptr,
 		.dynamicStateCount	= (uint32_t)dynamicStates.size(),
 		.pDynamicStates		= dynamicStates.data()
 	};

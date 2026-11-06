@@ -32,7 +32,7 @@ using PushDataLayout = std::vector<std::vector<PushDataEntry>>;
 struct BindingMappingAndInfo
 {
 	std::vector<VkDescriptorSetAndBindingMappingEXT> bindings;
-	VkShaderDescriptorSetAndBindingMappingInfoEXT info;
+	VkShaderDescriptorSetAndBindingMappingInfoEXT info{ VK_STRUCTURE_TYPE_SHADER_DESCRIPTOR_SET_AND_BINDING_MAPPING_INFO_EXT };
 
 	void Finalize();
 };

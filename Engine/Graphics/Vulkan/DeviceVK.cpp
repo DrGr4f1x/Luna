@@ -638,13 +638,15 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 	VkPipelineRenderingCreateInfo dynamicRenderingInfo{};
 	FillRenderTargetState(dynamicRenderingInfo, rtvFormats, pipelineDesc);
 
+	// Descriptor heaps
+	VkPipelineCreateFlags2CreateInfo pipelineCreateFlags2CI{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+	};
+
 	if (UseDescriptorHeap())
 	{
-		VkPipelineCreateFlags2CreateInfo pipelineCreateFlags2CI{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
-			.pNext = nullptr,
-			.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
-		};
 		dynamicRenderingInfo.pNext = &pipelineCreateFlags2CI;
 	}
 

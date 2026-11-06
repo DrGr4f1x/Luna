@@ -61,6 +61,8 @@ public:
 
 	VkBindHeapInfoEXT GetBindInfo(DescriptorHeapType heapType) const;
 
+	void Print() const override {}
+
 private:
 	IDescriptorHeapImpl* m_impl{ nullptr };
 };

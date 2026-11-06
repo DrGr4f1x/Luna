@@ -20,6 +20,8 @@ class IDescriptorHeap
 {
 public:
 	virtual ~IDescriptorHeap() {}
+
+	virtual void Print() const = 0;
 };
 
 using DescriptorHeapPtr = std::shared_ptr<IDescriptorHeap>;
