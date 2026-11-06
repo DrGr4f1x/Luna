@@ -164,8 +164,8 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_samplerState.bindInfo.sType = VK_STRUCTURE_TYPE_BIND_HEAP_INFO_EXT;
 		impl->m_samplerState.bindInfo.heapRange.address = impl->m_samplerState.descriptorHeap->GetBufferDeviceAddress();
 		impl->m_samplerState.bindInfo.heapRange.size = impl->m_samplerState.descriptorHeap->GetSize();
-		impl->m_samplerState.bindInfo.reservedRangeOffset = impl->m_samplerState.bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRange;
-		impl->m_samplerState.bindInfo.reservedRangeSize = m_caps.descriptorHeap.minSamplerHeapReservedRange;
+		impl->m_samplerState.bindInfo.reservedRangeOffset = impl->m_samplerState.bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
+		impl->m_samplerState.bindInfo.reservedRangeSize = m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
 
 		impl->m_samplerState.bufferSize = m_caps.descriptorHeap.samplerDescriptorSize * numSamplers;
 		impl->m_samplerState.initialHead = impl->m_samplerState.bufferHead;
@@ -1295,7 +1295,7 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorHeapBuffer(DescriptorHeapType ty
 	}
 	else
 	{
-		size_t baseSize = numDescriptors * m_caps.descriptorHeap.samplerDescriptorSize + m_caps.descriptorHeap.minSamplerHeapReservedRange;
+		size_t baseSize = numDescriptors * m_caps.descriptorHeap.samplerDescriptorSize + m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
 		bufferSize = Math::AlignUp(baseSize, m_caps.descriptorHeap.samplerHeapAlignment);
 	}
 
