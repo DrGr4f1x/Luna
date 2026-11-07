@@ -53,10 +53,11 @@ Device::Device(ID3D12Device* device, D3D12MA::Allocator* allocator)
 }
 
 
-DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers)
+DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
 	auto descriptorHeap = make_shared<DescriptorHeap>();
 
+	const uint32_t numResources = numImages + numBuffers;
 	descriptorHeap->m_resourceHeap.heap = CreateDescriptorHeapInternal(numResources, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 	descriptorHeap->m_resourceHeap.numDescriptors = numResources;
 	

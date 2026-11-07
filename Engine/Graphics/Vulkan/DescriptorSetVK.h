@@ -21,6 +21,7 @@ namespace Luna::VK
 
 // Forward declarations
 class DescriptorBindingTemplate;
+class Descriptor;
 class Device;
 
 
@@ -61,6 +62,11 @@ protected:
 	template <DescriptorRegisterType registerType>
 	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
 	
+	void SetSRV_Internal(uint32_t srvRegister, const Descriptor* descriptor);
+	void SetUAV_Internal(uint32_t uavRegister, const Descriptor* descriptor);
+	void SetCBV_Internal(uint32_t cbvRegister, const Descriptor* descriptor);
+	void SetSampler_Internal(uint32_t samplerRegister, const Descriptor* descriptor);
+
 	size_t GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
 	size_t GetRegisterOffsetUAV(uint32_t uavRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
 	size_t GetRegisterOffsetCBV(uint32_t cbvRegister, uint32_t arrayIndex = 0, uint32_t descriptorSize = 0) const;
@@ -83,10 +89,10 @@ protected:
 
 	// Maps for registers to heap memory offsets
 	// TODO: put this in another structure and cache/share between sets
-	std::unordered_map<uint32_t, uint32_t> m_srvRegisterOffsetMap;
-	std::unordered_map<uint32_t, uint32_t> m_uavRegisterOffsetMap;
-	std::unordered_map<uint32_t, uint32_t> m_cbvRegisterOffsetMap;
-	std::unordered_map<uint32_t, uint32_t> m_samplerRegisterOffsetMap;
+	std::unordered_map<uint32_t, std::byte*> m_srvRegisterOffsetMap;
+	std::unordered_map<uint32_t, std::byte*> m_uavRegisterOffsetMap;
+	std::unordered_map<uint32_t, std::byte*> m_cbvRegisterOffsetMap;
+	std::unordered_map<uint32_t, std::byte*> m_samplerRegisterOffsetMap;
 
 };
 

@@ -327,8 +327,9 @@ DescriptorAllocation DynamicDescriptorBuffer::Allocate(size_t sizeInBytes)
 	m_freeSpace -= alignedSize;
 
 	return DescriptorAllocation{
-		.mem		= allocation,
-		.offset		= (size_t)(allocation - m_bufferStart)
+		.mem			= allocation,
+		.offsetInBytes	= (size_t)(allocation - m_bufferStart),
+		.offsetInItems	= 0
 	};
 }
 
@@ -374,8 +375,9 @@ void DynamicDescriptorBuffer::DescriptorCache::Allocate(uint32_t rootIndex, size
 	freeSpace -= alignedSize;
 
 	tableAllocations[rootIndex] = DescriptorAllocation{
-		.mem		= allocation,
-		.offset		= (size_t)(allocation - descriptorMemory)
+		.mem			= allocation,
+		.offsetInBytes	= (size_t)(allocation - descriptorMemory),
+		.offsetInItems	= 0
 	};
 }
 
@@ -385,7 +387,8 @@ void DynamicDescriptorBuffer::DescriptorCache::Clear()
 	for (uint32_t i = 0; i < MaxRootParameters; ++i)
 	{
 		tableAllocations[i].mem = nullptr;
-		tableAllocations[i].offset = 0;
+		tableAllocations[i].offsetInBytes = 0;
+		tableAllocations[i].offsetInItems = 0;
 
 		hasActiveData[i] = false;
 		hasDirtyData[i] = false;

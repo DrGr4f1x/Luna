@@ -19,7 +19,8 @@ namespace Luna::VK
 struct DescriptorAllocation
 {
 	std::byte* mem{ nullptr };
-	size_t offset{ 0 };
+	size_t offsetInBytes{ 0 };
+	size_t offsetInItems{ 0 };
 };
 
 } // namespace Luna::VK

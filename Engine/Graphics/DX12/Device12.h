@@ -41,7 +41,7 @@ public:
 
 	const DeviceCaps& GetDeviceCaps() const override { return m_caps; }
 
-	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers);
+	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers);
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;

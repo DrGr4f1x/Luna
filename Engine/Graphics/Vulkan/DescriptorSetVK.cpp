@@ -48,36 +48,35 @@ void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescr
 void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
 	const auto descriptor = (const Descriptor*)colorBuffer->GetSrvDescriptor();
-
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	SetSRV_Internal(srvRegister, descriptor);
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv)
 {
 	const auto descriptor = (const Descriptor*)depthBuffer->GetSrvDescriptor(depthSrv);
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	SetSRV_Internal(srvRegister, descriptor);
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer)
 {
 	const auto descriptor = (const Descriptor*)gpuBuffer->GetSrvDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	SetSRV_Internal(srvRegister, descriptor);
 }
 
 
 void DescriptorSet::SetSRV(uint32_t srvRegister, TexturePtr texture)
 {
 	const auto descriptor = (const Descriptor*)texture->GetDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
+	SetSRV_Internal(srvRegister, descriptor);
 }
 
 
 void DescriptorSet::SetUAV(uint32_t uavRegister, ColorBufferPtr colorBuffer, uint32_t uavIndex)
 {
 	const auto descriptor = (const Descriptor*)colorBuffer->GetUavDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(uavRegister)));
+	SetUAV_Internal(uavRegister, descriptor);
 }
 
 
@@ -90,27 +89,27 @@ void DescriptorSet::SetUAV(uint32_t uavRegister, DepthBufferPtr depthBuffer)
 void DescriptorSet::SetUAV(uint32_t uavRegister, GpuBufferPtr gpuBuffer)
 {
 	const auto descriptor = (const Descriptor*)gpuBuffer->GetUavDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(uavRegister)));
+	SetUAV_Internal(uavRegister, descriptor);
 }
 
 
 void DescriptorSet::SetCBV(uint32_t cbvRegister, GpuBufferPtr gpuBuffer)
 {
 	const auto descriptor = (const Descriptor*)gpuBuffer->GetCbvDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetCBV(cbvRegister)));
+	SetCBV_Internal(cbvRegister, descriptor);
 }
 
 
 void DescriptorSet::SetSampler(uint32_t samplerRegister, SamplerPtr sampler)
 {
 	const auto descriptor = (const Descriptor*)sampler->GetDescriptor();
-	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSampler(samplerRegister)));
+	SetSampler_Internal(samplerRegister, descriptor);
 }
 
 
 size_t DescriptorSet::GetDescriptorBufferOffset() const
 {
-	return m_allocation.offset;
+	return m_allocation.offsetInBytes;
 }
 
 
@@ -161,75 +160,87 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 }
 
 
-size_t DescriptorSet::GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
+void DescriptorSet::SetSRV_Internal(uint32_t srvRegister, const Descriptor* descriptor)
 {
-	const uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
-
 	if (m_useDescriptorHeap)
 	{
-		auto res = m_srvRegisterOffsetMap.find(bindingIndex);
-		assert(res != m_srvRegisterOffsetMap.end());
-
-		return res->second;
+		descriptor->CopyRawDescriptor((void*)m_srvRegisterOffsetMap[srvRegister]);
 	}
 	else
 	{
-		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
+		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
 	}
+}
+
+
+void DescriptorSet::SetUAV_Internal(uint32_t uavRegister, const Descriptor* descriptor)
+{
+	if (m_useDescriptorHeap)
+	{
+		descriptor->CopyRawDescriptor((void*)m_uavRegisterOffsetMap[uavRegister]);
+	}
+	else
+	{
+		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(uavRegister)));
+	}
+}
+
+
+void DescriptorSet::SetCBV_Internal(uint32_t cbvRegister, const Descriptor* descriptor)
+{
+	if (m_useDescriptorHeap)
+	{
+		descriptor->CopyRawDescriptor((void*)m_cbvRegisterOffsetMap[cbvRegister]);
+	}
+	else
+	{
+		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetCBV(cbvRegister)));
+	}
+}
+
+
+void DescriptorSet::SetSampler_Internal(uint32_t samplerRegister, const Descriptor* descriptor)
+{
+	if (m_useDescriptorHeap)
+	{
+		descriptor->CopyRawDescriptor((void*)m_samplerRegisterOffsetMap[samplerRegister]);
+	}
+	else
+	{
+		descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSampler(samplerRegister)));
+	}
+}
+
+
+size_t DescriptorSet::GetRegisterOffsetSRV(uint32_t srvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
+{
+	assert(!m_useDescriptorHeap);
+
+	const uint32_t bindingIndex = GetRegisterShiftSRV() + srvRegister;
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 
 size_t DescriptorSet::GetRegisterOffsetUAV(uint32_t uavRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
+	assert(!m_useDescriptorHeap);
+
 	const uint32_t bindingIndex = GetRegisterShiftUAV() + uavRegister;
-
-	if (m_useDescriptorHeap)
-	{
-		auto res = m_uavRegisterOffsetMap.find(bindingIndex);
-		assert(res != m_uavRegisterOffsetMap.end());
-
-		return res->second;
-	}
-	else
-	{
-		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
-	}
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 
 size_t DescriptorSet::GetRegisterOffsetCBV(uint32_t cbvRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
 	const uint32_t bindingIndex = GetRegisterShiftCBV() + cbvRegister;
-
-	if (m_useDescriptorHeap)
-	{
-		auto res = m_cbvRegisterOffsetMap.find(bindingIndex);
-		assert(res != m_cbvRegisterOffsetMap.end());
-
-		return res->second;
-	}
-	else
-	{
-		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
-	}
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 
 size_t DescriptorSet::GetRegisterOffsetSampler(uint32_t samplerRegister, uint32_t arrayIndex, uint32_t descriptorSize) const
 {
 	const uint32_t bindingIndex = GetRegisterShiftSampler() + samplerRegister;
-
-	if (m_useDescriptorHeap)
-	{
-		auto res = m_samplerRegisterOffsetMap.find(bindingIndex);
-		assert(res != m_samplerRegisterOffsetMap.end());
-
-		return res->second;
-	}
-	else
-	{
-		return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
-	}
+	return m_layout->GetBindingOffset(bindingIndex) + arrayIndex * descriptorSize;
 }
 
 } // namespace Luna::VK

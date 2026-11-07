@@ -230,6 +230,8 @@ void Application::Run()
 		UpdateWindowSize();
 
 		m_isRunning = Tick();
+
+		m_currentFrame++;
 	}
 
 	m_deviceManager->WaitForGpu();
@@ -296,7 +298,7 @@ void Application::SetDefaultSearchPaths()
 void Application::CreateDeviceDependentResources()
 {
 	// Create default descriptor heap
-	m_defaultDescriptorHeap = CreateDescriptorHeap(m_numResourceDescriptors, m_numSamplerDescriptors);
+	m_defaultDescriptorHeap = CreateDescriptorHeap(m_numImageDescriptors, m_numBufferDescriptors, m_numSamplerDescriptors);
 
 	if (m_grid)
 	{
@@ -365,9 +367,9 @@ void Application::UpdateWindowSize()
 }
 
 
-DescriptorHeapPtr Application::CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers)
+DescriptorHeapPtr Application::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
-	return m_deviceManager->GetDevice()->CreateDescriptorHeap(numResources, numSamplers);
+	return m_deviceManager->GetDevice()->CreateDescriptorHeap(numImages, numBuffers, numSamplers);
 }
 
 

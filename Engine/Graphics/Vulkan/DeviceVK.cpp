@@ -128,7 +128,7 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCa
 }
 
 
-DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers)
+DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
 	auto descriptorHeap = make_shared<DescriptorHeap>();
 
@@ -140,8 +140,10 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_device = this;
 
 		// Resource heap
-		auto resourceHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numResources);
+		auto resourceHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Resource, numImages, numBuffers);
 		ThrowIfFailed(vmaMapMemory(resourceHeap->GetAllocator(), resourceHeap->GetAllocation(), (void**)&impl->m_resourceState.bufferHead));
+
+		ZeroMemory(impl->m_resourceState.bufferHead, resourceHeap->GetSize());
 
 		impl->m_resourceState.descriptorHeap = resourceHeap;
 
@@ -150,14 +152,18 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_resourceState.bindInfo.heapRange.size = impl->m_resourceState.descriptorHeap->GetSize();
 		impl->m_resourceState.bindInfo.reservedRangeOffset = impl->m_resourceState.bindInfo.heapRange.size - m_caps.descriptorHeap.minResourceHeapReservedRange;
 		impl->m_resourceState.bindInfo.reservedRangeSize = m_caps.descriptorHeap.minResourceHeapReservedRange;
+		impl->m_numImageDescriptors = numImages;
+		impl->m_numBufferDescriptors = numBuffers;
 
-		impl->m_resourceState.bufferSize = m_caps.descriptorHeap.largestResourceDescriptorSize * numResources;
-		impl->m_resourceState.initialHead = impl->m_resourceState.bufferHead;
-		impl->m_resourceState.freeSpace = impl->m_resourceState.bufferSize;
+		// Image descriptors are before buffer descriptors, so offset the start of buffer descriptor memory
+		// by: (number of images) * (image descriptor size)
+		impl->m_bufferDescriptorOffset = numImages * (uint32_t)m_caps.descriptorHeap.imageDescriptorSize;
 
 		// Sampler heap
-		auto samplerHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Sampler, numSamplers);
+		auto samplerHeap = CreateDescriptorHeapBuffer(DescriptorHeapType::Sampler, numSamplers, 0);
 		ThrowIfFailed(vmaMapMemory(samplerHeap->GetAllocator(), samplerHeap->GetAllocation(), (void**)&impl->m_samplerState.bufferHead));
+
+		ZeroMemory(impl->m_samplerState.bufferHead, samplerHeap->GetSize());
 
 		impl->m_samplerState.descriptorHeap = samplerHeap;
 
@@ -166,10 +172,7 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_samplerState.bindInfo.heapRange.size = impl->m_samplerState.descriptorHeap->GetSize();
 		impl->m_samplerState.bindInfo.reservedRangeOffset = impl->m_samplerState.bindInfo.heapRange.size - m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
 		impl->m_samplerState.bindInfo.reservedRangeSize = m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
-
-		impl->m_samplerState.bufferSize = m_caps.descriptorHeap.samplerDescriptorSize * numSamplers;
-		impl->m_samplerState.initialHead = impl->m_samplerState.bufferHead;
-		impl->m_samplerState.freeSpace = impl->m_samplerState.bufferSize;
+		impl->m_numSamplerDescriptors = numSamplers;
 
 		descriptorHeap->m_impl = impl;
 	}
@@ -182,7 +185,7 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 
 		// Resource buffer
 		impl->m_resourceBuffer.alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
-		impl->m_resourceBuffer.bufferSize = m_caps.descriptorBuffer.descriptorSize.largest * numResources;
+		impl->m_resourceBuffer.bufferSize = m_caps.descriptorBuffer.descriptorSize.largest * (numImages + numBuffers);
 
 		auto resourceBuffer = CreateDescriptorBuffer(DescriptorHeapType::Resource, impl->m_resourceBuffer.bufferSize);
 		ThrowIfFailed(vmaMapMemory(resourceBuffer->GetAllocator(), resourceBuffer->GetAllocation(), (void**)&impl->m_resourceBuffer.bufferHead));
@@ -190,6 +193,7 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_resourceBuffer.descriptorBuffer = resourceBuffer;
 		impl->m_resourceBuffer.initialHead = impl->m_resourceBuffer.bufferHead;
 		impl->m_resourceBuffer.freeSpace = impl->m_resourceBuffer.bufferSize;
+		impl->m_numResourceDescriptors = numImages + numBuffers;
 
 		// Sampler buffer
 		impl->m_samplerBuffer.alignment = m_caps.descriptorBuffer.descriptorBufferOffsetAlignment;
@@ -201,6 +205,7 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numResources, uint32_t n
 		impl->m_samplerBuffer.descriptorBuffer = samplerBuffer;
 		impl->m_samplerBuffer.initialHead = impl->m_samplerBuffer.bufferHead;
 		impl->m_samplerBuffer.freeSpace = impl->m_samplerBuffer.bufferSize;
+		impl->m_numSamplerDescriptors = numSamplers;
 
 		descriptorHeap->m_impl = impl;
 	}
@@ -961,98 +966,61 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 
 	auto descriptorSet = std::make_shared<DescriptorSet>(this, rootParameter);
 
-	const auto descriptorHeapType = rootParameter.IsSamplerTable() ? DescriptorHeapType::Sampler : DescriptorHeapType::Resource;
-
-#if 0
-	uint32_t i = 0;
+	const bool isSamplerTable = rootParameter.IsSamplerTable();
+	uint32_t rangeIndex = 0;
 	for (const auto& range : rootParameter.table)
 	{
-		const bool isImageDescriptor = IsImageDescriptorType(range.descriptorType);
-
-		DescriptorAllocation allocation = descriptorHeap->AllocateDescriptors(descriptorHeapType, range.numDescriptors, isImageDescriptor);
-		PushData pushData{ .offset = pushDataEntries[i].offset, .value = allocation.offset };
-		descriptorSet->m_pushData.push_back(pushData);
-
-		++i;
-	}
-#endif
-
-	size_t offset = 0;
-
-	for (const auto& range : rootParameter.table)
-	{
-		if (rootParameter.IsSamplerTable())
+		if (isSamplerTable)
 		{
+			auto allocation = descriptorHeap->AllocateDescriptors(DescriptorHeapType::Sampler, range.numDescriptors, false);
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
-				PushData pushData{ .offset = pushDataEntries[i].offset, .value = (uint32_t)offset };
-				descriptorSet->m_pushData.push_back(pushData);
-
-				uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
-
-				descriptorSet->m_samplerRegisterOffsetMap[binding + i] = (uint32_t)offset;
-				offset += m_caps.descriptorHeap.samplerDescriptorSize;
+				std::byte* writeDest = allocation.mem + i * m_caps.descriptorHeap.samplerDescriptorSize;
+				descriptorSet->m_samplerRegisterOffsetMap[range.startRegister + i] = writeDest;
 			}
+
+			PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
+			descriptorSet->m_pushData.push_back(pushData);
 		}
 		else
 		{
-			const size_t descriptorSize = IsImageDescriptorType(range.descriptorType) ?
-				m_caps.descriptorHeap.imageDescriptorSize :
-				m_caps.descriptorHeap.bufferDescriptorSize;
-
+			const bool isImageDescriptorRange = IsImageDescriptorType(range.descriptorType);
+			auto allocation = descriptorHeap->AllocateDescriptors(DescriptorHeapType::Resource, range.numDescriptors, isImageDescriptorRange);
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
-				PushData pushData{ .offset = pushDataEntries[i].offset, .value = (uint32_t)offset };
-				descriptorSet->m_pushData.push_back(pushData);
-
-				uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
-
-				if (IsDescriptorTypeSRV(range.descriptorType))
+				std::byte* writeDest = nullptr;
+				if (isImageDescriptorRange)
 				{
-					descriptorSet->m_srvRegisterOffsetMap[binding + i] = (uint32_t)offset;
-				}
-				else if (IsDescriptorTypeUAV(range.descriptorType))
-				{
-					descriptorSet->m_uavRegisterOffsetMap[binding + i] = (uint32_t)offset;
+					writeDest = allocation.mem + i * m_caps.descriptorHeap.imageDescriptorSize;
 				}
 				else
 				{
-					assert(range.descriptorType == DescriptorType::ConstantBuffer);
-					descriptorSet->m_cbvRegisterOffsetMap[binding + i] = (uint32_t)offset;
+					writeDest = allocation.mem + i * m_caps.descriptorHeap.bufferDescriptorSize;
 				}
-				offset += descriptorSize;
+
+				if (IsDescriptorTypeSRV(range.descriptorType))
+				{
+					descriptorSet->m_srvRegisterOffsetMap[range.startRegister + i] = writeDest;
+				}
+				else if (IsDescriptorTypeUAV(range.descriptorType))
+				{
+					descriptorSet->m_uavRegisterOffsetMap[range.startRegister + i] = writeDest;
+				}
+				else
+				{
+					descriptorSet->m_cbvRegisterOffsetMap[range.startRegister + i] = writeDest;
+				}
 			}
 
-			offset = Math::AlignUp(offset, m_caps.descriptorHeap.largestResourceDescriptorAlignment);
+			PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
+			descriptorSet->m_pushData.push_back(pushData);
 		}
+
+		++rangeIndex;
 	}
 
 	descriptorSet->m_useDescriptorHeap = UseDescriptorHeap();
-	descriptorSet->m_allocation = descriptorHeap->AllocateDescriptors(descriptorHeapType, offset);
-
-	// Add allocation offset to push data offsets
-	for (auto& pushData : descriptorSet->m_pushData)
-	{
-		pushData.value += (uint32_t)descriptorSet->m_allocation.offset;
-	}
-
-	// Add allocation offset to register offsets
-	for (auto& kvp : descriptorSet->m_srvRegisterOffsetMap)
-	{
-		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
-	}
-	for (auto& kvp : descriptorSet->m_uavRegisterOffsetMap)
-	{
-		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
-	}
-	for (auto& kvp : descriptorSet->m_cbvRegisterOffsetMap)
-	{
-		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
-	}
-	for (auto& kvp : descriptorSet->m_samplerRegisterOffsetMap)
-	{
-		kvp.second += (uint32_t)descriptorSet->m_allocation.offset;
-	}
+	descriptorSet->m_allocation = DescriptorAllocation{};
 
 	return descriptorSet;
 }
@@ -1283,7 +1251,7 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 }
 
 
-wil::com_ptr<CVkBuffer> Device::CreateDescriptorHeapBuffer(DescriptorHeapType type, uint32_t numDescriptors)
+wil::com_ptr<CVkBuffer> Device::CreateDescriptorHeapBuffer(DescriptorHeapType type, uint32_t numImages, uint32_t numBuffers)
 {
 	VkBufferUsageFlags extraFlags = VK_BUFFER_USAGE_DESCRIPTOR_HEAP_BIT_EXT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
@@ -1291,13 +1259,13 @@ wil::com_ptr<CVkBuffer> Device::CreateDescriptorHeapBuffer(DescriptorHeapType ty
 	size_t bufferSize = 0;
 	if (type == DescriptorHeapType::Resource)
 	{
-		size_t baseSize = numDescriptors * m_caps.descriptorHeap.largestResourceDescriptorSize;
+		size_t baseSize = numImages * m_caps.descriptorHeap.imageDescriptorSize + numBuffers * m_caps.descriptorHeap.bufferDescriptorSize;
 		baseSize += m_caps.descriptorHeap.minResourceHeapReservedRange;
 		bufferSize = Math::AlignUp(baseSize, m_caps.descriptorHeap.resourceHeapAlignment);
 	}
 	else
 	{
-		size_t baseSize = numDescriptors * m_caps.descriptorHeap.samplerDescriptorSize + m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
+		size_t baseSize = numImages * m_caps.descriptorHeap.samplerDescriptorSize + m_caps.descriptorHeap.minSamplerHeapReservedRangeWithEmbedded;
 		bufferSize = Math::AlignUp(baseSize, m_caps.descriptorHeap.samplerHeapAlignment);
 	}
 
@@ -2179,6 +2147,10 @@ static void ProcessTable(const DeviceCaps& caps, const DescriptorHeap* descripto
 	uint32_t heapIndexStride = 0;
 	uint32_t heapArrayStride = 0;
 
+	uint32_t imageDescriptorOffset = 0;
+	uint32_t bufferDescriptorOffset = descriptorHeap->GetNumImageDescriptors() * (uint32_t)caps.descriptorHeap.imageDescriptorSize;
+	uint32_t heapOffset{ 0 };
+
 	for (const auto& range : rootParameter.table)
 	{
 		const uint32_t binding = range.startRegister + GetRegisterShift(range.descriptorType);
@@ -2190,16 +2162,19 @@ static void ProcessTable(const DeviceCaps& caps, const DescriptorHeap* descripto
 		{
 			heapIndexStride = (uint32_t)caps.descriptorHeap.samplerDescriptorSize;
 			heapArrayStride = (uint32_t)caps.descriptorHeap.samplerDescriptorSize;
+			heapOffset = 0;
 		}
 		else if (IsImageDescriptorType(range.descriptorType))
 		{
 			heapIndexStride = (uint32_t)caps.descriptorHeap.imageDescriptorSize;
 			heapArrayStride = (uint32_t)caps.descriptorHeap.imageDescriptorSize;
+			heapOffset = imageDescriptorOffset;
 		}
 		else
 		{
 			heapIndexStride = (uint32_t)caps.descriptorHeap.bufferDescriptorSize;
 			heapArrayStride = (uint32_t)caps.descriptorHeap.bufferDescriptorSize;
+			heapOffset = bufferDescriptorOffset;
 		}
 
 		VkDescriptorSetAndBindingMappingEXT setAndBindingMapping{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT };
@@ -2209,7 +2184,7 @@ static void ProcessTable(const DeviceCaps& caps, const DescriptorHeap* descripto
 		setAndBindingMapping.resourceMask			= spirvType;
 		setAndBindingMapping.source					= VK_DESCRIPTOR_MAPPING_SOURCE_HEAP_WITH_PUSH_INDEX_EXT;
 		setAndBindingMapping.sourceData.pushIndex	= {};
-		setAndBindingMapping.sourceData.pushIndex.heapOffset = 0;
+		setAndBindingMapping.sourceData.pushIndex.heapOffset = heapOffset;
 		setAndBindingMapping.sourceData.pushIndex.pushOffset = pushDataLayout[index][rangeIndex].offset;
 		setAndBindingMapping.sourceData.pushIndex.heapIndexStride = heapIndexStride;
 		setAndBindingMapping.sourceData.pushIndex.heapArrayStride = heapArrayStride;

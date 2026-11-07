@@ -14,6 +14,8 @@
 
 #include "DeviceVK.h"
 
+using namespace std;
+
 
 namespace Luna::VK
 {
@@ -30,9 +32,9 @@ DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType
 }
 
 
-DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes)
+DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
 {
-	return m_impl->AllocateDescriptors(heapType, sizeInBytes);
+	return m_impl->AllocateDescriptors(heapType, numDescriptors, imageDescriptors);
 }
 
 
@@ -60,8 +62,6 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHe
 		m_resourceBuffer :
 		m_samplerBuffer;
 
-	assert(bufferState.bufferSize > 0);
-
 	VkDeviceSize size{ 0 };
 	vkGetDescriptorSetLayoutSizeEXT(m_device->GetVulkanDevice(), vkDescriptorSetLayout, &size);
 
@@ -74,13 +74,14 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHe
 	bufferState.freeSpace -= alignedSize;
 
 	return DescriptorAllocation{
-		.mem		= allocation,
-		.offset		= (size_t)(allocation - bufferState.initialHead)
+		.mem			= allocation,
+		.offsetInBytes	= (size_t)(allocation - bufferState.initialHead),
+		.offsetInItems	= 0
 	};
 }
 
 
-DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes)
+DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
 {
 	assert(false);
 	return DescriptorAllocation{};
@@ -102,25 +103,51 @@ DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeap
 }
 
 
-DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorHeapType heapType, size_t sizeInBytes)
+DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
 {
 	const auto& caps = m_device->GetDeviceCaps();
 
-	HeapState& heapState = (heapType == DescriptorHeapType::Resource) ?
-		m_resourceState :
-		m_samplerState;
+	std::byte* mem = (heapType == DescriptorHeapType::Resource) ?
+		m_resourceState.bufferHead :
+		m_samplerState.bufferHead;
 
-	size_t alignedSize = Math::AlignUp(sizeInBytes, caps.descriptorHeap.largestResourceDescriptorAlignment);
-	assert(heapState.freeSpace >= alignedSize);
+	uint32_t offset = 0;
 
-	std::byte* allocation = heapState.bufferHead;
-	heapState.bufferHead += alignedSize;
+	if (heapType == DescriptorHeapType::Resource)
+	{
+		if (imageDescriptors)
+		{
+			assert(m_numAllocatedImageDescriptors + numDescriptors <= m_numImageDescriptors);
 
-	heapState.freeSpace -= alignedSize;
+			mem += m_imageDescriptorOffset;
+			mem += m_numAllocatedImageDescriptors * GetImageDescriptorSize();
+			offset = m_numAllocatedImageDescriptors;
+			m_numAllocatedImageDescriptors += numDescriptors;
+		}
+		else
+		{
+			assert(m_numAllocatedBufferDescriptors + numDescriptors <= m_numBufferDescriptors);
+
+			mem += m_bufferDescriptorOffset;
+			mem += m_numAllocatedBufferDescriptors * GetBufferDescriptorSize();
+			offset = m_numAllocatedBufferDescriptors;
+			m_numAllocatedBufferDescriptors += numDescriptors;
+		}
+	}
+	else
+	{
+		assert(m_numAllocatedSamplerDescriptors + numDescriptors <= m_numSamplerDescriptors);
+
+		mem += m_samplerDescriptorOffset;
+		mem += m_numAllocatedSamplerDescriptors * GetSamplerDescriptorSize();
+		offset = m_numAllocatedSamplerDescriptors;
+		m_numAllocatedSamplerDescriptors += numDescriptors;
+	}
 
 	return DescriptorAllocation{
-		.mem = allocation,
-		.offset = (size_t)(allocation - heapState.initialHead)
+		.mem			= mem,
+		.offsetInBytes	= 0,
+		.offsetInItems	= offset
 	};
 }
 
@@ -138,6 +165,24 @@ VkBindHeapInfoEXT DescriptorHeapImpl::GetBindInfo(DescriptorHeapType heapType) c
 	return (heapType == DescriptorHeapType::Resource) ?
 		m_resourceState.bindInfo :
 		m_samplerState.bindInfo;
+}
+
+
+size_t DescriptorHeapImpl::GetImageDescriptorSize() const
+{
+	return m_device->GetDeviceCaps().descriptorHeap.imageDescriptorSize;
+}
+
+
+size_t DescriptorHeapImpl::GetBufferDescriptorSize() const
+{
+	return m_device->GetDeviceCaps().descriptorHeap.bufferDescriptorSize;
+}
+
+
+size_t DescriptorHeapImpl::GetSamplerDescriptorSize() const
+{
+	return m_device->GetDeviceCaps().descriptorHeap.samplerDescriptorSize;
 }
 
 } // namespace Luna::VK

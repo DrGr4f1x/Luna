@@ -47,7 +47,7 @@ public:
 
 	const Luna::DeviceCaps& GetDeviceCaps() const override { return m_caps; }
 
-	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numResources, uint32_t numSamplers) override;
+	DescriptorHeapPtr CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers) override;
 
 	ColorBufferPtr CreateColorBuffer(const ColorBufferDesc& colorBufferDesc) override;
 	DepthBufferPtr CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc) override;
@@ -75,7 +75,7 @@ public:
 
 	ColorBufferPtr CreateColorBufferFromSwapChainImage(CVkImage* swapChainImage, uint32_t width, uint32_t height, Format format, uint32_t imageIndex);
 
-	wil::com_ptr<CVkBuffer> CreateDescriptorHeapBuffer(DescriptorHeapType type, uint32_t numDescriptors);
+	wil::com_ptr<CVkBuffer> CreateDescriptorHeapBuffer(DescriptorHeapType type, uint32_t numImages, uint32_t numBuffers);
 	wil::com_ptr<CVkBuffer> CreateDescriptorBuffer(DescriptorHeapType type, size_t sizeInBytes);
 
 	VkDevice GetVulkanDevice() const { return m_device->Get(); }

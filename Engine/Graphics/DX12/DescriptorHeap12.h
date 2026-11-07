@@ -30,8 +30,6 @@ public:
 
 	DescriptorHandle AllocateDescriptors(DescriptorHeapType type, uint32_t numDescriptors);
 
-	void Print() const override {}
-
 protected:
 	void Initialize();
 
