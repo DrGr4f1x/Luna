@@ -18,6 +18,15 @@
 #undef CreateSemaphore
 #endif
 
+namespace Luna
+{
+
+// Forward declarations
+struct SamplerDesc;
+
+} // namespace Luna
+
+
 namespace Luna::VK
 {
 
@@ -109,5 +118,7 @@ uint32_t GetRegisterShiftUAV();
 uint32_t GetRegisterShiftSampler();
 
 size_t GetDescriptorSize(DescriptorType descriptorType);
+
+VkSamplerCreateInfo FillSamplerCreateInfo(const SamplerDesc& samplerDesc);
 
 }

@@ -247,4 +247,31 @@ size_t GetDescriptorSize(DescriptorType descriptorType)
 	}
 }
 
+
+VkSamplerCreateInfo FillSamplerCreateInfo(const SamplerDesc& samplerDesc)
+{
+	const VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
+
+	return  VkSamplerCreateInfo{
+		.sType						= VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+		.pNext						= nullptr,
+		.flags						= 0,
+		.magFilter					= filterMapping.magFilter,
+		.minFilter					= filterMapping.minFilter,
+		.mipmapMode					= filterMapping.mipFilter,
+		.addressModeU				= TextureAddressToVulkan(samplerDesc.addressU),
+		.addressModeV				= TextureAddressToVulkan(samplerDesc.addressV),
+		.addressModeW				= TextureAddressToVulkan(samplerDesc.addressW),
+		.mipLodBias					= samplerDesc.mipLODBias,
+		.anisotropyEnable			= filterMapping.isAnisotropic,
+		.maxAnisotropy				= (float)samplerDesc.maxAnisotropy,
+		.compareEnable				= filterMapping.isComparisonEnabled,
+		.compareOp					= ComparisonFuncToVulkan(samplerDesc.comparisonFunc),
+		.minLod						= samplerDesc.minLOD,
+		.maxLod						= samplerDesc.maxLOD,
+		.borderColor				= BorderColorToVulkan(samplerDesc.staticBorderColor),
+		.unnormalizedCoordinates	= VK_FALSE
+	};
+}
+
 } // namespace Luna::VK

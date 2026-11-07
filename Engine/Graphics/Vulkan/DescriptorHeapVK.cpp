@@ -28,53 +28,6 @@ static bool IsResourceDescriptorClass(DescriptorClass descriptorClass)
 }
 
 
-DescriptorBuffer::~DescriptorBuffer()
-{
-	vmaUnmapMemory(m_resourceBuffer.descriptorBuffer->GetAllocator(), m_resourceBuffer.descriptorBuffer->GetAllocation());
-	vmaUnmapMemory(m_samplerBuffer.descriptorBuffer->GetAllocator(), m_samplerBuffer.descriptorBuffer->GetAllocation());
-}
-
-
-DescriptorAllocation DescriptorBuffer::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
-{
-	BufferState& bufferState = (heapType == DescriptorHeapType::Resource) ?
-		m_resourceBuffer :
-		m_samplerBuffer;
-
-	VkDeviceSize size{ 0 };
-	vkGetDescriptorSetLayoutSizeEXT(m_device->GetVulkanDevice(), vkDescriptorSetLayout, &size);
-
-	size_t alignedSize = Math::AlignUp(size, bufferState.alignment);
-	assert(bufferState.freeSpace >= alignedSize);
-
-	std::byte* allocation = bufferState.bufferHead;
-	bufferState.bufferHead += alignedSize;
-
-	bufferState.freeSpace -= alignedSize;
-
-	return DescriptorAllocation{
-		.mem			= allocation,
-		.offsetInBytes	= (size_t)(allocation - bufferState.initialHead),
-		.offsetInItems	= 0
-	};
-}
-
-
-DescriptorAllocation DescriptorBuffer::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
-{
-	assert(false);
-	return DescriptorAllocation{};
-}
-
-
-VkBuffer DescriptorBuffer::GetBuffer(DescriptorHeapType heapType) const
-{
-	return (heapType == DescriptorHeapType::Resource) ? 
-		m_resourceBuffer.descriptorBuffer->Get() :
-		m_samplerBuffer.descriptorBuffer->Get();
-}
-
-
 DescriptorHeap::~DescriptorHeap()
 {
 	vmaUnmapMemory(m_resourceState.descriptorHeap->GetAllocator(), m_resourceState.descriptorHeap->GetAllocation());
@@ -131,9 +84,9 @@ DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorClass descrip
 	}
 
 	return DescriptorAllocation{
-		.mem			= mem,
-		.offsetInBytes	= 0,
-		.offsetInItems	= offset
+		.mem = mem,
+		.offsetInBytes = 0,
+		.offsetInItems = offset
 	};
 }
 
@@ -169,6 +122,53 @@ size_t DescriptorHeap::GetBufferDescriptorSize() const
 size_t DescriptorHeap::GetSamplerDescriptorSize() const
 {
 	return m_device->GetDeviceCaps().descriptorHeap.samplerDescriptorSize;
+}
+
+
+DescriptorBuffer::~DescriptorBuffer()
+{
+	vmaUnmapMemory(m_resourceBuffer.descriptorBuffer->GetAllocator(), m_resourceBuffer.descriptorBuffer->GetAllocation());
+	vmaUnmapMemory(m_samplerBuffer.descriptorBuffer->GetAllocator(), m_samplerBuffer.descriptorBuffer->GetAllocation());
+}
+
+
+DescriptorAllocation DescriptorBuffer::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
+{
+	BufferState& bufferState = (heapType == DescriptorHeapType::Resource) ?
+		m_resourceBuffer :
+		m_samplerBuffer;
+
+	VkDeviceSize size{ 0 };
+	vkGetDescriptorSetLayoutSizeEXT(m_device->GetVulkanDevice(), vkDescriptorSetLayout, &size);
+
+	size_t alignedSize = Math::AlignUp(size, bufferState.alignment);
+	assert(bufferState.freeSpace >= alignedSize);
+
+	std::byte* allocation = bufferState.bufferHead;
+	bufferState.bufferHead += alignedSize;
+
+	bufferState.freeSpace -= alignedSize;
+
+	return DescriptorAllocation{
+		.mem			= allocation,
+		.offsetInBytes	= (size_t)(allocation - bufferState.initialHead),
+		.offsetInItems	= 0
+	};
+}
+
+
+DescriptorAllocation DescriptorBuffer::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
+{
+	assert(false);
+	return DescriptorAllocation{};
+}
+
+
+VkBuffer DescriptorBuffer::GetBuffer(DescriptorHeapType heapType) const
+{
+	return (heapType == DescriptorHeapType::Resource) ? 
+		m_resourceBuffer.descriptorBuffer->Get() :
+		m_samplerBuffer.descriptorBuffer->Get();
 }
 
 } // namespace Luna::VK

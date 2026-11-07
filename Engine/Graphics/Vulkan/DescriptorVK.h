@@ -20,7 +20,6 @@ namespace Luna::VK
 // Forward declarations
 class Device;
 
-
 class Descriptor : public IDescriptor
 {
 public:

@@ -306,6 +306,7 @@ void Descriptor::SetSizeAndReadDescriptorForHeap(VkDevice device, size_t descrip
 	vkWriteResourceDescriptorsEXT(device, 1, &resInfo, &range);
 }
 
+
 void Descriptor::ReadImageDescriptorForBuffer(VkDevice device, size_t descriptorSize, VkImageLayout layout, VkDescriptorType descriptorType, VkImageView imageView)
 {
 	VkDescriptorImageInfo info{

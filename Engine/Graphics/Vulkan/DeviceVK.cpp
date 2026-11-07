@@ -1030,28 +1030,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 
 SamplerPtr Device::CreateSampler(const SamplerDesc& samplerDesc)
 {
-	VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
-
-	VkSamplerCreateInfo createInfo{
-		.sType						= VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-		.pNext						= nullptr,
-		.flags						= 0,
-		.magFilter					= filterMapping.magFilter,
-		.minFilter					= filterMapping.minFilter,
-		.mipmapMode					= filterMapping.mipFilter,
-		.addressModeU				= TextureAddressToVulkan(samplerDesc.addressU),
-		.addressModeV				= TextureAddressToVulkan(samplerDesc.addressV),
-		.addressModeW				= TextureAddressToVulkan(samplerDesc.addressW),
-		.mipLodBias					= samplerDesc.mipLODBias,
-		.anisotropyEnable			= filterMapping.isAnisotropic,
-		.maxAnisotropy				= (float)samplerDesc.maxAnisotropy,
-		.compareEnable				= filterMapping.isComparisonEnabled,
-		.compareOp					= ComparisonFuncToVulkan(samplerDesc.comparisonFunc),
-		.minLod						= samplerDesc.minLOD,
-		.maxLod						= samplerDesc.maxLOD,
-		.borderColor				= BorderColorToVulkan(samplerDesc.staticBorderColor),
-		.unnormalizedCoordinates	= VK_FALSE
-	};
+	const VkSamplerCreateInfo createInfo = FillSamplerCreateInfo(samplerDesc);
 
 	wil::com_ptr<CVkSampler> pSampler;
 
@@ -2229,26 +2208,7 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const IDe
 		const SamplerDesc& samplerDesc = staticSampler.samplerDesc;
 		const VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
 
-		VkSamplerCreateInfo createInfo{
-			.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-			.pNext = nullptr,
-			.flags = 0,
-			.magFilter = filterMapping.magFilter,
-			.minFilter = filterMapping.minFilter,
-			.mipmapMode = filterMapping.mipFilter,
-			.addressModeU = TextureAddressToVulkan(samplerDesc.addressU),
-			.addressModeV = TextureAddressToVulkan(samplerDesc.addressV),
-			.addressModeW = TextureAddressToVulkan(samplerDesc.addressW),
-			.mipLodBias = samplerDesc.mipLODBias,
-			.anisotropyEnable = filterMapping.isAnisotropic,
-			.maxAnisotropy = (float)samplerDesc.maxAnisotropy,
-			.compareEnable = filterMapping.isComparisonEnabled,
-			.compareOp = ComparisonFuncToVulkan(samplerDesc.comparisonFunc),
-			.minLod = samplerDesc.minLOD,
-			.maxLod = samplerDesc.maxLOD,
-			.borderColor = BorderColorToVulkan(samplerDesc.staticBorderColor),
-			.unnormalizedCoordinates = VK_FALSE
-		};
+		VkSamplerCreateInfo createInfo = FillSamplerCreateInfo(samplerDesc);
 
 		shaderSetAndBindingMapping.staticSamplers.push_back(createInfo);
 	}
