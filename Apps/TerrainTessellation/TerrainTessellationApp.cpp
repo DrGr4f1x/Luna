@@ -99,9 +99,11 @@ void TerrainTessellationApp::Render()
 	context.DrawIndexed((uint32_t)m_terrainIndices->GetElementCount());
 
 	RenderGrid(context);
-	RenderUI(context);
 
 	context.EndRendering();
+
+	RenderUI(context);
+
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

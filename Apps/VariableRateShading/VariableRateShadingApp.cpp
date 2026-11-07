@@ -134,9 +134,10 @@ void VariableRateShadingApp::Render()
 		context.DrawIndexedInstanced(drawArgs.indexCount, 1, drawArgs.indexStart, drawArgs.vertexBase, 0);
 	}
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

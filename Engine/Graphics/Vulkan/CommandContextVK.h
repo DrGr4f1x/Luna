@@ -231,9 +231,7 @@ private:
 	}
 
 	// Descriptor buffer
-	void SetRootCBVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
-	void SetRootSRVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
-	void SetRootUAVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootBufferForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 	// Descriptor heap
 	void SetRootBufferForDescriptorHeap(const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);

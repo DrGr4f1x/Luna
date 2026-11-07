@@ -163,9 +163,10 @@ void PipelineStatisticsApp::Render()
 
 	context.EndQuery(m_queryHeap, activeFrame);
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 
 	// Copy query results to buffer
 	context.ResolveQueries(m_queryHeap, activeFrame, 1, m_readbackBuffer, activeFrame * m_queryHeap->GetQuerySize());

@@ -137,9 +137,9 @@ void ShadowMappingApp::Render()
 		}
 	}
 
-	RenderUI(context);
-
 	context.EndRendering();
+
+	RenderUI(context);
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 

@@ -203,8 +203,9 @@ void SSAOApp::Render()
 		context.Draw(3);
 	}
 
-	RenderUI(context);
 	context.EndRendering();
+
+	RenderUI(context);
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 

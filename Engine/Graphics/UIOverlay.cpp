@@ -88,6 +88,8 @@ void UIOverlay::Render(GraphicsContext& context)
 
 	ScopedDrawEvent event(context, "UI Overlay");
 
+	context.BeginRendering(m_application->GetColorBuffer());
+
 	context.SetViewportAndScissor(0u, 0u, m_application->GetWindowWidth(), m_application->GetWindowHeight());
 
 	context.SetRootSignature(m_rootSignature);
@@ -140,6 +142,8 @@ void UIOverlay::Render(GraphicsContext& context)
 		}
 		vertexOffset += cmd_list->VtxBuffer.Size;
 	}
+
+	context.EndRendering();
 }
 
 

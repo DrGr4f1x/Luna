@@ -178,9 +178,11 @@ void EndCapApp::Render()
 	}
 
 	RenderGrid(context);
-	RenderUI(context);
 
 	context.EndRendering();
+
+	RenderUI(context);
+
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

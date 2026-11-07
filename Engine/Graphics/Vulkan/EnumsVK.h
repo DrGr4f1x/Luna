@@ -46,6 +46,8 @@ VkShaderStageFlagBits ShaderTypeToVulkan(ShaderType shaderType);
 
 VkDescriptorType DescriptorTypeToVulkan(DescriptorType descriptorType);
 
+VkDescriptorType RootParameterTypeToVulkanDescriptorType(RootParameterType rootParameterType);
+
 
 enum class SamplerReductionMode
 {

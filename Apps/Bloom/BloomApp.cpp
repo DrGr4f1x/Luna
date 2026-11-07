@@ -187,9 +187,10 @@ void BloomApp::Render()
 		context.Draw(3);
 	}
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

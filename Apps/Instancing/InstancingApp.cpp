@@ -124,9 +124,10 @@ void InstancingApp::Render()
 		}
 	}
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

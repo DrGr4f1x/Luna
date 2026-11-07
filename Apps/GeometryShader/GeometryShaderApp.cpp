@@ -104,9 +104,10 @@ void GeometryShaderApp::Render()
 		m_model->Render(context);
 	}
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

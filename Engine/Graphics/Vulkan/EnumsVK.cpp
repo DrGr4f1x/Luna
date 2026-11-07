@@ -393,6 +393,18 @@ VkDescriptorType DescriptorTypeToVulkan(DescriptorType descriptorType)
 }
 
 
+VkDescriptorType RootParameterTypeToVulkanDescriptorType(RootParameterType rootParameterType)
+{
+	switch (rootParameterType)
+	{
+	case RootParameterType::RootCBV: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	case RootParameterType::RootSRV:
+	case RootParameterType::RootUAV: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+	default:						 return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+	}
+}
+
+
 static const std::array<VkTextureFilterMapping, (size_t)TextureFilter::Count> s_textureFilterMap = { {
 	{ TextureFilter::MinMagMipPoint,						VK_FILTER_NEAREST,	VK_FILTER_NEAREST,	VK_SAMPLER_MIPMAP_MODE_NEAREST,	SamplerReductionMode::None, VK_FALSE,	VK_FALSE },
 	{ TextureFilter::MinMagPointMipLinear,					VK_FILTER_NEAREST,	VK_FILTER_NEAREST,	VK_SAMPLER_MIPMAP_MODE_LINEAR,	SamplerReductionMode::None,	VK_FALSE,	VK_FALSE },

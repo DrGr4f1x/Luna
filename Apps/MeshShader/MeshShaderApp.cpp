@@ -86,9 +86,10 @@ void MeshShaderApp::Render()
 
 	context.DispatchMesh(1, 1, 1);
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

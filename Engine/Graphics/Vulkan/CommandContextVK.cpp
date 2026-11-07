@@ -1146,7 +1146,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 	}
 	else
 	{
-		SetRootCBVForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 }
 
@@ -1166,7 +1166,7 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 	}
 	else
 	{
-		SetRootSRVForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 }
 
@@ -1186,7 +1186,7 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 	}
 	else
 	{
-		SetRootUAVForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 }
 
@@ -1981,7 +1981,7 @@ RootSignature* CommandContextVK::GetRootSignature(CommandListType type)
 }
 
 
-void CommandContextVK::SetRootCBVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBuffer->GetBuffer(),
@@ -1989,78 +1989,18 @@ void CommandContextVK::SetRootCBVForDescriptorBuffer(CommandListType type, const
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const auto& rootParameter = rootSignature->GetRootParameter(rootIndex);
+
 	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
 	assert(binding != (uint32_t)-1);
 
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding + GetRegisterShift(RootParameterType::RootCBV),
+		.dstBinding			= binding + GetRegisterShift(rootParameter.parameterType),
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.descriptorType		= RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
 		.pBufferInfo		= &info
-	};
-
-	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
-	assert(pushDescriptorSetIndex != (uint32_t)-1);
-
-	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
-		VK_PIPELINE_BIND_POINT_GRAPHICS :
-		VK_PIPELINE_BIND_POINT_COMPUTE;
-
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
-}
-
-
-void CommandContextVK::SetRootSRVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
-{
-	VkDescriptorBufferInfo info{
-		.buffer = gpuBuffer->GetBuffer(),
-		.offset = offsetInBytes,
-		.range = VK_WHOLE_SIZE
-	};
-
-	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
-	assert(binding != (uint32_t)-1);
-
-	VkWriteDescriptorSet writeDescriptor{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding = binding + GetRegisterShift(RootParameterType::RootSRV),
-		.dstArrayElement = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		.pBufferInfo = &info
-	};
-
-	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
-	assert(pushDescriptorSetIndex != (uint32_t)-1);
-
-	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
-		VK_PIPELINE_BIND_POINT_GRAPHICS :
-		VK_PIPELINE_BIND_POINT_COMPUTE;
-
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
-}
-
-
-void CommandContextVK::SetRootUAVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
-{
-	VkDescriptorBufferInfo info{
-		.buffer = gpuBuffer->GetBuffer(),
-		.offset = offsetInBytes,
-		.range = VK_WHOLE_SIZE
-	};
-
-	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
-	assert(binding != (uint32_t)-1);
-
-	VkWriteDescriptorSet writeDescriptor{
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding = binding + GetRegisterShift(RootParameterType::RootUAV),
-		.dstArrayElement = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-		.pBufferInfo = &info
 	};
 
 	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();

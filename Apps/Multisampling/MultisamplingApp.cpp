@@ -118,9 +118,7 @@ void MultisamplingApp::Render()
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
 	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 
-	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
 	RenderUI(context);
-	context.EndRendering();
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 

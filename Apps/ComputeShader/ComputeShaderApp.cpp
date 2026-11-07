@@ -170,9 +170,10 @@ void ComputeShaderApp::Render()
 
 	context.DrawIndexed((uint32_t)m_indexBuffer->GetElementCount());
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

@@ -124,9 +124,10 @@ void ComputeParticlesApp::Render()
 
 	context.Draw(6 * m_particleCount);
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

@@ -255,9 +255,10 @@ void MeshletCullApp::Render()
 		m_cullDataVisualizer.Render(context, obj.model.GetMesh(0), m_selectedIndex, 1);
 	}
 
+	context.EndRendering();
+
 	RenderUI(context);
 
-	context.EndRendering();
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();

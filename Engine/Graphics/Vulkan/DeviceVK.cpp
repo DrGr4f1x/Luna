@@ -39,18 +39,6 @@ namespace Luna::VK
 static Device* g_vulkanDevice{ nullptr };
 
 
-inline VkDescriptorType RootParameterTypeToVulkanDescriptorType(RootParameterType rootParameterType)
-{
-	switch (rootParameterType)
-	{
-	case RootParameterType::RootCBV: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	case RootParameterType::RootSRV:
-	case RootParameterType::RootUAV: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-	default:						 return VK_DESCRIPTOR_TYPE_MAX_ENUM;
-	}
-}
-
-
 pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
 {
 	auto fileSystem = GetFileSystem();
