@@ -1028,7 +1028,7 @@ void CommandContextVK::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 
 void CommandContextVK::BindDescriptorHeap(IDescriptorHeap* descriptorHeap)
 {
-	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap;
+	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap;
 	const auto heapClass = descriptorHeapVK->GetClass();
 
 	if (heapClass == VulkanDescriptorHeapClass::Heap)
@@ -1142,7 +1142,7 @@ void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, cons
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootBufferForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorHeap(rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
@@ -1162,7 +1162,7 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootBufferForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorHeap(rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
@@ -1182,7 +1182,7 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootBufferForDescriptorHeap(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		SetRootBufferForDescriptorHeap(rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
@@ -2074,7 +2074,7 @@ void CommandContextVK::SetRootUAVForDescriptorBuffer(CommandListType type, const
 }
 
 
-void CommandContextVK::SetRootBufferForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+void CommandContextVK::SetRootBufferForDescriptorHeap(const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	assert(offsetInBytes == 0);
 

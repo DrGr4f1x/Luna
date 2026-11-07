@@ -43,7 +43,7 @@ void ShaderSetAndBindingMapping::Finalize()
 
 Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
 {
-	DescriptorHeap* descriptorHeapVK = (DescriptorHeap*)descriptorHeap.get();
+	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap.get();
 
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 

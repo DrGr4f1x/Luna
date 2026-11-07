@@ -236,7 +236,7 @@ private:
 	void SetRootUAVForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 	// Descriptor heap
-	void SetRootBufferForDescriptorHeap(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootBufferForDescriptorHeap(const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 private:
 	std::string m_id;

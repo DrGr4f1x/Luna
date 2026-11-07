@@ -30,7 +30,7 @@ namespace Luna::VK
 {
 
 // Forward declarations
-class DescriptorHeap;
+class IDescriptorHeapVK;
 
 
 struct DescriptorSetDesc
@@ -61,8 +61,8 @@ public:
 
 	QueryHeapPtr CreateQueryHeap(const QueryHeapDesc& queryHeapDesc) override;
 
-	DescriptorSetPtr CreateDescriptorSet(DescriptorHeap* descriptorHeap, const DescriptorSetDesc& descriptorSetDesc);
-	DescriptorSetPtr CreateDescriptorSet(DescriptorHeap* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter);
+	DescriptorSetPtr CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, const DescriptorSetDesc& descriptorSetDesc);
+	DescriptorSetPtr CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter);
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 
@@ -99,7 +99,7 @@ protected:
 	TexturePtr CreateTextureSimple(TextureDimension dimension, const TextureDesc& textureDesc);
 
 	RootSignaturePtr CreateRootSignatureForDescriptorBuffer(const RootSignatureDesc& rootSignatureDesc);
-	RootSignaturePtr CreateRootSignatureForDescriptorHeap(const DescriptorHeap* descriptorHeap, const RootSignatureDesc& rootSignatureDesc);
+	RootSignaturePtr CreateRootSignatureForDescriptorHeap(const IDescriptorHeapVK* descriptorHeap, const RootSignatureDesc& rootSignatureDesc);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

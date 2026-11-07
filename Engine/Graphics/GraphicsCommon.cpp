@@ -123,7 +123,9 @@ IDeviceManager* GetDeviceManager()
 
 uint64_t GetFrameNumber()
 {
-	return GetDeviceManager()->GetFrameNumber();
+	if (g_deviceManager)
+		return g_deviceManager->GetFrameNumber();
+	return 0;
 }
 
 } // namespace Luna

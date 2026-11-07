@@ -24,47 +24,18 @@ static bool IsResourceDescriptorClass(DescriptorClass descriptorClass)
 {
 	using enum DescriptorClass;
 
-	return descriptorClass == Image || descriptorClass == Buffer || descriptorClass == RayTracingAccelStruct;
+	return descriptorClass == Image || descriptorClass == Buffer;
 }
 
 
-DescriptorHeap::~DescriptorHeap()
+DescriptorBuffer::~DescriptorBuffer()
 {
-	delete m_impl;
+	vmaUnmapMemory(m_resourceBuffer.descriptorBuffer->GetAllocator(), m_resourceBuffer.descriptorBuffer->GetAllocation());
+	vmaUnmapMemory(m_samplerBuffer.descriptorBuffer->GetAllocator(), m_samplerBuffer.descriptorBuffer->GetAllocation());
 }
 
 
-DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
-{
-	return m_impl->AllocateDescriptorMemory(heapType, vkDescriptorSetLayout);
-}
-
-
-DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
-{
-	return m_impl->AllocateDescriptors(descriptorClass, numDescriptors);
-}
-
-
-VulkanDescriptorHeapClass DescriptorHeap::GetClass() const
-{
-	return m_impl->GetClass();
-}
-
-
-VkBuffer DescriptorHeap::GetBuffer(DescriptorHeapType heapType) const
-{
-	return m_impl->GetBuffer(heapType);
-}
-
-
-VkBindHeapInfoEXT DescriptorHeap::GetBindInfo(DescriptorHeapType heapType) const
-{
-	return m_impl->GetBindInfo(heapType);
-}
-
-
-DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
+DescriptorAllocation DescriptorBuffer::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	BufferState& bufferState = (heapType == DescriptorHeapType::Resource) ?
 		m_resourceBuffer :
@@ -89,14 +60,14 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHe
 }
 
 
-DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
+DescriptorAllocation DescriptorBuffer::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
 {
 	assert(false);
 	return DescriptorAllocation{};
 }
 
 
-VkBuffer DescriptorBufferImpl::GetBuffer(DescriptorHeapType heapType) const
+VkBuffer DescriptorBuffer::GetBuffer(DescriptorHeapType heapType) const
 {
 	return (heapType == DescriptorHeapType::Resource) ? 
 		m_resourceBuffer.descriptorBuffer->Get() :
@@ -104,14 +75,21 @@ VkBuffer DescriptorBufferImpl::GetBuffer(DescriptorHeapType heapType) const
 }
 
 
-DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
+DescriptorHeap::~DescriptorHeap()
+{
+	vmaUnmapMemory(m_resourceState.descriptorHeap->GetAllocator(), m_resourceState.descriptorHeap->GetAllocation());
+	vmaUnmapMemory(m_samplerState.descriptorHeap->GetAllocator(), m_samplerState.descriptorHeap->GetAllocation());
+}
+
+
+DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout)
 {
 	assert(false);
 	return DescriptorAllocation{};
 }
 
 
-DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
+DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
 {
 	const auto& caps = m_device->GetDeviceCaps();
 
@@ -160,7 +138,7 @@ DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorClass des
 }
 
 
-VkBuffer DescriptorHeapImpl::GetBuffer(DescriptorHeapType heapType) const
+VkBuffer DescriptorHeap::GetBuffer(DescriptorHeapType heapType) const
 {
 	return (heapType == DescriptorHeapType::Resource) ?
 		m_resourceState.descriptorHeap->Get() :
@@ -168,7 +146,7 @@ VkBuffer DescriptorHeapImpl::GetBuffer(DescriptorHeapType heapType) const
 }
 
 
-VkBindHeapInfoEXT DescriptorHeapImpl::GetBindInfo(DescriptorHeapType heapType) const
+VkBindHeapInfoEXT DescriptorHeap::GetBindInfo(DescriptorHeapType heapType) const
 {
 	return (heapType == DescriptorHeapType::Resource) ?
 		m_resourceState.bindInfo :
@@ -176,19 +154,19 @@ VkBindHeapInfoEXT DescriptorHeapImpl::GetBindInfo(DescriptorHeapType heapType) c
 }
 
 
-size_t DescriptorHeapImpl::GetImageDescriptorSize() const
+size_t DescriptorHeap::GetImageDescriptorSize() const
 {
 	return m_device->GetDeviceCaps().descriptorHeap.imageDescriptorSize;
 }
 
 
-size_t DescriptorHeapImpl::GetBufferDescriptorSize() const
+size_t DescriptorHeap::GetBufferDescriptorSize() const
 {
 	return m_device->GetDeviceCaps().descriptorHeap.bufferDescriptorSize;
 }
 
 
-size_t DescriptorHeapImpl::GetSamplerDescriptorSize() const
+size_t DescriptorHeap::GetSamplerDescriptorSize() const
 {
 	return m_device->GetDeviceCaps().descriptorHeap.samplerDescriptorSize;
 }
