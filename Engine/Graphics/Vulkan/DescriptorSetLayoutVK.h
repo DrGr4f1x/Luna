@@ -43,8 +43,6 @@ public:
 
 	wil::com_ptr<CVkDescriptorSetLayout> GetDescriptorSetLayout() const noexcept;
 
-	const std::vector<VkDescriptorSetLayoutBinding>& GetDescriptorSetLayoutBindings() const noexcept { return m_descriptorSetLayoutBindings; }
-
 	size_t GetHashCode() const noexcept { return m_hashcode; }
 	size_t GetDescriptorSetSize() const noexcept { return m_layoutSize; }
 
@@ -54,9 +52,6 @@ protected:
 	Device* m_device{ nullptr };
 	wil::com_ptr<CVkDescriptorSetLayout> m_descriptorSetLayout;
 	size_t m_hashcode{ 0 };
-
-	// Descriptor bindings
-	std::vector<VkDescriptorSetLayoutBinding> m_descriptorSetLayoutBindings;
 
 	// Descriptor buffer data
 	VkDeviceSize m_layoutSize{ 0 };

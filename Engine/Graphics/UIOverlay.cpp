@@ -329,7 +329,6 @@ void UIOverlay::InitPipeline()
 		.depthStencilState	= CommonStates::DepthStateDisabled(),
 		.rasterizerState	= CommonStates::RasterizerTwoSided(),
 		.rtvFormats			= { m_application->GetColorFormat() },
-		.dsvFormat			= m_application->GetDepthFormat(),
 		.topology			= PrimitiveTopology::TriangleList,
 		.vertexShader		= { .shaderFile = "UIVS" },
 		.pixelShader		= { .shaderFile = "UIPS" },

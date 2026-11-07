@@ -130,8 +130,6 @@ Device::Device(CVkDevice* device, CVmaAllocator* allocator, const Luna::DeviceCa
 
 DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
-	
-
 	// Descriptor heap
 	if (UseDescriptorHeap())
 	{
@@ -880,7 +878,10 @@ QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_CONTROL_SHADER_PATCHES_BIT;
 		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT;
 		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT;
-		// TODO: Support mesh shader stats
+
+		// Mesh shader statistics
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TASK_SHADER_INVOCATIONS_BIT_EXT;
+		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_MESH_SHADER_INVOCATIONS_BIT_EXT;
 	}
 
 	VkQueryPoolCreateInfo createInfo{
@@ -1608,7 +1609,6 @@ DescriptorSetLayoutPtr Device::CreateDescriptorSetLayout(const RootParameter& ro
 	descriptorSetLayout->m_device = this;
 	descriptorSetLayout->m_descriptorSetLayout = setLayout;
 	descriptorSetLayout->m_hashcode = hashCode;
-	descriptorSetLayout->m_descriptorSetLayoutBindings = bindings;
 
 	// Get info for descriptor buffer binding
 	{
@@ -1814,10 +1814,10 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignat
 		for (const auto& staticSamplerDesc : rootSignatureDesc.staticSamplers)
 		{
 			VkDescriptorSetLayoutBinding vkBinding{
-				.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
-				.descriptorCount = 1,
-				.stageFlags = VK_SHADER_STAGE_ALL,
-				.pImmutableSamplers = &vkSamplers[currentBinding]
+				.descriptorType			= VK_DESCRIPTOR_TYPE_SAMPLER,
+				.descriptorCount		= 1,
+				.stageFlags				= VK_SHADER_STAGE_ALL,
+				.pImmutableSamplers		= &vkSamplers[currentBinding]
 			};
 
 			if (staticSamplerDesc.shaderRegister == APPEND_REGISTER)
@@ -1839,10 +1839,10 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignat
 
 		// Create the descriptor set layout for the static samplers
 		VkDescriptorSetLayoutCreateInfo createInfo{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
-			.bindingCount = (uint32_t)vkLayoutBindings.size(),
-			.pBindings = vkLayoutBindings.data()
+			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_EMBEDDED_IMMUTABLE_SAMPLERS_BIT_EXT,
+			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
+			.pBindings		= vkLayoutBindings.data()
 		};
 
 		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
@@ -1871,11 +1871,11 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignat
 			const uint32_t regShift = GetRegisterShift(rootParameter.parameterType);
 
 			VkDescriptorSetLayoutBinding vkBinding{
-				.binding = regShift + rootParameter.startRegister,
-				.descriptorType = RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
-				.descriptorCount = 1,
-				.stageFlags = ShaderStageToVulkan(rootParameter.shaderVisibility),
-				.pImmutableSamplers = nullptr
+				.binding				= regShift + rootParameter.startRegister,
+				.descriptorType			= RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
+				.descriptorCount		= 1,
+				.stageFlags				= ShaderStageToVulkan(rootParameter.shaderVisibility),
+				.pImmutableSamplers		= nullptr
 			};
 			vkLayoutBindings.push_back(vkBinding);
 
@@ -1884,10 +1884,10 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignat
 
 		// Create the descriptor set layout for the push descriptors
 		VkDescriptorSetLayoutCreateInfo createInfo{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
-			.bindingCount = (uint32_t)vkLayoutBindings.size(),
-			.pBindings = vkLayoutBindings.data()
+			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+			.flags			= VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT | VK_DESCRIPTOR_SET_LAYOUT_CREATE_DESCRIPTOR_BUFFER_BIT_EXT,
+			.bindingCount	= (uint32_t)vkLayoutBindings.size(),
+			.pBindings		= vkLayoutBindings.data()
 		};
 
 		VkDescriptorSetLayout vkDescriptorSetLayout{ VK_NULL_HANDLE };
@@ -1925,11 +1925,11 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorBuffer(const RootSignat
 	if (firstCompile)
 	{
 		VkPipelineLayoutCreateInfo createInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount = (uint32_t)vkDescriptorSetLayouts.size(),
-			.pSetLayouts = vkDescriptorSetLayouts.data(),
-			.pushConstantRangeCount = (uint32_t)vkPushConstantRanges.size(),
-			.pPushConstantRanges = vkPushConstantRanges.data()
+			.sType						= VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+			.setLayoutCount				= (uint32_t)vkDescriptorSetLayouts.size(),
+			.pSetLayouts				= vkDescriptorSetLayouts.data(),
+			.pushConstantRangeCount		= (uint32_t)vkPushConstantRanges.size(),
+			.pPushConstantRanges		= vkPushConstantRanges.data()
 		};
 
 		VkPipelineLayout vkPipelineLayout{ VK_NULL_HANDLE };
@@ -2075,17 +2075,14 @@ static void ProcessRootConstants(ShaderSetAndBindingMapping& shaderSetAndBinding
 	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
 	const uint32_t pushDataOffset = pushDataLayout[index][0].offset;
 
-	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
-		.descriptorSet = index,
-		.firstBinding = binding,
-		.bindingCount = 1,
-		.resourceMask = VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT,
-		.source = VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT,
-		.sourceData = {
-			.pushDataOffset = pushDataOffset
-		}
+	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping{
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+		.descriptorSet	= index,
+		.firstBinding	= binding,
+		.bindingCount	= 1,
+		.resourceMask	= VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT,
+		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT,
+		.sourceData		= { .pushDataOffset = pushDataOffset }
 	};
 
 	AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
@@ -2105,17 +2102,14 @@ static void ProcessRootBuffers(ShaderSetAndBindingMapping& shaderSetAndBindingMa
 	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
 	const uint32_t pushDataOffset = pushDataLayout[index][0].offset;
 
-	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping
-	{
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
-		.descriptorSet = index,
-		.firstBinding = binding,
-		.bindingCount = 1,
-		.resourceMask = spirvType,
-		.source = VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT,
-		.sourceData = {
-			.pushAddressOffset = pushDataOffset
-		}
+	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping {
+		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
+		.descriptorSet	= index,
+		.firstBinding	= binding,
+		.bindingCount	= 1,
+		.resourceMask	= spirvType,
+		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_ADDRESS_EXT,
+		.sourceData = {	.pushAddressOffset = pushDataOffset	}
 	};
 
 	AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
@@ -2240,69 +2234,6 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const IDe
 
 	shaderSetAndBindingMapping.Finalize();
 }
-
-
-#if 0
-static void LogRootSignature(const RootSignatureDesc& rootSignatureDesc, const ShaderSetAndBindingMapping& shaderSetAndBindingMapping)
-{
-	LogInfo(LogVulkan) << "=== RootSignature ===" << endl;
-	LogInfo(LogVulkan) << "  Name: " << rootSignatureDesc.name << endl;
-
-	LogInfo(LogVulkan) << "  Root Parameters:" << endl;
-	uint32_t index = 0;
-	for (const auto& rootParam : rootSignatureDesc.rootParameters)
-	{
-		LogInfo(LogVulkan) << "    Index: " << index << endl;
-		if (rootParam.parameterType == RootParameterType::RootConstants)
-		{
-			LogInfo(LogVulkan) << "      Type: RootConstants" << endl;
-			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
-			LogInfo(LogVulkan) << "      Num 32bit Constants: " << rootParam.num32BitConstants << endl;
-			LogInfo(LogVulkan) << "      Shader Visibility: " << rootParam.shaderVisibility << endl;
-		}
-		else if (rootParam.parameterType == RootParameterType::RootCBV)
-		{
-			LogInfo(LogVulkan) << "      Type: RootCBV" << endl;
-			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
-		}
-		else if (rootParam.parameterType == RootParameterType::RootSRV)
-		{
-			LogInfo(LogVulkan) << "      Type: RootSRV" << endl;
-			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
-		}
-		else if (rootParam.parameterType == RootParameterType::RootUAV)
-		{
-			LogInfo(LogVulkan) << "      Type: RootUAV" << endl;
-			LogInfo(LogVulkan) << "      Start Register: " << rootParam.startRegister << ", with offset: " << rootParam.startRegister + GetRegisterShift(rootParam.parameterType) << endl;
-		}
-		else
-		{
-			LogInfo(LogVulkan) << "      Type: Table" << endl;
-			LogInfo(LogVulkan) << "      Descriptor Ranges:" << endl;
-			uint32_t rangeIndex = 0;
-			uint32_t currentRegister = 0;
-			for (const auto& range : rootParam.table)
-			{
-				LogInfo(LogVulkan) << "        Descriptor Type:" << range.descriptorType << endl;
-				if (range.startRegister == APPEND_REGISTER)
-				{
-					uint32_t temp = currentRegister++;
-					LogInfo(LogVulkan) << "        Start Register [APPEND]: " << temp << ", with offset: " << temp + GetRegisterShift(range.descriptorType) << endl;
-				}
-				else
-				{
-					LogInfo(LogVulkan) << "        Start Register [APPEND]: " << range.startRegister << ", with offset: " << range.startRegister + GetRegisterShift(range.descriptorType) << endl;
-					currentRegister = range.startRegister + range.numDescriptors;
-				}
-
-				++rangeIndex;
-			}
-		}
-
-		++index;
-	}
-}
-#endif
 
 
 RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const IDescriptorHeapVK* descriptorHeap, const RootSignatureDesc& rootSignatureDesc)
