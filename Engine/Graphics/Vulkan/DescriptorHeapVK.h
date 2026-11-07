@@ -35,7 +35,7 @@ class IDescriptorHeapImpl
 public:
 	virtual DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) = 0;
 
-	virtual DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors) = 0;
+	virtual DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors) = 0;
 
 	virtual VulkanDescriptorHeapClass GetClass() const = 0;
 
@@ -58,7 +58,7 @@ public:
 	virtual ~DescriptorHeap();
 	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout);
 
-	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors);
+	DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors);
 
 	VulkanDescriptorHeapClass GetClass() const;
 
@@ -82,7 +82,7 @@ class DescriptorBufferImpl : public IDescriptorHeapImpl
 
 public:
 	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) override;
-	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors) override;
+	DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors) override;
 
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
 
@@ -122,7 +122,7 @@ class DescriptorHeapImpl : public IDescriptorHeapImpl
 
 public:
 	DescriptorAllocation AllocateDescriptorMemory(DescriptorHeapType heapType, VkDescriptorSetLayout vkDescriptorSetLayout) override;
-	DescriptorAllocation AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors) override;
+	DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors) override;
 
 	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Heap; }
 

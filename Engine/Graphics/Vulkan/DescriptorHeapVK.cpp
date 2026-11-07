@@ -20,6 +20,14 @@ using namespace std;
 namespace Luna::VK
 {
 
+static bool IsResourceDescriptorClass(DescriptorClass descriptorClass)
+{
+	using enum DescriptorClass;
+
+	return descriptorClass == Image || descriptorClass == Buffer || descriptorClass == RayTracingAccelStruct;
+}
+
+
 DescriptorHeap::~DescriptorHeap()
 {
 	delete m_impl;
@@ -32,9 +40,9 @@ DescriptorAllocation DescriptorHeap::AllocateDescriptorMemory(DescriptorHeapType
 }
 
 
-DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+DescriptorAllocation DescriptorHeap::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
 {
-	return m_impl->AllocateDescriptors(heapType, numDescriptors, imageDescriptors);
+	return m_impl->AllocateDescriptors(descriptorClass, numDescriptors);
 }
 
 
@@ -81,7 +89,7 @@ DescriptorAllocation DescriptorBufferImpl::AllocateDescriptorMemory(DescriptorHe
 }
 
 
-DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+DescriptorAllocation DescriptorBufferImpl::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
 {
 	assert(false);
 	return DescriptorAllocation{};
@@ -103,19 +111,19 @@ DescriptorAllocation DescriptorHeapImpl::AllocateDescriptorMemory(DescriptorHeap
 }
 
 
-DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorHeapType heapType, uint32_t numDescriptors, bool imageDescriptors)
+DescriptorAllocation DescriptorHeapImpl::AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors)
 {
 	const auto& caps = m_device->GetDeviceCaps();
 
-	std::byte* mem = (heapType == DescriptorHeapType::Resource) ?
-		m_resourceState.bufferHead :
-		m_samplerState.bufferHead;
+	std::byte* mem = (descriptorClass == DescriptorClass::Sampler) ?
+		m_samplerState.bufferHead :
+		m_resourceState.bufferHead;
 
 	uint32_t offset = 0;
 
-	if (heapType == DescriptorHeapType::Resource)
+	if (IsResourceDescriptorClass(descriptorClass))
 	{
-		if (imageDescriptors)
+		if (descriptorClass == DescriptorClass::Image)
 		{
 			assert(m_numAllocatedImageDescriptors + numDescriptors <= m_numImageDescriptors);
 

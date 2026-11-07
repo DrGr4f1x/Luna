@@ -972,7 +972,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 	{
 		if (isSamplerTable)
 		{
-			auto allocation = descriptorHeap->AllocateDescriptors(DescriptorHeapType::Sampler, range.numDescriptors, false);
+			auto allocation = descriptorHeap->AllocateDescriptors(DescriptorClass::Sampler, range.numDescriptors);
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
 				std::byte* writeDest = allocation.mem + i * m_caps.descriptorHeap.samplerDescriptorSize;
@@ -984,12 +984,15 @@ DescriptorSetPtr Device::CreateDescriptorSet(DescriptorHeap* descriptorHeap, con
 		}
 		else
 		{
-			const bool isImageDescriptorRange = IsImageDescriptorType(range.descriptorType);
-			auto allocation = descriptorHeap->AllocateDescriptors(DescriptorHeapType::Resource, range.numDescriptors, isImageDescriptorRange);
+			const auto descriptorClass = IsImageDescriptorType(range.descriptorType) ?
+				DescriptorClass::Image :
+				DescriptorClass::Buffer;
+
+			auto allocation = descriptorHeap->AllocateDescriptors(descriptorClass, range.numDescriptors);
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
 				std::byte* writeDest = nullptr;
-				if (isImageDescriptorRange)
+				if (descriptorClass == DescriptorClass::Image)
 				{
 					writeDest = allocation.mem + i * m_caps.descriptorHeap.imageDescriptorSize;
 				}
