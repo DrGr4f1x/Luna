@@ -1056,78 +1056,60 @@ void CommandContextVK::BindDescriptorHeap(IDescriptorHeap* descriptorHeap)
 
 void CommandContextVK::SetConstantArray(CommandListType type, uint32_t rootIndex, uint32_t numConstants, const void* constants, uint32_t offset)
 {
-	vkCmdPushConstants(
-		m_commandBuffer,
-		GetPipelineLayout(type),
-		m_shaderStages[rootIndex],
-		offset * sizeof(DWORD),
-		numConstants * sizeof(DWORD),
-		constants);
+	const uint32_t offsetInBytes = offset * sizeof(DWORD);
+	const uint32_t sizeInBytes = numConstants * sizeof(DWORD);
+
+	SetPushDataOrPushConstants(type, rootIndex, offsetInBytes, constants, sizeInBytes);
 }
 
 
 void CommandContextVK::SetConstant(CommandListType type, uint32_t rootIndex, uint32_t offset, DWParam val)
 {
 	uint32_t v = val.u_value;
-	vkCmdPushConstants(
-		m_commandBuffer,
-		GetPipelineLayout(type),
-		m_shaderStages[rootIndex],
-		offset * sizeof(uint32_t),
-		sizeof(uint32_t),
-		&v);
+	const uint32_t offsetInBytes = offset * sizeof(uint32_t);
+	const uint32_t sizeInBytes = sizeof(uint32_t);
+
+	SetPushDataOrPushConstants(type, rootIndex, offsetInBytes, &v, sizeInBytes);
 }
 
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x)
 {
 	uint32_t v = x.u_value;
-	vkCmdPushConstants(
-		m_commandBuffer,
-		GetPipelineLayout(type),
-		m_shaderStages[rootIndex],
-		0,
-		sizeof(uint32_t),
-		&v);
+	const uint32_t offsetInBytes = 0;
+	const uint32_t sizeInBytes = sizeof(uint32_t);
+
+	SetPushDataOrPushConstants(type, rootIndex, offsetInBytes, &v, sizeInBytes);
 }
 
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y)
 {
 	uint32_t val[] = { x.u_value, y.u_value };
-	vkCmdPushConstants(
-		m_commandBuffer,
-		GetPipelineLayout(type),
-		m_shaderStages[rootIndex],
-		0,
-		2 * sizeof(uint32_t),
-		&val);
+	const uint32_t offsetInBytes = 0;
+	const uint32_t sizeInBytes = 2 * sizeof(uint32_t);
+
+	SetPushDataOrPushConstants(type, rootIndex, offsetInBytes, &val, sizeInBytes);
 }
 
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z)
 {
 	uint32_t val[] = { x.u_value, y.u_value, z.u_value };
-	vkCmdPushConstants(
-		m_commandBuffer,
-		GetPipelineLayout(type),
-		m_shaderStages[rootIndex],
-		0,
-		3 * sizeof(uint32_t),
-		&val);
+	const uint32_t offsetInBytes = 0;
+	const uint32_t sizeInBytes = 3 * sizeof(uint32_t);
+
+	SetPushDataOrPushConstants(type, rootIndex, offsetInBytes, &val, sizeInBytes);
 }
 
 
 void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DWParam x, DWParam y, DWParam z, DWParam w)
 {
 	uint32_t val[] = { x.u_value, y.u_value, z.u_value, w.u_value };
-	vkCmdPushConstants(
-		m_commandBuffer,
-		GetPipelineLayout(type),
-		m_shaderStages[rootIndex],
-		0,
-		4 * sizeof(uint32_t),
-		&val);
+	const uint32_t offsetInBytes = 0;
+	const uint32_t sizeInBytes = 4 * sizeof(uint32_t);
+
+	SetPushDataOrPushConstants(type, rootIndex, offsetInBytes, &val, sizeInBytes);
 }
 
 
@@ -1964,6 +1946,27 @@ void CommandContextVK::PreDispatch()
 			UpdateAndBindDynamicDescriptors(graphicsPipe);
 			ClearDirtyDescriptors(CommandListType::Compute);
 		}
+	}
+}
+
+
+void CommandContextVK::SetPushDataOrPushConstants(CommandListType type, uint32_t rootIndex, uint32_t offset, const void* data, uint32_t size)
+{
+	if (m_useDescriptorHeaps)
+	{
+		const auto* rootSignature = GetRootSignature(type);
+		const auto& pushDataEntry = rootSignature->GetPushDataEntry(rootIndex, 0);
+		SetPushData(pushDataEntry.offset + offset, data, size);
+	}
+	else
+	{
+		vkCmdPushConstants(
+			m_commandBuffer,
+			GetPipelineLayout(type),
+			m_shaderStages[rootIndex],
+			offset,
+			size,
+			data);
 	}
 }
 

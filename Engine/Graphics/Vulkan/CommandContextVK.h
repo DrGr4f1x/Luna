@@ -216,6 +216,9 @@ private:
 	void PreDraw();
 	void PreDispatch();
 
+	// Helper to set push data (descriptor heap) or push constants (descriptor buffer)
+	void SetPushDataOrPushConstants(CommandListType type, uint32_t rootIndex, uint32_t offset, const void* data, uint32_t size);
+
 	RootSignature* GetRootSignature(CommandListType type);
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }

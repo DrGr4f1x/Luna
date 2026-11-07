@@ -88,6 +88,8 @@ void DirectConstantsApp::Render()
 	context.SetRootSignature(m_rootSignature);
 	context.SetGraphicsPipeline(m_pipeline);
 
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
+
 	context.SetRootCBV(0, m_constantBuffer);
 	context.SetConstantArray(1, 24, &m_lightConstants);
 
