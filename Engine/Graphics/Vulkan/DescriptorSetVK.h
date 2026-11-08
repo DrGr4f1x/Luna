@@ -90,12 +90,15 @@ protected:
 	// Is using descriptor heap
 	bool m_useDescriptorHeap{ false };
 
+	// Descriptor allocations per range
+	std::vector<DescriptorAllocation> m_rangeAllocations;
+
 	// Maps for registers to heap memory offsets
 	// TODO: put this in another structure and cache/share between sets
-	std::unordered_map<uint32_t, std::byte*> m_srvRegisterOffsetMap;
-	std::unordered_map<uint32_t, std::byte*> m_uavRegisterOffsetMap;
-	std::unordered_map<uint32_t, std::byte*> m_cbvRegisterOffsetMap;
-	std::unordered_map<uint32_t, std::byte*> m_samplerRegisterOffsetMap;
+	std::unordered_map<uint16_t, uint32_t> m_srvRegisterOffsetMap;
+	std::unordered_map<uint16_t, uint32_t> m_uavRegisterOffsetMap;
+	std::unordered_map<uint16_t, uint32_t> m_cbvRegisterOffsetMap;
+	std::unordered_map<uint16_t, uint32_t> m_samplerRegisterOffsetMap;
 
 };
 

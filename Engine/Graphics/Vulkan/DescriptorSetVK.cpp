@@ -167,35 +167,37 @@ void DescriptorSet::SetDescriptors_Internal_Heap(uint32_t descriptorRegister, st
 
 	assert(rangeIndex != ~0u);
 	const auto& range = m_rootParameter.table[rangeIndex];
+	std::byte* mem = m_rangeAllocations[rangeIndex].mem;
 
 	const size_t numDescriptors = std::min<size_t>(range.numDescriptors, descriptors.size());
 
 	for (uint32_t i = 0; i < numDescriptors; ++i)
 	{
 		const auto descriptor = (const Descriptor*)descriptors[i];
+		const size_t descriptorSize = descriptor->GetRawDescriptorSize();
 
 		switch (range.descriptorType)
 		{
 		case DescriptorType::Sampler:
-			descriptor->CopyRawDescriptor((void*)m_samplerRegisterOffsetMap[descriptorRegister + i]);
+			descriptor->CopyRawDescriptor(mem + m_samplerRegisterOffsetMap[descriptorRegister + i] * descriptorSize);
 			break;
 
 		case DescriptorType::ConstantBuffer:
-			descriptor->CopyRawDescriptor((void*)m_cbvRegisterOffsetMap[descriptorRegister + i]);
+			descriptor->CopyRawDescriptor(mem + m_cbvRegisterOffsetMap[descriptorRegister + i] * descriptorSize);
 			break;
 
 		case DescriptorType::TextureSRV:
 		case DescriptorType::TypedBufferSRV:
 		case DescriptorType::StructuredBufferSRV:
 		case DescriptorType::RawBufferSRV:
-			descriptor->CopyRawDescriptor((void*)m_srvRegisterOffsetMap[descriptorRegister + i]);
+			descriptor->CopyRawDescriptor(mem + m_srvRegisterOffsetMap[descriptorRegister + i] * descriptorSize);
 			break;
 
 		case DescriptorType::TextureUAV:
 		case DescriptorType::TypedBufferUAV:
 		case DescriptorType::StructuredBufferUAV:
 		case DescriptorType::RawBufferUAV:
-			descriptor->CopyRawDescriptor((void*)m_uavRegisterOffsetMap[descriptorRegister + i]);
+			descriptor->CopyRawDescriptor(mem + m_uavRegisterOffsetMap[descriptorRegister + i] * descriptorSize);
 			break;
 
 		default:
@@ -210,7 +212,9 @@ void DescriptorSet::SetSRV_Internal(uint32_t srvRegister, const Descriptor* desc
 {
 	if (m_useDescriptorHeap)
 	{
-		descriptor->CopyRawDescriptor((void*)m_srvRegisterOffsetMap[srvRegister]);
+		const uint16_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(DescriptorRegisterType::SRV, srvRegister);
+		std::byte* mem = m_rangeAllocations[rangeIndex].mem;
+		descriptor->CopyRawDescriptor(mem + m_srvRegisterOffsetMap[srvRegister] * descriptor->GetRawDescriptorSize());
 	}
 	else
 	{
@@ -223,7 +227,9 @@ void DescriptorSet::SetUAV_Internal(uint32_t uavRegister, const Descriptor* desc
 {
 	if (m_useDescriptorHeap)
 	{
-		descriptor->CopyRawDescriptor((void*)m_uavRegisterOffsetMap[uavRegister]);
+		const uint16_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(DescriptorRegisterType::UAV, uavRegister);
+		std::byte* mem = m_rangeAllocations[rangeIndex].mem;
+		descriptor->CopyRawDescriptor(mem + m_uavRegisterOffsetMap[uavRegister] * descriptor->GetRawDescriptorSize());
 	}
 	else
 	{
@@ -236,7 +242,9 @@ void DescriptorSet::SetCBV_Internal(uint32_t cbvRegister, const Descriptor* desc
 {
 	if (m_useDescriptorHeap)
 	{
-		descriptor->CopyRawDescriptor((void*)m_cbvRegisterOffsetMap[cbvRegister]);
+		const uint16_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(DescriptorRegisterType::CBV, cbvRegister);
+		std::byte* mem = m_rangeAllocations[rangeIndex].mem;
+		descriptor->CopyRawDescriptor(mem + m_cbvRegisterOffsetMap[cbvRegister] * descriptor->GetRawDescriptorSize());
 	}
 	else
 	{
@@ -249,7 +257,9 @@ void DescriptorSet::SetSampler_Internal(uint32_t samplerRegister, const Descript
 {
 	if (m_useDescriptorHeap)
 	{
-		descriptor->CopyRawDescriptor((void*)m_samplerRegisterOffsetMap[samplerRegister]);
+		const uint16_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(DescriptorRegisterType::Sampler, samplerRegister);
+		std::byte* mem = m_rangeAllocations[rangeIndex].mem;
+		descriptor->CopyRawDescriptor(mem + m_samplerRegisterOffsetMap[samplerRegister] * descriptor->GetRawDescriptorSize());
 	}
 	else
 	{

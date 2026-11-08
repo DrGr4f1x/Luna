@@ -979,13 +979,15 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 	uint32_t rangeIndex = 0;
 	for (const auto& range : rootParameter.table)
 	{
+		DescriptorAllocation allocation{};
+
 		if (isSamplerTable)
 		{
-			auto allocation = descriptorHeap->AllocateDescriptors(DescriptorClass::Sampler, range.numDescriptors);
+			allocation = descriptorHeap->AllocateDescriptors(DescriptorClass::Sampler, range.numDescriptors);
+
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
-				std::byte* writeDest = allocation.mem + i * m_caps.descriptorHeap.samplerDescriptorSize;
-				descriptorSet->m_samplerRegisterOffsetMap[range.startRegister + i] = writeDest;
+				descriptorSet->m_samplerRegisterOffsetMap[uint16_t(range.startRegister + i)] = i;
 			}
 
 			PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
@@ -997,36 +999,28 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 				DescriptorClass::Image :
 				DescriptorClass::Buffer;
 
-			auto allocation = descriptorHeap->AllocateDescriptors(descriptorClass, range.numDescriptors);
+			allocation = descriptorHeap->AllocateDescriptors(descriptorClass, range.numDescriptors);
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
-				std::byte* writeDest = nullptr;
-				if (descriptorClass == DescriptorClass::Image)
-				{
-					writeDest = allocation.mem + i * m_caps.descriptorHeap.imageDescriptorSize;
-				}
-				else
-				{
-					writeDest = allocation.mem + i * m_caps.descriptorHeap.bufferDescriptorSize;
-				}
-
 				if (IsDescriptorTypeSRV(range.descriptorType))
 				{
-					descriptorSet->m_srvRegisterOffsetMap[range.startRegister + i] = writeDest;
+					descriptorSet->m_srvRegisterOffsetMap[range.startRegister + i] = i;
 				}
 				else if (IsDescriptorTypeUAV(range.descriptorType))
 				{
-					descriptorSet->m_uavRegisterOffsetMap[range.startRegister + i] = writeDest;
+					descriptorSet->m_uavRegisterOffsetMap[range.startRegister + i] = i;
 				}
 				else
 				{
-					descriptorSet->m_cbvRegisterOffsetMap[range.startRegister + i] = writeDest;
+					descriptorSet->m_cbvRegisterOffsetMap[range.startRegister + i] = i;
 				}
 			}
 
 			PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
 			descriptorSet->m_pushData.push_back(pushData);
 		}
+
+		descriptorSet->m_rangeAllocations.push_back(allocation);
 
 		++rangeIndex;
 	}
