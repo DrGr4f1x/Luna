@@ -888,9 +888,11 @@ QueryHeapPtr Device::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 		pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_COMPUTE_SHADER_INVOCATIONS_BIT;
 
 		// Mesh shader statistics
-		// TODO: need to check support / enable meshShaderQueries
-		//pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TASK_SHADER_INVOCATIONS_BIT_EXT;
-		//pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_MESH_SHADER_INVOCATIONS_BIT_EXT;
+		if (m_caps.features.meshShaderPipelineStats)
+		{
+			pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_TASK_SHADER_INVOCATIONS_BIT_EXT;
+			pipelineStatisticFlags |= VK_QUERY_PIPELINE_STATISTIC_MESH_SHADER_INVOCATIONS_BIT_EXT;
+		}
 	}
 
 	VkQueryPoolCreateInfo createInfo{
