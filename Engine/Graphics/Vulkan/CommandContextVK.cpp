@@ -1279,7 +1279,7 @@ void CommandContextVK::SetUAV(CommandListType type, uint32_t rootIndex, uint32_t
 
 void CommandContextVK::SetCBV(CommandListType type, uint32_t rootIndex, uint32_t cbvRegister, const IGpuBuffer* gpuBuffer)
 {
-	//ParseRootSignature(type);
+	ParseRootSignature(type);
 
 	m_dynamicResourceDescriptorBuffer.SetCBV(type, rootIndex, cbvRegister, 0, gpuBuffer);
 
@@ -1438,32 +1438,38 @@ void CommandContextVK::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer
 
 	FlushResourceBarriers();
 
-	VkImageResolve resolve{
+	VkImageResolve2 resolve{
+		.sType			= VK_STRUCTURE_TYPE_IMAGE_RESOLVE_2,
+		.pNext			= nullptr,
 		.srcSubresource = {
-			.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
-			.mipLevel			= 0,
-			.baseArrayLayer		= 0,
-			.layerCount			= srcBuffer->GetArraySize()
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.mipLevel = 0,
+			.baseArrayLayer = 0,
+			.layerCount = srcBuffer->GetArraySize()
 			},
 		.srcOffset		= { .x = 0, .y = 0, .z = 0 },
 		.dstSubresource = {
-			.aspectMask			= VK_IMAGE_ASPECT_COLOR_BIT,
-			.mipLevel			= 0,
-			.baseArrayLayer		= 0,
-			.layerCount			= destBuffer->GetArraySize()
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.mipLevel = 0,
+			.baseArrayLayer = 0,
+			.layerCount = destBuffer->GetArraySize()
 			},
 		.dstOffset		= { .x = 0, .y = 0, .z = 0 },
 		.extent			= { .width = (uint32_t)destBuffer->GetWidth(), .height = destBuffer->GetHeight(), .depth = 1 }
 	};
 
-	vkCmdResolveImage(
-		m_commandBuffer,
-		srcBufferVK->GetImage(),
-		VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-		destBufferVK->GetImage(),
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1,
-		&resolve);
+	VkResolveImageInfo2 info{
+		.sType				= VK_STRUCTURE_TYPE_RESOLVE_IMAGE_INFO_2,
+		.pNext				= nullptr,
+		.srcImage			= srcBufferVK->GetImage(),
+		.srcImageLayout		= VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		.dstImage			= destBufferVK->GetImage(),
+		.dstImageLayout		= VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.regionCount		= 1,
+		.pRegions			= &resolve
+	};
+
+	vkCmdResolveImage2(m_commandBuffer, &info);
 }
 
 
@@ -1599,8 +1605,24 @@ void CommandContextVK::InitializeBuffer_Internal(IGpuBuffer* destBuffer, const v
 	GpuBuffer* destBufferVK = (GpuBuffer*)destBuffer;
 	assert(destBufferVK != nullptr);
 
-	VkBufferCopy copyRegion{ .size = numBytes };
-	vkCmdCopyBuffer(m_commandBuffer, reinterpret_cast<VkBuffer>(dynAlloc.resource), destBufferVK->GetBuffer(), 1, &copyRegion);
+	VkBufferCopy2 copyRegion{ 
+		.sType		= VK_STRUCTURE_TYPE_BUFFER_COPY_2,
+		.pNext		= nullptr,
+		.srcOffset	= 0,
+		.dstOffset	= 0,
+		.size		= numBytes 
+	};
+	
+	VkCopyBufferInfo2 info{
+		.sType			= VK_STRUCTURE_TYPE_COPY_BUFFER_INFO_2,
+		.pNext			= nullptr,
+		.srcBuffer		= reinterpret_cast<VkBuffer>(dynAlloc.resource),
+		.dstBuffer		= destBufferVK->GetBuffer(),
+		.regionCount	= 1,
+		.pRegions		= &copyRegion
+	};
+
+	vkCmdCopyBuffer2(m_commandBuffer, &info);
 
 	TransitionResource(destBuffer, ResourceState::GenericRead, true);
 }
@@ -1960,13 +1982,17 @@ void CommandContextVK::SetPushDataOrPushConstants(CommandListType type, uint32_t
 	}
 	else
 	{
-		vkCmdPushConstants(
-			m_commandBuffer,
-			GetPipelineLayout(type),
-			m_shaderStages[rootIndex],
-			offset,
-			size,
-			data);
+		VkPushConstantsInfo info{
+			.sType			= VK_STRUCTURE_TYPE_PUSH_CONSTANTS_INFO,
+			.pNext			= nullptr,
+			.layout			= GetPipelineLayout(type),
+			.stageFlags		= m_shaderStages[rootIndex],
+			.offset			= offset,
+			.size			= size,
+			.pValues		= data
+		};
+
+		vkCmdPushConstants2(m_commandBuffer, &info);
 	}
 }
 
@@ -1992,28 +2018,34 @@ void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, co
 		.range		= VK_WHOLE_SIZE
 	};
 
-	const auto& rootParameter = rootSignature->GetRootParameter(rootIndex);
+	const auto rootParameterType = rootSignature->GetRootParameter(rootIndex).parameterType;
 
 	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
 	assert(binding != (uint32_t)-1);
 
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstBinding			= binding + GetRegisterShift(rootParameter.parameterType),
+		.dstBinding			= binding + GetRegisterShift(rootParameterType),
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= RootParameterTypeToVulkanDescriptorType(rootParameter.parameterType),
+		.descriptorType		= RootParameterTypeToVulkanDescriptorType(rootParameterType),
 		.pBufferInfo		= &info
 	};
 
 	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
 	assert(pushDescriptorSetIndex != (uint32_t)-1);
 
-	VkPipelineBindPoint bindPoint = type == CommandListType::Graphics ?
-		VK_PIPELINE_BIND_POINT_GRAPHICS :
-		VK_PIPELINE_BIND_POINT_COMPUTE;
+	VkPushDescriptorSetInfo pushInfo{
+		.sType					= VK_STRUCTURE_TYPE_PUSH_DESCRIPTOR_SET_INFO,
+		.pNext					= nullptr,
+		.stageFlags				= m_shaderStages[rootIndex],
+		.layout					= GetPipelineLayout(type),
+		.set					= pushDescriptorSetIndex,
+		.descriptorWriteCount	= 1,
+		.pDescriptorWrites		= &writeDescriptor
+	};
 
-	vkCmdPushDescriptorSet(m_commandBuffer, bindPoint, GetPipelineLayout(type), pushDescriptorSetIndex, 1, &writeDescriptor);
+	vkCmdPushDescriptorSet2(m_commandBuffer, &pushInfo);
 }
 
 

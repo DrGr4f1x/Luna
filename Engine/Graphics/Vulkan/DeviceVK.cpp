@@ -2188,11 +2188,7 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const IDe
 	// Process static samplers
 	for (const auto& staticSampler : rootSignatureDesc.staticSamplers)
 	{
-		const SamplerDesc& samplerDesc = staticSampler.samplerDesc;
-		const VkTextureFilterMapping filterMapping = TextureFilterToVulkan(samplerDesc.filter);
-
-		VkSamplerCreateInfo createInfo = FillSamplerCreateInfo(samplerDesc);
-
+		VkSamplerCreateInfo createInfo = FillSamplerCreateInfo(staticSampler.samplerDesc);
 		shaderSetAndBindingMapping.staticSamplers.push_back(createInfo);
 	}
 
