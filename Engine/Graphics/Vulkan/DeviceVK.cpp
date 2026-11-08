@@ -2003,6 +2003,9 @@ static uint32_t ComputePushDataLayout(PushDataLayout& layout, const RootSignatur
 		++i;
 	}
 
+	// Root descriptors (i.e. push addresses) have to be 8-byte aligned
+	offset = Math::AlignUp(offset, 8);
+
 	// Process root descriptors
 	i = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)

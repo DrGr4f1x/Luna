@@ -2051,11 +2051,9 @@ void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, co
 
 void CommandContextVK::SetRootBufferForDescriptorHeap(const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	assert(offsetInBytes == 0);
-
 	// Update push data
 	uint32_t offset = rootSignature->GetPushDataEntry(rootIndex, 0).offset;
-	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetBufferDeviceAddress();
+	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetBufferDeviceAddress() + offsetInBytes;
 	assert(bufferDeviceAddress != 0);
 
 	SetPushData(offset, &bufferDeviceAddress, sizeof(VkDeviceAddress));
