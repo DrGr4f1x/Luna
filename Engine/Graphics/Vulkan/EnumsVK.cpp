@@ -917,6 +917,15 @@ VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorTyp
 {
 	using enum DescriptorType;
 
+#if APPLY_WORKAROUND_DXC_8492
+	switch (descriptorType)
+	{
+	case StructuredBufferSRV:			return VK_SPIRV_RESOURCE_TYPE_ALL_EXT; break;
+	case RawBufferSRV:					return VK_SPIRV_RESOURCE_TYPE_ALL_EXT; break;
+	case TypedBufferSRV:				return VK_SPIRV_RESOURCE_TYPE_ALL_EXT; break;
+	}
+#endif
+
 	switch (descriptorType)
 	{
 	case ConstantBuffer:				return VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT; break;

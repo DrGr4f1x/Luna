@@ -32,4 +32,6 @@
 
 #define ALLOW_DESCRIPTOR_HEAP 1
 
+#define APPLY_WORKAROUND_DXC_8492 1
+
 static const size_t kMaxRawDescriptorSize = 64;
