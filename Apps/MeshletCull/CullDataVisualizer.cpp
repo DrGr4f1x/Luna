@@ -82,7 +82,7 @@ void CullDataVisualizer::CreateDeviceDependentResources(IDevice* device)
 				RootSRV(1, ShaderStage::Mesh)
 			}
 		};
-		m_rootSignature = device->CreateRootSignature(desc);
+		m_rootSignature = device->CreateRootSignature(m_application->GetDefaultDescriptorHeap(), desc);
 	}
 
 	// Constant buffer

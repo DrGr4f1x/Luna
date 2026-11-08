@@ -434,7 +434,7 @@ void BloomApp::InitConstantBuffers()
 
 void BloomApp::InitDescriptorSets()
 {
-	auto* descriptorHeap = GetDefaultDescriptorHeap();
+	auto descriptorHeap = GetDefaultDescriptorHeap();
 
 	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(descriptorHeap, 1);
 	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTexture);

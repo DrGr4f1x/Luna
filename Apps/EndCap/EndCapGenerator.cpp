@@ -620,21 +620,23 @@ void EndCapGenerator::InitBuffers()
 
 void EndCapGenerator::InitDescriptorSets()
 {
+	auto descriptorHeap = m_app->GetDefaultDescriptorHeap();
+
 	// Bounds init
-	m_boundsInitDescriptors = m_boundsInitRootSig->CreateDescriptorSet(0);
+	m_boundsInitDescriptors = m_boundsInitRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_boundsInitDescriptors->SetUAV(0, m_boundsBuffer);
 
 	// Border init
-	m_leftRightBorderInitDescriptors = m_borderInitRootSig->CreateDescriptorSet(0);
+	m_leftRightBorderInitDescriptors = m_borderInitRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_leftRightBorderInitDescriptors->SetUAV(0, m_leftBorderBuffer);
 	m_leftRightBorderInitDescriptors->SetUAV(1, m_rightBorderBuffer);
 
-	m_topBottomBorderInitDescriptors = m_borderInitRootSig->CreateDescriptorSet(0);
+	m_topBottomBorderInitDescriptors = m_borderInitRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_topBottomBorderInitDescriptors->SetUAV(0, m_topBorderBuffer);
 	m_topBottomBorderInitDescriptors->SetUAV(1, m_bottomBorderBuffer);
 
 	// Contour pass
-	m_psContourDescriptors = m_contourRootSignature->CreateDescriptorSet(2);
+	m_psContourDescriptors = m_contourRootSignature->CreateDescriptorSet(descriptorHeap, 2);
 	m_psContourDescriptors->SetUAV(0, m_boundsBuffer);
 	m_psContourDescriptors->SetUAV(1, m_leftBorderBuffer);
 	m_psContourDescriptors->SetUAV(2, m_rightBorderBuffer);
@@ -642,7 +644,7 @@ void EndCapGenerator::InitDescriptorSets()
 	m_psContourDescriptors->SetUAV(4, m_bottomBorderBuffer);
 
 	// Outer boundary
-	m_outerBoundaryDescriptors = m_outerBoundaryRootSig->CreateDescriptorSet(0);
+	m_outerBoundaryDescriptors = m_outerBoundaryRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_outerBoundaryDescriptors->SetUAV(0, m_outerBoundaryBuffer);
 	m_outerBoundaryDescriptors->SetSRV(0, m_leftBorderBuffer);
 	m_outerBoundaryDescriptors->SetSRV(1, m_rightBorderBuffer);
@@ -650,7 +652,7 @@ void EndCapGenerator::InitDescriptorSets()
 	m_outerBoundaryDescriptors->SetSRV(3, m_bottomBorderBuffer);
 
 	// Edge crossing filter
-	m_edgeCrossingDescriptors = m_edgeCrossingRootSig->CreateDescriptorSet(0);
+	m_edgeCrossingDescriptors = m_edgeCrossingRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_edgeCrossingDescriptors->SetSRV(0, m_contourDataBuffer);
 	m_edgeCrossingDescriptors->SetUAV(0, m_edgeCrossingBuffer);
 	m_edgeCrossingDescriptors->SetUAV(1, m_edgeIdBuffer);
@@ -658,7 +660,7 @@ void EndCapGenerator::InitDescriptorSets()
 	m_edgeCrossingDescriptors->SetCBV(0, m_edgeCrossingConstantBuffer);
 
 	// Fill
-	m_fillDescriptors = m_fillRootSig->CreateDescriptorSet(0);
+	m_fillDescriptors = m_fillRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_fillDescriptors->SetUAV(0, m_endCapMaskBuffer);
 	m_fillDescriptors->SetUAV(1, m_fillDebugTex);
 	m_fillDescriptors->SetSRV(0, m_edgeCrossingBuffer2);
@@ -669,7 +671,7 @@ void EndCapGenerator::InitDescriptorSets()
 	m_fillDescriptors->SetSRV(5, m_bottomBorderBuffer);
 
 	// Median filter
-	m_medianFilterDescriptors = m_medianFilterRootSig->CreateDescriptorSet(0);
+	m_medianFilterDescriptors = m_medianFilterRootSig->CreateDescriptorSet(descriptorHeap, 0);
 	m_medianFilterDescriptors->SetSRV(0, m_endCapMaskBuffer);
 	m_medianFilterDescriptors->SetUAV(0, m_filteredBuffer);
 	m_medianFilterDescriptors->SetCBV(0, m_medianFilterConstantBuffer);

@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include "Graphics\DescriptorHeap.h"
 #include "Graphics\GpuBuffer.h"
 #include "Graphics\PipelineState.h"
 #include "Graphics\RootSignature.h"

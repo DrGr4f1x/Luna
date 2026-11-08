@@ -64,7 +64,7 @@ void FrustumVisualizer::CreateDeviceDependentResources(IDevice* device)
 			.name			= "FrustumVisualizer Root Signature",
 			.rootParameters	= {	RootCBV(0, ShaderStage::Mesh) }
 		};
-		m_rootSignature = device->CreateRootSignature(desc);
+		m_rootSignature = device->CreateRootSignature(m_application->GetDefaultDescriptorHeap(), desc);
 	}
 
 	// Constant buffer
