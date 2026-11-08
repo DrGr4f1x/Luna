@@ -1969,12 +1969,12 @@ static uint32_t ComputePushDataLayout(PushDataLayout& layout, const RootSignatur
 	uint32_t i = 0;
 	uint16_t offset = 0;
 
-	// Process root descriptors
+	// Process root constants
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
-		if (IsRootDescriptorType(rootParameter.parameterType))
+		if (rootParameter.parameterType == RootParameterType::RootConstants)
 		{
-			uint16_t size = (uint16_t)sizeof(uint64_t);
+			uint16_t size = rootParameter.num32BitConstants * 4;
 			PushDataEntry entry{ .offset = offset, .size = size };
 			offset += size;
 
@@ -1983,13 +1983,13 @@ static uint32_t ComputePushDataLayout(PushDataLayout& layout, const RootSignatur
 		++i;
 	}
 
-	// Process root constants
+	// Process root descriptors
 	i = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
-		if (rootParameter.parameterType == RootParameterType::RootConstants)
+		if (IsRootDescriptorType(rootParameter.parameterType))
 		{
-			uint16_t size = rootParameter.num32BitConstants * 4;
+			uint16_t size = (uint16_t)sizeof(uint64_t);
 			PushDataEntry entry{ .offset = offset, .size = size };
 			offset += size;
 

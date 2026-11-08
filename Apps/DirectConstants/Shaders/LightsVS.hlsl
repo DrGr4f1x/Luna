@@ -47,7 +47,7 @@ struct LightStruct
 
 #if VK
 [[vk::push_constant]]
-LightStruct lights;
+LightStruct lights : BINDING(b1, 1);
 #else
 cbuffer VSLights
 {

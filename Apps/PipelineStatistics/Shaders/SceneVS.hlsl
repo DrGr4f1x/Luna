@@ -45,7 +45,7 @@ struct ObjectPosition
 [[vk::push_constant]]
 ObjectPosition position;
 #else
-cbuffer VSPositions
+cbuffer VSPositions 
 {
     ObjectPosition position;
 };
