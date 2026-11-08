@@ -660,16 +660,12 @@ GraphicsPipelinePtr Device::CreateGraphicsPipeline(const GraphicsPipelineDesc& p
 		.pDepthStencilState		= &depthStencilInfo,
 		.pColorBlendState		= &blendStateInfo,
 		.pDynamicState			= &dynamicStateInfo,
+		.layout					= rootSignature->GetPipelineLayout(),
 		.renderPass				= VK_NULL_HANDLE,
 		.subpass				= 0,
 		.basePipelineHandle		= VK_NULL_HANDLE,
 		.basePipelineIndex		= 0
 	};
-
-	if (UseDescriptorBuffer())
-	{
-		pipelineCreateInfo.layout = rootSignature->GetPipelineLayout();
-	}
 
 	VkPipeline vkPipeline{ VK_NULL_HANDLE };
 	wil::com_ptr<CVkPipeline> pipeline;
@@ -710,7 +706,7 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+	VkPipelineCreateFlags flags = UseDescriptorBuffer() ? VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT : 0;
 
 	VkComputePipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
@@ -721,6 +717,18 @@ ComputePipelinePtr Device::CreateComputePipeline(const ComputePipelineDesc& pipe
 		.basePipelineHandle		= VK_NULL_HANDLE,
 		.basePipelineIndex		= 0
 	};
+
+	// Descriptor heaps
+	VkPipelineCreateFlags2CreateInfo pipelineCreateFlags2CI{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+	};
+
+	if (UseDescriptorHeap())
+	{
+		pipelineCreateInfo.pNext = &pipelineCreateFlags2CI;
+	}
 
 	VkPipeline vkPipeline{ VK_NULL_HANDLE };
 	wil::com_ptr<CVkPipeline> pipeline;
@@ -801,10 +809,22 @@ MeshletPipelinePtr Device::CreateMeshletPipeline(const MeshletPipelineDesc& pipe
 	VkPipelineRenderingCreateInfo dynamicRenderingInfo{};
 	FillRenderTargetState(dynamicRenderingInfo, rtvFormats, pipelineDesc);
 
+	// Descriptor heaps
+	VkPipelineCreateFlags2CreateInfo pipelineCreateFlags2CI{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_CREATE_FLAGS_2_CREATE_INFO,
+		.pNext = nullptr,
+		.flags = VK_PIPELINE_CREATE_2_DESCRIPTOR_HEAP_BIT_EXT
+	};
+
+	if (UseDescriptorHeap())
+	{
+		dynamicRenderingInfo.pNext = &pipelineCreateFlags2CI;
+	}
+
 	auto rootSignature = (RootSignature*)pipelineDesc.rootSignature.get();
 
 	// Flags
-	VkPipelineCreateFlags flags = VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT;
+	VkPipelineCreateFlags flags = UseDescriptorBuffer() ? VK_PIPELINE_CREATE_DESCRIPTOR_BUFFER_BIT_EXT : 0;
 	
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo{
 		.sType					= VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,

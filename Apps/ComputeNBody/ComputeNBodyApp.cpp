@@ -91,11 +91,9 @@ void ComputeNBodyApp::Render()
 	}
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
 	context.ClearColor(GetColorBuffer());
-	context.ClearDepth(GetDepthBuffer());
 
-	context.BeginRendering(GetColorBuffer(), GetDepthBuffer());
+	context.BeginRendering(GetColorBuffer());
 
 	context.SetViewportAndScissor(0u, 0u, GetWindowWidth(), GetWindowHeight());
 
@@ -208,7 +206,6 @@ void ComputeNBodyApp::InitPipelines()
 		.depthStencilState	= CommonStates::DepthStateDisabled(),
 		.rasterizerState	= CommonStates::RasterizerTwoSided(),
 		.rtvFormats			= { GetColorFormat() },
-		.dsvFormat			= GetDepthFormat(),
 		.topology			= PrimitiveTopology::PointList,
 		.vertexShader		= {.shaderFile = "ParticleVS" },
 		.pixelShader		= {.shaderFile = "ParticlePS" },

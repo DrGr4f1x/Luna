@@ -115,8 +115,7 @@ void MultisamplingApp::Render()
 	context.Resolve(m_msaaColorBuffer, GetColorBuffer(), GetColorFormat());
 
 	// Render UI after MSAA resolve
-	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget);
-	context.TransitionResource(GetDepthBuffer(), ResourceState::DepthWrite);
+	context.TransitionResource(GetColorBuffer(), ResourceState::RenderTarget, true);
 
 	RenderUI(context);
 

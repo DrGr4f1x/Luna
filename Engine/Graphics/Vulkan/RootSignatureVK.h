@@ -61,7 +61,7 @@ class RootSignature : public IRootSignature
 public:
 	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
 
-	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout->Get(); }
+	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout ? m_pipelineLayout->Get() : VK_NULL_HANDLE; }
 	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;
 
 	bool HasStaticSamplers() const noexcept { return m_staticSamplerDescriptorSetIndex != ~0u; }
