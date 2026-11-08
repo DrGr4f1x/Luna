@@ -37,6 +37,7 @@ struct BindingMappingAndInfo
 	void Finalize();
 };
 
+
 struct ShaderSetAndBindingMapping
 {
 	BindingMappingAndInfo compute;
@@ -49,6 +50,8 @@ struct ShaderSetAndBindingMapping
 	BindingMappingAndInfo mesh;
 
 	std::vector<VkSamplerCreateInfo> staticSamplers;
+
+	void Add(const VkDescriptorSetAndBindingMappingEXT& setAndBindingMapping, ShaderStage shaderStage);
 
 	void Finalize();
 };

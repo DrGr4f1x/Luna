@@ -2058,27 +2058,6 @@ static uint32_t ComputePushDataLayout(PushDataLayout& layout, const RootSignatur
 }
 
 
-static void AddShaderSetAndBindingMapping(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, VkDescriptorSetAndBindingMappingEXT setAndBindingMapping, ShaderStage shaderStage)
-{
-	auto AddMapping = [setAndBindingMapping, shaderStage](std::vector<VkDescriptorSetAndBindingMappingEXT>& shaderSet, const ShaderStage target)
-		{
-			if (HasFlag(shaderStage, target))
-			{
-				shaderSet.push_back(setAndBindingMapping);
-			}
-		};
-
-	AddMapping(shaderSetAndBindingMapping.compute.bindings, ShaderStage::Compute);
-	AddMapping(shaderSetAndBindingMapping.vertex.bindings, ShaderStage::Vertex);
-	AddMapping(shaderSetAndBindingMapping.hull.bindings, ShaderStage::Hull);
-	AddMapping(shaderSetAndBindingMapping.domain.bindings, ShaderStage::Domain);
-	AddMapping(shaderSetAndBindingMapping.geometry.bindings, ShaderStage::Geometry);
-	AddMapping(shaderSetAndBindingMapping.pixel.bindings, ShaderStage::Pixel);
-	AddMapping(shaderSetAndBindingMapping.amplification.bindings, ShaderStage::Amplification);
-	AddMapping(shaderSetAndBindingMapping.mesh.bindings, ShaderStage::Mesh);
-}
-
-
 static void ProcessRootBuffers(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const RootParameter& rootParameter, const uint32_t index, const PushDataLayout& pushDataLayout)
 {
 	VkSpirvResourceTypeFlagsEXT spirvType{};
@@ -2102,7 +2081,7 @@ static void ProcessRootBuffers(ShaderSetAndBindingMapping& shaderSetAndBindingMa
 		.sourceData = {	.pushAddressOffset = pushDataOffset	}
 	};
 
-	AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
+	shaderSetAndBindingMapping.Add(setAndBindingMapping, rootParameter.shaderVisibility);
 }
 
 
@@ -2154,7 +2133,7 @@ static void ProcessTable(const DeviceCaps& caps, const IDescriptorHeapVK* descri
 		setAndBindingMapping.sourceData.pushIndex.heapIndexStride = heapIndexStride;
 		setAndBindingMapping.sourceData.pushIndex.heapArrayStride = heapArrayStride;
 		
-		AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
+		shaderSetAndBindingMapping.Add(setAndBindingMapping, rootParameter.shaderVisibility);
 
 		++rangeIndex;
 	}
@@ -2214,7 +2193,7 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const IDe
 		setAndBindingMapping.sourceData.constantOffset = {};
 		setAndBindingMapping.sourceData.constantOffset.pEmbeddedSampler = &shaderSetAndBindingMapping.staticSamplers[staticSamplerIndex];
 
-		AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, staticSampler.shaderStage);
+		shaderSetAndBindingMapping.Add(setAndBindingMapping, staticSampler.shaderStage);
 	}
 
 	shaderSetAndBindingMapping.Finalize();

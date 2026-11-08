@@ -28,6 +28,27 @@ void BindingMappingAndInfo::Finalize()
 }
 
 
+void ShaderSetAndBindingMapping::Add(const VkDescriptorSetAndBindingMappingEXT& setAndBindingMapping, ShaderStage shaderStage)
+{
+	auto AddMapping = [setAndBindingMapping, shaderStage](std::vector<VkDescriptorSetAndBindingMappingEXT>& shaderSet, const ShaderStage target)
+		{
+			if (HasFlag(shaderStage, target))
+			{
+				shaderSet.push_back(setAndBindingMapping);
+			}
+		};
+
+	AddMapping(compute.bindings, ShaderStage::Compute);
+	AddMapping(vertex.bindings, ShaderStage::Vertex);
+	AddMapping(hull.bindings, ShaderStage::Hull);
+	AddMapping(domain.bindings, ShaderStage::Domain);
+	AddMapping(geometry.bindings, ShaderStage::Geometry);
+	AddMapping(pixel.bindings, ShaderStage::Pixel);
+	AddMapping(amplification.bindings, ShaderStage::Amplification);
+	AddMapping(mesh.bindings, ShaderStage::Mesh);
+}
+
+
 void ShaderSetAndBindingMapping::Finalize()
 {
 	compute.Finalize();

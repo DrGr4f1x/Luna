@@ -73,6 +73,13 @@ enum class DescriptorClass : uint8_t
 };
 
 
+enum class DescriptorManagement : uint8_t
+{
+	Buffer,
+	Heap
+};
+
+
 struct VkTextureFilterMapping
 {
 	TextureFilter engineFilter;

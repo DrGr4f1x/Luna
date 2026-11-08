@@ -23,13 +23,6 @@ namespace Luna::VK
 class Device;
 
 
-enum class VulkanDescriptorHeapClass
-{
-	Heap,
-	Buffer
-};
-
-
 class IDescriptorHeapVK : public IDescriptorHeap
 {
 public:
@@ -37,7 +30,7 @@ public:
 
 	virtual DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors) = 0;
 
-	virtual VulkanDescriptorHeapClass GetClass() const = 0;
+	virtual DescriptorManagement GetDescriptorManagement() const = 0;
 
 	virtual VkBuffer GetBuffer(DescriptorHeapType heapType) const = 0;
 
@@ -61,7 +54,7 @@ public:
 
 	DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors) override;
 
-	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Heap; }
+	DescriptorManagement GetDescriptorManagement() const override { return DescriptorManagement::Heap; }
 
 	VkBuffer GetBuffer(DescriptorHeapType heapType) const override;
 
@@ -118,7 +111,7 @@ public:
 
 	DescriptorAllocation AllocateDescriptors(DescriptorClass descriptorClass, uint32_t numDescriptors) override;
 
-	VulkanDescriptorHeapClass GetClass() const override { return VulkanDescriptorHeapClass::Buffer; }
+	DescriptorManagement GetDescriptorManagement() const override { return DescriptorManagement::Buffer; }
 
 	VkBuffer GetBuffer(DescriptorHeapType heapType) const override;
 

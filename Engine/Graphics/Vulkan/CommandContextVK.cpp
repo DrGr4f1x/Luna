@@ -1029,9 +1029,9 @@ void CommandContextVK::SetShadingRate(ShadingRate shadingRate, const ShadingRate
 void CommandContextVK::BindDescriptorHeap(IDescriptorHeap* descriptorHeap)
 {
 	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap;
-	const auto heapClass = descriptorHeapVK->GetClass();
+	const auto descriptorManagement = descriptorHeapVK->GetDescriptorManagement();
 
-	if (heapClass == VulkanDescriptorHeapClass::Heap)
+	if (descriptorManagement == DescriptorManagement::Heap)
 	{
 		DescriptorHeapType types[] = { DescriptorHeapType::Resource, DescriptorHeapType::Sampler };
 		VkBindHeapInfoEXT bindInfos[] = {
