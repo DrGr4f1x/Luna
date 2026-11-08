@@ -2059,25 +2059,6 @@ static void AddShaderSetAndBindingMapping(ShaderSetAndBindingMapping& shaderSetA
 }
 
 
-static void ProcessRootConstants(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const RootParameter& rootParameter, const uint32_t index, const PushDataLayout& pushDataLayout)
-{
-	const uint32_t binding = rootParameter.startRegister + GetRegisterShift(rootParameter.parameterType);
-	const uint32_t pushDataOffset = pushDataLayout[index][0].offset;
-
-	VkDescriptorSetAndBindingMappingEXT setAndBindingMapping{
-		.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_SET_AND_BINDING_MAPPING_EXT,
-		.descriptorSet	= index,
-		.firstBinding	= binding,
-		.bindingCount	= 1,
-		.resourceMask	= VK_SPIRV_RESOURCE_TYPE_UNIFORM_BUFFER_BIT_EXT,
-		.source			= VK_DESCRIPTOR_MAPPING_SOURCE_PUSH_DATA_EXT,
-		.sourceData		= { .pushDataOffset = pushDataOffset }
-	};
-
-	AddShaderSetAndBindingMapping(shaderSetAndBindingMapping, setAndBindingMapping, rootParameter.shaderVisibility);
-}
-
-
 static void ProcessRootBuffers(ShaderSetAndBindingMapping& shaderSetAndBindingMapping, const RootParameter& rootParameter, const uint32_t index, const PushDataLayout& pushDataLayout)
 {
 	VkSpirvResourceTypeFlagsEXT spirvType{};
@@ -2165,12 +2146,11 @@ static void ComputeShaderSetAndBindingMappings(const DeviceCaps& caps, const IDe
 	uint32_t index = 0;
 	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
 	{
+		// Note: We don't need to process RootConstants.  These are packed first in push data, and don't
+		// need a VkDescriptorSetAndBindingMappingEXT entry, because they don't interact with the
+		// descriptor heap.
 		switch (rootParameter.parameterType)
 		{
-		case RootParameterType::RootConstants:
-			ProcessRootConstants(shaderSetAndBindingMapping, rootParameter, index, pushDataLayout);
-			break;
-
 		case RootParameterType::RootCBV:
 		case RootParameterType::RootSRV:
 		case RootParameterType::RootUAV:
