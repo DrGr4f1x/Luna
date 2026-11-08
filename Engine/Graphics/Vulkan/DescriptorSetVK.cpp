@@ -36,7 +36,7 @@ void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescr
 {
 	if (m_useDescriptorHeap)
 	{
-		assert(false);
+		SetDescriptors_Internal_Heap<DescriptorRegisterType::SRV>(srvRegister, descriptors);
 	}
 	else
 	{
@@ -150,6 +150,52 @@ void DescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::sp
 		case DescriptorType::StructuredBufferUAV:
 		case DescriptorType::RawBufferUAV:
 			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(descriptorRegister, i, descriptorSize)));
+			break;
+
+		default:
+			assert(false);
+			break;
+		}
+	}
+}
+
+
+template <DescriptorRegisterType registerType>
+void DescriptorSet::SetDescriptors_Internal_Heap(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors)
+{
+	const uint32_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(registerType, descriptorRegister);
+
+	assert(rangeIndex != ~0u);
+	const auto& range = m_rootParameter.table[rangeIndex];
+
+	const size_t numDescriptors = std::min<size_t>(range.numDescriptors, descriptors.size());
+
+	for (uint32_t i = 0; i < numDescriptors; ++i)
+	{
+		const auto descriptor = (const Descriptor*)descriptors[i];
+
+		switch (range.descriptorType)
+		{
+		case DescriptorType::Sampler:
+			descriptor->CopyRawDescriptor((void*)m_samplerRegisterOffsetMap[descriptorRegister + i]);
+			break;
+
+		case DescriptorType::ConstantBuffer:
+			descriptor->CopyRawDescriptor((void*)m_cbvRegisterOffsetMap[descriptorRegister + i]);
+			break;
+
+		case DescriptorType::TextureSRV:
+		case DescriptorType::TypedBufferSRV:
+		case DescriptorType::StructuredBufferSRV:
+		case DescriptorType::RawBufferSRV:
+			descriptor->CopyRawDescriptor((void*)m_srvRegisterOffsetMap[descriptorRegister + i]);
+			break;
+
+		case DescriptorType::TextureUAV:
+		case DescriptorType::TypedBufferUAV:
+		case DescriptorType::StructuredBufferUAV:
+		case DescriptorType::RawBufferUAV:
+			descriptor->CopyRawDescriptor((void*)m_uavRegisterOffsetMap[descriptorRegister + i]);
 			break;
 
 		default:

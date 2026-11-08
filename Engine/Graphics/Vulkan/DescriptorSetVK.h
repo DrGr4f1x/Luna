@@ -61,6 +61,9 @@ public:
 protected:
 	template <DescriptorRegisterType registerType>
 	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
+
+	template <DescriptorRegisterType registerType>
+	void SetDescriptors_Internal_Heap(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
 	
 	void SetSRV_Internal(uint32_t srvRegister, const Descriptor* descriptor);
 	void SetUAV_Internal(uint32_t uavRegister, const Descriptor* descriptor);
