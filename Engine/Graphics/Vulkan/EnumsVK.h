@@ -145,4 +145,6 @@ bool IsImageDescriptorType(DescriptorType descriptorType);
 
 bool IsBufferDescriptorType(DescriptorType descriptorType);
 
+DescriptorClass GetDescriptorClass(DescriptorType descriptorType);
+
 } // namespace Luna::VK

@@ -934,7 +934,7 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 	const DescriptorHeapType heapType = isSamplerSet ? DescriptorHeapType::Sampler : DescriptorHeapType::Resource;
 	DescriptorAllocation allocation = descriptorHeap->AllocateDescriptorMemory(heapType, vkDescriptorSetLayout);
 
-	auto descriptorSet = std::make_shared<DescriptorSet>(this, descriptorSetDesc.rootParameter);
+	auto descriptorSet = std::make_shared<BufferDescriptorSet>(this, descriptorSetDesc.rootParameter);
 	descriptorSet->m_allocation = allocation;
 	descriptorSet->m_layout = descriptorSetDesc.descriptorSetLayout;
 
@@ -942,40 +942,11 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 }
 
 
-static size_t ComputeRootParameterHeapSize(const DeviceCaps& caps, const RootParameter& rootParameter)
-{
-	size_t size = 0;
-
-	for (const auto& range : rootParameter.table)
-	{
-		if (rootParameter.IsSamplerTable())
-		{
-			size += range.numDescriptors * caps.descriptorHeap.samplerDescriptorSize;
-			size = Math::AlignUp(size, caps.descriptorHeap.samplerDescriptorAlignment);
-		}
-		else
-		{
-			if (IsImageDescriptorType(range.descriptorType))
-			{
-				size += range.numDescriptors * caps.descriptorHeap.imageDescriptorSize;
-			}
-			else
-			{
-				size += range.numDescriptors * caps.descriptorHeap.bufferDescriptorSize;
-			}
-			size = Math::AlignUp(size, caps.descriptorHeap.largestResourceDescriptorAlignment);
-		}
-	}
-
-	return size;
-}
-
-
 DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter)
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
-	auto descriptorSet = std::make_shared<DescriptorSet>(this, rootParameter);
+	auto descriptorSet = std::make_shared<HeapDescriptorSet>(this, rootParameter);
 
 	const bool isSamplerTable = rootParameter.IsSamplerTable();
 	uint32_t rangeIndex = 0;
@@ -997,11 +968,10 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 		}
 		else
 		{
-			const auto descriptorClass = IsImageDescriptorType(range.descriptorType) ?
-				DescriptorClass::Image :
-				DescriptorClass::Buffer;
+			const auto descriptorClass = GetDescriptorClass(range.descriptorType);
 
 			allocation = descriptorHeap->AllocateDescriptors(descriptorClass, range.numDescriptors);
+
 			for (uint32_t i = 0; i < range.numDescriptors; ++i)
 			{
 				if (IsDescriptorTypeSRV(range.descriptorType))
@@ -1026,9 +996,6 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 
 		++rangeIndex;
 	}
-
-	descriptorSet->m_useDescriptorHeap = UseDescriptorHeap();
-	descriptorSet->m_allocation = DescriptorAllocation{};
 
 	return descriptorSet;
 }

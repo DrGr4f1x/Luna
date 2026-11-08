@@ -1672,12 +1672,14 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
-	DescriptorSet* descriptorSetVK = (DescriptorSet*)descriptorSet;
+	auto descriptorSetVK = (IDescriptorSetVK*)descriptorSet;
 	assert(descriptorSetVK != nullptr);
 
-	if (m_useDescriptorHeaps)
+	if (descriptorSetVK->GetDescriptorManagement() == DescriptorManagement::Heap)
 	{
-		const auto& pushData = descriptorSetVK->GetPushData();
+		auto heapDescriptorSet = (HeapDescriptorSet*)descriptorSetVK;
+
+		const auto& pushData = heapDescriptorSet->GetPushData();
 		for (const auto data : pushData)
 		{
 			assert(data.offset != ~0u);
@@ -1687,9 +1689,11 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 	}
 	else
 	{
+		auto bufferDescriptorSet = (BufferDescriptorSet*)descriptorSetVK;
+
 		// TODO: This refers to the Resource buffer.  Shouldn't hardcode index 0.
 		uint32_t bufferIndex = 0;
-		VkDeviceSize offset = descriptorSetVK->GetDescriptorBufferOffset();
+		VkDeviceSize offset = bufferDescriptorSet->GetDescriptorBufferOffset();
 
 		vkCmdSetDescriptorBufferOffsetsEXT(
 			m_commandBuffer,

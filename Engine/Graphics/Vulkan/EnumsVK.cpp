@@ -967,4 +967,22 @@ bool IsBufferDescriptorType(DescriptorType descriptorType)
 	return !IsImageDescriptorType(descriptorType) && (descriptorType != Sampler);
 }
 
+
+DescriptorClass GetDescriptorClass(DescriptorType descriptorType)
+{
+	if (IsImageDescriptorType(descriptorType))
+	{
+		return DescriptorClass::Image;
+	}
+	else if (IsBufferDescriptorType(descriptorType))
+	{
+		return DescriptorClass::Buffer;
+	}
+	else
+	{
+		assert(descriptorType == DescriptorType::Sampler);
+		return DescriptorClass::Sampler;
+	}
+}
+
 } // Minimumnamespace Luna::VK
