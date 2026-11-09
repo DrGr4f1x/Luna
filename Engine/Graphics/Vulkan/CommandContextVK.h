@@ -22,11 +22,13 @@ namespace Luna::VK
 {
 
 // Forward declarations
+class BufferRootSignature;
 class ColorBuffer;
 class ComputeContext;
 class DepthBuffer;
 class GpuBuffer;
 class GraphicsContext;
+class HeapRootSignature;
 
 
 struct TextureBarrier
@@ -219,7 +221,7 @@ private:
 	// Helper to set push data (descriptor heap) or push constants (descriptor buffer)
 	void SetPushDataOrPushConstants(CommandListType type, uint32_t rootIndex, uint32_t offset, const void* data, uint32_t size);
 
-	RootSignature* GetRootSignature(CommandListType type);
+	const IRootSignature* GetRootSignature(CommandListType type) const;
 
 	size_t GetPendingBarrierCount() const noexcept { return m_textureBarriers.size() + m_bufferBarriers.size(); }
 
@@ -234,10 +236,10 @@ private:
 	}
 
 	// Descriptor buffer
-	void SetRootBufferForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootBufferForDescriptorBuffer(CommandListType type, const BufferRootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 	// Descriptor heap
-	void SetRootBufferForDescriptorHeap(const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
+	void SetRootBufferForDescriptorHeap(const HeapRootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes);
 
 private:
 	std::string m_id;

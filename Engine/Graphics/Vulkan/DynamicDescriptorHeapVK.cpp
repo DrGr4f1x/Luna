@@ -88,7 +88,7 @@ void DynamicDescriptorBuffer::CleanupUsedBuffers(uint64_t fenceValue)
 }
 
 
-void DynamicDescriptorBuffer::ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe)
+void DynamicDescriptorBuffer::ParseRootSignature(const BufferRootSignature& rootSignature, bool graphicsPipe)
 {
 	auto& descriptorCache = graphicsPipe ? m_graphicsCache : m_computeCache;
 

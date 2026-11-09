@@ -836,7 +836,7 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
 
-	const RootSignature* rootSignatureVK = (const RootSignature*)rootSignature;
+	const auto* rootSignatureVK = (const IRootSignatureVK*)rootSignature;
 	assert(rootSignatureVK != nullptr);
 
 	VkPipelineLayout pipelineLayout = m_useDescriptorHeaps ? VK_NULL_HANDLE : rootSignatureVK->GetPipelineLayout();
@@ -858,13 +858,18 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 		}
 
 		// Bind static samplers, if needed
-		if (rootSignatureVK->HasStaticSamplers())
+		if (rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Buffer)
 		{
-			vkCmdBindDescriptorBufferEmbeddedSamplersEXT(
-				m_commandBuffer,
-				VK_PIPELINE_BIND_POINT_GRAPHICS,
-				m_graphicsPipelineLayout,
-				rootSignatureVK->GetStaticSamplerDescriptorSetIndex());
+			const auto bufferRootSignature = (BufferRootSignature*)rootSignatureVK;
+
+			if (bufferRootSignature->HasStaticSamplers())
+			{
+				vkCmdBindDescriptorBufferEmbeddedSamplersEXT(
+					m_commandBuffer,
+					VK_PIPELINE_BIND_POINT_GRAPHICS,
+					m_graphicsPipelineLayout,
+					bufferRootSignature->GetStaticSamplerDescriptorSetIndex());
+			}
 		}
 	}
 	else
@@ -884,14 +889,19 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 		}
 
 		// Bind static samplers, if needed
-		if (rootSignatureVK->HasStaticSamplers())
+		if (rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Buffer)
 		{
-			vkCmdBindDescriptorBufferEmbeddedSamplersEXT(
-				m_commandBuffer,
-				VK_PIPELINE_BIND_POINT_COMPUTE,
-				m_computePipelineLayout,
-				rootSignatureVK->GetStaticSamplerDescriptorSetIndex());
-		}
+			const auto bufferRootSignature = (BufferRootSignature*)rootSignatureVK;
+
+			if (bufferRootSignature->HasStaticSamplers())
+			{
+				vkCmdBindDescriptorBufferEmbeddedSamplersEXT(
+					m_commandBuffer,
+					VK_PIPELINE_BIND_POINT_COMPUTE,
+					m_computePipelineLayout,
+					bufferRootSignature->GetStaticSamplerDescriptorSetIndex());
+			}
+			}
 	}
 
 	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
@@ -903,8 +913,13 @@ void CommandContextVK::SetRootSignature(CommandListType type, const IRootSignatu
 	}
 
 	// Push data
-	m_pushDataCurrentSize = rootSignatureVK->GetPushDataSize();
-	m_pushDataDirty = false;
+	if (rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Heap)
+	{
+		const auto heapRootSignature = (HeapRootSignature*)rootSignatureVK;
+
+		m_pushDataCurrentSize = heapRootSignature->GetPushDataSize();
+		m_pushDataDirty = false;
+	}
 }
 
 
@@ -1115,20 +1130,27 @@ void CommandContextVK::SetConstants(CommandListType type, uint32_t rootIndex, DW
 
 void CommandContextVK::SetRootCBV(CommandListType type, uint32_t rootIndex, const IGpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+	const auto* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const RootSignature* rootSignature = GetRootSignature(type);
+	const auto* rootSignature = GetRootSignature(type);
+	const auto* rootSignatureVK = (IRootSignatureVK*)rootSignature;
 
 	FlushResourceBarriers();
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootBufferForDescriptorHeap(rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		assert(rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Heap);
+		const auto* heapRootSignature = (HeapRootSignature*)rootSignatureVK;
+
+		SetRootBufferForDescriptorHeap(heapRootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
-		SetRootBufferForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		assert(rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Buffer);
+		const auto* bufferRootSignature = (BufferRootSignature*)rootSignatureVK;
+
+		SetRootBufferForDescriptorBuffer(type, bufferRootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 }
 
@@ -1138,17 +1160,24 @@ void CommandContextVK::SetRootSRV(CommandListType type, uint32_t rootIndex, cons
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const RootSignature* rootSignature = GetRootSignature(type);
+	const auto* rootSignature = GetRootSignature(type);
+	const auto* rootSignatureVK = (IRootSignatureVK*)rootSignature;
 
 	FlushResourceBarriers();
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootBufferForDescriptorHeap(rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		assert(rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Heap);
+		const auto* heapRootSignature = (HeapRootSignature*)rootSignatureVK;
+
+		SetRootBufferForDescriptorHeap(heapRootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
-		SetRootBufferForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		assert(rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Buffer);
+		const auto* bufferRootSignature = (BufferRootSignature*)rootSignatureVK;
+
+		SetRootBufferForDescriptorBuffer(type, bufferRootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 }
 
@@ -1158,17 +1187,24 @@ void CommandContextVK::SetRootUAV(CommandListType type, uint32_t rootIndex, cons
 	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
 	assert(gpuBufferVK != nullptr);
 
-	const RootSignature* rootSignature = GetRootSignature(type);
+	const auto* rootSignature = GetRootSignature(type);
+	const auto* rootSignatureVK = (IRootSignatureVK*)rootSignature;
 
 	FlushResourceBarriers();
 
 	if (m_useDescriptorHeaps)
 	{
-		SetRootBufferForDescriptorHeap(rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		assert(rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Heap);
+		const auto* heapRootSignature = (HeapRootSignature*)rootSignatureVK;
+
+		SetRootBufferForDescriptorHeap(heapRootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 	else
 	{
-		SetRootBufferForDescriptorBuffer(type, rootSignature, rootIndex, gpuBufferVK, offsetInBytes);
+		assert(rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Buffer);
+		const auto* bufferRootSignature = (BufferRootSignature*)rootSignatureVK;
+
+		SetRootBufferForDescriptorBuffer(type, bufferRootSignature, rootIndex, gpuBufferVK, offsetInBytes);
 	}
 }
 
@@ -1833,7 +1869,7 @@ void CommandContextVK::ResetRenderTargets()
 
 void CommandContextVK::ParseRootSignature(CommandListType type)
 {
-	const RootSignature* rootSignatureVK = nullptr;
+	const IRootSignatureVK* rootSignatureVK = nullptr;
 	bool graphicsPipe = true;
 	bool shouldParse = false;
 
@@ -1841,7 +1877,7 @@ void CommandContextVK::ParseRootSignature(CommandListType type)
 	{
 		if (!m_isGraphicsRootSignatureParsed && (m_graphicsRootSignature != nullptr))
 		{
-			rootSignatureVK = (const RootSignature*)m_graphicsRootSignature;
+			rootSignatureVK = (const IRootSignatureVK*)m_graphicsRootSignature;
 			shouldParse = true;
 
 			m_isGraphicsRootSignatureParsed = true;
@@ -1851,7 +1887,7 @@ void CommandContextVK::ParseRootSignature(CommandListType type)
 	{
 		if (!m_isComputeRootSignatureParsed && (m_computeRootSignature != nullptr))
 		{
-			rootSignatureVK = (const RootSignature*)m_computeRootSignature;
+			rootSignatureVK = (const IRootSignatureVK*)m_computeRootSignature;
 			graphicsPipe = false;
 			shouldParse = true;
 
@@ -1861,8 +1897,17 @@ void CommandContextVK::ParseRootSignature(CommandListType type)
 
 	if (shouldParse)
 	{
-		m_dynamicResourceDescriptorBuffer.ParseRootSignature(*rootSignatureVK, graphicsPipe);
-		m_dynamicSamplerDescriptorBuffer.ParseRootSignature(*rootSignatureVK, graphicsPipe);
+		if (rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Heap)
+		{
+			const auto* heapRootSignature = (const HeapRootSignature*)rootSignatureVK;
+			// TODO
+		}
+		else
+		{
+			const auto* bufferRootSignature = (const BufferRootSignature*)rootSignatureVK;
+			m_dynamicResourceDescriptorBuffer.ParseRootSignature(*bufferRootSignature, graphicsPipe);
+			m_dynamicSamplerDescriptorBuffer.ParseRootSignature(*bufferRootSignature, graphicsPipe);
+		}
 	}
 }
 
@@ -1981,7 +2026,9 @@ void CommandContextVK::SetPushDataOrPushConstants(CommandListType type, uint32_t
 	if (m_useDescriptorHeaps)
 	{
 		const auto* rootSignature = GetRootSignature(type);
-		const auto& pushDataEntry = rootSignature->GetPushDataEntry(rootIndex, 0);
+		const auto* heapRootSignature = (HeapRootSignature*)rootSignature;
+
+		const auto& pushDataEntry = heapRootSignature->GetPushDataEntry(rootIndex, 0);
 		SetPushData(pushDataEntry.offset + offset, data, size);
 	}
 	else
@@ -2001,20 +2048,20 @@ void CommandContextVK::SetPushDataOrPushConstants(CommandListType type, uint32_t
 }
 
 
-RootSignature* CommandContextVK::GetRootSignature(CommandListType type)
+const IRootSignature* CommandContextVK::GetRootSignature(CommandListType type) const
 {
 	if (type == CommandListType::Graphics)
 	{
-		return (RootSignature*)m_graphicsRootSignature;
+		return m_graphicsRootSignature;
 	}
 	else
 	{
-		return (RootSignature*)m_computeRootSignature;
+		return m_computeRootSignature;
 	}
 }
 
 
-void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, const BufferRootSignature* bufferRootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	VkDescriptorBufferInfo info{
 		.buffer		= gpuBuffer->GetBuffer(),
@@ -2022,9 +2069,9 @@ void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, co
 		.range		= VK_WHOLE_SIZE
 	};
 
-	const auto rootParameterType = rootSignature->GetRootParameter(rootIndex).parameterType;
+	const auto rootParameterType = bufferRootSignature->GetRootParameter(rootIndex).parameterType;
 
-	const uint32_t binding = rootSignature->GetPushDescriptorBinding(rootIndex);
+	const uint32_t binding = bufferRootSignature->GetPushDescriptorBinding(rootIndex);
 	assert(binding != (uint32_t)-1);
 
 	VkWriteDescriptorSet writeDescriptor{
@@ -2036,7 +2083,7 @@ void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, co
 		.pBufferInfo		= &info
 	};
 
-	const uint32_t pushDescriptorSetIndex = rootSignature->GetPushDescriptorSetIndex();
+	const uint32_t pushDescriptorSetIndex = bufferRootSignature->GetPushDescriptorSetIndex();
 	assert(pushDescriptorSetIndex != (uint32_t)-1);
 
 	VkPushDescriptorSetInfo pushInfo{
@@ -2053,10 +2100,10 @@ void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, co
 }
 
 
-void CommandContextVK::SetRootBufferForDescriptorHeap(const RootSignature* rootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
+void CommandContextVK::SetRootBufferForDescriptorHeap(const HeapRootSignature* heapRootSignature, uint32_t rootIndex, const GpuBuffer* gpuBuffer, size_t offsetInBytes)
 {
 	// Update push data
-	uint32_t offset = rootSignature->GetPushDataEntry(rootIndex, 0).offset;
+	uint32_t offset = heapRootSignature->GetPushDataEntry(rootIndex, 0).offset;
 	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetBufferDeviceAddress() + offsetInBytes;
 	assert(bufferDeviceAddress != 0);
 

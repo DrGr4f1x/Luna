@@ -62,7 +62,7 @@ void ShaderSetAndBindingMapping::Finalize()
 }
 
 
-Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
+Luna::DescriptorSetPtr BufferRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
 {
 	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap.get();
 
@@ -71,42 +71,27 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 	// Can only create descriptor sets for tables
 	assert(rootParam.parameterType == RootParameterType::Table);
 	
-	if (m_useDescriptorHeap)
-	{
-		return m_device->CreateDescriptorSet(descriptorHeapVK, m_pushDataLayout[rootParamIndex], rootParam);
-	}
-	else
-	{
-		DescriptorSetDesc descriptorSetDesc{
-			.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex],
-			.rootParameter			= rootParam
-		};
+	DescriptorSetDesc descriptorSetDesc{
+		.descriptorSetLayout	= m_descriptorSetLayouts[rootParamIndex],
+		.rootParameter			= rootParam
+	};
 
-		return m_device->CreateDescriptorSet(descriptorHeapVK, descriptorSetDesc);
-	}
+	return m_device->CreateDescriptorSet(descriptorHeapVK, descriptorSetDesc);
 }
 
 
-DescriptorSetLayout* RootSignature::GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept
+DescriptorSetLayout* BufferRootSignature::GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept
 {
-	if (m_useDescriptorHeap)
+	if (rootParamIndex < m_descriptorSetLayouts.size())
 	{
-		assert(false);
-
-		return nullptr;
+		return m_descriptorSetLayouts[rootParamIndex].get();
 	}
-	else
-	{
-		if (rootParamIndex < m_descriptorSetLayouts.size())
-		{
-			return m_descriptorSetLayouts[rootParamIndex].get();
-		}
-	}
+	
 	return nullptr;
 }
 
 
-uint32_t RootSignature::GetPushDescriptorBinding(uint32_t rootParamIndex) const noexcept
+uint32_t BufferRootSignature::GetPushDescriptorBinding(uint32_t rootParamIndex) const noexcept
 {
 	auto it = m_pushDescriptorBindingMap.find(rootParamIndex);
 	if (it != m_pushDescriptorBindingMap.end())
@@ -115,6 +100,19 @@ uint32_t RootSignature::GetPushDescriptorBinding(uint32_t rootParamIndex) const 
 	}
 
 	return (uint32_t)-1;
+}
+
+
+Luna::DescriptorSetPtr HeapRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
+{
+	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap.get();
+
+	const auto& rootParam = GetRootParameter(rootParamIndex);
+
+	// Can only create descriptor sets for tables
+	assert(rootParam.parameterType == RootParameterType::Table);
+
+	return m_device->CreateDescriptorSet(descriptorHeapVK, m_pushDataLayout[rootParamIndex], rootParam);
 }
 
 } // namespace Luna::VK

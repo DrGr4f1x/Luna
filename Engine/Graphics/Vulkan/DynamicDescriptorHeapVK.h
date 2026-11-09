@@ -32,10 +32,11 @@ namespace Luna::VK
 {
 
 // Forward declarations
+class BufferRootSignature;
 class CommandContextVK;
 class Descriptor;
 class DescriptorSetLayout;
-class RootSignature;
+class HeapRootSignature;
 
 
 class DynamicDescriptorBuffer
@@ -48,7 +49,7 @@ public:
 
 	void CleanupUsedBuffers(uint64_t fenceValue);
 
-	void ParseRootSignature(const RootSignature& rootSignature, bool graphicsPipe);
+	void ParseRootSignature(const BufferRootSignature& rootSignature, bool graphicsPipe);
 
 	void UpdateAndBindDescriptorSets(VkCommandBuffer commandBuffer, bool graphicsPipe);
 

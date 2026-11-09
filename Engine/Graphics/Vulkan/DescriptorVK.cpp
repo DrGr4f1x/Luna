@@ -245,6 +245,7 @@ size_t Descriptor::CopyRawDescriptor(void* dest) const
 	return m_rawDescriptorSize;
 }
 
+
 void Descriptor::ReadImageDescriptorForHeap(VkDevice device, size_t descriptorSize, VkImageLayout layout, VkDescriptorType descriptorType, const VkImageViewCreateInfo& viewInfo)
 {
 	VkImageDescriptorInfoEXT imageDescInfo{

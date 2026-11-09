@@ -57,14 +57,29 @@ struct ShaderSetAndBindingMapping
 };
 
 
-class RootSignature : public IRootSignature
+class IRootSignatureVK : public IRootSignature
+{
+public:
+	virtual DescriptorManagement GetDescriptorManagement() const = 0;
+
+	virtual VkPipelineLayout GetPipelineLayout() const = 0;
+};
+
+
+class BufferRootSignature : public IRootSignatureVK
 {
 	friend class Device;
 
 public:
+	// IRootSignatureVK API
+	DescriptorManagement GetDescriptorManagement() const final { return DescriptorManagement::Buffer; }
+
+	// IRootSignature API
 	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
 
-	VkPipelineLayout GetPipelineLayout() const noexcept { return m_pipelineLayout ? m_pipelineLayout->Get() : VK_NULL_HANDLE; }
+	VkPipelineLayout GetPipelineLayout() const final { return m_pipelineLayout->Get(); }
+
+	// Descriptor buffer API
 	DescriptorSetLayout* GetDescriptorSetLayout(uint32_t rootParamIndex) const noexcept;
 
 	bool HasStaticSamplers() const noexcept { return m_staticSamplerDescriptorSetIndex != ~0u; }
@@ -77,17 +92,9 @@ public:
 	uint32_t GetPushDescriptorSetIndex() const noexcept { return m_pushDescriptorSetIndex; }
 	uint32_t GetPushDescriptorBinding(uint32_t rootParamIndex) const noexcept;
 
-	// Push data (for DescriptorHeap)
-	const PushDataLayout& GetPushDataLayout() const noexcept { return m_pushDataLayout; }
-	const std::vector<PushDataEntry>& GetPushDataEntries(uint32_t index) const { return m_pushDataLayout[index]; }
-	const PushDataEntry& GetPushDataEntry(uint32_t index, uint32_t entryIndex) const { return m_pushDataLayout[index][entryIndex]; }
-	uint32_t GetPushDataSize() const noexcept { return m_pushDataSize; }
-
-	// Shader set and binding mapping (for DescriptorHeap)
-	const ShaderSetAndBindingMapping& GetShaderSetAndBindingMapping() const { return m_shaderSetAndBindingMapping; }
-
-protected:
+private:
 	Device* m_device{ nullptr };
+
 	wil::com_ptr<CVkPipelineLayout> m_pipelineLayout;
 	std::vector<DescriptorSetLayoutPtr> m_descriptorSetLayouts;
 	size_t m_resourceDescriptorSetLayoutSize{ 0 };
@@ -100,6 +107,35 @@ protected:
 	// Push descriptors
 	uint32_t m_pushDescriptorSetIndex{ (uint32_t)-1 };
 	std::unordered_map<uint32_t, uint32_t> m_pushDescriptorBindingMap;
+};
+
+
+class HeapRootSignature : public IRootSignatureVK
+{
+	friend class Device;
+
+public:
+	// IRootSignatureVK API
+	DescriptorManagement GetDescriptorManagement() const final { return DescriptorManagement::Heap; }
+
+	// IRootSignature API
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
+
+	VkPipelineLayout GetPipelineLayout() const final { return VK_NULL_HANDLE; }
+
+	// Descriptor heap API
+	
+	// Push data
+	const PushDataLayout& GetPushDataLayout() const noexcept { return m_pushDataLayout; }
+	const std::vector<PushDataEntry>& GetPushDataEntries(uint32_t index) const { return m_pushDataLayout[index]; }
+	const PushDataEntry& GetPushDataEntry(uint32_t index, uint32_t entryIndex) const { return m_pushDataLayout[index][entryIndex]; }
+	uint32_t GetPushDataSize() const noexcept { return m_pushDataSize; }
+
+	// Shader set and binding mapping
+	const ShaderSetAndBindingMapping& GetShaderSetAndBindingMapping() const { return m_shaderSetAndBindingMapping; }
+
+private:
+	Device* m_device{ nullptr };
 
 	// Push data
 	PushDataLayout m_pushDataLayout;
@@ -107,9 +143,6 @@ protected:
 
 	// Shader set and binding mapping
 	ShaderSetAndBindingMapping m_shaderSetAndBindingMapping;
-
-	// Is using descriptor heaps?
-	bool m_useDescriptorHeap{ false };
 };
 
 } // namespace Luna::VK
