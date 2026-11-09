@@ -975,7 +975,11 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 }
 
 
-DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, const std::vector<PushDataEntry>& pushDataEntries, const RootParameter& rootParameter)
+DescriptorSetPtr Device::CreateDescriptorSet(
+	IDescriptorHeapVK* descriptorHeap, 
+	const std::vector<PushDataEntry>& pushDataEntries, 
+	HeapDescriptorBindingMapPtr registerOffsetMap, 
+	const RootParameter& rootParameter)
 {
 	std::lock_guard guard(m_descriptorSetMutex);
 
@@ -985,47 +989,15 @@ DescriptorSetPtr Device::CreateDescriptorSet(IDescriptorHeapVK* descriptorHeap, 
 	uint32_t rangeIndex = 0;
 	for (const auto& range : rootParameter.table)
 	{
-		DescriptorAllocation allocation{};
+		const auto descriptorClass = GetDescriptorClass(range.descriptorType);
 
-		if (isSamplerTable)
-		{
-			allocation = descriptorHeap->AllocateDescriptors(DescriptorClass::Sampler, range.numDescriptors);
+		DescriptorAllocation allocation = descriptorHeap->AllocateDescriptors(descriptorClass, range.numDescriptors);
 
-			for (uint32_t i = 0; i < range.numDescriptors; ++i)
-			{
-				descriptorSet->m_samplerRegisterOffsetMap[uint16_t(range.startRegister + i)] = i;
-			}
-
-			PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
-			descriptorSet->m_pushData.push_back(pushData);
-		}
-		else
-		{
-			const auto descriptorClass = GetDescriptorClass(range.descriptorType);
-
-			allocation = descriptorHeap->AllocateDescriptors(descriptorClass, range.numDescriptors);
-
-			for (uint32_t i = 0; i < range.numDescriptors; ++i)
-			{
-				if (IsDescriptorTypeSRV(range.descriptorType))
-				{
-					descriptorSet->m_srvRegisterOffsetMap[range.startRegister + i] = i;
-				}
-				else if (IsDescriptorTypeUAV(range.descriptorType))
-				{
-					descriptorSet->m_uavRegisterOffsetMap[range.startRegister + i] = i;
-				}
-				else
-				{
-					descriptorSet->m_cbvRegisterOffsetMap[range.startRegister + i] = i;
-				}
-			}
-
-			PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
-			descriptorSet->m_pushData.push_back(pushData);
-		}
+		PushData pushData{ .offset = pushDataEntries[rangeIndex].offset, .value = (uint32_t)allocation.offsetInItems };
+		descriptorSet->m_pushData.push_back(pushData);
 
 		descriptorSet->m_rangeAllocations.push_back(allocation);
+		descriptorSet->m_registerOffsetMap = registerOffsetMap;
 
 		++rangeIndex;
 	}
@@ -2212,6 +2184,65 @@ RootSignaturePtr Device::CreateRootSignatureForDescriptorHeap(const IDescriptorH
 
 	// Compute shader set and binding mappings
 	ComputeShaderSetAndBindingMappings(m_caps, descriptorHeap, rootSignature->m_shaderSetAndBindingMapping, rootSignature->m_pushDataLayout, rootSignatureDesc);
+
+	// Setup register offset maps
+	for (const auto& rootParameter : rootSignatureDesc.rootParameters)
+	{
+		if (rootParameter.parameterType == RootParameterType::Table)
+		{
+			bool canUseCompactMap = true;
+			for (const auto& range : rootParameter.table)
+			{
+				if (range.startRegister + range.numDescriptors >= 32)
+				{
+					canUseCompactMap = false;
+					break;
+				}
+			}
+
+			HeapDescriptorBindingMapPtr registerOffsetMap;
+			if (canUseCompactMap)
+			{
+				registerOffsetMap = make_shared<HeapDescriptorBindingMapCompact>();
+			}
+			else
+			{
+				registerOffsetMap = make_shared<HeapDescriptorBindingMapGeneral>();
+			}
+
+			for (const auto& range : rootParameter.table)
+			{
+				uint32_t offset = 0;
+				for (uint32_t i = 0; i < range.numDescriptors; ++i)
+				{
+					if (IsDescriptorTypeSRV(range.descriptorType))
+					{
+						registerOffsetMap->SetRegisterOffsetSRV(i + range.startRegister, offset);
+					}
+					else if (IsDescriptorTypeUAV(range.descriptorType))
+					{
+						registerOffsetMap->SetRegisterOffsetUAV(i + range.startRegister, offset);
+					}
+					else if (range.descriptorType == DescriptorType::ConstantBuffer)
+					{
+						registerOffsetMap->SetRegisterOffsetCBV(i + range.startRegister, offset);
+					}
+					else
+					{
+						assert(range.descriptorType == DescriptorType::Sampler);
+						registerOffsetMap->SetRegisterOffsetSampler(i + range.startRegister, offset);
+					}
+					++offset;
+				}
+			}
+
+			rootSignature->m_registerOffsetMaps.push_back(registerOffsetMap);
+		}
+		else
+		{
+			rootSignature->m_registerOffsetMaps.push_back(nullptr);
+		}
+	}
 
 	return rootSignature;
 }

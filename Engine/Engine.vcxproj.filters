@@ -224,9 +224,6 @@
     <ClCompile Include="Graphics\DX12\DescriptorOffsetTable12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Vulkan\DescriptorSetHeapLayoutVK.cpp">
-      <Filter>Graphics\Vulkan</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -597,9 +594,6 @@
     </ClInclude>
     <ClInclude Include="Graphics\DX12\DescriptorOffsetTable12.h">
       <Filter>Graphics\DX12</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\DescriptorSetHeapLayoutVK.h">
-      <Filter>Graphics\Vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

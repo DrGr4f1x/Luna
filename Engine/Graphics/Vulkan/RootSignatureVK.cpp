@@ -112,7 +112,7 @@ Luna::DescriptorSetPtr HeapRootSignature::CreateDescriptorSet(DescriptorHeapPtr 
 	// Can only create descriptor sets for tables
 	assert(rootParam.parameterType == RootParameterType::Table);
 
-	return m_device->CreateDescriptorSet(descriptorHeapVK, m_pushDataLayout[rootParamIndex], rootParam);
+	return m_device->CreateDescriptorSet(descriptorHeapVK, m_pushDataLayout[rootParamIndex], m_registerOffsetMaps[rootParamIndex], rootParam);
 }
 
 } // namespace Luna::VK

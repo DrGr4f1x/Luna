@@ -143,6 +143,9 @@ private:
 
 	// Shader set and binding mapping
 	ShaderSetAndBindingMapping m_shaderSetAndBindingMapping;
+
+	// Register offset maps
+	std::vector<HeapDescriptorBindingMapPtr> m_registerOffsetMaps;
 };
 
 } // namespace Luna::VK
