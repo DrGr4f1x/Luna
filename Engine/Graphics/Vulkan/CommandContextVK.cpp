@@ -1784,7 +1784,6 @@ void CommandContextVK::BindDescriptorHeaps()
 }
 
 
-
 void CommandContextVK::UpdateAndBindDynamicDescriptors(bool graphicsPipe)
 {
 	m_dynamicResourceDescriptorBuffer.UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);

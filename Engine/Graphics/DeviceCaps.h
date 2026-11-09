@@ -143,6 +143,7 @@ struct DeviceCaps
 		} descriptorSize;
 	} descriptorBuffer;
 
+	// Descriptor heap
 	struct
 	{
 		size_t		samplerHeapAlignment;
@@ -369,6 +370,7 @@ struct DeviceCaps
 		uint32_t meshShader : 1; // NRIMeshShader
 		uint32_t lowLatency : 1; // NRILowLatency
 		uint32_t micromap : 1; // see "Micromap"
+		uint32_t deviceAddressCommands : 1;
 
 		// Smaller
 		uint32_t independentFrontAndBackStencilReferenceAndMasks : 1; // see "StencilAttachmentDesc::back"

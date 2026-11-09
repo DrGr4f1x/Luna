@@ -236,6 +236,7 @@ void DeviceCaps::LogCaps() const
 	LogInfo(LogGraphics) << format(formatStr, "meshShader", features.meshShader) << endl;
 	LogInfo(LogGraphics) << format(formatStr, "lowLatency", features.lowLatency) << endl;
 	LogInfo(LogGraphics) << format(formatStr, "micromap", features.micromap) << endl;
+	LogInfo(LogGraphics) << format(formatStr, "deviceAddressCommands", features.deviceAddressCommands) << endl;
 	LogInfo(LogGraphics) << format(formatStr, "independentFrontAndBackStencilReferenceAndMasks", features.independentFrontAndBackStencilReferenceAndMasks) << endl;
 	LogInfo(LogGraphics) << format(formatStr, "textureFilterMinMax", features.textureFilterMinMax) << endl;
 	LogInfo(LogGraphics) << format(formatStr, "logicOp", features.logicOp) << endl;

@@ -463,6 +463,7 @@ void FillCaps(ID3D12Device* device, DeviceCaps& caps)
 	caps.features.swapChain = true; // TODO: HasOutput();
 	caps.features.lowLatency = false; // TODO HasNvExt();
 	caps.features.micromap = caps.tiers.rayTracing >= 3;
+	caps.features.deviceAddressCommands = true;
 
 	caps.features.textureFilterMinMax = levels.MaxSupportedFeatureLevel >= D3D_FEATURE_LEVEL_11_1 ? true : false;
 	caps.features.logicOp = options.OutputMergerLogicOp != 0;

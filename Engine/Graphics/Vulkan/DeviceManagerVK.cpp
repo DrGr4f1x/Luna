@@ -702,6 +702,7 @@ void DeviceManager::EnableDeviceExtensions()
 	RequestExtension(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
 	RequestExtension(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME);
 	RequestExtension(VK_EXT_DESCRIPTOR_HEAP_EXTENSION_NAME);
+	RequestExtension(VK_KHR_DEVICE_ADDRESS_COMMANDS_EXTENSION_NAME);
 
 	m_vkbPhysicalDevice.enable_extensions_if_present(requestedExtensions);
 
@@ -908,6 +909,11 @@ void DeviceManager::EnableDeviceExtensions()
 		VK_APPEND_PNEXT(m_extFeatures.descriptorHeapFeatures);
 	}
 
+	if (IsExtensionRequested(VK_KHR_DEVICE_ADDRESS_COMMANDS_EXTENSION_NAME))
+	{
+		VK_APPEND_PNEXT(m_extFeatures.deviceAddressCommands);
+	}
+
 	vkGetPhysicalDeviceFeatures2(m_vkPhysicalDevice->Get(), &m_features);
 
 	m_supportedFeatures.descriptorIndexing = m_extFeatures.features12.descriptorIndexing;
@@ -927,6 +933,7 @@ void DeviceManager::EnableDeviceExtensions()
 	m_supportedFeatures.fifoLatestReady = m_extFeatures.presentModeFifoLatestReadyFeaturesEXT.presentModeFifoLatestReady;
 	m_supportedFeatures.descriptorBuffers = m_extFeatures.descriptorBufferFeatures.descriptorBuffer;
 	m_supportedFeatures.descriptorHeaps = m_extFeatures.descriptorHeapFeatures.descriptorHeap;
+	m_supportedFeatures.deviceAddressCommands = m_extFeatures.deviceAddressCommands.deviceAddressCommands;
 
 	// Memory props
 	{ 
@@ -1418,6 +1425,7 @@ void DeviceManager::EnableDeviceExtensions()
 		m_caps.features.meshShader = m_extFeatures.meshShaderFeatures.meshShader != 0 && m_extFeatures.meshShaderFeatures.taskShader != 0;
 		m_caps.features.lowLatency = m_supportedFeatures.presentId != 0 && IsExtensionRequested(VK_NV_LOW_LATENCY_2_EXTENSION_NAME);
 		m_caps.features.micromap = m_extFeatures.micromapFeatures.micromap != 0;
+		m_caps.features.deviceAddressCommands = m_extFeatures.deviceAddressCommands.deviceAddressCommands != 0;
 
 		m_caps.features.independentFrontAndBackStencilReferenceAndMasks = true;
 		m_caps.features.textureFilterMinMax = m_extFeatures.features12.samplerFilterMinmax;
