@@ -193,14 +193,8 @@ void DescriptorIndexingApp::InitDescriptorSets()
 	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
 	m_vsDescriptorSet->SetCBV(0, m_constantBuffer);
 
-	std::vector<const IDescriptor*> textureDescriptors{ m_numTextures };
-	for (size_t i = 0; i < textureDescriptors.size(); ++i)
-	{
-		textureDescriptors[i] = m_textures[i]->GetDescriptor();
-	}
-	
 	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_psDescriptorSet->SetBindlessSRVs(0, textureDescriptors);
+	m_psDescriptorSet->SetSRVs(0, m_textures);
 }
 
 

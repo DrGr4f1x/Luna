@@ -209,14 +209,7 @@ void DynamicIndexingApp::InitDescriptorSets()
 {
 	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
 	m_psDescriptorSet->SetSRV(0, m_diffuseTexture);
-
-	vector<const IDescriptor*> bindlessDescriptors;
-	bindlessDescriptors.resize(m_cityMaterialCount);
-	for (uint32_t i = 0; i < m_cityMaterialCount; ++i)
-	{
-		bindlessDescriptors[i] = m_cityMaterialTextures[i]->GetDescriptor();
-	}
-	m_psDescriptorSet->SetBindlessSRVs(1, bindlessDescriptors);
+	m_psDescriptorSet->SetSRVs(1, m_cityMaterialTextures);
 }
 
 
