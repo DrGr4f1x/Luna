@@ -32,8 +32,6 @@ class DescriptorSet : public IDescriptorSet
 public:
 	DescriptorSet(Device* device, const RootParameter& rootParameter);
 
-	void SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors) override;
-
 	void SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer) override;

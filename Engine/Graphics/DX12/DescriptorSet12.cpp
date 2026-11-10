@@ -31,26 +31,6 @@ DescriptorSet::DescriptorSet(Device* device, const RootParameter& rootParameter)
 {}
 
 
-void DescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
-{
-	assert(!m_isSamplerTable);
-	assert(m_rootParameter.parameterType == RootParameterType::Table);
-
-	// TODO: Add some safety checks here
-
-	const uint32_t srvOffset = GetSrvOffset(srvRegister);
-
-	for (size_t i = 0; i < descriptors.size(); ++i)
-	{
-		const Descriptor* descriptor = (const Descriptor*)descriptors[i];
-
-		const uint32_t descriptorSlot = srvOffset + (uint32_t)i;
-
-		UpdateDescriptor(descriptorSlot, descriptor->GetHandleCPU());
-	}
-}
-
-
 void DescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
 	const uint32_t descriptorSlot = GetSrvOffset(srvRegister);

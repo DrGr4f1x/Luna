@@ -32,12 +32,6 @@ BufferDescriptorSet::BufferDescriptorSet(Device* device, const RootParameter& ro
 {}
 
 
-void BufferDescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
-{
-	SetDescriptors_Internal<DescriptorRegisterType::SRV>(srvRegister, descriptors);
-}
-
-
 void BufferDescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
 {
 	const auto descriptor = (const Descriptor*)colorBuffer->GetSrvDescriptor();
@@ -106,53 +100,6 @@ size_t BufferDescriptorSet::GetDescriptorBufferOffset() const
 }
 
 
-template <DescriptorRegisterType registerType>
-void BufferDescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors)
-{
-	const uint32_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(registerType, descriptorRegister);
-
-	assert(rangeIndex != ~0u);
-	const auto& range = m_rootParameter.table[rangeIndex];
-
-	const size_t numDescriptors = std::min<size_t>(range.numDescriptors, descriptors.size());
-
-	for (uint32_t i = 0; i < numDescriptors; ++i)
-	{
-		const auto descriptor = (const Descriptor*)descriptors[i];
-		const uint32_t descriptorSize = (uint32_t)descriptor->GetRawDescriptorSize();
-
-		switch (range.descriptorType)
-		{
-		case DescriptorType::Sampler:
-			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSampler(descriptorRegister, i, descriptorSize)));
-			break;
-
-		case DescriptorType::ConstantBuffer:
-			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetCBV(descriptorRegister, i, descriptorSize)));
-			break;
-
-		case DescriptorType::TextureSRV:
-		case DescriptorType::TypedBufferSRV:
-		case DescriptorType::StructuredBufferSRV:
-		case DescriptorType::RawBufferSRV:
-			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(descriptorRegister, i, descriptorSize)));
-			break;
-
-		case DescriptorType::TextureUAV:
-		case DescriptorType::TypedBufferUAV:
-		case DescriptorType::StructuredBufferUAV:
-		case DescriptorType::RawBufferUAV:
-			descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetUAV(descriptorRegister, i, descriptorSize)));
-			break;
-
-		default:
-			assert(false);
-			break;
-		}
-	}
-}
-
-
 void BufferDescriptorSet::SetSRV_Internal(uint32_t srvRegister, const Descriptor* descriptor)
 {
 	descriptor->CopyRawDescriptor((void*)(m_allocation.mem + GetRegisterOffsetSRV(srvRegister)));
@@ -209,12 +156,6 @@ HeapDescriptorSet::HeapDescriptorSet(Device* device, const RootParameter& rootPa
 	: m_device{ device }
 	, m_rootParameter{ rootParameter }
 {}
-
-
-void HeapDescriptorSet::SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors)
-{
-	SetDescriptors_Internal<DescriptorRegisterType::SRV>(srvRegister, descriptors);
-}
 
 
 void HeapDescriptorSet::SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer)
@@ -276,66 +217,6 @@ void HeapDescriptorSet::SetSampler(uint32_t samplerRegister, SamplerPtr sampler)
 {
 	const auto descriptor = (const Descriptor*)sampler->GetDescriptor();
 	SetSampler_Internal(samplerRegister, descriptor);
-}
-
-
-template <DescriptorRegisterType registerType>
-void HeapDescriptorSet::SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors)
-{
-	const uint32_t rangeIndex = m_rootParameter.FindMatchingRangeIndex(registerType, descriptorRegister);
-
-	assert(rangeIndex != ~0u);
-	const auto& range = m_rootParameter.table[rangeIndex];
-	std::byte* mem = m_rangeAllocations[rangeIndex].mem;
-
-	const size_t numDescriptors = std::min<size_t>(range.numDescriptors, descriptors.size());
-
-	for (uint32_t i = 0; i < numDescriptors; ++i)
-	{
-		const auto descriptor = (const Descriptor*)descriptors[i];
-		const size_t descriptorSize = descriptor->GetRawDescriptorSize();
-
-		switch (range.descriptorType)
-		{
-		case DescriptorType::Sampler:
-		{
-			const uint32_t offsetSampler = m_registerOffsetMap->GetRegisterOffsetSampler(descriptorRegister + i);
-			descriptor->CopyRawDescriptor(mem + offsetSampler * descriptorSize);
-		}
-			break;
-
-		case DescriptorType::ConstantBuffer:
-		{
-			const uint32_t offsetCbv = m_registerOffsetMap->GetRegisterOffsetCBV(descriptorRegister + i);
-			descriptor->CopyRawDescriptor(mem + offsetCbv * descriptorSize);
-		}
-			break;
-
-		case DescriptorType::TextureSRV:
-		case DescriptorType::TypedBufferSRV:
-		case DescriptorType::StructuredBufferSRV:
-		case DescriptorType::RawBufferSRV:
-		{
-			const uint32_t offsetSrv = m_registerOffsetMap->GetRegisterOffsetSRV(descriptorRegister + i);
-			descriptor->CopyRawDescriptor(mem + offsetSrv * descriptorSize);
-		}
-			break;
-
-		case DescriptorType::TextureUAV:
-		case DescriptorType::TypedBufferUAV:
-		case DescriptorType::StructuredBufferUAV:
-		case DescriptorType::RawBufferUAV:
-		{
-			const uint32_t offsetUav = m_registerOffsetMap->GetRegisterOffsetUAV(descriptorRegister + i);
-			descriptor->CopyRawDescriptor(mem + offsetUav * descriptorSize);
-		}
-			break;
-
-		default:
-			assert(false);
-			break;
-		}
-	}
 }
 
 

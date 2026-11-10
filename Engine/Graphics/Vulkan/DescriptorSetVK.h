@@ -48,8 +48,6 @@ public:
 
 	DescriptorManagement GetDescriptorManagement() const final { return DescriptorManagement::Buffer; }
 
-	void SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors) override;
-
 	void SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer) override;
@@ -66,9 +64,6 @@ public:
 	size_t GetDescriptorBufferOffset() const;
 
 protected:
-	template <DescriptorRegisterType registerType>
-	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
-
 	void SetSRV_Internal(uint32_t srvRegister, const Descriptor* descriptor);
 	void SetUAV_Internal(uint32_t uavRegister, const Descriptor* descriptor);
 	void SetCBV_Internal(uint32_t cbvRegister, const Descriptor* descriptor);
@@ -99,8 +94,6 @@ public:
 
 	DescriptorManagement GetDescriptorManagement() const final { return DescriptorManagement::Heap; }
 
-	void SetBindlessSRVs(uint32_t srvRegister, std::span<const IDescriptor*> descriptors) override;
-
 	void SetSRV(uint32_t srvRegister, ColorBufferPtr colorBuffer) override;
 	void SetSRV(uint32_t srvRegister, DepthBufferPtr depthBuffer, bool depthSrv = true) override;
 	void SetSRV(uint32_t srvRegister, GpuBufferPtr gpuBuffer) override;
@@ -117,9 +110,6 @@ public:
 	const std::vector<PushData>& GetPushData() const { return m_pushData; }
 
 protected:
-	template <DescriptorRegisterType registerType>
-	void SetDescriptors_Internal(uint32_t descriptorRegister, std::span<const IDescriptor*> descriptors);
-
 	void SetSRV_Internal(uint32_t srvRegister, const Descriptor* descriptor);
 	void SetUAV_Internal(uint32_t uavRegister, const Descriptor* descriptor);
 	void SetCBV_Internal(uint32_t cbvRegister, const Descriptor* descriptor);

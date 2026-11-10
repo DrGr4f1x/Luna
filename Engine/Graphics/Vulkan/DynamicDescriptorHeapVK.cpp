@@ -478,4 +478,45 @@ void DynamicDescriptorBuffer::BindDescriptorSetOffsets(VkCommandBuffer commandBu
 	}
 }
 
+
+#if 0
+std::mutex DynamicDescriptorHeap::sm_mutex;
+std::vector<wil::com_ptr<CVkBuffer>> DynamicDescriptorHeap::sm_descriptorHeapPool[2];
+std::queue<std::pair<uint64_t, CVkBuffer*>> DynamicDescriptorHeap::sm_retiredDescriptorHeaps[2];
+std::queue<CVkBuffer*> DynamicDescriptorHeap::sm_availableDescriptorHeaps[2];
+
+
+DynamicDescriptorHeap::DynamicDescriptorHeap(CommandContextVK& owningContext, DescriptorHeapType heapType)
+	: m_owningContext{ owningContext }
+	, m_heapType{ heapType }
+{}
+
+
+void DynamicDescriptorHeap::CleanupUsedHeaps(uint64_t fenceValue)
+{
+	RetireCurrentHeap();
+	RetireUsedHeaps(fenceValue);
+}
+
+
+void DynamicDescriptorHeap::RetireCurrentHeap()
+{
+	if (m_currentHeapPtr != nullptr)
+	{
+		vmaUnmapMemory(m_currentHeapPtr->GetAllocator(), m_currentHeapPtr->GetAllocation());
+		m_retiredHeaps.push_back(m_currentHeapPtr);
+		m_currentHeapPtr = nullptr;
+	}
+	m_currentOffset = 0;
+	m_bufferStart = nullptr;
+}
+
+
+void DynamicDescriptorBuffer::RetireUsedBuffers(uint64_t fenceValue)
+{
+	DiscardDescriptorBuffers(m_bufferType, fenceValue, m_retiredBuffers);
+	m_retiredBuffers.clear();
+}
+#endif
+
 } // namespace Luna::VK

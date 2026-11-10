@@ -157,4 +157,38 @@ private:
 	void BindDescriptorSetOffsets(VkCommandBuffer commandBuffer, DescriptorCache& descriptorCache, bool bindDirtyDescriptorSetsOnly, bool graphicsPipe);
 };
 
+
+#if 0
+class DynamicDescriptorHeap
+{
+public:
+	DynamicDescriptorHeap(CommandContextVK& owningContext, DescriptorHeapType bufferType);
+
+	void CleanupUsedHeaps(uint64_t fenceValue);
+
+	void ParseRootSignature(const HeapRootSignature& rootSignature);
+
+	void RetireCurrentHeap();
+	void RetireUsedHeaps(uint64_t fenceValue);
+
+private:
+	// Static members
+	static const size_t sm_numImageDescriptors = (1 << 15);
+	static const size_t sm_numBufferDescriptors = (1 << 15);
+	static const size_t sm_numSamplerDescriptors = (1 << 10);
+	static std::mutex sm_mutex;
+	static std::vector<wil::com_ptr<CVkBuffer>> sm_descriptorHeapPool[2];
+	static std::queue<std::pair<uint64_t, CVkBuffer*>> sm_retiredDescriptorHeaps[2];
+	static std::queue<CVkBuffer*> sm_availableDescriptorHeaps[2];
+
+	// Non-static members
+	CommandContextVK& m_owningContext;
+	CVkBuffer* m_currentHeapPtr{ nullptr };
+	const DescriptorHeapType m_heapType;
+
+	std::vector<CVkBuffer*> m_retiredHeaps;
+};
+#endif
+
+
 } // namespace Luna::VK
