@@ -112,6 +112,19 @@ inline RangeBuilder BindlessRawBufferUAV{ DescriptorType::RawBufferUAV, Bindless
 inline RangeBuilder BindlessSampler{ DescriptorType::Sampler, BindlessFlags };
 
 
+struct DescriptorInfo
+{
+	DescriptorType type{ DescriptorType::None };
+	uint32_t registerIndex{ ~0u };
+	uint32_t rangeIndex{ ~0u };
+
+	operator bool() const
+	{
+		return type != DescriptorType::None && registerIndex != ~0u && rangeIndex != ~0u;
+	}
+};
+
+
 struct RootParameter
 {
 	Luna::ShaderStage shaderVisibility{ ShaderStage::All };
@@ -190,6 +203,130 @@ struct RootParameter
 		}
 
 		return rangeIndex;
+	}
+
+	// Forward iterator for visiting each descriptor in each range in the table.
+	template <typename T>
+	struct Iterator
+	{
+		// Standard iterator traits required by STL algorithms
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = std::remove_cv_t<T>;
+		using difference_type = std::ptrdiff_t;
+		using pointer = T*;
+		using reference = T&;
+
+		Iterator(const RootParameter& rootParameter, DescriptorType type, uint32_t registerIndex, uint32_t rangeIndex) 
+			: m_rootParameter{ rootParameter }
+			, m_info{ type, registerIndex, rangeIndex }
+		{}
+
+		template <typename Other>
+		Iterator(const Iterator<Other>& other)
+			: m_rootParameter{ other.m_rootParameter }
+			, m_info{ other.m_info.type, other.m_info.registerIndex, other.m_info.rangeIndex }
+		{}
+
+		Iterator& operator++()
+		{
+			if (!m_info)
+				return *this;
+
+			const DescriptorRange& range = m_rootParameter.table[m_info.rangeIndex];
+			if (m_info.registerIndex >= (range.startRegister + range.numDescriptors))
+			{
+				++m_info.rangeIndex;
+
+				if (m_info.rangeIndex >= m_rootParameter.table.size())
+				{
+					m_info = DescriptorInfo{};
+					return *this;
+				}
+				else
+				{
+					m_info.type = m_rootParameter.table[m_info.rangeIndex].descriptorType;
+					m_info.registerIndex = m_rootParameter.table[m_info.rangeIndex].startRegister;
+					return *this;
+				}
+			}
+			else
+			{
+				++m_info.registerIndex;
+				return *this;
+			}
+		}
+
+		template <typename Other>
+		bool operator==(const Iterator<Other>& other) const
+		{
+			return
+				m_info.type == other.m_info.type &&
+				m_info.registerIndex == other.m_info.registerIndex &&
+				m_info.rangeIndex == other.m_info.rangeIndex;
+		}
+
+		template <typename Other>
+		bool operator!=(const Iterator<Other>& other) const
+		{
+			return !(*this == other);
+		}
+
+		const DescriptorInfo& operator*() const
+		{
+			return m_info;
+		}
+
+	private:
+		template <typename> friend struct Iterator;
+
+		const RootParameter& m_rootParameter;
+		DescriptorInfo m_info{};
+	};
+
+	// Typedefs aligning with STL container conventions
+	using iterator = Iterator<DescriptorInfo>;
+	using const_iterator = Iterator<const DescriptorInfo>;
+
+	iterator end()
+	{
+		return iterator(*this, DescriptorType::None, ~0u, ~0u);
+	}
+
+	iterator begin()
+	{
+		if (!table.empty())
+		{
+			return iterator(*this, table[0].descriptorType, table[0].startRegister, 0);
+		}
+		return end();
+	}
+
+	const_iterator begin() const
+	{
+		if (!table.empty())
+		{
+			return iterator(*this, table[0].descriptorType, table[0].startRegister, 0);
+		}
+		return end();
+	}
+
+	const_iterator end() const
+	{
+		return const_iterator(*this, DescriptorType::None, ~0u, ~0u);
+	}
+
+	const_iterator cbegin() const
+	{
+		if (!table.empty())
+		{
+			return iterator(*this, table[0].descriptorType, table[0].startRegister, 0);
+		}
+		return cend();
+	}
+
+	const_iterator cend() const
+	{
+		return const_iterator(*this, DescriptorType::None, ~0u, ~0u);
 	}
 };
 
