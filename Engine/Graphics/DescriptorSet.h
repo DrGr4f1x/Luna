@@ -34,7 +34,14 @@ struct StencilSrv
 	DepthBufferPtr depthBuffer;
 };
 
-using SrvProvider = std::variant<ColorBufferPtr, DepthBufferPtr, StencilSrv, GpuBufferPtr, TexturePtr>;
+struct StencilUav
+{
+	StencilUav(DepthBufferPtr inDepthBuffer) : depthBuffer{ inDepthBuffer } {}
+	DepthBufferPtr depthBuffer;
+};
+
+
+using DescriptorProvider = std::variant<ColorBufferPtr, DepthBufferPtr, StencilSrv, StencilUav, GpuBufferPtr, TexturePtr>;
 
 using UavProvider = std::variant<ColorBufferPtr, DepthBufferPtr, GpuBufferPtr>;
 
@@ -56,17 +63,18 @@ public:
 	virtual void SetSRV(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;
 	virtual void SetSRV(uint32_t slot, TexturePtr texture) = 0;
 
-	void SetSRVs(uint32_t startSlot, std::initializer_list<SrvProvider> srvs)
+	void SetSRVs(uint32_t startSlot, std::initializer_list<DescriptorProvider> srvProviders)
 	{
 		uint32_t slot = startSlot;
-		for (auto srvProvider : srvs)
+		for (auto srvProvider : srvProviders)
 		{
 			std::visit(overloaded{
 				[slot, this](ColorBufferPtr colorBuffer) { SetSRV(slot, colorBuffer); },
 				[slot, this](DepthBufferPtr depthBuffer) { SetSRV(slot, depthBuffer, true);  },
 				[slot, this](StencilSrv stencilSrv) { SetSRV(slot, stencilSrv.depthBuffer, false); },
 				[slot, this](GpuBufferPtr gpuBuffer) { SetSRV(slot, gpuBuffer); },
-				[slot, this](TexturePtr texture) { SetSRV(slot, texture); }
+				[slot, this](TexturePtr texture) { SetSRV(slot, texture); },
+				[slot, this](auto&& other) { assert(false); }
 				}, srvProvider);
 			++slot;
 		}

@@ -480,29 +480,27 @@ void SSAOApp::InitDescriptorSets()
 {
 	for (uint32_t i = 0; i < (uint32_t)m_model->materials.size(); ++i)
 	{
-		auto descriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-		descriptorSet->SetSRV(0, m_model->materials[i].diffuseTexture);
+		auto descriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1, m_model->materials[i].diffuseTexture);
 		m_sceneDescriptorSets.push_back(descriptorSet);
 	}
 
-	m_ssaoDescriptorSet = m_ssaoRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_ssaoDescriptorSet->SetSRV(0, m_positionBuffer);
-	m_ssaoDescriptorSet->SetSRV(1, m_depthBuffer);
-	m_ssaoDescriptorSet->SetSRV(2, m_normalBuffer);
-	m_ssaoDescriptorSet->SetSRV(3, m_noiseTexture);
-	m_ssaoDescriptorSet->SetCBV(0, m_ssaoKernelConstantBuffer);
-	m_ssaoDescriptorSet->SetCBV(1, m_ssaoConstantBuffer);
+	m_ssaoDescriptorSet = m_ssaoRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0, 
+		{ m_positionBuffer,
+		  m_depthBuffer,
+		  m_normalBuffer,
+		  m_noiseTexture,
+		  m_ssaoKernelConstantBuffer,
+		  m_ssaoConstantBuffer });
 
-	m_ssaoBlurDescriptorSet = m_ssaoBlurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_ssaoBlurDescriptorSet->SetSRV(0, m_ssaoRenderTarget);
+	m_ssaoBlurDescriptorSet = m_ssaoBlurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0, m_ssaoRenderTarget);
 
-	m_compositionDescriptorSet = m_compositionRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_compositionDescriptorSet->SetSRV(0, m_positionBuffer);
-	m_compositionDescriptorSet->SetSRV(1, m_normalBuffer);
-	m_compositionDescriptorSet->SetSRV(2, m_albedoBuffer);
-	m_compositionDescriptorSet->SetSRV(3, m_ssaoRenderTarget);
-	m_compositionDescriptorSet->SetSRV(4, m_ssaoBlurRenderTarget);
-	m_compositionDescriptorSet->SetCBV(0, m_compositionConstantBuffer);
+	m_compositionDescriptorSet = m_compositionRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0, 
+		{ m_positionBuffer,
+		  m_normalBuffer,
+		  m_albedoBuffer,
+		  m_ssaoRenderTarget,
+		  m_ssaoBlurRenderTarget,
+		  m_compositionConstantBuffer });
 }
 #endif // !APP_DYNAMIC_DESCRIPTORS
 

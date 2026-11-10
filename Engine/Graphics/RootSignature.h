@@ -233,7 +233,7 @@ struct RootParameter
 				return *this;
 
 			const DescriptorRange& range = m_rootParameter.table[m_info.rangeIndex];
-			if (m_info.registerIndex >= (range.startRegister + range.numDescriptors))
+			if (m_info.registerIndex >= (range.startRegister + range.numDescriptors - 1))
 			{
 				++m_info.rangeIndex;
 
@@ -254,6 +254,13 @@ struct RootParameter
 				++m_info.registerIndex;
 				return *this;
 			}
+		}
+
+		Iterator operator++(int)
+		{
+			Iterator temp = *this;
+			++(*this);
+			return temp;
 		}
 
 		template <typename Other>
@@ -487,6 +494,19 @@ public:
 	virtual ~IRootSignature() = default;
 
 	virtual DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const = 0;
+
+	// Helpers to initialize a descriptor set with a single descriptor source
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, ColorBufferPtr colorBuffer) const;
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, DepthBufferPtr depthBuffer, bool depthDescriptor) const;
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, GpuBufferPtr gpuBuffer) const;
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, TexturePtr texture) const;
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, SamplerPtr sampler) const;
+
+	// Helper to initialize a descriptor set with a list of resource descriptor sources
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, std::initializer_list<DescriptorProvider> descriptorProviders) const;
+
+	// Helper to initialize a descriptor set with a list of samplers
+	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, std::initializer_list<SamplerPtr> samplerProviders) const;
 
 	const RootSignatureDesc& GetDesc() const noexcept { return m_desc; }
 	uint32_t GetNumRootParameters() const noexcept;
