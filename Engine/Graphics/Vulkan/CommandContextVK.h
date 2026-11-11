@@ -294,6 +294,9 @@ private:
 	uint32_t m_pushDataCurrentSize{ 0 };
 	bool m_pushDataDirty{ false };
 
+	// Device address commands
+	bool m_useDeviceAddressCommands{ false };
+
 	const IRootSignature* m_graphicsRootSignature{ nullptr };
 	const IRootSignature* m_computeRootSignature{ nullptr };
 	bool m_isComputeRootSignatureParsed{ false };

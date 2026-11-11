@@ -87,6 +87,8 @@ public:
 	bool UseDescriptorHeap() const;
 	bool UseDescriptorBuffer() const { return !UseDescriptorHeap(); }
 
+	bool UseDeviceAddressCommands() const;
+
 protected:
 	wil::com_ptr<CVkImage> CreateImage(const ImageDesc& imageDesc);
 

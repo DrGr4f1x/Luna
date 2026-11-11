@@ -31,6 +31,7 @@
 #include "VkBootstrap.h"
 
 #define ALLOW_DESCRIPTOR_HEAP 1
+#define ALLOW_DEVICE_ADDRESS_COMMANDS 1
 
 #define APPLY_WORKAROUND_DXC_8492 1
 

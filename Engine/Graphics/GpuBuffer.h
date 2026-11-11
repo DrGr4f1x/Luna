@@ -62,6 +62,8 @@ public:
 	virtual const IDescriptor* GetUavDescriptor() const noexcept = 0;
 	virtual const IDescriptor* GetCbvDescriptor() const noexcept = 0;
 
+	virtual uint64_t GetGpuAddress() const noexcept = 0;
+
 protected:
 	Format m_format{ Format::Unknown };
 	size_t m_bufferSize{ 0 };

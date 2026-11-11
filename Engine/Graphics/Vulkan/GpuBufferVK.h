@@ -37,8 +37,9 @@ public:
 	const IDescriptor* GetUavDescriptor() const noexcept override { return &m_uavDescriptor; }
 	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_cbvDescriptor; }
 
+	uint64_t GetGpuAddress() const noexcept override { return m_deviceAddress; }
+
 	VkBuffer GetBuffer() const noexcept;
-	VkDeviceAddress GetBufferDeviceAddress() const noexcept { return m_deviceAddress; }
 
 	void InitializeDescriptors(Device* device, bool hasSrv, bool hasUav);
 

@@ -151,6 +151,7 @@ CommandContextVK::CommandContextVK(CVkDevice* device, CommandListType type)
 	, m_dynamicSamplerDescriptorBuffer{ *this, DescriptorHeapType::Sampler }
 {
 	m_useDescriptorHeaps = GetVulkanDevice()->UseDescriptorHeap();
+	m_useDeviceAddressCommands = GetVulkanDevice()->UseDeviceAddressCommands();
 
 	ZeroMemory(m_currentDescriptorBuffers, sizeof(m_currentDescriptorBuffers));
 	ZeroMemory(m_currentDescriptorHeaps, sizeof(m_currentDescriptorHeaps));
@@ -1333,23 +1334,54 @@ void CommandContextVK::SetSampler(CommandListType type, uint32_t rootIndex, uint
 
 void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 {
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
-	assert(gpuBufferVK != nullptr);
-
 	const bool is16Bit = gpuBuffer->GetElementSize() == sizeof(uint16_t);
 	const VkIndexType indexType = is16Bit ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
-	vkCmdBindIndexBuffer(m_commandBuffer, gpuBufferVK->GetBuffer(), 0, indexType);
+
+	if (m_useDeviceAddressCommands)
+	{
+		VkBindIndexBuffer3InfoKHR info{
+			.sType			= VK_STRUCTURE_TYPE_BIND_INDEX_BUFFER_3_INFO_KHR,
+			.pNext			= nullptr,
+			.addressRange	= {.address = gpuBuffer->GetGpuAddress(), .size = gpuBuffer->GetBufferSize() },
+			.addressFlags	= VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+			.indexType		= indexType
+		};
+
+		vkCmdBindIndexBuffer3KHR(m_commandBuffer, &info);
+	}
+	else
+	{
+		const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+		assert(gpuBufferVK != nullptr);
+
+		vkCmdBindIndexBuffer(m_commandBuffer, gpuBufferVK->GetBuffer(), 0, indexType);
+	}
 }
 
 
 void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffer)
 {
-	const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
-	assert(gpuBufferVK != nullptr);
+	if (m_useDeviceAddressCommands)
+	{
+		VkBindVertexBuffer3InfoKHR info{
+			.sType			= VK_STRUCTURE_TYPE_BIND_VERTEX_BUFFER_3_INFO_KHR,
+			.pNext			= nullptr,
+			.setStride		= VK_FALSE,
+			.addressRange	= { .address = gpuBuffer->GetGpuAddress(), .size = gpuBuffer->GetBufferSize() },
+			.addressFlags	= VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR
+		};
 
-	VkDeviceSize offsets[1] = { 0 };
-	VkBuffer buffers[1] = { gpuBufferVK->GetBuffer() };
-	vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
+		vkCmdBindVertexBuffers3KHR(m_commandBuffer, slot, 1, &info);
+	}
+	else
+	{
+		const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+		assert(gpuBufferVK != nullptr);
+
+		VkDeviceSize offsets[1] = { 0 };
+		VkBuffer buffers[1] = { gpuBufferVK->GetBuffer() };
+		vkCmdBindVertexBuffers(m_commandBuffer, slot, 1, buffers, offsets);
+	}
 }
 
 
@@ -2103,7 +2135,7 @@ void CommandContextVK::SetRootBufferForDescriptorHeap(const HeapRootSignature* h
 {
 	// Update push data
 	uint32_t offset = heapRootSignature->GetPushDataEntry(rootIndex, 0).offset;
-	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetBufferDeviceAddress() + offsetInBytes;
+	const VkDeviceAddress bufferDeviceAddress = gpuBuffer->GetGpuAddress() + offsetInBytes;
 	assert(bufferDeviceAddress != 0);
 
 	SetPushData(offset, &bufferDeviceAddress, sizeof(VkDeviceAddress));

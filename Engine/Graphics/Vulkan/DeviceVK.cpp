@@ -1309,6 +1309,15 @@ bool Device::UseDescriptorHeap() const
 }
 
 
+bool Device::UseDeviceAddressCommands() const
+{
+#if ALLOW_DEVICE_ADDRESS_COMMANDS
+	return GetVulkanDeviceManager()->GetSupportedFeatures().deviceAddressCommands;
+#endif
+	return false;
+}
+
+
 wil::com_ptr<CVkImage> Device::CreateImage(const ImageDesc& imageDesc)
 {
 	const bool isVolume = HasAnyFlag(imageDesc.resourceType, ResourceType::Texture3D);

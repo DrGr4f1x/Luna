@@ -42,7 +42,7 @@ public:
 	const IDescriptor* GetUavDescriptor() const noexcept override { return &m_uavDescriptor; }
 	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_cbvDescriptor; }
 
-	uint64_t GetGpuAddress() const noexcept;
+	uint64_t GetGpuAddress() const noexcept override;
 
 protected:
 	wil::com_ptr<D3D12MA::Allocation> m_allocation;
