@@ -252,8 +252,7 @@ void MultisamplingApp::InitDescriptorSets()
 		const uint32_t materialIndex = m_model->meshes[i]->materialIndex;
 		TexturePtr texture = m_model->materials[materialIndex].diffuseTexture;
 
-		auto srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-		srvDescriptorSet->SetSRV(0, texture);
+		auto srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1, texture);
 
 		m_srvDescriptorSets.push_back(srvDescriptorSet);
 	}

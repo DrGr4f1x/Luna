@@ -36,7 +36,7 @@ using SamplerPtr = std::shared_ptr<ISampler>;
 class ResourceSet
 {
 public:
-	void Initialize(DescriptorHeapPtr descriptorHeap, RootSignaturePtr rootSignature);
+	void Initialize(RootSignaturePtr rootSignature);
 
 	// TODO: change 'int param' and 'int slot' to uint32_t
 	void SetSRV(int param, int slot, ColorBufferPtr colorBuffer);

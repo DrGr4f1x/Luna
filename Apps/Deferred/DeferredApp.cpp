@@ -308,13 +308,13 @@ void DeferredApp::InitConstantBuffers()
 
 void DeferredApp::InitDescriptorSets()
 {
-	m_armorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
+	m_armorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(1);
 	m_armorSrvDescriptorSet->SetSRVs(0, { m_armorColorTexture, m_armorNormalTexture });
 
-	m_floorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
+	m_floorSrvDescriptorSet = m_gbufferRootSignature->CreateDescriptorSet(1);
 	m_floorSrvDescriptorSet->SetSRVs(0, { m_floorColorTexture, m_floorNormalTexture });
 
-	m_lightingCbvSrvDescriptorSet = m_lightingRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
+	m_lightingCbvSrvDescriptorSet = m_lightingRootSignature->CreateDescriptorSet(0);
 	m_lightingCbvSrvDescriptorSet->SetSRVs(0, { m_positionBuffer, m_normalBuffer, m_albedoBuffer });
 	m_lightingCbvSrvDescriptorSet->SetCBV(0, m_lightingConstantBuffer);
 }

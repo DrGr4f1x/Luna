@@ -216,8 +216,7 @@ void TextureApp::InitPipelineState()
 #if !APP_DYNAMIC_DESCRIPTORS
 void TextureApp::InitDescriptorSet()
 {
-	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_srvDescriptorSet->SetSRV(0, m_texture);
+	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1, m_texture);
 }
 #endif // !APP_DYNAMIC_DESCRIPTORS
 

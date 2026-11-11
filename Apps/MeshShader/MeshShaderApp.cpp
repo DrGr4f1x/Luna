@@ -166,8 +166,7 @@ void MeshShaderApp::InitPipeline()
 
 void MeshShaderApp::InitDescriptorSet()
 {
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0, m_constantBuffer);
 }
 
 

@@ -339,11 +339,8 @@ void InstancingApp::InitInstanceBuffer()
 
 void InstancingApp::InitDescriptorSets()
 {
-	m_rockSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_rockSrvDescriptorSet->SetSRV(0, m_rockTexture);
-
-	m_planetSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_planetSrvDescriptorSet->SetSRV(0, m_planetTexture);
+	m_rockSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1, m_rockTexture);
+	m_planetSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1, m_planetTexture);
 }
 
 

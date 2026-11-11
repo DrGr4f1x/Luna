@@ -254,11 +254,11 @@ void TerrainTessellationApp::InitConstantBuffers()
 
 void TerrainTessellationApp::InitResourceSets()
 {
-	m_skyResources.Initialize(GetDefaultDescriptorHeap(), m_skyRootSignature);
+	m_skyResources.Initialize(m_skyRootSignature);
 	m_skyResources.SetSRV(1, 0, m_skyTexture);
 	m_skyResources.SetSampler(2, 0, m_samplerLinearWrap);
 
-	m_terrainResources.Initialize(GetDefaultDescriptorHeap(), m_terrainRootSignature);
+	m_terrainResources.Initialize(m_terrainRootSignature);
 	m_terrainResources.SetCBV(0, 0, m_terrainConstantBuffer);
 	m_terrainResources.SetSRV(0, 1, m_terrainHeightMap);
 	m_terrainResources.SetSampler(1, 0, m_samplerLinearMirror);

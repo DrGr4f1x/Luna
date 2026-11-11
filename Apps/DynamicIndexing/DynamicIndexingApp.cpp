@@ -207,7 +207,7 @@ void DynamicIndexingApp::InitConstantBuffer()
 
 void DynamicIndexingApp::InitDescriptorSets()
 {
-	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
+	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_psDescriptorSet->SetSRV(0, m_diffuseTexture);
 	m_psDescriptorSet->SetSRVs(1, m_cityMaterialTextures);
 }

@@ -190,10 +190,8 @@ void DescriptorIndexingApp::InitPipeline()
 
 void DescriptorIndexingApp::InitDescriptorSets()
 {
-	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_vsDescriptorSet->SetCBV(0, m_constantBuffer);
-
-	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
+	m_vsDescriptorSet = m_rootSignature->CreateDescriptorSet(0, m_constantBuffer);
+	m_psDescriptorSet = m_rootSignature->CreateDescriptorSet(1);
 	m_psDescriptorSet->SetSRVs(0, m_textures);
 }
 

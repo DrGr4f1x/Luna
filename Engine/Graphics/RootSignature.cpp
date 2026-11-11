@@ -16,9 +16,9 @@
 namespace Luna
 {
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, ColorBufferPtr colorBuffer) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, ColorBufferPtr colorBuffer) const
 { 
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	if (descriptorSet)
 	{
@@ -47,9 +47,9 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descripto
 }
 
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, DepthBufferPtr depthBuffer, bool depthDescriptor) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, DepthBufferPtr depthBuffer, bool depthDescriptor) const
 {
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	if (descriptorSet)
 	{
@@ -78,9 +78,9 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descripto
 }
 
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, GpuBufferPtr gpuBuffer) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, GpuBufferPtr gpuBuffer) const
 {
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	if (descriptorSet)
 	{
@@ -113,9 +113,9 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descripto
 }
 
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, TexturePtr texture) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, TexturePtr texture) const
 {
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	if (descriptorSet)
 	{
@@ -138,9 +138,9 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descripto
 }
 
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, SamplerPtr sampler) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, SamplerPtr sampler) const
 {
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	if (descriptorSet)
 	{
@@ -163,9 +163,9 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descripto
 }
 
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, std::initializer_list<DescriptorProvider> descriptorProviders) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, std::initializer_list<DescriptorProvider> descriptorProviders) const
 {
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	const auto& rootParameter = m_desc.rootParameters[rootParamIndex];
 	auto descIt = rootParameter.cbegin();
@@ -227,9 +227,9 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descripto
 }
 
 
-DescriptorSetPtr IRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex, std::initializer_list<SamplerPtr> samplerProviders) const
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, std::initializer_list<SamplerPtr> samplerProviders) const
 {
-	auto descriptorSet = CreateDescriptorSet(descriptorHeap, rootParamIndex);
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 
 	const auto& rootParameter = m_desc.rootParameters[rootParamIndex];
 	assert(rootParameter.IsSamplerTable());

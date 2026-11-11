@@ -388,7 +388,8 @@ void UIOverlay::InitDescriptorHeap()
 
 void UIOverlay::InitResourceSet()
 {
-	m_resources.Initialize(m_descriptorHeap, m_rootSignature);
+	m_rootSignature->SetDescriptorHeap(m_descriptorHeap);
+	m_resources.Initialize(m_rootSignature);
 	m_resources.SetCBV(0, 0, m_vsConstantBuffer);
 	m_resources.SetSRV(1, 0, m_fontTex);
 	m_resources.SetSampler(2, 0, m_fontSampler);

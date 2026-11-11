@@ -234,20 +234,19 @@ void ComputeNBodyApp::InitPipelines()
 
 void ComputeNBodyApp::InitDescriptorSets()
 {
-	m_graphicsVsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_graphicsVsCbvSrvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
-	m_graphicsVsCbvSrvDescriptorSet->SetSRV(0, m_particleBuffer);
+	m_graphicsVsCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(0,
+		{ m_graphicsConstantBuffer,
+		  m_particleBuffer });
 
-	m_graphicsGsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_graphicsGsCbvDescriptorSet->SetCBV(0, m_graphicsConstantBuffer);
+	m_graphicsGsCbvDescriptorSet = m_rootSignature->CreateDescriptorSet(1, m_graphicsConstantBuffer);
 
-	m_graphicsPsSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 2);
-	m_graphicsPsSrvDescriptorSet->SetSRV(0, m_colorTexture);
-	m_graphicsPsSrvDescriptorSet->SetSRV(1, m_gradientTexture);
+	m_graphicsPsSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(2,
+		{ m_colorTexture,
+		  m_gradientTexture });
 
-	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_computeCbvUavDescriptorSet->SetCBV(0, m_computeConstantBuffer);
-	m_computeCbvUavDescriptorSet->SetUAV(0, m_particleBuffer);
+	m_computeCbvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0,
+		{ m_computeConstantBuffer,
+		  m_particleBuffer });
 }
 
 

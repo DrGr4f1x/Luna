@@ -316,11 +316,8 @@ void IndirectDrawApp::InitPipelines()
 
 void IndirectDrawApp::InitDescriptorSets()
 {
-	m_groundSrvDescriptorSet = m_groundRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_groundSrvDescriptorSet->SetSRV(0, m_groundTexture);
-
-	m_plantsSrvDescriptorSet = m_plantsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_plantsSrvDescriptorSet->SetSRV(0, m_plantsTextureArray);
+	m_groundSrvDescriptorSet = m_groundRootSignature->CreateDescriptorSet(1, m_groundTexture);
+	m_plantsSrvDescriptorSet = m_plantsRootSignature->CreateDescriptorSet(1, m_plantsTextureArray);
 }
 
 

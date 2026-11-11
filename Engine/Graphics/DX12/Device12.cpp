@@ -776,6 +776,7 @@ Luna::RootSignaturePtr Device::CreateRootSignature(DescriptorHeapPtr descriptorH
 	rootSignature->m_descriptorTableBitmap = descriptorTableBitmap;
 	rootSignature->m_samplerTableBitmap = samplerTableBitmap;
 	rootSignature->m_descriptorTableSizes = descriptorTableSize;
+	rootSignature->SetDescriptorHeap(descriptorHeap);
 
 	uint32_t rootIndex = 0;
 	for (const auto rootParameter : rootSignatureDesc.rootParameters)

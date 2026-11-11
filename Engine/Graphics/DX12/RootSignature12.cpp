@@ -19,7 +19,7 @@
 namespace Luna::DX12
 {
 
-Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
+Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(uint32_t rootParamIndex) const
 {
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 
@@ -37,7 +37,7 @@ Luna::DescriptorSetPtr RootSignature::CreateDescriptorSet(DescriptorHeapPtr desc
 		.isSamplerTable = isSamplerTable
 	};
 
-	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)descriptorHeap.get();
+	DescriptorHeap* descriptorHeap12 = (DescriptorHeap*)m_descriptorHeap.get();
 	descriptorSetDesc.descriptorHandle = descriptorHeap12->AllocateDescriptors(heapType, numDescriptors);
 	
 

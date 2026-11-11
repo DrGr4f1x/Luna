@@ -75,7 +75,7 @@ public:
 	DescriptorManagement GetDescriptorManagement() const final { return DescriptorManagement::Buffer; }
 
 	// IRootSignature API
-	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
+	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
 
 	VkPipelineLayout GetPipelineLayout() const final { return m_pipelineLayout->Get(); }
 
@@ -119,7 +119,7 @@ public:
 	DescriptorManagement GetDescriptorManagement() const final { return DescriptorManagement::Heap; }
 
 	// IRootSignature API
-	DescriptorSetPtr CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const override;
+	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex) const override;
 
 	VkPipelineLayout GetPipelineLayout() const final { return VK_NULL_HANDLE; }
 

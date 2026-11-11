@@ -243,8 +243,7 @@ void TextureArrayApp::InitConstantBuffer()
 #if !APP_DYNAMIC_DESCRIPTORS
 void TextureArrayApp::InitDescriptorSet()
 {
-	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_srvDescriptorSet->SetSRV(0, m_texture);
+	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1, m_texture);
 }
 #endif
 

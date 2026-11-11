@@ -62,9 +62,9 @@ void ShaderSetAndBindingMapping::Finalize()
 }
 
 
-Luna::DescriptorSetPtr BufferRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
+Luna::DescriptorSetPtr BufferRootSignature::CreateDescriptorSet(uint32_t rootParamIndex) const
 {
-	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap.get();
+	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)m_descriptorHeap.get();
 
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 
@@ -103,9 +103,9 @@ uint32_t BufferRootSignature::GetPushDescriptorBinding(uint32_t rootParamIndex) 
 }
 
 
-Luna::DescriptorSetPtr HeapRootSignature::CreateDescriptorSet(DescriptorHeapPtr descriptorHeap, uint32_t rootParamIndex) const
+Luna::DescriptorSetPtr HeapRootSignature::CreateDescriptorSet(uint32_t rootParamIndex) const
 {
-	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)descriptorHeap.get();
+	IDescriptorHeapVK* descriptorHeapVK = (IDescriptorHeapVK*)m_descriptorHeap.get();
 
 	const auto& rootParam = GetRootParameter(rootParamIndex);
 

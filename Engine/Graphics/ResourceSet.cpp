@@ -19,7 +19,7 @@
 namespace Luna
 {
 
-void ResourceSet::Initialize(DescriptorHeapPtr descriptorHeap, RootSignaturePtr rootSignature)
+void ResourceSet::Initialize(RootSignaturePtr rootSignature)
 {
 	const uint32_t numRootParameters = rootSignature->GetNumRootParameters();
 	
@@ -31,7 +31,7 @@ void ResourceSet::Initialize(DescriptorHeapPtr descriptorHeap, RootSignaturePtr 
 		const auto& rootParameter = rootSignature->GetRootParameter(i);
 		if (rootParameter.parameterType == RootParameterType::Table)
 		{
-			DescriptorSetPtr descriptorSet = rootSignature->CreateDescriptorSet(descriptorHeap, i);
+			DescriptorSetPtr descriptorSet = rootSignature->CreateDescriptorSet(i);
 			m_descriptorSets.push_back(descriptorSet);
 		}
 		else

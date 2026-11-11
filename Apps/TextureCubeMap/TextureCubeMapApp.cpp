@@ -264,12 +264,10 @@ void TextureCubeMapApp::InitPipelines()
 #if !APP_DYNAMIC_DESCRIPTORS
 void TextureCubeMapApp::InitDescriptorSets()
 {
-	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_modelCbvSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-
-	m_skyBoxSrvDescriptorSet->SetSRV(0, m_skyboxTex);
-	m_modelCbvSrvDescriptorSet->SetCBV(0, m_psModelConstantBuffer);
-	m_modelCbvSrvDescriptorSet->SetSRV(0, m_skyboxTex);
+	m_skyBoxSrvDescriptorSet = m_skyboxRootSignature->CreateDescriptorSet(1, m_skyboxTex);
+	m_modelCbvSrvDescriptorSet = m_modelRootSignature->CreateDescriptorSet(1,
+		{ m_psModelConstantBuffer, 
+		  m_skyboxTex });
 }
 #endif
 

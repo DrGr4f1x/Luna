@@ -383,11 +383,8 @@ void Texture3dApp::InitTexture()
 #if !APP_DYNAMIC_DESCRIPTORS
 void Texture3dApp::InitDescriptorSets()
 {
-	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-
-	m_cbvDescriptorSet->SetCBV(0, m_constantBuffer);
-	m_srvDescriptorSet->SetSRV(0, m_texture);
+	m_cbvDescriptorSet = m_rootSignature->CreateDescriptorSet(0, m_constantBuffer);
+	m_srvDescriptorSet = m_rootSignature->CreateDescriptorSet(1, m_texture);
 }
 #endif // !APP_DYNAMIC_DESCRIPTORS
 

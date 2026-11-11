@@ -329,7 +329,7 @@ void EndCapApp::InitPipelines()
 
 void EndCapApp::InitDescriptorSet()
 {
-	m_endCapDescriptors = m_endCapRootSig->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
+	m_endCapDescriptors = m_endCapRootSig->CreateDescriptorSet(1);
 	m_endCapDescriptors->SetSRV(0, m_endCapGenerator.GetEndCapMaskTexture());
 }
 

@@ -241,10 +241,9 @@ void TextureCubeMapArrayApp::InitPipelines()
 
 void TextureCubeMapArrayApp::InitDescriptorSet()
 {
-	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-
-	m_psCbvSrvDescriptorSet->SetCBV(0, m_psConstantBuffer);
-	m_psCbvSrvDescriptorSet->SetSRV(0, m_skyboxTex);
+	m_psCbvSrvDescriptorSet = m_rootSignature->CreateDescriptorSet(1, 
+		{ m_psConstantBuffer,
+		  m_skyboxTex });
 }
 
 

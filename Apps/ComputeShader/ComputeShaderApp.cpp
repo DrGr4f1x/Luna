@@ -341,15 +341,13 @@ void ComputeShaderApp::InitPipelines()
 
 void ComputeShaderApp::InitDescriptorSets()
 {
-	m_computeSrvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-	m_computeSrvUavDescriptorSet->SetSRV(0, m_texture);
-	m_computeSrvUavDescriptorSet->SetUAV(0, m_computeScratchBuffer);
+	m_computeSrvUavDescriptorSet = m_computeRootSignature->CreateDescriptorSet(0,
+		{ m_texture,
+		  m_computeScratchBuffer });
 
-	m_graphicsLeftSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_graphicsLeftSrvDescriptorSet->SetSRV(0, m_texture);
+	m_graphicsLeftSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1, m_texture);
 
-	m_graphicsRightSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_graphicsRightSrvDescriptorSet->SetSRV(0, m_computeScratchBuffer);
+	m_graphicsRightSrvDescriptorSet = m_graphicsRootSignature->CreateDescriptorSet(1, m_computeScratchBuffer);
 }
 
 

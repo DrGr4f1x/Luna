@@ -497,11 +497,15 @@ RootSignaturePtr Device::CreateRootSignature(DescriptorHeapPtr descriptorHeap, c
 	if (UseDescriptorHeap())
 	{
 		IDescriptorHeapVK* descriptorHeapVk = (IDescriptorHeapVK*)descriptorHeap.get();
-		return CreateRootSignatureForDescriptorHeap(descriptorHeapVk, rootSignatureDesc);
+		auto rootSignature = CreateRootSignatureForDescriptorHeap(descriptorHeapVk, rootSignatureDesc);
+		rootSignature->SetDescriptorHeap(descriptorHeap);
+		return rootSignature;
 	}
 	else
 	{
-		return CreateRootSignatureForDescriptorBuffer(rootSignatureDesc);
+		auto rootSignature = CreateRootSignatureForDescriptorBuffer(rootSignatureDesc);
+		rootSignature->SetDescriptorHeap(descriptorHeap);
+		return rootSignature;
 	}
 }
 

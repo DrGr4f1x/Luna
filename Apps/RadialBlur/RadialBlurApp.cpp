@@ -303,13 +303,10 @@ void RadialBlurApp::InitRenderTargets()
 
 void RadialBlurApp::InitDescriptorSets()
 {
-	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 1);
-	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(GetDefaultDescriptorHeap(), 0);
-
-	m_sceneSrvDescriptorSet->SetSRV(0, m_gradientTex);
-
-	m_blurCbvSrvDescriptorSet->SetSRV(0, m_offscreenColorBuffer);
-	m_blurCbvSrvDescriptorSet->SetCBV(0, m_radialBlurConstantBuffer);
+	m_sceneSrvDescriptorSet = m_sceneRootSignature->CreateDescriptorSet(1, m_gradientTex);
+	m_blurCbvSrvDescriptorSet = m_radialBlurRootSignature->CreateDescriptorSet(0,
+		{ m_offscreenColorBuffer,
+		  m_radialBlurConstantBuffer });
 }
 
 
