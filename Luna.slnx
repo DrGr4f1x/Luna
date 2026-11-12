@@ -61,6 +61,7 @@
     <Project Path="Apps/OcclusionQuery/OcclusionQuery.vcxproj" Id="04daa390-4b62-4b9d-a7a2-488f7a6447aa">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
+    <Project Path="Apps/ParallaxOcclusion/ParallaxOcclusion.vcxproj" Id="0b66f8f3-476a-4272-960f-02fc8a14e91e" />
     <Project Path="Apps/Pipelines/Pipelines.vcxproj" Id="9f32e4f0-21d0-465e-8fc8-f4d1d4aaa06a">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
