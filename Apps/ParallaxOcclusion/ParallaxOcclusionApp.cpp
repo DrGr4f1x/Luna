@@ -60,6 +60,15 @@ void ParallaxOcclusionApp::Update()
 }
 
 
+void ParallaxOcclusionApp::UpdateUI()
+{
+	if (m_uiOverlay->Header("Settings")) 
+	{
+		m_uiOverlay->ComboBox("Mode", &m_psConstants.mappingMode, mappingModes);
+	}
+}
+
+
 void ParallaxOcclusionApp::Render()
 {
 	auto& context = GraphicsContext::Begin("Scene");
@@ -86,7 +95,7 @@ void ParallaxOcclusionApp::Render()
 
 	context.EndRendering();
 
-	//RenderUI(context);
+	RenderUI(context);
 
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
@@ -101,7 +110,7 @@ void ParallaxOcclusionApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Math::Vector3(0.0f, 1.25f, -1.25f));
+	m_camera.SetPosition(Math::Vector3(0.0f, 3.0f, 3.0f));
 
 	InitRootSignature();
 
@@ -117,7 +126,7 @@ void ParallaxOcclusionApp::CreateDeviceDependentResources()
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(box.GetCenter(), 4.0f, 2.0f);
+	m_controller.SetOrbitTarget(box.GetCenter(), 2.0f, 1.0f);
 }
 
 
@@ -210,7 +219,7 @@ void ParallaxOcclusionApp::UpdateConstantBuffer()
 	// VS constants
 	m_vsConstants.projection = m_camera.GetProjectionMatrix();
 	m_vsConstants.view = m_camera.GetViewMatrix();
-	m_vsConstants.model = Matrix4{ kIdentity };
+	m_vsConstants.model = Matrix4::MakeScale(0.2f);
 	m_vsConstants.cameraPos = Vector4(m_camera.GetPosition(), 1.0f);
 
 	m_vsConstantBuffer->Update(sizeof(VSConstants), &m_vsConstants);

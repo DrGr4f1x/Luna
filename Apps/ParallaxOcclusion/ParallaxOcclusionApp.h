@@ -26,6 +26,7 @@ public:
 	void Shutdown() final;
 
 	void Update() final;
+	void UpdateUI() final;
 	void Render() final;
 
 protected:
@@ -54,7 +55,7 @@ protected:
 		Math::Matrix4 projection{};
 		Math::Matrix4 view{};
 		Math::Matrix4 model{};
-		Math::Vector4 lightPos{ 0.0f, 2.0f, 0.0f, 1.0f };
+		Math::Vector4 lightPos{ 0.0f, -2.0f, 0.0f, 1.0f };
 		Math::Vector4 cameraPos{};
 	};
 
@@ -63,7 +64,7 @@ protected:
 		float heightScale = 0.1f;
 		float parallaxBias = -0.02f;
 		float numLayers = 48.0f;
-		int32_t mappingMode = 4;
+		int32_t mappingMode = 2;
 	};
 
 	VSConstants m_vsConstants{};
@@ -84,4 +85,13 @@ protected:
 	Luna::ModelPtr m_planeModel;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
+
+	// UI variables
+	const std::vector<std::string> mappingModes = {
+		"Color only",
+		"Normal mapping",
+		"Parallax mapping",
+		"Steep parallax mapping",
+		"Parallax occlusion mapping",
+	};
 };

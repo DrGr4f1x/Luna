@@ -36,7 +36,7 @@ SamplerState samplerLinearWrap : BINDING(s0, 2);
 
 float2 ParallaxMapping(float2 uv, float3 viewDir)
 {
-    float height = 1.0 - textureNormalHeightMap.SampleLevel(samplerLinearWrap, uv, 0.0).a;
+    float height = 1.0 - textureNormalHeightMap.SampleLevel(samplerLinearWrap, uv, 0.0).a;    
     float2 p = viewDir.xy * (height * (heightScale * 0.5) + parallaxBias) / viewDir.z;
     return uv - p;
 }
@@ -90,6 +90,7 @@ float2 ParallaxOcclusionMapping(float2 uv, float3 viewDir)
 float4 main(PSInput input) : SV_TARGET
 {
     float3 V = normalize(input.tangentViewPos - input.tangentFragPos);
+    V.z = -V.z;
     float2 uv = input.uv;
 
     if (mappingMode == 0)
@@ -125,8 +126,8 @@ float4 main(PSInput input) : SV_TARGET
 
         float3 color = textureColorMap.Sample(samplerLinearWrap, uv).rgb;
         float3 ambient = 0.2 * color;
-        float3 diffuse = max(dot(L, N), 0.0) * color;
-        float3 specular = float3(0.15, 0.15, 0.15) * pow(max(dot(N, H), 0.0), 32.0);
+        float3 diffuse = saturate(dot(N, L)) * color;
+        float3 specular = float3(0.15, 0.15, 0.15) * pow(saturate(dot(N, R)), 32.0);
 
         return float4(ambient + diffuse + specular, 1.0f);
     }

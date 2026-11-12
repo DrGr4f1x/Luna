@@ -42,16 +42,18 @@ cbuffer VSConstants : BINDING(b0, 0)
 VSOutput main(VSInput input)
 {
     VSOutput output = (VSOutput) 0;
-    output.pos = mul(projection, mul(view, mul(model, float4(input.pos, 1.0f))));
+    float4 posWS = mul(model, float4(input.pos, 1.0));
+    output.pos = mul(projection, mul(view, posWS));
     output.uv = input.uv;
 
     float3 N = normalize(input.normal);
-    float3 T = normalize(input.tangent.xyz);
+    float3 T = normalize(input.tangent);
     float3 B = normalize(cross(N, T));
     float3x3 TBN = float3x3(T, B, N);
 
+    //test
     output.tangentLightPos = mul(lightPos.xyz, TBN);
     output.tangentViewPos = mul(cameraPos.xyz, TBN);
-    output.tangentFragPos = mul(mul(model, float4(input.pos, 1.0)).xyz, TBN);
+    output.tangentFragPos = mul(posWS.xyz, TBN);
     return output;
 }
