@@ -206,6 +206,9 @@ protected:
 
 	Color m_gridColor{ DirectX::Colors::WhiteSmoke };
 
+	// UI options
+	float m_uiWidth{ 110.0f };
+
 private:
 	bool Initialize();
 	void Finalize();

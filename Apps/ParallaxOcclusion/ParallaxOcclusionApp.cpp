@@ -37,6 +37,7 @@ void ParallaxOcclusionApp::Configure()
 {
 	// Application config, before device creation
 	Application::Configure();
+	m_uiWidth = 250.0f;
 }
 
 
@@ -62,7 +63,7 @@ void ParallaxOcclusionApp::Update()
 
 void ParallaxOcclusionApp::UpdateUI()
 {
-	if (m_uiOverlay->Header("Settings")) 
+	if (m_uiOverlay->Header("Settings"))
 	{
 		m_uiOverlay->ComboBox("Mode", &m_psConstants.mappingMode, mappingModes);
 	}

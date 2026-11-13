@@ -490,7 +490,7 @@ void Application::PrepareUI()
 	ImGui::TextUnformatted(m_deviceManager->GetDeviceName().c_str());
 	ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / m_timer.GetFramesPerSecond()), m_timer.GetFramesPerSecond());
 
-	ImGui::PushItemWidth(110.0f * m_uiOverlay->GetScale());
+	ImGui::PushItemWidth(m_uiWidth * m_uiOverlay->GetScale());
 	UpdateUI();
 	ImGui::PopItemWidth();
 

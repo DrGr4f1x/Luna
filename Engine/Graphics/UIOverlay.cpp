@@ -218,6 +218,19 @@ void UIOverlay::Text(const char* formatstr, ...)
 }
 
 
+bool UIOverlay::Begin(const char* caption)
+{
+	bool ret = ImGui::Begin(caption);
+	return ret;
+}
+
+
+void UIOverlay::End()
+{
+	ImGui::End();
+}
+
+
 static inline ImVec4 ColorToImVec4(const Color& color, float alpha)
 {
 	return ImVec4(color.R(), color.G(), color.B(), alpha);

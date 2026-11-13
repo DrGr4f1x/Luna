@@ -55,6 +55,9 @@ public:
 	bool Button(const char* caption);
 	void Text(const char* formatstr, ...);
 
+	bool Begin(const char* caption);
+	void End();
+
 protected:
 	void InitImGui();
 	void InitRootSignature();

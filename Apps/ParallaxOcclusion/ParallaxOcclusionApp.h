@@ -64,7 +64,7 @@ protected:
 		float heightScale = 0.1f;
 		float parallaxBias = -0.02f;
 		float numLayers = 48.0f;
-		int32_t mappingMode = 2;
+		int32_t mappingMode = 4;
 	};
 
 	VSConstants m_vsConstants{};
