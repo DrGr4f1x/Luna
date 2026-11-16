@@ -56,6 +56,7 @@
     <ClCompile Include="Graphics\DX12\LinearAllocator12.cpp" />
     <ClCompile Include="Graphics\DX12\PipelineStateUtil12.cpp" />
     <ClCompile Include="Graphics\DX12\Queue12.cpp" />
+    <ClCompile Include="Graphics\DX12\RayTracing\RayTracingPipeline12.cpp" />
     <ClCompile Include="Graphics\DX12\RootSignature12.cpp" />
     <ClCompile Include="Graphics\DX12\Sampler12.cpp" />
     <ClCompile Include="Graphics\DX12\Shader12.cpp" />
@@ -170,6 +171,9 @@
     <ClInclude Include="Graphics\DX12\PipelineStateUtil12.h" />
     <ClInclude Include="Graphics\DX12\QueryHeap12.h" />
     <ClInclude Include="Graphics\DX12\Queue12.h" />
+    <ClInclude Include="Graphics\DX12\RayTracing\RayTracingGeometry12.h" />
+    <ClInclude Include="Graphics\DX12\RayTracing\RayTracingPipeline12.h" />
+    <ClInclude Include="Graphics\DX12\RayTracing\ShaderBindingTable12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\Sampler12.h" />
     <ClInclude Include="Graphics\DX12\Shader12.h" />
@@ -190,6 +194,9 @@
     <ClInclude Include="Graphics\PipelineState.h" />
     <ClInclude Include="Graphics\PixelBuffer.h" />
     <ClInclude Include="Graphics\QueryHeap.h" />
+    <ClInclude Include="Graphics\RayTracing\RayTracingGeometry.h" />
+    <ClInclude Include="Graphics\RayTracing\RayTracingPipeline.h" />
+    <ClInclude Include="Graphics\RayTracing\ShaderBindingTable.h" />
     <ClInclude Include="Graphics\Resource.h" />
     <ClInclude Include="Graphics\ResourceSet.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
@@ -219,6 +226,9 @@
     <ClInclude Include="Graphics\Vulkan\FormatsVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueryHeapVK.h" />
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
+    <ClInclude Include="Graphics\Vulkan\RayTracing\RayTracingGeometryVK.h" />
+    <ClInclude Include="Graphics\Vulkan\RayTracing\RayTracingPipelineVK.h" />
+    <ClInclude Include="Graphics\Vulkan\RayTracing\ShaderBindingTableVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\SamplerVK.h" />

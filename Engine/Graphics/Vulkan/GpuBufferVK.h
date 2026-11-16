@@ -38,18 +38,23 @@ public:
 	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_cbvDescriptor; }
 
 	uint64_t GetGpuAddress() const noexcept override { return m_deviceAddress; }
+	uint64_t GetAccelerationStructureDeviceAddress() const noexcept { return m_accelerationStructureDeviceAddress; }
 
 	VkBuffer GetBuffer() const noexcept;
+
+	VkAccelerationStructureKHR GetAccelerationStructure() const noexcept;
 
 	void InitializeDescriptors(Device* device, bool hasSrv, bool hasUav);
 
 protected:
 	wil::com_ptr<CVkBuffer> m_buffer;
+	wil::com_ptr<CVkAccelerationStructure> m_accelerationStructure;
 	Descriptor m_srvDescriptor;
 	Descriptor m_uavDescriptor;
 	Descriptor m_cbvDescriptor;
 
 	VkDeviceAddress m_deviceAddress{ 0 };
+	VkDeviceAddress m_accelerationStructureDeviceAddress{ 0 };
 
 	bool m_isCpuWriteable{ false };
 };

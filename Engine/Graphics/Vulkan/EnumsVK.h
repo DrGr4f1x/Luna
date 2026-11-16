@@ -139,6 +139,16 @@ VkExtent2D ShadingRateToVulkan(ShadingRate shadingRate);
 
 VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombiner shadingRateCombiner);
 
+VkGeometryTypeKHR RayTracingGeometryTypeToVulkan(RayTracingGeometryType geometryType);
+
+VkGeometryFlagsKHR RayTracingGeometryFlagsToVulkan(RayTracingGeometryFlags geometryFlags);
+
+VkAccelerationStructureTypeKHR RayTracingAccelerationStructureTypeToVulkan(RayTracingAccelerationStructureType structureType);
+
+VkBuildAccelerationStructureFlagsKHR RayTracingAccelerationStructureFlagsToVulkan(RayTracingAccelerationStructureFlags structureFlags);
+
+VkPipelineCreateFlags RayTracingPipelineFlagsToVulkan(RayTracingPipelineFlags pipelineFlags);
+
 VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorType);
 
 bool IsImageDescriptorType(DescriptorType descriptorType);

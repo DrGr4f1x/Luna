@@ -28,6 +28,10 @@
 #include "Sampler12.h"
 #include "Texture12.h"
 
+#include "RayTracing\RayTracingGeometry12.h"
+#include "RayTracing\RayTracingPipeline12.h"
+#include "RayTracing\ShaderBindingTable12.h"
+
 
 #if ENABLE_D3D12_DEBUG_MARKERS
 #include <pix3.h>
@@ -211,6 +215,19 @@ uint64_t CommandContext12::Finish(bool bWaitForCompletion)
 	}
 
 	return fenceValue;
+}
+
+
+void CommandContext12::CopyColorBuffer(IColorBuffer* dest, IColorBuffer* src)
+{
+	TransitionResource(dest, ResourceState::CopyDest, false);
+	TransitionResource(src, ResourceState::CopySource, false);
+	FlushResourceBarriers();
+
+	ColorBuffer* dest12 = (ColorBuffer*)dest;
+	ColorBuffer* src12 = (ColorBuffer*)src;
+
+	m_commandList->CopyResource(dest12->GetResource(), src12->GetResource());
 }
 
 
@@ -625,6 +642,14 @@ void CommandContext12::SetMeshletPipeline(const IMeshletPipeline* meshletPipelin
 		m_graphicsPipelineState = meshletPSO;
 	}
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_UNDEFINED);
+}
+
+
+void CommandContext12::SetRayTracingPipeline(const IRayTracingPipeline* rayTracingPipeline)
+{
+	RayTracingPipeline* rayTracingPipeline12 = (RayTracingPipeline*)rayTracingPipeline;
+
+	m_commandList4->SetPipelineState1(rayTracingPipeline12->GetStateObject());
 }
 
 
@@ -1161,6 +1186,33 @@ void CommandContext12::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, 
 }
 
 
+void CommandContext12::DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+{
+	FlushResourceBarriers();
+
+	ShaderBindingTable* shaderBindingTable12 = (ShaderBindingTable*)shaderBindingTable;
+
+	StridedAddressRegion rayGenRegion = shaderBindingTable12->GetRayGenerationShaderRecord();
+	StridedAddressRegion missRegion = shaderBindingTable12->GetMissShaderTable();
+	StridedAddressRegion hitGroupRegion = shaderBindingTable12->GetHitGroupTable();
+
+	D3D12_DISPATCH_RAYS_DESC dispatchDesc{};
+	dispatchDesc.HitGroupTable.StartAddress = hitGroupRegion.bufferAddress;
+	dispatchDesc.HitGroupTable.SizeInBytes = hitGroupRegion.size;
+	dispatchDesc.HitGroupTable.StrideInBytes = hitGroupRegion.stride;
+	dispatchDesc.MissShaderTable.StartAddress = missRegion.bufferAddress;
+	dispatchDesc.MissShaderTable.SizeInBytes = missRegion.size;
+	dispatchDesc.MissShaderTable.StrideInBytes = missRegion.stride;
+	dispatchDesc.RayGenerationShaderRecord.StartAddress = rayGenRegion.bufferAddress;
+	dispatchDesc.RayGenerationShaderRecord.SizeInBytes = rayGenRegion.size;
+	dispatchDesc.Width = width;
+	dispatchDesc.Height = height;
+	dispatchDesc.Depth = 1;
+	
+	m_commandList4->DispatchRays(&dispatchDesc);
+}
+
+
 void CommandContext12::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format)
 {
 	const ColorBuffer* srcBuffer12 = (const ColorBuffer*)srcBuffer;
@@ -1337,6 +1389,21 @@ void CommandContext12::InitializeTexture_Internal(ITexture* destTexture, const T
 
 	UpdateSubresources(m_commandList, texture12->GetResource(), stagingBuffer, 0, 0, numSubresources, subresources.data());
 	TransitionResource(destTexture, ResourceState::GenericRead, true);
+}
+
+
+void CommandContext12::BuildAccelerationStructure_Internal(const RayTracingBuildInfoBase* buildInfo)
+{
+	const RayTracingBuildInfo* buildInfo12 = (const RayTracingBuildInfo*)buildInfo;
+
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {};
+	{
+		buildDesc.Inputs = buildInfo12->inputs;
+		buildDesc.ScratchAccelerationStructureData = buildInfo->scratchBuffer->GetGpuAddress();
+		buildDesc.DestAccelerationStructureData = buildInfo->destBuffer->GetGpuAddress();
+	}
+
+	m_commandList4->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
 }
 
 

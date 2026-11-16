@@ -70,9 +70,16 @@ public:
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 
-	TexturePtr CreateTexture1D(const TextureDesc& textureDesc);
-	TexturePtr CreateTexture2D(const TextureDesc& textureDesc);
-	TexturePtr CreateTexture3D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture1D(const TextureDesc& textureDesc) override;
+	TexturePtr CreateTexture2D(const TextureDesc& textureDesc) override;
+	TexturePtr CreateTexture3D(const TextureDesc& textureDesc) override;
+
+	GpuBufferPtr CreateBLAS(const RayTracingGeometryDesc& geometryDesc) override;
+	GpuBufferPtr CreateTLAS(const RayTracingTLASDesc& tlasDesc) override;
+
+	RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) override;
+
+	ShaderBindingTablePtr CreateShaderBindingTable(RayTracingPipelinePtr pipeline) override;
 
 	ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) override;
 	bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) override;
@@ -106,6 +113,10 @@ protected:
 
 	RootSignaturePtr CreateRootSignatureForDescriptorBuffer(const RootSignatureDesc& rootSignatureDesc);
 	RootSignaturePtr CreateRootSignatureForDescriptorHeap(const IDescriptorHeapVK* descriptorHeap, const RootSignatureDesc& rootSignatureDesc);
+
+	wil::com_ptr<CVkBuffer> CreateAccelerationStructureBuffer(const VkAccelerationStructureBuildSizesInfoKHR& buildSizesInfo);
+	wil::com_ptr<CVkBuffer> CreateRayTracingScratchBuffer(const VkAccelerationStructureBuildSizesInfoKHR& buildSizesInfo);
+	wil::com_ptr<CVkBuffer> CreateRayTracingInstanceBuffer(size_t sizeInBytes, const void* initialData, const std::string& name);
 
 protected:
 	wil::com_ptr<CVkDevice> m_device;

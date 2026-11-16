@@ -22,6 +22,9 @@
 #include "Graphics\RootSignature.h"
 #include "Graphics\Sampler.h"
 #include "Graphics\Texture.h"
+#include "Graphics\RayTracing\RayTracingGeometry.h"
+#include "Graphics\RayTracing\RayTracingPipeline.h"
+#include "Graphics\RayTracing\ShaderBindingTable.h"
 
 
 namespace Luna
@@ -59,6 +62,13 @@ public:
 	virtual TexturePtr CreateTexture1D(const TextureDesc& textureDesc) = 0;
 	virtual TexturePtr CreateTexture2D(const TextureDesc& textureDesc) = 0;
 	virtual TexturePtr CreateTexture3D(const TextureDesc& textureDesc) = 0;
+
+	virtual GpuBufferPtr CreateBLAS(const RayTracingGeometryDesc& geometryDesc) = 0;
+	virtual GpuBufferPtr CreateTLAS(const RayTracingTLASDesc& tlasDesc) = 0;
+
+	virtual RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) = 0;
+
+	virtual ShaderBindingTablePtr CreateShaderBindingTable(RayTracingPipelinePtr pipeline) = 0;
 
 	virtual ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) = 0;
 	virtual bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) = 0;

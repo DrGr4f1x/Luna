@@ -65,6 +65,38 @@ GpuBufferPtr CreateIndexBuffer(const string& name, std::span<uint32_t> indexData
 }
 
 
+GpuBufferPtr CreateRayTracingIndexBuffer(const string& name, std::span<uint16_t> indexData)
+{
+	GpuBufferDesc desc{
+		.name					= name,
+		.resourceType			= ResourceType::IndexBuffer,
+		.memoryAccess			= MemoryAccess::GpuRead,
+		.elementCount			= indexData.size(),
+		.elementSize			= sizeof(uint16_t),
+		.initialData			= indexData.data(),
+		.bRayTracingBuildInput	= true
+	};
+
+	return GetDevice()->CreateGpuBuffer(desc);
+}
+
+
+GpuBufferPtr CreateRayTracingIndexBuffer(const string& name, std::span<uint32_t> indexData)
+{
+	GpuBufferDesc desc{
+		.name					= name,
+		.resourceType			= ResourceType::IndexBuffer,
+		.memoryAccess			= MemoryAccess::GpuRead,
+		.elementCount			= indexData.size(),
+		.elementSize			= sizeof(uint32_t),
+		.initialData			= indexData.data(),
+		.bRayTracingBuildInput	= true
+	};
+
+	return GetDevice()->CreateGpuBuffer(desc);
+}
+
+
 GpuBufferPtr CreateVertexBuffer(const string& name, size_t elementCount, size_t elementSize, const void* initialData)
 {
 	GpuBufferDesc desc{
@@ -74,6 +106,22 @@ GpuBufferPtr CreateVertexBuffer(const string& name, size_t elementCount, size_t 
 		.elementCount	= elementCount,
 		.elementSize	= elementSize,
 		.initialData	= initialData
+	};
+
+	return GetDevice()->CreateGpuBuffer(desc);
+}
+
+
+GpuBufferPtr CreateRayTracingVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData)
+{
+	GpuBufferDesc desc{
+		.name					= name,
+		.resourceType			= ResourceType::VertexBuffer,
+		.memoryAccess			= MemoryAccess::GpuRead,
+		.elementCount			= elementCount,
+		.elementSize			= elementSize,
+		.initialData			= initialData,
+		.bRayTracingBuildInput	= true
 	};
 
 	return GetDevice()->CreateGpuBuffer(desc);

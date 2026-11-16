@@ -181,12 +181,12 @@ inline std::wstring MakeWStr(const std::string& str)
 	{
 		return std::wstring();
 	}
-	int numChars = MultiByteToWideChar(CP_ACP, WC_ERR_INVALID_CHARS, str.c_str(), (int)str.size(), nullptr, 0);
+	int numChars = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
 	std::wstring wstr;
 	if (numChars)
 	{
 		wstr.resize(numChars);
-		if (MultiByteToWideChar(CP_ACP, WC_ERR_INVALID_CHARS, str.c_str(), (int)str.size(), &wstr[0], numChars))
+		if (MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], numChars))
 		{
 			return wstr;
 		}

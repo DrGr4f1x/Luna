@@ -817,4 +817,88 @@ D3D12_SHADING_RATE_COMBINER ShadingRateCombinerToDX12(ShadingRateCombiner shadin
 	}
 }
 
+
+D3D12_RAYTRACING_GEOMETRY_TYPE RayTracingGeometryTypeToDX12(RayTracingGeometryType geometryType)
+{
+	switch (geometryType)
+	{
+	case RayTracingGeometryType::Triangles: return D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES; break;
+	case RayTracingGeometryType::AABBs: return D3D12_RAYTRACING_GEOMETRY_TYPE_PROCEDURAL_PRIMITIVE_AABBS; break;
+	case RayTracingGeometryType::OpacityMicroMap: return D3D12_RAYTRACING_GEOMETRY_TYPE_OMM_TRIANGLES; break;
+	default:
+		assert(false);
+		return D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES; 
+		break;
+	}
+}
+
+
+D3D12_RAYTRACING_GEOMETRY_FLAGS RayTracingGeometryFlagsToDX12(RayTracingGeometryFlags geometryFlags)
+{
+	D3D12_RAYTRACING_GEOMETRY_FLAGS flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+
+	if (HasFlag(geometryFlags, RayTracingGeometryFlags::Opaque))
+		flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+	if (HasFlag(geometryFlags, RayTracingGeometryFlags::NoDuplicateAnyHit))
+		flags |= D3D12_RAYTRACING_GEOMETRY_FLAG_NO_DUPLICATE_ANYHIT_INVOCATION;
+
+	return flags;
+}
+
+
+D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE RayTracingAccelerationStructureTypeToDX12(RayTracingAccelerationStructureType type)
+{
+	switch (type)
+	{
+	case RayTracingAccelerationStructureType::BottomLevel: return D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL; break;
+	case RayTracingAccelerationStructureType::TopLevel: return D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL; break;
+	case RayTracingAccelerationStructureType::OpacityMicroMap: return D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_OPACITY_MICROMAP_ARRAY; break;
+	default:
+		assert(false);
+		return D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL; 
+		break;
+	}
+}
+
+
+D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS RayTracingAccelerationStructureFlagsToDX12(RayTracingAccelerationStructureFlags structureFlags)
+{
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS flags{ D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_NONE };
+
+	using enum RayTracingAccelerationStructureFlags;
+	if (HasFlag(structureFlags, AllowUpdate))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+	if (HasFlag(structureFlags, AllowCompaction))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_COMPACTION;
+	if (HasFlag(structureFlags, FastTrace))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+	if (HasFlag(structureFlags, FastBuild))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
+	if (HasFlag(structureFlags, LowMemory))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_MINIMIZE_MEMORY;
+	if (HasFlag(structureFlags, PerformUpdate))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+	if (HasFlag(structureFlags, AllowOmmUpdate))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_OMM_UPDATE;
+	if (HasFlag(structureFlags, AllowDisableOmmUpdates))
+		flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_DISABLE_OMMS;
+
+	return flags;
+}
+
+
+D3D12_RAYTRACING_PIPELINE_FLAGS RayTracingPipelineFlagsToDX12(RayTracingPipelineFlags pipelineFlags)
+{
+	D3D12_RAYTRACING_PIPELINE_FLAGS flags{ D3D12_RAYTRACING_PIPELINE_FLAG_NONE };
+
+	if (HasFlag(pipelineFlags, RayTracingPipelineFlags::SkipTriangles))
+		flags |= D3D12_RAYTRACING_PIPELINE_FLAG_SKIP_TRIANGLES;
+	if (HasFlag(pipelineFlags, RayTracingPipelineFlags::SkipProceduralPrimitives))
+		flags |= D3D12_RAYTRACING_PIPELINE_FLAG_SKIP_PROCEDURAL_PRIMITIVES;
+	if (HasFlag(pipelineFlags, RayTracingPipelineFlags::AllowOpacityMicromaps))
+		flags |= D3D12_RAYTRACING_PIPELINE_FLAG_ALLOW_OPACITY_MICROMAPS;
+
+	return flags;
+}
+
 } // namespace Luna::DX12

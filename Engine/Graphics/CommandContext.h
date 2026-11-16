@@ -29,9 +29,12 @@ class IComputePipeline;
 class IGraphicsPipeline;
 class IMeshletPipeline;
 class IQueryHeap;
+class IRayTracingPipeline;
 class ResourceSet;
 class IRootSignature;
 class ISampler;
+class IShaderBindingTable;
+struct RayTracingBuildInfoBase;
 
 
 using ColorBufferPtr = std::shared_ptr<IColorBuffer>;
@@ -43,8 +46,10 @@ using GpuBufferPtr = std::shared_ptr<IGpuBuffer>;
 using GraphicsPipelinePtr = std::shared_ptr<IGraphicsPipeline>;
 using MeshletPipelinePtr = std::shared_ptr<IMeshletPipeline>;
 using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
+using RayTracingPipelinePtr = std::shared_ptr<IRayTracingPipeline>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 using SamplerPtr = std::shared_ptr<ISampler>;
+using ShaderBindingTablePtr = std::shared_ptr<IShaderBindingTable>;
 
 
 class ICommandContext
@@ -69,6 +74,8 @@ public:
 
 	// Flush existing commands and release the current context
 	virtual uint64_t Finish(bool bWaitForCompletion = false) = 0;
+
+	virtual void CopyColorBuffer(IColorBuffer* dest, IColorBuffer* src) = 0;
 
 	virtual void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
 	virtual void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate = false) = 0;
@@ -106,6 +113,7 @@ public:
 	virtual void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) = 0;
 	virtual void SetComputePipeline(const IComputePipeline* computePipeline) = 0;
 	virtual void SetMeshletPipeline(const IMeshletPipeline* meshletPipeline) = 0;
+	virtual void SetRayTracingPipeline(const IRayTracingPipeline* rayTracingPipeline) = 0;
 
 	virtual void SetViewport(float x, float y, float w, float h, float minDepth, float maxDepth) = 0;
 	virtual void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) = 0;
@@ -169,6 +177,8 @@ public:
 	
 	virtual void DispatchMesh(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
 
+	virtual void DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
+
 	virtual void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) = 0;
 
 	// Compute context
@@ -181,6 +191,8 @@ public:
 protected:
 	virtual void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) = 0;
 	virtual void InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit) = 0;
+
+	virtual void BuildAccelerationStructure_Internal(const RayTracingBuildInfoBase* buildInfo) = 0;
 };
 
 
@@ -218,8 +230,12 @@ public:
 		return reinterpret_cast<ComputeContext&>(*this);
 	}
 
+	void CopyColorBuffer(const ColorBufferPtr& dest,const ColorBufferPtr& source);
+
 	static void InitializeBuffer(const GpuBufferPtr& destBuffer, const void* bufferData, size_t numBytes, size_t offset = 0);
 	static void InitializeTexture(const TexturePtr& destTexture, const TextureInitializer& texInit);
+
+	static void BuildAccelerationStructure(const RayTracingBuildInfoBase* buildInfo);
 
 	// Flush existing commands and release the current context
 	uint64_t Finish(bool bWaitForCompletion = false);
@@ -394,6 +410,10 @@ public:
 	void Dispatch2D(uint32_t threadCountX, uint32_t threadCountY, uint32_t groupSizeX = 8, uint32_t groupSizeY = 8);
 	void Dispatch3D(uint32_t threadCountX, uint32_t threadCountY, uint32_t threadCountZ, uint32_t groupSizeX, uint32_t groupSizeY, uint32_t groupSizeZ);
 	void DispatchIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset = 0);
+
+	// Ray tracing is basically compute, so it goes here
+	void SetRayTracingPipeline(const RayTracingPipelinePtr& rayTracingPipeline);
+	void DispatchRays(const ShaderBindingTablePtr& shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth = 1);
 };
 
 
@@ -453,6 +473,12 @@ inline void CommandContext::Reset()
 inline void CommandContext::Initialize()
 {
 	m_contextImpl->Initialize();
+}
+
+
+inline void CommandContext::CopyColorBuffer(const ColorBufferPtr& dest, const ColorBufferPtr& src)
+{
+	m_contextImpl->CopyColorBuffer(dest.get(), src.get());
 }
 
 
@@ -1089,6 +1115,18 @@ inline void ComputeContext::Dispatch3D(uint32_t threadCountX, uint32_t threadCou
 inline void ComputeContext::DispatchIndirect(const GpuBufferPtr& argumentBuffer, uint64_t argumentBufferOffset)
 {
 	m_contextImpl->DispatchIndirect(argumentBuffer.get(), argumentBufferOffset);
+}
+
+
+inline void ComputeContext::SetRayTracingPipeline(const RayTracingPipelinePtr& rayTracingPipeline)
+{
+	m_contextImpl->SetRayTracingPipeline(rayTracingPipeline.get());
+}
+
+
+inline void ComputeContext::DispatchRays(const ShaderBindingTablePtr& shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+{
+	m_contextImpl->DispatchRays(shaderBindingTable.get(), width, height, depth);
 }
 
 } // namespace Luna

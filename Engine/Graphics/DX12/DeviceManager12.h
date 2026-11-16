@@ -107,6 +107,8 @@ public:
 	ID3D12Device* GetD3D12Device() { return m_dxDevice.get(); }
 	D3D12MA::Allocator* GetAllocator() { return m_d3d12maAllocator.get(); }
 
+	void BuildAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& buildDesc);
+
 private:
 	void CreateDevice();
 	std::vector<AdapterInfo> EnumerateAdapters();

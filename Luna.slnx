@@ -71,6 +71,7 @@
     <Project Path="Apps/RadialBlur/RadialBlur.vcxproj" Id="1cbe17fe-fdf7-447e-919d-e723e22ed819">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
+    <Project Path="Apps/RayTracingBasic/RayTracingBasic.vcxproj" Id="9b04a349-32a9-4b0a-bd0c-695a36931f57" />
     <Project Path="Apps/ShadowMapping/ShadowMapping.vcxproj" Id="c66bbe87-5785-4f20-bde1-e7763f6f6508" />
     <Project Path="Apps/SSAO/SSAO.vcxproj" Id="7d24664b-531a-4d77-909d-cd81a82a0260" />
     <Project Path="Apps/StencilBuffer/StencilBuffer.vcxproj" Id="bec22c52-8956-43a6-96d4-974ae4deac85">

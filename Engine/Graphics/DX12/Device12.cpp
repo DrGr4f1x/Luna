@@ -31,6 +31,10 @@
 #include "Shader12.h"
 #include "Texture12.h"
 
+#include "RayTracing\RayTracingGeometry12.h"
+#include "RayTracing\RayTracingPipeline12.h"
+#include "RayTracing\ShaderBindingTable12.h"
+
 using namespace std;
 
 
@@ -47,6 +51,7 @@ Device::Device(ID3D12Device* device, D3D12MA::Allocator* allocator)
 	m_freeDescriptors.resize(D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES, vector<DescriptorHandle2>());
 
 	m_device2 = m_device.query<ID3D12Device2>();
+	m_dxrDevice = m_device.query<ID3D12Device5>();
 
 	assert(g_d3d12Device == nullptr);
 	g_d3d12Device = this;
@@ -1043,6 +1048,368 @@ TexturePtr Device::CreateTexture3D(const TextureDesc& textureDesc)
 }
 
 
+GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
+{
+	D3D12_RAYTRACING_GEOMETRY_DESC d3d12GeometryDesc{
+		.Type	= RayTracingGeometryTypeToDX12(geometryDesc.geometryType),
+		.Flags	= RayTracingGeometryFlagsToDX12(geometryDesc.flags)
+	};
+
+	if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
+	{
+		d3d12GeometryDesc.Triangles.IndexBuffer = geometryDesc.triangles.indexBuffer;
+		d3d12GeometryDesc.Triangles.IndexCount = (UINT)geometryDesc.triangles.indexCount;
+		d3d12GeometryDesc.Triangles.IndexFormat = geometryDesc.triangles.indexFormat == Format::R32_UInt ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+		d3d12GeometryDesc.Triangles.Transform3x4 = geometryDesc.triangles.transform3x4;
+		d3d12GeometryDesc.Triangles.VertexFormat = FormatToDxgi(geometryDesc.triangles.vertexFormat).srvFormat;
+		d3d12GeometryDesc.Triangles.VertexCount = (UINT)geometryDesc.triangles.vertexCount;
+		d3d12GeometryDesc.Triangles.VertexBuffer.StartAddress = geometryDesc.triangles.vertexBuffer;
+		d3d12GeometryDesc.Triangles.VertexBuffer.StrideInBytes = geometryDesc.triangles.vertexStride;
+	}
+	else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
+	{
+		// TODO
+		assert(false);
+	}
+	else
+	{
+		// TODO
+		assert(false);
+	}
+
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+
+	// Get size info
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo{};
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs{
+		.Type				= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
+		.Flags				= buildFlags,
+		.NumDescs			= 1,
+		.DescsLayout		= D3D12_ELEMENTS_LAYOUT_ARRAY,
+		.pGeometryDescs		= &d3d12GeometryDesc
+	};
+	m_dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
+
+	// Create scratch buffer and BLAS buffer
+	GpuBufferPtr scratchBuffer = CreateRayTracingBuffer(bottomLevelPrebuildInfo.ScratchDataSizeInBytes, "Scratch Buffer", D3D12_RESOURCE_STATE_COMMON);
+	GpuBufferPtr blasBuffer = CreateRayTracingBuffer(bottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, "BLAS Buffer", D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+
+	// Build the BLAS
+	RayTracingBuildInfo buildInfo{};
+	buildInfo.scratchBuffer = scratchBuffer;
+	buildInfo.destBuffer = blasBuffer;
+	buildInfo.flags = RayTracingAccelerationStructureFlags::FastTrace;
+	buildInfo.type = RayTracingAccelerationStructureType::BottomLevel;
+	buildInfo.inputs = bottomLevelInputs;
+
+	CommandContext::BuildAccelerationStructure(&buildInfo);
+
+	return blasBuffer;
+}
+
+
+GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
+{
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+
+	// Get size info
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo{};
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs{
+		.Type			= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+		.Flags			= buildFlags,
+		.NumDescs		= 1,
+		.DescsLayout	= D3D12_ELEMENTS_LAYOUT_ARRAY
+	};
+	m_dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
+
+	// Create scratch buffer and TLAS buffer
+	GpuBufferPtr scratchBuffer = CreateRayTracingBuffer(topLevelPrebuildInfo.ScratchDataSizeInBytes, "Scratch Buffer", D3D12_RESOURCE_STATE_COMMON);
+	GpuBufferPtr tlasBuffer = CreateRayTracingBuffer(topLevelPrebuildInfo.ResultDataMaxSizeInBytes, "TLAS Buffer", D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+
+	// Upload instance data
+	vector<D3D12_RAYTRACING_INSTANCE_DESC> d3d12Instances;
+	for (const auto& instance : tlasDesc.instances)
+	{
+		D3D12_RAYTRACING_INSTANCE_DESC instanceDesc{};
+		instanceDesc.Transform[0][0] = instance.transform.GetX().GetX();
+		instanceDesc.Transform[0][1] = instance.transform.GetX().GetY();
+		instanceDesc.Transform[0][2] = instance.transform.GetX().GetZ();
+		instanceDesc.Transform[0][3] = instance.transform.GetX().GetW();
+
+		instanceDesc.Transform[1][0] = instance.transform.GetY().GetX();
+		instanceDesc.Transform[1][1] = instance.transform.GetY().GetY();
+		instanceDesc.Transform[1][2] = instance.transform.GetY().GetZ();
+		instanceDesc.Transform[1][3] = instance.transform.GetY().GetW();
+
+		instanceDesc.Transform[2][0] = instance.transform.GetZ().GetX();
+		instanceDesc.Transform[2][1] = instance.transform.GetZ().GetY();
+		instanceDesc.Transform[2][2] = instance.transform.GetZ().GetZ();
+		instanceDesc.Transform[2][3] = instance.transform.GetZ().GetW();
+
+		instanceDesc.InstanceID = instance.instanceID;
+		instanceDesc.InstanceMask = instance.instanceMask;
+		instanceDesc.AccelerationStructure = instance.accelerationStructure;
+
+		d3d12Instances.push_back(instanceDesc);
+	}
+
+	auto instanceBuffer = CreateRayTracingInstanceBuffer(d3d12Instances.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC), d3d12Instances.data(), "Instance Buffer");
+
+	topLevelInputs.InstanceDescs = instanceBuffer->GetGpuAddress();
+
+	// Build the BLAS
+	RayTracingBuildInfo buildInfo{};
+	buildInfo.scratchBuffer = scratchBuffer;
+	buildInfo.destBuffer = tlasBuffer;
+	buildInfo.flags = RayTracingAccelerationStructureFlags::FastTrace;
+	buildInfo.type = RayTracingAccelerationStructureType::BottomLevel;
+	buildInfo.inputs = topLevelInputs;
+
+	CommandContext::BuildAccelerationStructure(&buildInfo);
+
+	return tlasBuffer;
+}
+
+
+RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc)
+{
+	RootSignature* rootSignature12 = (RootSignature*)pipelineDesc.rootSignature.get();
+	ID3D12RootSignature* d3d12RootSignature = rootSignature12->GetRootSignature();
+
+	CD3DX12_STATE_OBJECT_DESC raytracingPipelineDesc{ D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE };
+
+	// Pipeline config
+	if (m_caps.tiers.rayTracing > 1)
+	{
+		auto pipelineConfig = raytracingPipelineDesc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG1_SUBOBJECT>();
+		pipelineConfig->Config(
+			pipelineDesc.maxRecursionDepth,
+			RayTracingPipelineFlagsToDX12(pipelineDesc.flags)
+		);
+	}
+	else
+	{
+		auto pipelineConfig = raytracingPipelineDesc.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
+		pipelineConfig->Config(pipelineDesc.maxRecursionDepth);
+	}
+	
+	// Shader config
+	auto shaderConfig = raytracingPipelineDesc.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
+	shaderConfig->Config(pipelineDesc.maxPayloadSize, pipelineDesc.maxRayHitAttributeSize);
+
+	// Node mask
+	auto nodeMaskConfig = raytracingPipelineDesc.CreateSubobject<CD3DX12_NODE_MASK_SUBOBJECT>();
+	nodeMaskConfig->SetNodeMask(0x1); // No mGPU support
+
+	// Global root signature
+	auto globalRootSignature = raytracingPipelineDesc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+	globalRootSignature->SetRootSignature(d3d12RootSignature);
+
+	// Shader and hit-group names, for building the SBT later
+	wstring rayGenShaderName;
+	wstring missShaderName;
+	vector<wstring> hitGroupNames;
+
+	// DXIL library
+	std::vector<Shader*> shaders;
+	for (const auto& libraryEntry : pipelineDesc.shaderLibrary)
+	{
+		auto dxilLibrary = raytracingPipelineDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+		const auto shaderType = libraryEntry.type;
+		const auto& shaderNameAndEntry = libraryEntry.shaderNameAndEntry;
+
+		Shader* shader = LoadShader(shaderType, shaderNameAndEntry);
+		shaders.push_back(shader);
+
+		if (shader->GetShaderType() == ShaderType::RayGeneration)
+		{
+			assert(rayGenShaderName.empty());
+			rayGenShaderName = shader->GetEntryW();
+		}
+		else if (shader->GetShaderType() == ShaderType::Miss)
+		{
+			assert(missShaderName.empty());
+			missShaderName = shader->GetEntryW();
+		}
+
+		D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE(shader->GetByteCode(), shader->GetByteCodeSize());
+		dxilLibrary->SetDXILLibrary(&libdxil);
+		dxilLibrary->DefineExport(shader->GetEntryW().c_str());
+	}
+
+	// Hit groups
+	for (uint32_t i = 0; i < (uint32_t)pipelineDesc.shaderGroups.size(); ++i)
+	{
+		// Loop over the indices in the shader group
+		for (uint32_t j = 0; j < 3; ++j)
+		{
+			const int32_t lookupIndex = pipelineDesc.shaderGroups[i].shaderIndices[j];
+			if (lookupIndex == -1)
+				continue;
+
+			Shader* shader = shaders[lookupIndex];
+
+			const auto shaderType = shader->GetShaderType();
+
+			// Not a hit group
+			if (shaderType == ShaderType::RayGeneration || shaderType == ShaderType::Miss || shaderType == ShaderType::Callable)
+			{
+				break;
+			}
+
+			auto hitgroup = raytracingPipelineDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+			hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
+
+			switch (shaderType)
+			{
+			case ShaderType::Intersection:
+				hitgroup->SetIntersectionShaderImport(shader->GetEntryW().c_str());
+				hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
+				break;
+
+			case ShaderType::ClosestHit:
+				hitgroup->SetClosestHitShaderImport(shader->GetEntryW().c_str());
+				break;
+
+			case ShaderType::AnyHit:
+				hitgroup->SetAnyHitShaderImport(shader->GetEntryW().c_str());
+				break;
+			}
+
+			std::wstring hitGroupName = std::format(L"hitgroup_{}", i);
+			hitgroup->SetHitGroupExport(hitGroupName.c_str());
+			hitGroupNames.push_back(hitGroupName);
+
+		} // for loop over shaders in shader group
+
+	} // for loop over shader groups
+
+	// Now we can create the actual DX12 object for the raytracing pipeline
+	wil::com_ptr<ID3D12StateObject> stateObject;
+	m_dxrDevice->CreateStateObject(raytracingPipelineDesc, IID_PPV_ARGS(&stateObject));
+
+	wil::com_ptr<ID3D12StateObjectProperties> stateObjectProperties = stateObject.query<ID3D12StateObjectProperties>();
+	
+	// Create and return the Luna RayTracingPipeline object
+	auto raytracingPipeline = std::make_shared<RayTracingPipeline>();
+	raytracingPipeline->m_stateObject = stateObject;
+	raytracingPipeline->m_stateObjectProperties = stateObjectProperties;
+	raytracingPipeline->m_rayGenShaderName = rayGenShaderName;
+	raytracingPipeline->m_missShaderName = missShaderName;
+	raytracingPipeline->m_hitGroupNames = std::move(hitGroupNames);
+	return raytracingPipeline;
+}
+
+
+ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pipeline)
+{
+	// Get the SBT alignment and the size of each SBT record
+	const size_t sbtRecordSize = m_caps.shaderStage.rayTracing.shaderGroupIdentifierSize;
+	const size_t tableAlignment = m_caps.memoryAlignment.shaderBindingTable;
+	const uint32_t sbtRecordStride = (uint32_t)Math::AlignUp(sbtRecordSize, tableAlignment);
+
+	// Compute table size
+	const size_t numSbtRecords =
+		(pipeline->HasRayGenShader() ? 1 : 0) +
+		(pipeline->HasMissShader() ? 1 : 0) +
+		pipeline->GetNumHitGroups();
+	assert(numSbtRecords > 0);
+	const size_t sbtSize = sbtRecordStride * numSbtRecords;
+
+	// Create buffer
+	GpuBufferDesc sbtDesc{
+		.name					= "Shader Binding Table",
+		.resourceType			= ResourceType::UploadBuffer,
+		.memoryAccess			= MemoryAccess::CpuWrite | MemoryAccess::GpuRead,
+		.elementCount			= 1,
+		.elementSize			= sbtSize,
+		.bShaderBindingTable	= true
+	};
+
+	auto bufferAllocation = AllocateBuffer(sbtDesc);
+
+	// Create GpuBuffer
+	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
+	gpuBuffer->m_type = sbtDesc.resourceType;
+	gpuBuffer->m_usageState = ResourceState::Common;
+	gpuBuffer->m_format = sbtDesc.format;
+	gpuBuffer->m_elementSize = sbtDesc.elementSize;
+	gpuBuffer->m_elementCount = sbtDesc.elementCount;
+	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
+	gpuBuffer->m_isCpuWriteable = HasFlag(sbtDesc.memoryAccess, MemoryAccess::CpuWrite);
+
+	ID3D12Resource* pResource = bufferAllocation->GetResource();
+
+	SetDebugName(pResource, sbtDesc.name);
+
+	gpuBuffer->m_allocation = bufferAllocation;
+
+	// Map buffer memory for SBT record uploads
+	uint64_t gpuAddress = gpuBuffer->GetGpuAddress();
+	std::byte* mem = (std::byte*)gpuBuffer->Map();
+
+	// Copy SBT records
+	RayTracingPipeline* pipeline12 = (RayTracingPipeline*)pipeline.get();
+	ID3D12StateObjectProperties* properties = pipeline12->GetStateObjectProperties();
+
+	StridedAddressRegion rayGenRegion{};
+	StridedAddressRegion missRegion{};
+	StridedAddressRegion hitGroupRegion{};
+
+	// Ray gen shader record
+	if (pipeline->HasRayGenShader())
+	{
+		void* shaderIdentifier = properties->GetShaderIdentifier(pipeline12->GetRayGenerationShaderName());
+		memcpy(mem, shaderIdentifier, sbtRecordSize);
+		mem += sbtRecordStride;
+
+		rayGenRegion.bufferAddress = gpuAddress;
+		rayGenRegion.size = sbtRecordStride;
+		rayGenRegion.stride = sbtRecordStride;
+		gpuAddress += sbtRecordStride;
+	}
+
+	// Miss shader record
+	if (pipeline->HasMissShader())
+	{
+		void* shaderIdentifier = properties->GetShaderIdentifier(pipeline12->GetMissShaderName());
+		memcpy(mem, shaderIdentifier, sbtRecordSize);
+		mem += sbtRecordStride;
+
+		missRegion.bufferAddress = gpuAddress;
+		missRegion.size = sbtRecordStride;
+		missRegion.stride = sbtRecordStride;
+		gpuAddress += sbtRecordStride;
+	}
+
+	// Hit group shader records
+	for (uint32_t i = 0; i < pipeline->GetNumHitGroups(); ++i)
+	{
+		void* shaderIdentifier = properties->GetShaderIdentifier(pipeline12->GetHitGroupName(i));
+		memcpy(mem, shaderIdentifier, sbtRecordSize);
+		mem += sbtRecordStride;
+	}
+	if (pipeline->GetNumHitGroups() > 0)
+	{
+		hitGroupRegion.bufferAddress = gpuAddress;
+		hitGroupRegion.size = sbtRecordStride * pipeline->GetNumHitGroups();
+		hitGroupRegion.stride = sbtRecordStride;
+	}
+
+	// Unmap buffer memory
+	gpuBuffer->Unmap();
+
+	// Create and return ShaderBindingTable
+	auto shaderBindingTable = make_shared<ShaderBindingTable>();
+	shaderBindingTable->m_sbt = gpuBuffer;
+	shaderBindingTable->m_rayGenRegion = rayGenRegion;
+	shaderBindingTable->m_missRegion = missRegion;
+	shaderBindingTable->m_hitGroupRegion = hitGroupRegion;
+
+	return shaderBindingTable;
+}
+
+
 ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
 {
 	Texture* tex = new Texture(this);
@@ -1487,6 +1854,112 @@ MeshletPipelinePtr Device::CreateMeshletPipelineStream(TPipelineStream& pipeline
 	meshletPipeline->m_pipelineState = pPipelineState;
 
 	return meshletPipeline;
+}
+
+
+GpuBufferPtr Device::CreateRayTracingBuffer(size_t sizeInBytes, const std::string& name, D3D12_RESOURCE_STATES initialState)
+{
+	D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_DEFAULT;
+	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+	D3D12_RESOURCE_DESC resourceDesc{
+		.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+		.Alignment = 0,
+		.Width = sizeInBytes,
+		.Height = 1,
+		.DepthOrArraySize = 1,
+		.MipLevels = 1,
+		.Format = DXGI_FORMAT_UNKNOWN,
+		.SampleDesc = {.Count = 1, .Quality = 0 },
+		.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+		.Flags = flags
+	};
+
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
+		.HeapType = heapType
+	};
+
+	wil::com_ptr<D3D12MA::Allocation> allocation;
+	HRESULT hr = m_allocator->CreateResource(
+		&allocationDesc,
+		&resourceDesc,
+		initialState,
+		NULL,
+		&allocation,
+		IID_NULL, NULL);
+
+	// Create GpuBuffer
+	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
+	gpuBuffer->m_type = ResourceType::AccelerationStructure;
+	gpuBuffer->m_usageState = ResourceState::AccelStructBuildBlas;
+	gpuBuffer->m_format = Format::Unknown;
+	gpuBuffer->m_elementSize = sizeInBytes;
+	gpuBuffer->m_elementCount = 1;
+	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
+	gpuBuffer->m_isCpuWriteable = false;
+	gpuBuffer->m_allocation = allocation;
+
+	gpuBuffer->m_srvDescriptor.CreateAccelerationStructureView(allocation->GetResource());
+
+	// Set debug name
+	ID3D12Resource* pResource = allocation->GetResource();
+	SetDebugName(pResource, name);
+
+	return gpuBuffer;
+}
+
+
+GpuBufferPtr Device::CreateRayTracingInstanceBuffer(size_t sizeInBytes, const void* initialData, const std::string& name)
+{
+	D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_UPLOAD;
+	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
+
+	D3D12_RESOURCE_DESC resourceDesc{
+		.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+		.Alignment = D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT,
+		.Width = sizeInBytes,
+		.Height = 1,
+		.DepthOrArraySize = 1,
+		.MipLevels = 1,
+		.Format = DXGI_FORMAT_UNKNOWN,
+		.SampleDesc = { .Count = 1, .Quality = 0 },
+		.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+		.Flags = flags
+	};
+
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
+		.HeapType = heapType
+	};
+
+	wil::com_ptr<D3D12MA::Allocation> allocation;
+	HRESULT hr = m_allocator->CreateResource(
+		&allocationDesc,
+		&resourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		NULL,
+		&allocation,
+		IID_NULL, NULL);
+
+	// Create GpuBuffer
+	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
+	gpuBuffer->m_type = ResourceType::UploadBuffer;
+	gpuBuffer->m_usageState = ResourceState::GenericRead;
+	gpuBuffer->m_format = Format::Unknown;
+	gpuBuffer->m_elementSize = sizeInBytes;
+	gpuBuffer->m_elementCount = 1;
+	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
+	gpuBuffer->m_isCpuWriteable = false;
+	gpuBuffer->m_allocation = allocation;
+
+	// Set debug name
+	ID3D12Resource* pResource = allocation->GetResource();
+	SetDebugName(pResource, name);
+
+	void* ptr = gpuBuffer->Map();
+	memcpy(ptr, initialData, sizeInBytes);
+	gpuBuffer->Unmap();
+
+	return gpuBuffer;
 }
 
 

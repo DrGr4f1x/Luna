@@ -77,6 +77,8 @@ public:
 	void BeginFrame() override;
 	uint64_t Finish(bool bWaitForCompletion) override;
 
+	void CopyColorBuffer(IColorBuffer* dest, IColorBuffer* src) override;
+
 	void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newSTate, bool bFlushImmediate) override;
 	void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
@@ -111,6 +113,7 @@ public:
 	void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) override;
 	void SetComputePipeline(const IComputePipeline* computePipeline) override;
 	void SetMeshletPipeline(const IMeshletPipeline* meshletPipeline) override;
+	void SetRayTracingPipeline(const IRayTracingPipeline* rayTracingPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -173,6 +176,8 @@ public:
 
 	void DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
+	void DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) override;
+
 	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 
 	void Dispatch(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) override;
@@ -192,8 +197,10 @@ public:
 
 private:
 	void ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, VkImageAspectFlags flags);
+
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void InitializeTexture_Internal(ITexture* texture, const TextureInitializer& texInit) override;
+	void BuildAccelerationStructure_Internal(const RayTracingBuildInfoBase* buildInfo) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 
 	void BindDescriptorBuffers();
@@ -278,6 +285,7 @@ private:
 	VkPipeline m_computePipeline{ VK_NULL_HANDLE };
 	std::array<VkShaderStageFlags, MaxRootParameters> m_shaderStages;
 	VkPrimitiveTopology m_primitiveTopology{ VK_PRIMITIVE_TOPOLOGY_MAX_ENUM };
+	bool m_isRayTracingPipelineBound{ false };
 
 	// Descriptor buffers
 	VkBuffer m_currentDescriptorBuffers[2];

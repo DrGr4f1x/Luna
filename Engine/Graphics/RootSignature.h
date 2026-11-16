@@ -132,6 +132,7 @@ struct RootParameter
 	uint32_t startRegister{ 0 };
 	uint32_t registerSpace{ 0 };
 	uint32_t num32BitConstants{ 0 };
+	bool isAccelerationStructure{ false };
 	std::vector<DescriptorRange> table;
 
 	constexpr RootParameter& SetShaderVisibility(Luna::ShaderStage value) noexcept { shaderVisibility = value; return *this; }
@@ -139,6 +140,7 @@ struct RootParameter
 	constexpr RootParameter& SetStartRegister(uint32_t value) noexcept { startRegister = value; return *this; }
 	constexpr RootParameter& SetRegisterSpace(uint32_t value) noexcept { registerSpace = value; return *this; }
 	constexpr RootParameter& SetNum32BitConstants(uint32_t value) noexcept { num32BitConstants = value; return *this; }
+	constexpr RootParameter& SetIsAccelerationStructure(bool value) noexcept { isAccelerationStructure = value; return *this; }
 	RootParameter& SetTable(const std::vector<DescriptorRange>& value) { table = value; return *this; }
 
 	bool Validate() const
@@ -365,13 +367,14 @@ public:
 		: m_type{ type }
 	{}
 
-	RootParameter operator()(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0)
+	RootParameter operator()(uint32_t startRegister, ShaderStage shaderVisibility = ShaderStage::All, uint32_t registerSpace = 0, bool isAccelerationStructure = false)
 	{ 
 		return RootParameter{
-			.shaderVisibility	= shaderVisibility,
-			.parameterType		= m_type,
-			.startRegister		= startRegister,
-			.registerSpace		= registerSpace
+			.shaderVisibility			= shaderVisibility,
+			.parameterType				= m_type,
+			.startRegister				= startRegister,
+			.registerSpace				= registerSpace,
+			.isAccelerationStructure	= isAccelerationStructure
 		};
 	}
 
@@ -483,6 +486,7 @@ struct RootSignatureDesc
 				return false;
 			}
 		}
+
 		return true;
 	}
 };

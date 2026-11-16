@@ -81,7 +81,9 @@ Shader::Shader(const ShaderDesc& shaderDesc)
 	: m_filenameWithExtension{ shaderDesc.filenameWithExtension }
 	, m_entry{ shaderDesc.entry }
 	, m_type{ shaderDesc.type }
-{}
+{
+	m_entry_w = MakeWStr(m_entry);
+}
 
 
 void Shader::WaitForLoad() const

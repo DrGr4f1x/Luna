@@ -709,6 +709,12 @@ void DeviceManager::ReleaseAllocation(D3D12MA::Allocation* allocation)
 }
 
 
+void DeviceManager::BuildAccelerationStructure(const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& buildDesc)
+{
+
+}
+
+
 void DeviceManager::CreateDevice()
 {
 	vector<AdapterInfo> adapterInfos = EnumerateAdapters();

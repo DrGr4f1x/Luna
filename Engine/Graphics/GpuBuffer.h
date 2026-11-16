@@ -30,8 +30,11 @@ struct GpuBufferDesc
 	size_t elementCount{ 0 };
 	size_t elementSize{ 0 };
 	const void* initialData{ nullptr };
+	// TODO: changes these to a flags enum called UsageFlags
 	bool bAllowShaderResource{ false };
 	bool bAllowUnorderedAccess{ false };
+	bool bRayTracingBuildInput{ false };
+	bool bShaderBindingTable{ false };
 
 	GpuBufferDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr GpuBufferDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
@@ -106,12 +109,21 @@ struct DispatchIndirectArgs
 GpuBufferPtr CreateConstantBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
 GpuBufferPtr CreateIndexBuffer(const std::string& name, std::span<uint16_t> indexData);
 GpuBufferPtr CreateIndexBuffer(const std::string& name, std::span<uint32_t> indexData);
+GpuBufferPtr CreateRayTracingIndexBuffer(const std::string& name, std::span<uint16_t> indexData);
+GpuBufferPtr CreateRayTracingIndexBuffer(const std::string& name, std::span<uint32_t> indexData);
 GpuBufferPtr CreateVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
+GpuBufferPtr CreateRayTracingVertexBuffer(const std::string& name, size_t elementCount, size_t elementSize, const void* initialData = nullptr);
 
 template <typename T>
 GpuBufferPtr CreateVertexBuffer(const std::string& name, std::span<T> vertexData)
 {
 	return CreateVertexBuffer(name, vertexData.size(), sizeof(T), vertexData.data());
+}
+
+template <typename T>
+GpuBufferPtr CreateRayTracingVertexBuffer(const std::string& name, std::span<T> vertexData)
+{
+	return CreateRayTracingVertexBuffer(name, vertexData.size(), sizeof(T), vertexData.data());
 }
 
 GpuBufferDesc DescribeDrawIndirectArgsBuffer(const std::string& name, size_t elementCount);

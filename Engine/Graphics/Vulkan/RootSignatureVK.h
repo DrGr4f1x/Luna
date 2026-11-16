@@ -40,7 +40,10 @@ struct BindingMappingAndInfo
 
 struct ShaderSetAndBindingMapping
 {
+	// Compute
 	BindingMappingAndInfo compute;
+
+	// Graphics
 	BindingMappingAndInfo vertex;
 	BindingMappingAndInfo hull;
 	BindingMappingAndInfo domain;
@@ -48,6 +51,14 @@ struct ShaderSetAndBindingMapping
 	BindingMappingAndInfo pixel;
 	BindingMappingAndInfo amplification;
 	BindingMappingAndInfo mesh;
+
+	// Ray tracing
+	BindingMappingAndInfo raygen;
+	BindingMappingAndInfo miss;
+	BindingMappingAndInfo anyhit;
+	BindingMappingAndInfo closesthit;
+	BindingMappingAndInfo intersection;
+	BindingMappingAndInfo callable;
 
 	std::vector<VkSamplerCreateInfo> staticSamplers;
 

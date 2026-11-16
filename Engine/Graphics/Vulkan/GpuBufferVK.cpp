@@ -59,6 +59,12 @@ VkBuffer GpuBuffer::GetBuffer() const noexcept
 }
 
 
+VkAccelerationStructureKHR GpuBuffer::GetAccelerationStructure() const noexcept
+{
+	return m_accelerationStructure ? m_accelerationStructure->Get() : VK_NULL_HANDLE;
+}
+
+
 void GpuBuffer::InitializeDescriptors(Device* device, bool hasSrv, bool hasUav)
 {
 	if (hasSrv)
@@ -66,6 +72,10 @@ void GpuBuffer::InitializeDescriptors(Device* device, bool hasSrv, bool hasUav)
 		if (HasAnyFlag(m_type, ResourceType::TypedBuffer))
 		{
 			m_srvDescriptor.ReadUniformTexelBufferDescriptor(device, m_deviceAddress, m_bufferSize, FormatToVulkan(m_format));
+		}
+		else if (HasAnyFlag(m_type, ResourceType::AccelerationStructure))
+		{
+			m_srvDescriptor.ReadAccelerationStructureDescriptor(device, m_accelerationStructureDeviceAddress, m_bufferSize);
 		}
 		else
 		{

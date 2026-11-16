@@ -59,9 +59,16 @@ public:
 
 	SamplerPtr CreateSampler(const SamplerDesc& samplerDesc) override;
 
-	TexturePtr CreateTexture1D(const TextureDesc& textureDesc);
-	TexturePtr CreateTexture2D(const TextureDesc& textureDesc);
-	TexturePtr CreateTexture3D(const TextureDesc& textureDesc);
+	TexturePtr CreateTexture1D(const TextureDesc& textureDesc) override;
+	TexturePtr CreateTexture2D(const TextureDesc& textureDesc) override;
+	TexturePtr CreateTexture3D(const TextureDesc& textureDesc) override;
+
+	GpuBufferPtr CreateBLAS(const RayTracingGeometryDesc& geometryDesc) override;
+	GpuBufferPtr CreateTLAS(const RayTracingTLASDesc& tlasDesc) override;
+
+	RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) override;
+
+	ShaderBindingTablePtr CreateShaderBindingTable(RayTracingPipelinePtr pipeline) override;
 
 	ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) override;
 	bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) override;
@@ -90,9 +97,13 @@ protected:
 	template <class TPipelineStream>
 	MeshletPipelinePtr CreateMeshletPipelineStream(TPipelineStream& pipelineStream, size_t hashCode, const MeshletPipelineDesc& pipelineDesc);
 
+	GpuBufferPtr CreateRayTracingBuffer(size_t sizeInBytes, const std::string& name, D3D12_RESOURCE_STATES initialState);
+	GpuBufferPtr CreateRayTracingInstanceBuffer(size_t sizeInBytes, const void* initialData, const std::string& name);
+
 protected:
 	wil::com_ptr<ID3D12Device> m_device;
 	wil::com_ptr<ID3D12Device2> m_device2;
+	wil::com_ptr<ID3D12Device5> m_dxrDevice;
 	wil::com_ptr<D3D12MA::Allocator> m_allocator;
 
 	// Device caps

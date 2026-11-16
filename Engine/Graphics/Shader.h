@@ -38,6 +38,8 @@ public:
 	
 	const std::string& GetFilenameWithExtension() const { return m_filenameWithExtension; }
 	const std::string& GetEntry() const { return m_entry; }
+	const std::wstring& GetEntryW() const { return m_entry_w; }
+
 	ShaderType GetShaderType() const { return m_type; }
 
 	const std::byte* GetByteCode() const { return m_byteCode.get(); }
@@ -52,6 +54,8 @@ private:
 	std::string m_filenameWithExtension;
 	std::string m_entry{ "main" };
 	ShaderType m_type{ ShaderType::None };
+
+	std::wstring m_entry_w;
 
 	std::unique_ptr<std::byte[]> m_byteCode;
 	size_t m_byteCodeSize{ 0 };

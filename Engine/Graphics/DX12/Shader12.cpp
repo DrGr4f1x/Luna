@@ -52,7 +52,13 @@ pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
 
 Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry)
 {
-	auto [shaderFilenameWithExtension, exists] = GetShaderFilenameWithExtension(shaderNameAndEntry.shaderFile);
+	std::string shaderFile = shaderNameAndEntry.shaderFile;
+	if (shaderNameAndEntry.entry != "main")
+	{
+		shaderFile = std::format("{}_{}", shaderNameAndEntry.shaderFile, shaderNameAndEntry.entry);
+	}
+
+	auto [shaderFilenameWithExtension, exists] = GetShaderFilenameWithExtension(shaderFile);
 
 	if (!exists)
 	{

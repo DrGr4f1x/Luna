@@ -188,6 +188,23 @@ void Descriptor::CreateDepthStencilView(ID3D12Resource* resource, const D3D12_DE
 }
 
 
+void Descriptor::CreateAccelerationStructureView(ID3D12Resource* resource)
+{
+	assert(m_device != nullptr);
+
+	ReleaseHandle();
+
+	m_handle = m_device->AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_cpuHandle = m_device->GetDescriptorHandleCPU(m_handle);
+
+	assert(resource->GetDesc().Dimension == D3D12_RESOURCE_DIMENSION_BUFFER);
+
+	m_gpuAddress = resource->GetGPUVirtualAddress();
+
+	m_type = DescriptorType::RayTracingAccelStruct;
+}
+
+
 void Descriptor::CreateSampler(const D3D12_SAMPLER_DESC& desc)
 {
 	assert(m_device != nullptr);

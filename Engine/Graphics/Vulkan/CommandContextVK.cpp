@@ -29,6 +29,11 @@
 #include "TextureVK.h"
 #include "VulkanUtil.h"
 
+#include "RayTracing\RayTracingGeometryVK.h"
+#include "RayTracing\RayTracingPipelineVK.h"
+#include "RayTracing\ShaderBindingTableVK.h"
+
+
 #if ENABLE_VULKAN_DEBUG_MARKERS
 #include <pix3.h>
 #endif
@@ -307,6 +312,38 @@ uint64_t CommandContextVK::Finish(bool bWaitForCompletion)
 	}
 
 	return fenceValue;
+}
+
+
+void CommandContextVK::CopyColorBuffer(IColorBuffer* dest, IColorBuffer* src)
+{
+	TransitionResource(dest, ResourceState::CopyDest, false);
+	TransitionResource(src, ResourceState::CopySource, false);
+	FlushResourceBarriers();
+
+	ColorBuffer* destVK = (ColorBuffer*)dest;
+	ColorBuffer* srcVK = (ColorBuffer*)src;
+
+	VkImageCopy2 copyRegion{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_COPY_2,
+		.srcSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 },
+		.srcOffset = { 0, 0, 0 },
+		.dstSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1 },
+		.dstOffset = { 0, 0, 0 },
+		.extent = { (uint32_t)dest->GetWidth(), dest->GetHeight(), 1}
+	};
+	
+	VkCopyImageInfo2 info{
+		.sType = VK_STRUCTURE_TYPE_COPY_IMAGE_INFO_2,
+		.srcImage = srcVK->GetImage(),
+		.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+		.dstImage = destVK->GetImage(),
+		.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.regionCount = 1,
+		.pRegions = &copyRegion
+	};
+
+	vkCmdCopyImage2(m_commandBuffer, &info);
 }
 
 
@@ -940,6 +977,8 @@ void CommandContextVK::SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipe
 	}
 
 	SetPrimitiveTopology(graphicsPipeline->GetPrimitiveTopology());
+
+	m_isRayTracingPipelineBound = false;
 }
 
 
@@ -957,6 +996,8 @@ void CommandContextVK::SetComputePipeline(const IComputePipeline* computePipelin
 		m_computePipeline = vkPipeline;
 		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, vkPipeline);
 	}
+
+	m_isRayTracingPipelineBound = false;
 }
 
 
@@ -974,6 +1015,18 @@ void CommandContextVK::SetMeshletPipeline(const IMeshletPipeline* meshletPipelin
 		m_graphicsPipeline = vkPipeline;
 		vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
 	}
+
+	m_isRayTracingPipelineBound = false;
+}
+
+
+void CommandContextVK::SetRayTracingPipeline(const IRayTracingPipeline* rayTracingPipeline)
+{
+	RayTracingPipeline* rayTracingPipelineVK = (RayTracingPipeline*)rayTracingPipeline;
+
+	vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR, rayTracingPipelineVK->GetPipeline());
+
+	m_isRayTracingPipelineBound = true;
 }
 
 
@@ -1496,6 +1549,33 @@ void CommandContextVK::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, 
 }
 
 
+void CommandContextVK::DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+{
+	PreDispatch();
+
+	ShaderBindingTable* shaderBindingTableVK = (ShaderBindingTable*)shaderBindingTable;
+
+	StridedAddressRegion rayGenRegion = shaderBindingTableVK->GetRayGenerationShaderRecord();
+	StridedAddressRegion missRegion = shaderBindingTableVK->GetMissShaderTable();
+	StridedAddressRegion hitGroupRegion = shaderBindingTableVK->GetHitGroupTable();
+
+	VkStridedDeviceAddressRegionKHR raygenShaderSbtEntry{ rayGenRegion.bufferAddress, rayGenRegion.stride, rayGenRegion.size };
+	VkStridedDeviceAddressRegionKHR missShaderSbtEntry{ missRegion.bufferAddress, missRegion.stride, missRegion.size };
+	VkStridedDeviceAddressRegionKHR hitShaderSbtEntry{ hitGroupRegion.bufferAddress, hitGroupRegion.stride, hitGroupRegion.size };
+	VkStridedDeviceAddressRegionKHR callableShaderSbtEntry{};
+
+	vkCmdTraceRaysKHR(
+		m_commandBuffer,
+		&raygenShaderSbtEntry,
+		&missShaderSbtEntry,
+		&hitShaderSbtEntry,
+		&callableShaderSbtEntry,
+		width,
+		height,
+		1);
+}
+
+
 void CommandContextVK::Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format)
 {
 	const ColorBuffer* srcBufferVK = (const ColorBuffer*)srcBuffer;
@@ -1736,6 +1816,18 @@ void CommandContextVK::InitializeTexture_Internal(ITexture* destTexture, const T
 }
 
 
+void CommandContextVK::BuildAccelerationStructure_Internal(const RayTracingBuildInfoBase* buildInfo)
+{
+	const RayTracingBuildInfo* buildInfoVK = (const RayTracingBuildInfo*)buildInfo;
+
+	vkCmdBuildAccelerationStructuresKHR(
+		m_commandBuffer,
+		1,
+		&buildInfoVK->buildGeometryInfo,
+		buildInfoVK->rangeInfos.data());
+}
+
+
 void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet)
 {
 	assert(type == CommandListType::Graphics || type == CommandListType::Compute);
@@ -1765,7 +1857,7 @@ void CommandContextVK::SetDescriptors_Internal(CommandListType type, uint32_t ro
 
 		vkCmdSetDescriptorBufferOffsetsEXT(
 			m_commandBuffer,
-			GetBindPoint(type),
+			m_isRayTracingPipelineBound ? VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR : GetBindPoint(type),
 			GetPipelineLayout(type),
 			rootIndex,
 			1,
@@ -2100,19 +2192,36 @@ void CommandContextVK::SetRootBufferForDescriptorBuffer(CommandListType type, co
 		.range		= VK_WHOLE_SIZE
 	};
 
+	const bool isAccelerationStructure = bufferRootSignature->GetRootParameter(rootIndex).isAccelerationStructure;
 	const auto rootParameterType = bufferRootSignature->GetRootParameter(rootIndex).parameterType;
 
 	const uint32_t binding = bufferRootSignature->GetPushDescriptorBinding(rootIndex);
 	assert(binding != (uint32_t)-1);
+
+	const VkDescriptorType descriptorType = isAccelerationStructure ?
+		VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR :
+		RootParameterTypeToVulkanDescriptorType(rootParameterType);
 
 	VkWriteDescriptorSet writeDescriptor{
 		.sType				= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 		.dstBinding			= binding + GetRegisterShift(rootParameterType),
 		.dstArrayElement	= 0,
 		.descriptorCount	= 1,
-		.descriptorType		= RootParameterTypeToVulkanDescriptorType(rootParameterType),
+		.descriptorType		= descriptorType,
 		.pBufferInfo		= &info
 	};
+
+	// Bind acceleration structure descriptor info, if needed
+	VkAccelerationStructureKHR accelerationStructure = VK_NULL_HANDLE;
+	VkWriteDescriptorSetAccelerationStructureKHR descriptorAccelerationStructureInfo{ VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR };
+	if (isAccelerationStructure)
+	{
+		accelerationStructure = gpuBuffer->GetAccelerationStructure();
+
+		descriptorAccelerationStructureInfo.accelerationStructureCount = 1;
+		descriptorAccelerationStructureInfo.pAccelerationStructures = &accelerationStructure;
+		writeDescriptor.pNext = &descriptorAccelerationStructureInfo;
+	}
 
 	const uint32_t pushDescriptorSetIndex = bufferRootSignature->GetPushDescriptorSetIndex();
 	assert(pushDescriptorSetIndex != (uint32_t)-1);

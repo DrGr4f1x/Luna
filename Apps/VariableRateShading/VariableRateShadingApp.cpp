@@ -348,7 +348,8 @@ void VariableRateShadingApp::InitPipelines()
 
 	// Refraction pipeline
 	desc.name = "Refraction Graphics Pipeline";
-	desc.vertexShader = { .shaderFile = "ShadowsAndSceneVS_74898BDA" };
+	desc.vertexShader = { .shaderFile = "RefractionVS" };
+	desc.pixelShader = { .shaderFile = "RefractionPS" };
 
 	m_refractionGraphicsPipeline = CreateGraphicsPipeline(desc);
 

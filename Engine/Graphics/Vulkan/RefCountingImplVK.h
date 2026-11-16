@@ -757,4 +757,36 @@ private:
 	VkQueryPool m_pool{ VK_NULL_HANDLE };
 };
 
+
+//
+// VkAccelerationStructureKHR
+//
+class __declspec(uuid("02D22D0E-F42A-4B50-86C9-5BFF98E2185C")) CVkAccelerationStructure
+	: public RefCounted<CVkAccelerationStructure>
+	, public NonCopyable
+{
+public:
+	CVkAccelerationStructure() noexcept = default;
+	CVkAccelerationStructure(CVkDevice* device, VkAccelerationStructureKHR accelerationStructure)
+		: m_device{ device }
+		, m_accelerationStructure{ accelerationStructure }
+	{}
+
+	~CVkAccelerationStructure()
+	{
+		Destroy();
+	}
+
+	VkAccelerationStructureKHR Get() const noexcept { return m_accelerationStructure; }
+	operator VkAccelerationStructureKHR() const noexcept { return Get(); }
+
+	VkDevice GetDevice() const noexcept { return m_device->Get(); }
+
+	void Destroy();
+
+private:
+	wil::com_ptr<CVkDevice> m_device;
+	VkAccelerationStructureKHR m_accelerationStructure{ VK_NULL_HANDLE };
+};
+
 } // namespace Luna::VK

@@ -913,6 +913,87 @@ VkFragmentShadingRateCombinerOpKHR ShadingRateCombinerToVulkan(ShadingRateCombin
 }
 
 
+VkGeometryTypeKHR RayTracingGeometryTypeToVulkan(RayTracingGeometryType geometryType)
+{
+	switch (geometryType)
+	{
+	case RayTracingGeometryType::Triangles: return VK_GEOMETRY_TYPE_TRIANGLES_KHR; break;
+	case RayTracingGeometryType::AABBs: return VK_GEOMETRY_TYPE_AABBS_KHR; break;
+	case RayTracingGeometryType::OpacityMicroMap: return VK_GEOMETRY_TYPE_MICROMAP_KHR; break;
+	default:
+		return VK_GEOMETRY_TYPE_TRIANGLES_KHR; 
+		break;
+	}
+}
+
+
+VkGeometryFlagsKHR RayTracingGeometryFlagsToVulkan(RayTracingGeometryFlags geometryFlags)
+{
+	VkGeometryFlagsKHR flags{};
+
+	if (HasFlag(geometryFlags, RayTracingGeometryFlags::Opaque))
+		flags |= VK_GEOMETRY_OPAQUE_BIT_KHR;
+	if (HasFlag(geometryFlags, RayTracingGeometryFlags::NoDuplicateAnyHit))
+		flags |= VK_GEOMETRY_NO_DUPLICATE_ANY_HIT_INVOCATION_BIT_KHR;
+
+	return flags;
+}
+
+
+VkAccelerationStructureTypeKHR RayTracingAccelerationStructureTypeToVulkan(RayTracingAccelerationStructureType structureType)
+{
+	switch (structureType)
+	{
+	case RayTracingAccelerationStructureType::BottomLevel: return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR; break;
+	case RayTracingAccelerationStructureType::TopLevel: return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR; break;
+	case RayTracingAccelerationStructureType::OpacityMicroMap: return VK_ACCELERATION_STRUCTURE_TYPE_OPACITY_MICROMAP_KHR; break;
+	default:
+		assert(false);
+		return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR; 
+		break;
+	}
+}
+
+
+VkBuildAccelerationStructureFlagsKHR RayTracingAccelerationStructureFlagsToVulkan(RayTracingAccelerationStructureFlags structureFlags)
+{
+	VkBuildAccelerationStructureFlagsKHR flags{};
+
+	using enum RayTracingAccelerationStructureFlags;
+	if (HasFlag(structureFlags, AllowUpdate))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_KHR;
+	if (HasFlag(structureFlags, AllowCompaction))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_KHR;
+	if (HasFlag(structureFlags, FastTrace))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+	if (HasFlag(structureFlags, FastBuild))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_KHR;
+	if (HasFlag(structureFlags, LowMemory))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_KHR;
+	if (HasFlag(structureFlags, AllowOmmUpdate))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_OPACITY_MICROMAP_UPDATE_BIT_KHR;
+	if (HasFlag(structureFlags, AllowDisableOmmUpdates))
+		flags |= VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_DISABLE_OPACITY_MICROMAPS_BIT_KHR;
+
+	return flags;
+}
+
+
+VkPipelineCreateFlags RayTracingPipelineFlagsToVulkan(RayTracingPipelineFlags pipelineFlags)
+{
+	VkPipelineCreateFlags flags{};
+
+	if (HasFlag(pipelineFlags, RayTracingPipelineFlags::SkipTriangles))
+		flags |= VK_PIPELINE_CREATE_RAY_TRACING_SKIP_TRIANGLES_BIT_KHR;
+	if (HasFlag(pipelineFlags, RayTracingPipelineFlags::SkipProceduralPrimitives))
+		flags |= VK_PIPELINE_CREATE_RAY_TRACING_SKIP_AABBS_BIT_KHR;
+	if (HasFlag(pipelineFlags, RayTracingPipelineFlags::AllowOpacityMicromaps))
+		flags |= VK_PIPELINE_CREATE_RAY_TRACING_OPACITY_MICROMAP_BIT_KHR;
+
+	return flags;
+}
+
+
 VkSpirvResourceTypeFlagBitsEXT GetSpirvResourceType(DescriptorType descriptorType)
 {
 	using enum DescriptorType;

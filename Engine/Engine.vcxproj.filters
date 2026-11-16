@@ -224,6 +224,9 @@
     <ClCompile Include="Graphics\DX12\DescriptorOffsetTable12.cpp">
       <Filter>Graphics\DX12</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\DX12\RayTracing\RayTracingPipeline12.cpp">
+      <Filter>Graphics\DX12\RayTracing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -595,6 +598,33 @@
     <ClInclude Include="Graphics\DX12\DescriptorOffsetTable12.h">
       <Filter>Graphics\DX12</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\RayTracing\RayTracingGeometry.h">
+      <Filter>Graphics\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\RayTracing\RayTracingGeometry12.h">
+      <Filter>Graphics\DX12\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\RayTracing\RayTracingGeometryVK.h">
+      <Filter>Graphics\Vulkan\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\RayTracing\RayTracingPipeline.h">
+      <Filter>Graphics\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\RayTracing\RayTracingPipeline12.h">
+      <Filter>Graphics\DX12\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\RayTracing\RayTracingPipelineVK.h">
+      <Filter>Graphics\Vulkan\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\RayTracing\ShaderBindingTable.h">
+      <Filter>Graphics\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\DX12\RayTracing\ShaderBindingTable12.h">
+      <Filter>Graphics\DX12\RayTracing</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Vulkan\RayTracing\ShaderBindingTableVK.h">
+      <Filter>Graphics\Vulkan\RayTracing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Core">
@@ -623,6 +653,15 @@
     </Filter>
     <Filter Include="External\FramePro">
       <UniqueIdentifier>{25bbef98-7975-4ed9-b196-ea73d75ed1d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\RayTracing">
+      <UniqueIdentifier>{e3715c7c-2c23-468d-8a04-194daf0e35b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\DX12\RayTracing">
+      <UniqueIdentifier>{751e0dcd-232c-41d1-b12a-b1520c177030}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Graphics\Vulkan\RayTracing">
+      <UniqueIdentifier>{e3b0b5a3-8186-4ac1-a909-a757779fcfea}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

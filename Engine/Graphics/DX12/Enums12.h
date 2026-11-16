@@ -76,4 +76,14 @@ D3D12_SHADING_RATE ShadingRateToDX12(ShadingRate shadingRate);
 
 D3D12_SHADING_RATE_COMBINER ShadingRateCombinerToDX12(ShadingRateCombiner shadingRateCombiner);
 
+D3D12_RAYTRACING_GEOMETRY_TYPE RayTracingGeometryTypeToDX12(RayTracingGeometryType geometryType);
+
+D3D12_RAYTRACING_GEOMETRY_FLAGS RayTracingGeometryFlagsToDX12(RayTracingGeometryFlags geometryFlags);
+
+D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE RayTracingAccelerationStructureTypeToDX12(RayTracingAccelerationStructureType type);
+
+D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS RayTracingAccelerationStructureFlagsToDX12(RayTracingAccelerationStructureFlags structureFlags);
+
+D3D12_RAYTRACING_PIPELINE_FLAGS RayTracingPipelineFlagsToDX12(RayTracingPipelineFlags pipelineFlags);
+
 } // namespace Luna::DX12

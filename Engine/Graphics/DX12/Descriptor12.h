@@ -53,6 +53,7 @@ public:
 	void CreateUnorderedAccessView(ID3D12Resource* resource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc);
 	void CreateRenderTargetView(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC& desc);
 	void CreateDepthStencilView(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC& desc);
+	void CreateAccelerationStructureView(ID3D12Resource* resource);
 	void CreateSampler(const D3D12_SAMPLER_DESC& desc);
 
 	// For swapchains

@@ -519,6 +519,8 @@ enum class ResourceType : uint32_t
 	StructuredBuffer	= 0x4000,
 	TypedBuffer			= 0x8000,
 	ReadbackBuffer		= 0x010000,
+	AccelerationStructure = 0x020000,
+	UploadBuffer		= 0x040000,
 
 	Texture1D_Type		= Texture1D | Texture1D_Array,
 	Texture2D_Type		= Texture2D | Texture2D_Array | Texture2DMS | Texture2DMS_Array,
@@ -527,7 +529,7 @@ enum class ResourceType : uint32_t
 
 	Texture_Type		= Texture1D_Type | Texture2D_Type | TextureCube_Type | Texture3D,
 	Buffer_Type			= IndexBuffer | VertexBuffer | ConstantBuffer | ByteAddressBuffer | IndirectArgsBuffer | StructuredBuffer |
-							TypedBuffer | ReadbackBuffer,
+							TypedBuffer | ReadbackBuffer | AccelerationStructure | UploadBuffer,
 	UnorderedAccess_Type = ByteAddressBuffer | IndirectArgsBuffer | StructuredBuffer | TypedBuffer,
 };
 template <> struct EnableBitmaskOperators<ResourceType> { static const bool enable = true; };
@@ -843,6 +845,55 @@ enum class ShadingRateCombiner : uint8_t
 	Min,
 	Max
 };
+
+
+enum class RayTracingGeometryType : uint8_t
+{
+	Triangles,
+	AABBs,
+	OpacityMicroMap
+};
+
+
+enum class RayTracingGeometryFlags : uint8_t
+{
+	None				= 0,
+	Opaque				= 0x1,
+	NoDuplicateAnyHit	= 0x2
+};
+template <> struct EnableBitmaskOperators<RayTracingGeometryFlags> { static const bool enable = true; };
+
+
+enum class RayTracingAccelerationStructureType : uint8_t
+{
+	BottomLevel,
+	TopLevel,
+	OpacityMicroMap
+};
+
+
+enum class RayTracingAccelerationStructureFlags : uint16_t
+{
+	AllowUpdate				= 0x0001,
+	AllowCompaction			= 0x0002,
+	FastTrace				= 0x0004,
+	FastBuild				= 0x0008,
+	LowMemory				= 0x0010,
+	PerformUpdate			= 0x0020,
+	AllowOmmUpdate			= 0x0100,
+	AllowDisableOmmUpdates	= 0x0200
+};
+template <> struct EnableBitmaskOperators<RayTracingAccelerationStructureFlags> { static const bool enable = true; };
+
+
+enum class RayTracingPipelineFlags : uint32_t
+{
+	None						= 0,
+	SkipTriangles				= 0x100,
+	SkipProceduralPrimitives	= 0x200,
+	AllowOpacityMicromaps		= 0x400
+};
+template <> struct EnableBitmaskOperators<RayTracingPipelineFlags> { static const bool enable = true; };
 
 } // namespace Luna
 

@@ -178,4 +178,11 @@ void CVkQueryPool::Destroy()
 	m_pool = VK_NULL_HANDLE;
 }
 
+
+void CVkAccelerationStructure::Destroy()
+{
+	vkDestroyAccelerationStructureKHR(GetDevice(), m_accelerationStructure, nullptr);
+	m_accelerationStructure = VK_NULL_HANDLE;
+}
+
 } // namespace Luna::VK

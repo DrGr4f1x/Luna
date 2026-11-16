@@ -52,6 +52,8 @@ public:
 	void BeginFrame() override {}
 	uint64_t Finish(bool bWaitForCompletion) override;
 
+	void CopyColorBuffer(IColorBuffer* dest, IColorBuffer* src) override;
+
 	void TransitionResource(IColorBuffer* colorBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(IDepthBuffer* depthBuffer, ResourceState newState, bool bFlushImmediate) override;
 	void TransitionResource(IGpuBuffer* gpuBuffer, ResourceState newState, bool bFlushImmediate) override;
@@ -87,6 +89,7 @@ public:
 	void SetGraphicsPipeline(const IGraphicsPipeline* graphicsPipeline) override;
 	void SetComputePipeline(const IComputePipeline* computePipeline) override;
 	void SetMeshletPipeline(const IMeshletPipeline* meshletPipeline) override;
+	void SetRayTracingPipeline(const IRayTracingPipeline* rayTracingPipeline) override;
 
 	void SetViewport(float x, float y, float w, float h, float minDepth = 0.0f, float maxDepth = 1.0f) override;
 	void SetScissor(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom) override;
@@ -149,6 +152,8 @@ public:
 
 	void DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
+	void DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) override;
+
 	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 
 	// Compute context
@@ -165,8 +170,10 @@ public:
 protected:
 	void TransitionResource_Internal(ID3D12Resource* resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState, bool bFlushImmediate);
 	void InsertUAVBarrier_Internal(ID3D12Resource* resource, bool bFlushImmediate);
+
 	void InitializeBuffer_Internal(IGpuBuffer* destBuffer, const void* bufferData, size_t numBytes, size_t offset) override;
 	void InitializeTexture_Internal(ITexture* destTexture, const TextureInitializer& texInit) override;
+	void BuildAccelerationStructure_Internal(const RayTracingBuildInfoBase* buildInfo) override;
 	void SetDescriptors_Internal(CommandListType type, uint32_t rootIndex, IDescriptorSet* descriptorSet);
 	void SetDynamicDescriptors_Internal(CommandListType type, uint32_t rootIndex, uint32_t offset, uint32_t numDescriptors, const D3D12_CPU_DESCRIPTOR_HANDLE handles[]);
 

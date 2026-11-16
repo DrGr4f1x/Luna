@@ -36,6 +36,7 @@ void ShadowMappingApp::Configure()
 {
 	// Application config, before device creation
 	Application::Configure();
+	m_uiWidth = 200.0f;
 }
 
 

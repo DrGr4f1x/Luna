@@ -38,7 +38,10 @@ void ShaderSetAndBindingMapping::Add(const VkDescriptorSetAndBindingMappingEXT& 
 			}
 		};
 
+	// Compute
 	AddMapping(compute.bindings, ShaderStage::Compute);
+
+	// Graphics
 	AddMapping(vertex.bindings, ShaderStage::Vertex);
 	AddMapping(hull.bindings, ShaderStage::Hull);
 	AddMapping(domain.bindings, ShaderStage::Domain);
@@ -46,12 +49,21 @@ void ShaderSetAndBindingMapping::Add(const VkDescriptorSetAndBindingMappingEXT& 
 	AddMapping(pixel.bindings, ShaderStage::Pixel);
 	AddMapping(amplification.bindings, ShaderStage::Amplification);
 	AddMapping(mesh.bindings, ShaderStage::Mesh);
+
+	// Ray tracing
+	AddMapping(raygen.bindings, ShaderStage::RayGeneration);
+	AddMapping(miss.bindings, ShaderStage::Miss);
+	AddMapping(anyhit.bindings, ShaderStage::AnyHit);
+	AddMapping(closesthit.bindings, ShaderStage::ClosestHit);
+	AddMapping(intersection.bindings, ShaderStage::Intersection);
+	AddMapping(callable.bindings, ShaderStage::Callable);
 }
 
 
 void ShaderSetAndBindingMapping::Finalize()
 {
 	compute.Finalize();
+
 	vertex.Finalize();
 	hull.Finalize();
 	domain.Finalize();
@@ -59,6 +71,13 @@ void ShaderSetAndBindingMapping::Finalize()
 	pixel.Finalize();
 	amplification.Finalize();
 	mesh.Finalize();
+
+	raygen.Finalize();
+	miss.Finalize();
+	anyhit.Finalize();
+	closesthit.Finalize();
+	intersection.Finalize();
+	callable.Finalize();
 }
 
 

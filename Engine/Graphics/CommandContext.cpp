@@ -72,6 +72,16 @@ void CommandContext::InitializeTexture(const TexturePtr& destTexture, const Text
 }
 
 
+void CommandContext::BuildAccelerationStructure(const RayTracingBuildInfoBase* buildInfo)
+{
+	CommandContext& buildContext = CommandContext::Begin();
+
+	buildContext.m_contextImpl->BuildAccelerationStructure_Internal(buildInfo);
+
+	buildContext.Finish(true);
+}
+
+
 ComputeContext& ComputeContext::Begin(const string& id, bool bAsync)
 {
 	CommandListType commandListType = bAsync ? CommandListType::Compute : CommandListType::Graphics;
