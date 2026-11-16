@@ -10,20 +10,17 @@
 
 #pragma once
 
-#include "Graphics\Resource.h"
+#include "Graphics\Enums.h"
 
 
 namespace Luna
 {
 
-// Forward declarations
-enum class ResourceState : uint32_t;
-enum class ResourceType : uint32_t;
-
-
-class IGpuResource : public IResource
+class IGpuResource
 { 
 public:
+	virtual ~IGpuResource() = default;
+
 	ResourceType GetResourceType() const noexcept { return m_type; }
 	ResourceState GetUsageState() const noexcept { return m_usageState; }
 	void SetUsageState(ResourceState usageState) noexcept { m_usageState = usageState; }

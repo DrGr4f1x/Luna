@@ -1859,25 +1859,9 @@ MeshletPipelinePtr Device::CreateMeshletPipelineStream(TPipelineStream& pipeline
 
 GpuBufferPtr Device::CreateRayTracingBuffer(size_t sizeInBytes, const std::string& name, D3D12_RESOURCE_STATES initialState)
 {
-	D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_DEFAULT;
-	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
-	D3D12_RESOURCE_DESC resourceDesc{
-		.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-		.Alignment = 0,
-		.Width = sizeInBytes,
-		.Height = 1,
-		.DepthOrArraySize = 1,
-		.MipLevels = 1,
-		.Format = DXGI_FORMAT_UNKNOWN,
-		.SampleDesc = {.Count = 1, .Quality = 0 },
-		.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		.Flags = flags
-	};
-
-	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
-		.HeapType = heapType
-	};
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{ .HeapType = D3D12_HEAP_TYPE_DEFAULT };
 
 	wil::com_ptr<D3D12MA::Allocation> allocation;
 	HRESULT hr = m_allocator->CreateResource(
@@ -1911,25 +1895,9 @@ GpuBufferPtr Device::CreateRayTracingBuffer(size_t sizeInBytes, const std::strin
 
 GpuBufferPtr Device::CreateRayTracingInstanceBuffer(size_t sizeInBytes, const void* initialData, const std::string& name)
 {
-	D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_UPLOAD;
-	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
+	auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeInBytes, D3D12_RESOURCE_FLAG_NONE, D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT);
 
-	D3D12_RESOURCE_DESC resourceDesc{
-		.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
-		.Alignment = D3D12_RAYTRACING_INSTANCE_DESCS_BYTE_ALIGNMENT,
-		.Width = sizeInBytes,
-		.Height = 1,
-		.DepthOrArraySize = 1,
-		.MipLevels = 1,
-		.Format = DXGI_FORMAT_UNKNOWN,
-		.SampleDesc = { .Count = 1, .Quality = 0 },
-		.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
-		.Flags = flags
-	};
-
-	auto allocationDesc = D3D12MA::ALLOCATION_DESC{
-		.HeapType = heapType
-	};
+	auto allocationDesc = D3D12MA::ALLOCATION_DESC{ .HeapType = D3D12_HEAP_TYPE_UPLOAD };
 
 	wil::com_ptr<D3D12MA::Allocation> allocation;
 	HRESULT hr = m_allocator->CreateResource(

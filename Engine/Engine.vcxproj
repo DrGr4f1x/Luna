@@ -117,7 +117,6 @@
     <ClInclude Include="Core\DWParam.h" />
     <ClInclude Include="Core\FlagStringMap.h" />
     <ClInclude Include="Core\Hash.h" />
-    <ClInclude Include="Core\NativeObjectPtr.h" />
     <ClInclude Include="Core\Math\BoundingBox.h" />
     <ClInclude Include="Core\Math\BoundingPlane.h" />
     <ClInclude Include="Core\Math\BoundingSphere.h" />
@@ -197,7 +196,6 @@
     <ClInclude Include="Graphics\RayTracing\RayTracingGeometry.h" />
     <ClInclude Include="Graphics\RayTracing\RayTracingPipeline.h" />
     <ClInclude Include="Graphics\RayTracing\ShaderBindingTable.h" />
-    <ClInclude Include="Graphics\Resource.h" />
     <ClInclude Include="Graphics\ResourceSet.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
     <ClInclude Include="Graphics\Sampler.h" />

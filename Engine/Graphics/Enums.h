@@ -779,45 +779,6 @@ enum class DepthStencilAspect
 };
 
 
-
-// TODO: Delete?
-enum class NativeObjectType : uint32_t
-{
-	// DX12
-	DX12_Resource				= 0x00010001,
-	DX12_RTV					= 0x00010002,
-	DX12_SRV					= 0x00010003,
-	DX12_UAV					= 0x00010004,
-	DX12_GpuVirtualAddress		= 0x00010005,
-	DX12_DSV					= 0x00010006,
-	DX12_DSV_ReadOnly			= 0x00010007,
-	DX12_DSV_DepthReadOnly		= 0x00010008,
-	DX12_DSV_StencilReadOnly	= 0x00010009,
-	DX12_SRV_Depth				= 0x0001000A,
-	DX12_SRV_Stencil			= 0x0001000B,
-	DX12_RootSignature			= 0x0001000C,
-	DX12_CBV					= 0x0001000D,
-
-	// Vulkan
-	VK_Image					= 0x00020001,
-	VK_Buffer					= 0x00020002,
-	VK_FrameBuffer				= 0x00020003,
-	VK_RenderPass				= 0x00020004,
-	VK_PipelineLayout			= 0x00020005,
-	VK_ImageView_RTV			= 0x00020006,
-	VK_ImageView_SRV			= 0x00020007,
-	VK_ImageView_DSV			= 0x00020008,
-	VK_ImageView_DSV_Depth		= 0x00020009,
-	VK_ImageView_DSV_Stencil	= 0x0002000A,
-	VK_ImageInfo_SRV			= 0x0002000B,
-	VK_ImageInfo_UAV			= 0x0002000C,
-	VK_ImageInfo_SRV_Depth		= 0x0002000D,
-	VK_ImageInfo_SRV_Stencil	= 0x0002000E,
-	VK_BufferInfo				= 0x0002000F,
-	VK_BufferView				= 0x00020010,
-};
-
-
 enum class StaticBorderColor : uint8_t
 {
 	TransparentBlack,
