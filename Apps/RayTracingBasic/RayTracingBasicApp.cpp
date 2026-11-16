@@ -76,7 +76,6 @@ void RayTracingBasicApp::Render()
 	computeContext.SetRootSignature(m_globalRootSignature);
 	computeContext.SetRayTracingPipeline(m_rayTracingPipeline);
 	computeContext.SetRootSRV(0, m_rayTracingTLAS);
-	//computeContext.SetDescriptors(0, m_testSet);
 	computeContext.SetDescriptors(1, m_descriptorSet);
 
 	computeContext.DispatchRays(m_shaderBindingTable, GetWindowWidth(), GetWindowHeight());
@@ -186,7 +185,6 @@ void RayTracingBasicApp::InitRootSignature()
 		.name				= "Global Root Signature",
 		.rootParameters		= {
 			RootSRV(0, ShaderStage::RayGeneration, 0, true /* isAccelerationStructure */),
-			//Table({ RayTracingAccelStruct(0, 1)}, ShaderStage::RayGeneration),
 			Table({ TextureUAV(1, 1), ConstantBuffer(2, 1) }, ShaderStage::RayGeneration)
 		}
 	};

@@ -196,6 +196,7 @@ protected:
 	std::unique_ptr<Grid> m_grid;
 
 	// Rendering resources
+	IDevice* m_device{ nullptr };
 	DepthBufferPtr m_depthBuffer;
 
 	// Default descriptor heap

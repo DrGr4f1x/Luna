@@ -369,85 +369,85 @@ void Application::UpdateWindowSize()
 
 DescriptorHeapPtr Application::CreateDescriptorHeap(uint32_t numImages, uint32_t numBuffers, uint32_t numSamplers)
 {
-	return m_deviceManager->GetDevice()->CreateDescriptorHeap(numImages, numBuffers, numSamplers);
+	return m_device->CreateDescriptorHeap(numImages, numBuffers, numSamplers);
 }
 
 
 ColorBufferPtr Application::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
-	return m_deviceManager->GetDevice()->CreateColorBuffer(colorBufferDesc);
+	return m_device->CreateColorBuffer(colorBufferDesc);
 }
 
 
 DepthBufferPtr Application::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
-	return m_deviceManager->GetDevice()->CreateDepthBuffer(depthBufferDesc);
+	return m_device->CreateDepthBuffer(depthBufferDesc);
 }
 
 
 GpuBufferPtr Application::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDesc)
 {
-	return m_deviceManager->GetDevice()->CreateGpuBuffer(gpuBufferDesc);
+	return m_device->CreateGpuBuffer(gpuBufferDesc);
 }
 
 
 RootSignaturePtr Application::CreateRootSignature(const RootSignatureDesc& rootSignatureDesc)
 {
-	return m_deviceManager->GetDevice()->CreateRootSignature(m_defaultDescriptorHeap, rootSignatureDesc);
+	return m_device->CreateRootSignature(m_defaultDescriptorHeap, rootSignatureDesc);
 }
 
 
 RootSignaturePtr Application::CreateRootSignature(DescriptorHeapPtr descriptorHeap, const RootSignatureDesc& rootSignatureDesc)
 {
-	return m_deviceManager->GetDevice()->CreateRootSignature(descriptorHeap, rootSignatureDesc);
+	return m_device->CreateRootSignature(descriptorHeap, rootSignatureDesc);
 }
 
 
 GraphicsPipelinePtr Application::CreateGraphicsPipeline(const GraphicsPipelineDesc& pipelineDesc)
 {
-	return m_deviceManager->GetDevice()->CreateGraphicsPipeline(pipelineDesc);
+	return m_device->CreateGraphicsPipeline(pipelineDesc);
 }
 
 
 ComputePipelinePtr Application::CreateComputePipeline(const ComputePipelineDesc& pipelineDesc)
 {
-	return m_deviceManager->GetDevice()->CreateComputePipeline(pipelineDesc);
+	return m_device->CreateComputePipeline(pipelineDesc);
 }
 
 
 MeshletPipelinePtr Application::CreateMeshletPipeline(const MeshletPipelineDesc& pipelineDesc)
 {
-	return m_deviceManager->GetDevice()->CreateMeshletPipeline(pipelineDesc);
+	return m_device->CreateMeshletPipeline(pipelineDesc);
 }
 
 
 QueryHeapPtr Application::CreateQueryHeap(const QueryHeapDesc& queryHeapDesc)
 {
-	return m_deviceManager->GetDevice()->CreateQueryHeap(queryHeapDesc);
+	return m_device->CreateQueryHeap(queryHeapDesc);
 }
 
 
 TexturePtr Application::CreateTexture1D(const TextureDesc& textureDesc)
 {
-	return m_deviceManager->GetDevice()->CreateTexture1D(textureDesc);
+	return m_device->CreateTexture1D(textureDesc);
 }
 
 
 TexturePtr Application::CreateTexture2D(const TextureDesc& textureDesc)
 {
-	return m_deviceManager->GetDevice()->CreateTexture2D(textureDesc);
+	return m_device->CreateTexture2D(textureDesc);
 }
 
 
 TexturePtr Application::CreateTexture3D(const TextureDesc& textureDesc)
 {
-	return m_deviceManager->GetDevice()->CreateTexture3D(textureDesc);
+	return m_device->CreateTexture3D(textureDesc);
 }
 
 
 SamplerPtr Application::CreateSampler(const SamplerDesc& samplerDesc)
 {
-	return m_deviceManager->GetDevice()->CreateSampler(samplerDesc);
+	return m_device->CreateSampler(samplerDesc);
 }
 
 
@@ -552,6 +552,7 @@ bool Application::Initialize()
 	m_inputSystem = make_unique<InputSystem>(m_hwnd);
 
 	CreateDeviceManager();
+	m_device = m_deviceManager->GetDevice();
 
 	m_grid = make_unique<Grid>(this, m_gridColor);
 	m_uiOverlay = make_unique<UIOverlay>(this, m_pWindow, m_appInfo.api);

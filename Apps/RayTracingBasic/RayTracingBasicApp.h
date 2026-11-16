@@ -66,6 +66,5 @@ protected:
 	Luna::GpuBufferPtr m_rayGenConstantBuffer;
 
 	Luna::ColorBufferPtr m_colorTarget;
-	Luna::DescriptorSetPtr m_testSet;
 	Luna::DescriptorSetPtr m_descriptorSet;
 };
