@@ -164,10 +164,10 @@ void RayTracingBasicApp::InitRayTracingBLAS()
 void RayTracingBasicApp::InitRayTracingTLAS()
 {
 	RayTracingInstanceDesc instanceDesc{
-		.transform				= Matrix4{ kIdentity },
-		.instanceID				= 1,
-		.instanceMask			= 0xFF,
-		.accelerationStructure	= m_triangleBLAS->GetGpuAddress()
+		.blas			= m_triangleBLAS,
+		.transform		= Matrix4{ kIdentity },
+		.instanceID		= 1,
+		.instanceMask	= 0xFF,
 	};
 
 	vector<RayTracingInstanceDesc> instances = { instanceDesc };

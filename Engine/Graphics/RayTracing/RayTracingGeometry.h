@@ -68,10 +68,10 @@ struct RayTracingBuildInfoBase
 
 struct RayTracingInstanceDesc
 {
+	GpuBufferPtr blas;
 	Math::Matrix4 transform{ Math::kIdentity };
 	uint32_t instanceID;
 	uint32_t instanceMask;
-	uint64_t accelerationStructure{ 0 };
 };
 
 

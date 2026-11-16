@@ -1092,6 +1092,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 		accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 		accelerationStructureGeometry.geometry.triangles.vertexFormat = FormatToVulkan(geometryDesc.triangles.vertexFormat);
 		accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = geometryDesc.triangles.vertexBuffer;
+		accelerationStructureGeometry.geometry.triangles.vertexStride = geometryDesc.triangles.vertexStride;
 		accelerationStructureGeometry.geometry.triangles.maxVertex = (uint32_t)geometryDesc.triangles.vertexCount - 1;
 		accelerationStructureGeometry.geometry.triangles.indexType = geometryDesc.triangles.indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 		accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = geometryDesc.triangles.indexBuffer;
@@ -1209,6 +1210,8 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	vector<VkAccelerationStructureInstanceKHR> instances;
 	for (const auto& instance : tlasDesc.instances)
 	{
+		GpuBuffer* blas = (GpuBuffer*)instance.blas.get();
+
 		VkAccelerationStructureInstanceKHR instanceDesc{};
 		instanceDesc.transform.matrix[0][0] = instance.transform.GetX().GetX();
 		instanceDesc.transform.matrix[0][1] = instance.transform.GetX().GetY();
@@ -1228,7 +1231,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 		instanceDesc.instanceCustomIndex = 0; // instance.instanceID;
 		instanceDesc.mask = instance.instanceMask;
 		instanceDesc.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
-		instanceDesc.accelerationStructureReference = instance.accelerationStructure;
+		instanceDesc.accelerationStructureReference = blas->GetAccelerationStructureDeviceAddress();
 		instances.push_back(instanceDesc);
 	}
 
@@ -1454,12 +1457,12 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	if (rayGenShaderIndex != -1)
 	{
 		VkRayTracingShaderGroupCreateInfoKHR rayGenGroupInfo{
-			.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
-			.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
-			.generalShader = (uint32_t)rayGenShaderIndex,
-			.closestHitShader = VK_SHADER_UNUSED_KHR,
-			.anyHitShader = VK_SHADER_UNUSED_KHR,
-			.intersectionShader = VK_SHADER_UNUSED_KHR
+			.sType					= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+			.type					= VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+			.generalShader			= (uint32_t)rayGenShaderIndex,
+			.closestHitShader		= VK_SHADER_UNUSED_KHR,
+			.anyHitShader			= VK_SHADER_UNUSED_KHR,
+			.intersectionShader		= VK_SHADER_UNUSED_KHR
 		};
 		shaderGroupInfos.push_back(rayGenGroupInfo);
 	}
@@ -1468,12 +1471,12 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	if (missShaderIndex != -1)
 	{
 		VkRayTracingShaderGroupCreateInfoKHR rayGenGroupInfo{
-			.sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
-			.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
-			.generalShader = (uint32_t)missShaderIndex,
-			.closestHitShader = VK_SHADER_UNUSED_KHR,
-			.anyHitShader = VK_SHADER_UNUSED_KHR,
-			.intersectionShader = VK_SHADER_UNUSED_KHR
+			.sType					= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+			.type					= VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+			.generalShader			= (uint32_t)missShaderIndex,
+			.closestHitShader		= VK_SHADER_UNUSED_KHR,
+			.anyHitShader			= VK_SHADER_UNUSED_KHR,
+			.intersectionShader		= VK_SHADER_UNUSED_KHR
 		};
 		shaderGroupInfos.push_back(rayGenGroupInfo);
 	}
@@ -1653,8 +1656,28 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pip
 	gpuBuffer->m_buffer = buffer;
 
 	// Copy SBT handles
-	void* mem = gpuBuffer->Map();
-	memcpy(mem, shaderHandleStorage.data(), shaderHandleStorage.size());
+	std::byte* mem = (std::byte*)gpuBuffer->Map();
+	std::byte* dst = mem;
+	size_t srcOffset = 0;
+	// Ray-gen group
+	if (pipeline->HasRayGenShader())
+	{
+		memcpy(dst, shaderHandleStorage.data(), sbtRecordSize);
+		dst += sbtRecordStride;
+		srcOffset += sbtRecordSize;
+	}
+	// Miss group
+	if (pipeline->HasMissShader())
+	{
+		memcpy(dst, shaderHandleStorage.data() + srcOffset, sbtRecordSize);
+		dst += sbtRecordStride;
+		srcOffset += sbtRecordSize;
+	}
+	// Hit groups
+	if (pipeline->GetNumHitGroups() > 0)
+	{
+		memcpy(dst, shaderHandleStorage.data() + srcOffset, sbtRecordSize * pipeline->GetNumHitGroups());
+	}
 	gpuBuffer->Unmap();
 
 	// Fill in address regions

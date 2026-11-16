@@ -1148,7 +1148,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 
 		instanceDesc.InstanceID = instance.instanceID;
 		instanceDesc.InstanceMask = instance.instanceMask;
-		instanceDesc.AccelerationStructure = instance.accelerationStructure;
+		instanceDesc.AccelerationStructure = instance.blas->GetGpuAddress();
 
 		d3d12Instances.push_back(instanceDesc);
 	}
