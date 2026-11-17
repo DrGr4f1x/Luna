@@ -32,7 +32,6 @@ public:
 		uint32_t arraySizeOrDepth,
 		uint32_t numMips,
 		uint32_t numSamples,
-		uint32_t planeCount,
 		Format format)
 		: IGpuResource{ type, usageState }
 		, m_width{ width }
@@ -40,7 +39,6 @@ public:
 		, m_arraySizeOrDepth{ arraySizeOrDepth }
 		, m_numMips{ numMips }
 		, m_numSamples{ numSamples }
-		, m_planeCount{ m_planeCount }
 		, m_format{ format }
 	{}
 
@@ -50,7 +48,6 @@ public:
 	uint32_t GetArraySize() const noexcept { return m_arraySizeOrDepth; }
 	uint32_t GetNumMips() const noexcept { return m_numMips; }
 	uint32_t GetNumSamples() const noexcept { return m_numSamples; }
-	uint32_t GetPlaneCount() const noexcept { return m_planeCount; }
 	Format GetFormat() const noexcept { return m_format; }
 	uint32_t GetNumFaces() const noexcept { return HasAnyFlag(m_type, ResourceType::TextureCube_Type) ? 6 : 1; }
 
@@ -60,7 +57,6 @@ protected:
 	uint32_t m_arraySizeOrDepth{ 1 };
 	uint32_t m_numMips{ 1 };
 	uint32_t m_numSamples{ 1 };
-	uint32_t m_planeCount{ 1 };
 	Format m_format{ Format::Unknown };
 };
 

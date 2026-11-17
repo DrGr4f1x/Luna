@@ -1721,7 +1721,6 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	textureVK->m_arraySizeOrDepth = effectiveArraySize;
 	textureVK->m_numMips = texInit.numMips;
 	textureVK->m_numSamples = 1;
-	textureVK->m_planeCount = 1;
 	textureVK->m_format = texInit.format;
 
 	// Create image

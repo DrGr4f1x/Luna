@@ -81,7 +81,6 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 	// a few DirectX-specific calculations and conversions.
 
 	ColorBufferDesc colorBufferDesc2 = colorBufferDesc;
-	colorBufferDesc2.planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
 
 	// Compute number of mips
 	auto numMips = colorBufferDesc.numMips == 0 ? ComputeNumMips(colorBufferDesc.width, colorBufferDesc.height) : colorBufferDesc.numMips;
@@ -232,7 +231,6 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 	// Make a writable copy of the DepthBufferDesc, since we need to do
 	// a few DirectX-specific calculations and conversions.
 	DepthBufferDesc depthBufferDesc2 = depthBufferDesc;
-	depthBufferDesc2.planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 	if (!depthBufferDesc.createShaderResources)
@@ -1400,7 +1398,6 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	texture12->m_arraySizeOrDepth = effectiveArraySize;
 	texture12->m_numMips = texInit.numMips;
 	texture12->m_numSamples = 1;
-	texture12->m_planeCount = GetFormatPlaneCount(FormatToDxgi(texInit.format).resourceFormat);
 	texture12->m_format = texInit.format;
 
 	// TODO: Allocate this with D3D12MA
@@ -1489,7 +1486,6 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain,
 	assert_succeeded(swapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
 
 	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
-	const uint8_t planeCount = GetFormatPlaneCount(resourceDesc.Format);
 
 	// Create Luna DX12 ColorBuffer object
 	ColorBufferDesc desc{
@@ -1499,7 +1495,6 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain,
 		.arraySizeOrDepth	= resourceDesc.DepthOrArraySize,
 		.numMips			= 1,
 		.numSamples			= resourceDesc.SampleDesc.Count,
-		.planeCount			= planeCount,
 		.clearColor			= DirectX::Colors::Black
 	};
 

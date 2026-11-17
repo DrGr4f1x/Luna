@@ -33,7 +33,6 @@ struct ColorBufferDesc
 	uint32_t numSamples{ 1 };
 	Format format{ Format::Unknown };
 	uint32_t numFragments{ 1 };
-	uint8_t planeCount{ 1 };
 	Color clearColor{ DirectX::Colors::Black };
 
 	ColorBufferDesc& SetName(const std::string& value) { name = value; return *this; }
@@ -46,7 +45,6 @@ struct ColorBufferDesc
 	constexpr ColorBufferDesc& SetNumSamples(uint32_t value) noexcept { numSamples = value; return *this; }
 	constexpr ColorBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
 	constexpr ColorBufferDesc& SetNumFragments(uint32_t value) noexcept { numFragments = value; return *this; }
-	constexpr ColorBufferDesc& SetPlaneCount(uint8_t value) noexcept { planeCount = value; return *this; }
 	ColorBufferDesc& SetClearColor(Color value) noexcept { clearColor = value; return *this; }
 };
 
@@ -55,7 +53,7 @@ class IColorBuffer : public IPixelBuffer
 {
 public:
 	explicit IColorBuffer(const ColorBufferDesc& desc)
-		: IPixelBuffer{ desc.resourceType, desc.usageState, desc.width, desc.height, desc.arraySizeOrDepth, desc.numMips, desc.numSamples, desc.planeCount, desc.format }
+		: IPixelBuffer{ desc.resourceType, desc.usageState, desc.width, desc.height, desc.arraySizeOrDepth, desc.numMips, desc.numSamples, desc.format }
 		, m_clearColor{ desc.clearColor }
 	{}
 

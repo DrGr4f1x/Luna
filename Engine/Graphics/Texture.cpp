@@ -49,7 +49,7 @@ uint32_t TextureInitializer::GetSubresourceIndex(GraphicsApi api, uint32_t face,
 
 
 ITexture::ITexture(const TextureDesc& desc)
-	: IPixelBuffer{ ResourceType::Texture2D, ResourceState::Common, desc.width, desc.height, desc.depth, desc.numMips, 1, 1, desc.format }
+	: IPixelBuffer{ ResourceType::Texture2D, ResourceState::Common, desc.width, desc.height, desc.depth, desc.numMips, 1, desc.format }
 {}
 
 

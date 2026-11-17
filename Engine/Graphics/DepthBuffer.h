@@ -32,7 +32,6 @@ struct DepthBufferDesc
 	uint32_t numMips{ 1 };
 	uint32_t numSamples{ 1 };
 	Format format{ Format::Unknown };
-	uint32_t planeCount{ 1 };
 	float clearDepth{ 1.0f };
 	uint8_t clearStencil{ 0 };
 	bool createShaderResources{ false };
@@ -46,7 +45,6 @@ struct DepthBufferDesc
 	constexpr DepthBufferDesc& SetNumMips(uint32_t value) noexcept { numMips = value; return *this; }
 	constexpr DepthBufferDesc& SetNumSamples(uint32_t value) noexcept { numSamples = value; return *this; }
 	constexpr DepthBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
-	constexpr DepthBufferDesc& SetPlaneCount(uint32_t value) noexcept { planeCount = value; return *this; }
 	constexpr DepthBufferDesc& SetClearDepth(float value) noexcept { clearDepth = value; return *this; }
 	constexpr DepthBufferDesc& SetClearStencil(uint8_t value) noexcept { clearStencil = value; return *this; }
 	constexpr DepthBufferDesc& SetCreateShaderResources(bool value) noexcept { createShaderResources = value; return *this; }
@@ -57,7 +55,7 @@ class IDepthBuffer : public IPixelBuffer
 {
 public:
 	explicit IDepthBuffer(const DepthBufferDesc& desc)
-		: IPixelBuffer{ desc.resourceType, desc.usageState, desc.width, desc.height, desc.arraySizeOrDepth, desc.numMips, desc.numSamples, desc.planeCount, desc.format }
+		: IPixelBuffer{ desc.resourceType, desc.usageState, desc.width, desc.height, desc.arraySizeOrDepth, desc.numMips, desc.numSamples, desc.format }
 		, m_clearDepth{ desc.clearDepth }
 		, m_clearStencil{ desc.clearStencil }
 	{}
