@@ -1383,40 +1383,25 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	}
 	else
 	{
-		VkShaderDescriptorSetAndBindingMappingInfoEXT info{};
 		int32_t shaderIndex = 0;
 		for (const auto& shaderEntry : pipelineDesc.shaderLibrary)
 		{
 			switch (shaderEntry.type)
 			{
 			case ShaderType::RayGeneration:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
 				assert(rayGenShaderIndex == -1);
 				rayGenShaderIndex = shaderIndex;
 				break;
 
 			case ShaderType::Miss:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
 				assert(missShaderIndex == -1);
 				missShaderIndex = shaderIndex;
 				break;
-
-			case ShaderType::AnyHit:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
-				break;
-
-			case ShaderType::ClosestHit:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
-				break;
-
-			case ShaderType::Intersection:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
-				break;
-
-			case ShaderType::Callable:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
-				break;
 			}
+
+			VkShaderDescriptorSetAndBindingMappingInfoEXT info{};
+			AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
+
 			++shaderIndex;
 		}
 	}
@@ -1747,9 +1732,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 		.imageUsage			= GpuImageUsage::ShaderResource,
 		.format				= textureVK->GetFormat(),
 		.imageAspect		= ImageAspect::Color,
-		.baseMipLevel		= 0,
 		.mipCount			= textureVK->GetNumMips(),
-		.baseArraySlice		= 0,
 		.arraySize			= isVolume ? 1 : texInit.arraySizeOrDepth
 	};
 	auto imageView = CreateImageView(imageViewDesc);
@@ -1772,14 +1755,10 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 
 	// Swapchain image
 	ColorBufferDesc colorBufferDesc{
-		.name				= name,
-		.resourceType		= ResourceType::Texture2D,
-		.usageState			= ResourceState::Undefined,
-		.width				= width,
-		.height				= height,
-		.arraySizeOrDepth	= 1,
-		.numSamples			= 1,
-		.format				= format
+		.name		= name,
+		.width		= width,
+		.height		= height,
+		.format		= format
 	};
 
 	SetDebugName(*m_device, swapChainImage->Get(), name);
