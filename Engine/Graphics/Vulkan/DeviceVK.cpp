@@ -264,22 +264,8 @@ ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 	imageViewDesc.SetImageUsage(GpuImageUsage::ShaderResource);
 	auto imageViewSrv = CreateImageView(imageViewDesc);
 
-	// Create ColorBuffer
-	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
-	colorBuffer->m_type = colorBufferDesc.resourceType;
-	colorBuffer->m_usageState = ResourceState::Undefined;
-	colorBuffer->m_width = colorBufferDesc.width;
-	colorBuffer->m_height = colorBufferDesc.height;
-	colorBuffer->m_arraySizeOrDepth = colorBufferDesc.arraySizeOrDepth;
-	colorBuffer->m_numMips = colorBufferDesc.numMips;
-	colorBuffer->m_numSamples = colorBufferDesc.numSamples;
-	colorBuffer->m_format = colorBufferDesc.format;
-	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
-	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
-	colorBuffer->m_image = image;
-
-	colorBuffer->SetRtvImageView(imageViewRtv.get());
-	colorBuffer->SetSrvImageView(imageViewSrv.get());
+	// Create Luna Vulkan ColorBuffer object
+	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>(colorBufferDesc, image.get(), imageViewRtv.get(), imageViewSrv.get());
 
 	colorBuffer->InitializeDescriptors(this, true);
 
@@ -364,23 +350,8 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 		stencilOnlyImageViewCreateInfo = depthStencilImageViewCreateInfo;
 	}
 
-	// Create DepthBuffer
-	auto depthBuffer = std::make_shared<Luna::VK::DepthBuffer>();
-	depthBuffer->m_type = depthBufferDesc.resourceType;
-	depthBuffer->m_usageState = ResourceState::Undefined;
-	depthBuffer->m_width = depthBufferDesc.width;
-	depthBuffer->m_height = depthBufferDesc.height;
-	depthBuffer->m_arraySizeOrDepth = depthBufferDesc.arraySizeOrDepth;
-	depthBuffer->m_numMips = 1;
-	depthBuffer->m_numSamples = depthBufferDesc.numSamples;
-	depthBuffer->m_format = depthBufferDesc.format;
-	depthBuffer->m_dimension = ResourceTypeToTextureDimension(depthBuffer->m_type);
-	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
-	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
-	depthBuffer->m_image = image;
-	depthBuffer->SetDepthStencilImageView(imageViewDepthStencil.get());
-	depthBuffer->SetDepthOnlyImageView(imageViewDepthOnly.get());
-	depthBuffer->SetStencilOnlyImageView(imageViewStencilOnly.get());
+	// Create Luna Vulkan DepthBuffer object
+	auto depthBuffer = std::make_shared<Luna::VK::DepthBuffer>(depthBufferDesc, image.get(), imageViewDepthStencil.get(), imageViewDepthOnly.get(), imageViewStencilOnly.get());
 
 	depthBuffer->InitializeDescriptors(this);
 
@@ -390,6 +361,8 @@ DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 
 GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 {
+	// Make a writable copy of the GpuBufferDesc, since we need to do
+	// a few Vulkan-specific calculations and conversions.
 	GpuBufferDesc gpuBufferDesc = gpuBufferDescIn;
 
 	constexpr VkBufferUsageFlags transferFlags = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
@@ -465,21 +438,15 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 		bufferView = Create<CVkBufferView>(m_device.get(), vkBufferView);
 	}
 
-	// Create GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>();
+	// Create Luna Vulkan GpuBuffer object
+	const uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), buffer->Get());
+	const bool isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
-	gpuBuffer->m_type = gpuBufferDesc.resourceType;
-	gpuBuffer->m_format = gpuBufferDesc.format;
-	gpuBuffer->m_usageState = ResourceState::GenericRead;
-	gpuBuffer->m_elementSize = gpuBufferDesc.elementSize;
-	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_buffer = buffer;
-	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
-	gpuBuffer->m_deviceAddress = GetBufferDeviceAddress(m_device->Get(), buffer->Get());
+	auto gpuBuffer = std::make_shared<GpuBuffer>(gpuBufferDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable);
 
 	gpuBuffer->InitializeDescriptors(this, gpuBufferDesc.bAllowShaderResource, gpuBufferDesc.bAllowUnorderedAccess);
 	
+	// Load initial data
 	if (gpuBufferDesc.initialData)
 	{
 		if (gpuBuffer->m_type == ResourceType::ConstantBuffer)
@@ -1185,20 +1152,21 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	};
 	auto accelStructureDeviceAddress = vkGetAccelerationStructureDeviceAddressKHR(m_device->Get(), &accelerationDeviceAddressInfo);
 
-	// Finally, create the GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>();
+	// Create Luna Vulkan GpuBuffer for the BLAS
+	GpuBufferDesc gpuBufferDesc{
+		.name			= geometryDesc.name,
+		.resourceType	= ResourceType::AccelerationStructure,
+		.usageState		= ResourceState::GenericRead,
+		.elementSize	= accelerationStructureBuildSizesInfo.accelerationStructureSize
+	};
 
-	gpuBuffer->m_type = ResourceType::AccelerationStructure;
-	gpuBuffer->m_format = Format::Unknown;
-	gpuBuffer->m_usageState = ResourceState::GenericRead;
-	gpuBuffer->m_elementSize = accelerationStructureBuildSizesInfo.accelerationStructureSize;
-	gpuBuffer->m_elementCount = 1;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_buffer = accelerationStructureBuffer;
-	gpuBuffer->m_isCpuWriteable = false;
-	gpuBuffer->m_deviceAddress = accelerationStructureBuffer->GetBufferDeviceAddress();
-	gpuBuffer->m_accelerationStructureDeviceAddress = accelStructureDeviceAddress;
-	gpuBuffer->m_accelerationStructure = accelerationStructure;
+	auto gpuBuffer = std::make_shared<GpuBuffer>(
+		gpuBufferDesc, 
+		accelerationStructureBuffer.get(), 
+		accelerationStructure.get(), 
+		accelerationStructureBuffer->GetBufferDeviceAddress(),
+		accelStructureDeviceAddress,
+		false);
 
 	return gpuBuffer;
 }
@@ -1321,21 +1289,24 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	};
 	auto accelStructureDeviceAddress = vkGetAccelerationStructureDeviceAddressKHR(m_device->Get(), &accelerationDeviceAddressInfo);
 
-	// Finally, create the GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>();
+	// Create Luna Vulkan GpuBuffer for the TLAS
+	GpuBufferDesc gpuBufferDesc{
+		.name			= "TLAS",
+		.resourceType	= ResourceType::AccelerationStructure,
+		.usageState		= ResourceState::GenericRead,
+		.elementSize	= accelerationStructureBuildSizesInfo.accelerationStructureSize
+	};
 
-	gpuBuffer->m_type = ResourceType::AccelerationStructure;
-	gpuBuffer->m_format = Format::Unknown;
-	gpuBuffer->m_usageState = ResourceState::GenericRead;
-	gpuBuffer->m_elementSize = accelerationStructureBuildSizesInfo.accelerationStructureSize;
-	gpuBuffer->m_elementCount = 1;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_buffer = accelerationStructureBuffer;
-	gpuBuffer->m_isCpuWriteable = false;
-	gpuBuffer->m_deviceAddress = accelerationStructureBuffer->GetBufferDeviceAddress();
-	gpuBuffer->m_accelerationStructureDeviceAddress = accelStructureDeviceAddress;
-	gpuBuffer->m_accelerationStructure = accelerationStructure;
+	auto gpuBuffer = std::make_shared<GpuBuffer>(
+		gpuBufferDesc,
+		accelerationStructureBuffer.get(),
+		accelerationStructure.get(),
+		accelerationStructureBuffer->GetBufferDeviceAddress(),
+		accelStructureDeviceAddress,
+		false);
+
 	gpuBuffer->InitializeDescriptors(this, true, false);
+
 	return gpuBuffer;
 }
 
@@ -1643,17 +1614,11 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pip
 
 	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferCreateInfo.size);
 
-	// Create GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>();
-	gpuBuffer->m_type = sbtDesc.resourceType;
-	gpuBuffer->m_usageState = ResourceState::Common;
-	gpuBuffer->m_format = sbtDesc.format;
-	gpuBuffer->m_elementSize = sbtDesc.elementSize;
-	gpuBuffer->m_elementCount = sbtDesc.elementCount;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_isCpuWriteable = HasFlag(sbtDesc.memoryAccess, MemoryAccess::CpuWrite);
-	gpuBuffer->m_deviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
-	gpuBuffer->m_buffer = buffer;
+	// Create Luna Vulkan GpuBuffer for shader binding table
+	const uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
+	const bool isCpuWriteable = HasFlag(sbtDesc.memoryAccess, MemoryAccess::CpuWrite);
+
+	auto gpuBuffer = std::make_shared<GpuBuffer>(sbtDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable);
 
 	// Copy SBT handles
 	std::byte* mem = (std::byte*)gpuBuffer->Map();
@@ -1722,8 +1687,9 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pip
 
 ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
 {
-	Texture* tex = new Texture();
-	tex->m_name = name;
+	TextureDesc desc{};
+
+	Texture* tex = new Texture(desc, this, nullptr, name);
 	tex->m_mapKey = mapKey;
 	return tex;
 }
@@ -1757,7 +1723,6 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	textureVK->m_numSamples = 1;
 	textureVK->m_planeCount = 1;
 	textureVK->m_format = texInit.format;
-	textureVK->m_dimension = texInit.dimension;
 
 	// Create image
 	ImageDesc imageDesc{
@@ -1792,11 +1757,7 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	auto imageViewCreateInfo = GetImageViewCreateInfo(imageViewDesc);
 
 	// Setup descriptor
-	const bool useDescriptorHeap = UseDescriptorHeap();
-	textureVK->m_descriptor.ReadSampledImageDescriptor(
-		this,  
-		imageViewCreateInfo, 
-		imageView->Get());
+	textureVK->m_descriptor.ReadSampledImageDescriptor(this, imageViewCreateInfo, imageView->Get());
 
 	// Copy initial data
 	TexturePtr temp = texture;
@@ -1814,6 +1775,7 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 	ColorBufferDesc colorBufferDesc{
 		.name				= name,
 		.resourceType		= ResourceType::Texture2D,
+		.usageState			= ResourceState::Undefined,
 		.width				= width,
 		.height				= height,
 		.arraySizeOrDepth	= 1,
@@ -1846,21 +1808,8 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChainImage(CVkImage* swapChainIm
 
 	auto imageViewSrv = CreateImageView(imageViewDesc);
 
-	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>();
-
-	colorBuffer->m_type = colorBufferDesc.resourceType;
-	colorBuffer->m_usageState = ResourceState::Undefined;
-	colorBuffer->m_width = colorBufferDesc.width;
-	colorBuffer->m_height = colorBufferDesc.height;
-	colorBuffer->m_arraySizeOrDepth = colorBufferDesc.arraySizeOrDepth;
-	colorBuffer->m_numMips = colorBufferDesc.numMips;
-	colorBuffer->m_numSamples = colorBufferDesc.numSamples;
-	colorBuffer->m_format = colorBufferDesc.format;
-	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
-	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
-	colorBuffer->m_image = swapChainImage;
-	colorBuffer->SetRtvImageView(imageViewRtv.get());
-	colorBuffer->SetSrvImageView(imageViewSrv.get());
+	// Create Luna Vulkan ColorBuffer object for swapchain
+	auto colorBuffer = std::make_shared<Luna::VK::ColorBuffer>(colorBufferDesc, swapChainImage, imageViewRtv.get(), imageViewSrv.get());
 
 	colorBuffer->InitializeDescriptors(this, false);
 
@@ -2057,6 +2006,7 @@ wil::com_ptr<CVkImageView> Device::CreateImageView(const ImageViewDesc& imageVie
 	VkImageView vkImageView{ VK_NULL_HANDLE };
 	if (VK_SUCCEEDED(vkCreateImageView(*m_device, &createInfo, nullptr, &vkImageView)))
 	{
+		SetDebugName(m_device->Get(), vkImageView, imageViewDesc.name);
 		return Create<CVkImageView>(m_device.get(), imageViewDesc.image, vkImageView, createInfo);
 	}
 	else

@@ -18,6 +18,32 @@
 namespace Luna::VK
 {
 
+GpuBuffer::GpuBuffer(
+	const GpuBufferDesc& desc,
+	CVkBuffer* buffer,
+	VkDeviceAddress deviceAddress,
+	bool isCpuWriteable)
+	: IGpuBuffer{ desc.resourceType, desc.usageState, desc.format, desc.elementSize, desc.elementCount }
+	, m_buffer{ buffer }
+	, m_deviceAddress{ deviceAddress }
+	, m_isCpuWriteable{ isCpuWriteable }
+{}
+
+GpuBuffer::GpuBuffer(
+	const GpuBufferDesc& desc,
+	CVkBuffer* buffer,
+	CVkAccelerationStructure* accelerationStructure,
+	VkDeviceAddress deviceAddress,
+	VkDeviceAddress accelerationStructureDeviceAddress,
+	bool isCpuWriteable)
+	: IGpuBuffer{ desc.resourceType, desc.usageState, desc.format, desc.elementSize, desc.elementCount }
+	, m_buffer{ buffer }
+	, m_accelerationStructure{ accelerationStructure }
+	, m_deviceAddress{ deviceAddress }
+	, m_accelerationStructureDeviceAddress{ accelerationStructureDeviceAddress }
+	, m_isCpuWriteable{ isCpuWriteable }
+{}
+
 void GpuBuffer::Update(size_t sizeInBytes, const void* data)
 {
 	Update(sizeInBytes, 0, data);
@@ -67,19 +93,21 @@ VkAccelerationStructureKHR GpuBuffer::GetAccelerationStructure() const noexcept
 
 void GpuBuffer::InitializeDescriptors(Device* device, bool hasSrv, bool hasUav)
 {
+	const size_t bufferSize = GetBufferSize();
+
 	if (hasSrv)
 	{
 		if (HasAnyFlag(m_type, ResourceType::TypedBuffer))
 		{
-			m_srvDescriptor.ReadUniformTexelBufferDescriptor(device, m_deviceAddress, m_bufferSize, FormatToVulkan(m_format));
+			m_srvDescriptor.ReadUniformTexelBufferDescriptor(device, m_deviceAddress, bufferSize, FormatToVulkan(m_format));
 		}
 		else if (HasAnyFlag(m_type, ResourceType::AccelerationStructure))
 		{
-			m_srvDescriptor.ReadAccelerationStructureDescriptor(device, m_accelerationStructureDeviceAddress, m_bufferSize);
+			m_srvDescriptor.ReadAccelerationStructureDescriptor(device, m_accelerationStructureDeviceAddress, bufferSize);
 		}
 		else
 		{
-			m_srvDescriptor.ReadStorageBufferDescriptor(device, m_deviceAddress, m_bufferSize);
+			m_srvDescriptor.ReadStorageBufferDescriptor(device, m_deviceAddress, bufferSize);
 
 		}
 	}
@@ -88,17 +116,17 @@ void GpuBuffer::InitializeDescriptors(Device* device, bool hasSrv, bool hasUav)
 	{
 		if (HasAnyFlag(m_type, ResourceType::TypedBuffer))
 		{
-			m_uavDescriptor.ReadStorageTexelBufferDescriptor(device, m_deviceAddress, m_bufferSize, FormatToVulkan(m_format));
+			m_uavDescriptor.ReadStorageTexelBufferDescriptor(device, m_deviceAddress, bufferSize, FormatToVulkan(m_format));
 		}
 		else
 		{
-			m_uavDescriptor.ReadStorageBufferDescriptor(device, m_deviceAddress, m_bufferSize);
+			m_uavDescriptor.ReadStorageBufferDescriptor(device, m_deviceAddress, bufferSize);
 		}
 	}
 
 	if (HasAnyFlag(m_type, ResourceType::ConstantBuffer))
 	{
-		m_cbvDescriptor.ReadUniformBufferDescriptor(device, m_deviceAddress, m_bufferSize);
+		m_cbvDescriptor.ReadUniformBufferDescriptor(device, m_deviceAddress, bufferSize);
 	}
 }
 

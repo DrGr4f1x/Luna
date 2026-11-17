@@ -27,7 +27,7 @@ class ColorBuffer : public IColorBuffer
 	friend class Device;
 
 public:
-	explicit ColorBuffer(Device* device);
+	ColorBuffer(const ColorBufferDesc& desc, Device* device, ID3D12Resource* resource);
 
 	const IDescriptor* GetSrvDescriptor() const noexcept override { return &m_srvDescriptor; }
 	const IDescriptor* GetRtvDescriptor() const noexcept override { return &m_rtvDescriptor; }
@@ -38,7 +38,7 @@ public:
 protected:
 	wil::com_ptr<ID3D12Resource> m_resource;
 
-	// Dscriptors
+	// Descriptors
 	Descriptor m_srvDescriptor;
 	Descriptor m_rtvDescriptor;
 	std::array<Descriptor, 12> m_uavDescriptors;

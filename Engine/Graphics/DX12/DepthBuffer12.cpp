@@ -16,7 +16,9 @@
 namespace Luna::DX12
 {
 
-DepthBuffer::DepthBuffer(Device* device)
+DepthBuffer::DepthBuffer(const DepthBufferDesc& desc, Device* device, ID3D12Resource* resource)
+	: IDepthBuffer{ desc }
+	, m_resource{ resource }
 {
 	for (auto& dsvDescriptor : m_dsvDescriptors)
 	{
@@ -24,6 +26,8 @@ DepthBuffer::DepthBuffer(Device* device)
 	}
 	m_depthSrvDescriptor.SetDevice(device);
 	m_stencilSrvDescriptor.SetDevice(device);
+
+	SetDebugName(m_resource.get(), desc.name);
 }
 
 

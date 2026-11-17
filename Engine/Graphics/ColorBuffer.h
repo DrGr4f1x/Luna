@@ -25,6 +25,7 @@ struct ColorBufferDesc
 {
 	std::string name;
 	ResourceType resourceType{ ResourceType::Texture2D };
+	ResourceState usageState{ ResourceState::Undefined };
 	uint64_t width{ 0 };
 	uint32_t height{ 0 };
 	uint32_t arraySizeOrDepth{ 1 };
@@ -53,6 +54,11 @@ struct ColorBufferDesc
 class IColorBuffer : public IPixelBuffer
 {
 public:
+	explicit IColorBuffer(const ColorBufferDesc& desc)
+		: IPixelBuffer{ desc.resourceType, desc.usageState, desc.width, desc.height, desc.arraySizeOrDepth, desc.numMips, desc.numSamples, desc.planeCount, desc.format }
+		, m_clearColor{ desc.clearColor }
+	{}
+
 	Color GetClearColor() const noexcept { return m_clearColor; }
 
 	virtual const IDescriptor* GetSrvDescriptor() const noexcept = 0;

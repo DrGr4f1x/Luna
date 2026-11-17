@@ -26,23 +26,16 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
+	DepthBuffer(const DepthBufferDesc& desc, CVkImage* image, CVkImageView* depthStencilImageView, CVkImageView* depthOnlyImageView, CVkImageView* stencilOnlyImageView)
+		: IDepthBuffer{ desc }
+		, m_image{ image }
+		, m_depthStencilImageView{ depthStencilImageView }
+		, m_depthOnlyImageView{ depthOnlyImageView }
+		, m_stencilOnlyImageView{ stencilOnlyImageView }
+	{}
+
 	const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept override { return nullptr; }
 	const IDescriptor* GetSrvDescriptor(bool depthSrv) const noexcept override;
-
-	void SetDepthStencilImageView(CVkImageView* imageView)
-	{
-		m_depthStencilImageView = imageView;
-	}
-
-	void SetDepthOnlyImageView(CVkImageView* imageView)
-	{
-		m_depthOnlyImageView = imageView;
-	}
-
-	void SetStencilOnlyImageView(CVkImageView* imageView)
-	{
-		m_stencilOnlyImageView = imageView;
-	}
 
 	VkImageView GetDsvImageView(DepthStencilAspect aspect) const;
 

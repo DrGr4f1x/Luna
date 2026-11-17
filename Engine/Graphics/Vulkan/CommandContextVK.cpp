@@ -447,7 +447,7 @@ void CommandContextVK::TransitionResource(ITexture* texture, ResourceState newSt
 	Texture* textureVK = (Texture*)texture;
 	assert(textureVK != nullptr);
 
-	const bool isVolume = texture->GetDimension() == TextureDimension::Texture3D;
+	const bool isVolume = texture->GetResourceType() == ResourceType::Texture3D;
 	const uint32_t arraySizeOrDepth = isVolume ? 1 : (texture->GetArraySize() * texture->GetNumFaces());
 
 	TextureBarrier barrier{

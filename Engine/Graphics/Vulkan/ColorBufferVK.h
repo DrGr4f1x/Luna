@@ -27,6 +27,8 @@ class ColorBuffer : public IColorBuffer
 	friend class Device;
 
 public:
+	ColorBuffer(const ColorBufferDesc& desc, CVkImage* image, CVkImageView* rtvImageView, CVkImageView* srvImageView);
+
 	const IDescriptor* GetSrvDescriptor() const noexcept override { return &m_srvDescriptor; }
 	const IDescriptor* GetRtvDescriptor() const noexcept override { assert(false);  return nullptr; }
 	const IDescriptor* GetUavDescriptor(uint32_t index) const noexcept override;

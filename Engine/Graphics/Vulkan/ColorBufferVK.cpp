@@ -18,6 +18,14 @@
 namespace Luna::VK
 {
 
+ColorBuffer::ColorBuffer(const ColorBufferDesc& desc, CVkImage* image, CVkImageView* rtvImageView, CVkImageView* srvImageView)
+	: IColorBuffer{ desc }
+	, m_image{ image }
+	, m_rtvImageView{ rtvImageView }
+	, m_srvImageView{ srvImageView }
+{}
+
+
 const IDescriptor* ColorBuffer::GetUavDescriptor(uint32_t index) const noexcept
 {
 	assert(index == 0);

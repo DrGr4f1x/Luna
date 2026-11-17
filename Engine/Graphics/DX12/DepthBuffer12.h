@@ -27,7 +27,7 @@ class DepthBuffer : public IDepthBuffer
 	friend class Device;
 
 public:
-	explicit DepthBuffer(Device* device);
+	explicit DepthBuffer(const DepthBufferDesc& desc, Device* device, ID3D12Resource* resource);
 
 	const IDescriptor* GetDsvDescriptor(DepthStencilAspect aspect) const noexcept override;
 	const IDescriptor* GetSrvDescriptor(bool depthSrv) const noexcept override;

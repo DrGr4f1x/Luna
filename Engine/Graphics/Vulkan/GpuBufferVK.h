@@ -27,6 +27,20 @@ class GpuBuffer : public IGpuBuffer
 	friend class Device;
 
 public:
+	GpuBuffer(
+		const GpuBufferDesc& desc,
+		CVkBuffer* buffer,
+		VkDeviceAddress deviceAddress,
+		bool isCpuWriteable);
+
+	GpuBuffer(
+		const GpuBufferDesc& desc,
+		CVkBuffer* buffer,
+		CVkAccelerationStructure* accelerationStructure,
+		VkDeviceAddress deviceAddress,
+		VkDeviceAddress accelerationStructureDeviceAddress,
+		bool isCpuWriteable);
+
 	void Update(size_t sizeInBytes, const void* data) override;
 	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
 
@@ -37,11 +51,19 @@ public:
 	const IDescriptor* GetUavDescriptor() const noexcept override { return &m_uavDescriptor; }
 	const IDescriptor* GetCbvDescriptor() const noexcept override { return &m_cbvDescriptor; }
 
-	uint64_t GetGpuAddress() const noexcept override { return m_deviceAddress; }
-	uint64_t GetAccelerationStructureDeviceAddress() const noexcept { return m_accelerationStructureDeviceAddress; }
+	uint64_t GetGpuAddress() const noexcept override 
+	{ 
+		assert(m_deviceAddress != 0);
+		return m_deviceAddress; 
+	}
+
+	uint64_t GetAccelerationStructureDeviceAddress() const noexcept 
+	{ 
+		assert(m_accelerationStructureDeviceAddress != 0);
+		return m_accelerationStructureDeviceAddress;
+	}
 
 	VkBuffer GetBuffer() const noexcept;
-
 	VkAccelerationStructureKHR GetAccelerationStructure() const noexcept;
 
 	void InitializeDescriptors(Device* device, bool hasSrv, bool hasUav);
@@ -49,14 +71,13 @@ public:
 protected:
 	wil::com_ptr<CVkBuffer> m_buffer;
 	wil::com_ptr<CVkAccelerationStructure> m_accelerationStructure;
+	VkDeviceAddress m_deviceAddress{ 0 };
+	VkDeviceAddress m_accelerationStructureDeviceAddress{ 0 };
+	bool m_isCpuWriteable{ false };
+
 	Descriptor m_srvDescriptor;
 	Descriptor m_uavDescriptor;
 	Descriptor m_cbvDescriptor;
-
-	VkDeviceAddress m_deviceAddress{ 0 };
-	VkDeviceAddress m_accelerationStructureDeviceAddress{ 0 };
-
-	bool m_isCpuWriteable{ false };
 };
 
 } // namespace Luna::VK

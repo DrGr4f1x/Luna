@@ -77,6 +77,8 @@ class ITexture : public IPixelBuffer
 	friend class TexturePtr;
 
 public:
+	explicit ITexture(const TextureDesc& desc);
+
 	virtual bool IsValid() const = 0;
 	bool IsLoading() const { return m_isLoading; }
 	void WaitForLoad() const;

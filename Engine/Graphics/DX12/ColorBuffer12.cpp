@@ -15,7 +15,9 @@
 namespace Luna::DX12
 {
 
-ColorBuffer::ColorBuffer(Device* device)
+ColorBuffer::ColorBuffer(const ColorBufferDesc& desc, Device* device, ID3D12Resource* resource)
+	: IColorBuffer{ desc }
+	, m_resource{ resource }
 {
 	m_rtvDescriptor.SetDevice(device);
 	m_srvDescriptor.SetDevice(device);
@@ -23,6 +25,8 @@ ColorBuffer::ColorBuffer(Device* device)
 	{
 		uavDescriptor.SetDevice(device);
 	}
+
+	SetDebugName(m_resource.get(), desc.name);
 }
 
 

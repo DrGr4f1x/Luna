@@ -26,8 +26,9 @@ struct GpuBufferDesc
 	std::string name;
 	ResourceType resourceType{ ResourceType::Unknown };
 	MemoryAccess memoryAccess{ MemoryAccess::Unknown };
+	ResourceState usageState{ ResourceState::Common };
 	Format format{ Format::Unknown };
-	size_t elementCount{ 0 };
+	size_t elementCount{ 1 };
 	size_t elementSize{ 0 };
 	const void* initialData{ nullptr };
 	// TODO: changes these to a flags enum called UsageFlags
@@ -39,6 +40,7 @@ struct GpuBufferDesc
 	GpuBufferDesc& SetName(const std::string& value) { name = value; return *this; }
 	constexpr GpuBufferDesc& SetResourceType(ResourceType value) noexcept { resourceType = value; return *this; }
 	constexpr GpuBufferDesc& SetMemoryAccess(MemoryAccess value) noexcept { memoryAccess = value; return *this; }
+	constexpr GpuBufferDesc& SetUsageState(ResourceState value) noexcept { usageState = value; return *this; }
 	constexpr GpuBufferDesc& SetFormat(Format value) noexcept { format = value; return *this; }
 	constexpr GpuBufferDesc& SetElementCount(size_t value) noexcept { elementCount = value; return *this; }
 	constexpr GpuBufferDesc& SetElementSize(size_t value) noexcept { elementSize = value; return *this; }
@@ -50,8 +52,20 @@ struct GpuBufferDesc
 class IGpuBuffer : public IGpuResource
 {
 public:
+	IGpuBuffer(
+		ResourceType type,
+		ResourceState usageState,
+		Format format,
+		size_t elementSize,
+		size_t elementCount)
+		: IGpuResource{ type, usageState }
+		, m_format{ format }
+		, m_elementSize{ elementSize }
+		, m_elementCount{ elementCount }
+	{}
+
 	Format GetFormat() const noexcept { return m_format; }
-	size_t GetBufferSize() const noexcept { return m_bufferSize; }
+	size_t GetBufferSize() const noexcept { return m_elementSize * m_elementCount; }
 	size_t GetElementSize() const noexcept { return m_elementSize; }
 	size_t GetElementCount() const noexcept { return m_elementCount; }
 
@@ -69,7 +83,6 @@ public:
 
 protected:
 	Format m_format{ Format::Unknown };
-	size_t m_bufferSize{ 0 };
 	size_t m_elementSize{ 0 };
 	size_t m_elementCount{ 0 };
 };

@@ -27,7 +27,7 @@ class Texture : public ITexture
 	friend class Device;
 
 public:
-	explicit Texture(Device* device);
+	Texture(const TextureDesc& desc, Device* device, ID3D12Resource* resource, const std::string& name);
 
 	bool IsValid() const noexcept override { return m_resource != nullptr; }
 

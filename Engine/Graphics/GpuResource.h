@@ -19,6 +19,11 @@ namespace Luna
 class IGpuResource
 { 
 public:
+	IGpuResource(ResourceType type, ResourceState usageState)
+		: m_type{ type }
+		, m_usageState{ usageState }
+	{}
+
 	virtual ~IGpuResource() = default;
 
 	ResourceType GetResourceType() const noexcept { return m_type; }

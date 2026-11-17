@@ -15,7 +15,10 @@
 namespace Luna::DX12
 {
 
-Texture::Texture(Device* device)
+Texture::Texture(const TextureDesc& desc, Device* device, ID3D12Resource* resource, const std::string& name)
+	: ITexture{ desc }
+	, m_resource{ resource }
+	, m_name{ name }
 {
 	m_srvDescriptor.SetDevice(device);
 }

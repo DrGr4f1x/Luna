@@ -94,6 +94,7 @@
     <ClCompile Include="Graphics\Vulkan\QueueVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\TextureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VersionVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanCommon.cpp" />
     <ClCompile Include="Graphics\Vulkan\VulkanUtil.cpp" />

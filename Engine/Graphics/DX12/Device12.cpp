@@ -77,23 +77,18 @@ DescriptorHeapPtr Device::CreateDescriptorHeap(uint32_t numImages, uint32_t numB
 
 Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBufferDesc)
 {
-	// Create color buffer
-	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>(this);
-	colorBuffer->m_type = colorBufferDesc.resourceType;
-	colorBuffer->m_width = colorBufferDesc.width;
-	colorBuffer->m_height = colorBufferDesc.height;
-	colorBuffer->m_arraySizeOrDepth = colorBufferDesc.arraySizeOrDepth;
-	colorBuffer->m_numSamples = colorBufferDesc.numSamples;
-	colorBuffer->m_planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
-	colorBuffer->m_format = colorBufferDesc.format;
-	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
-	colorBuffer->m_clearColor = colorBufferDesc.clearColor;
-	
-	// Create resource
-	auto numMips = colorBufferDesc.numMips == 0 ? ComputeNumMips(colorBufferDesc.width, colorBufferDesc.height) : colorBufferDesc.numMips;
-	auto flags = CombineResourceFlags(colorBufferDesc.numSamples);
+	// Make a writable copy of the ColorBufferDesc, since we need to do
+	// a few DirectX-specific calculations and conversions.
 
-	colorBuffer->m_numMips = numMips;
+	ColorBufferDesc colorBufferDesc2 = colorBufferDesc;
+	colorBufferDesc2.planeCount = GetFormatPlaneCount(FormatToDxgi(colorBufferDesc.format).resourceFormat);
+
+	// Compute number of mips
+	auto numMips = colorBufferDesc.numMips == 0 ? ComputeNumMips(colorBufferDesc.width, colorBufferDesc.height) : colorBufferDesc.numMips;
+	colorBufferDesc2.numMips = numMips;
+
+	// Create resource
+	auto flags = CombineResourceFlags(colorBufferDesc.numSamples);
 
 	D3D12_RESOURCE_DESC resourceDesc{
 		.Dimension			= GetResourceDimension(colorBufferDesc.resourceType),
@@ -120,9 +115,8 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 	assert_succeeded(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
 		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&resource)));
 
-	SetDebugName(resource.get(), colorBufferDesc.name);
-
-	colorBuffer->m_resource = resource;
+	// Create Luna DX12 ColorBuffer
+	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>(colorBufferDesc2, this, resource.get());
 
 	// Create descriptors and derived views
 	assert_msg(colorBufferDesc.arraySizeOrDepth == 1 || numMips == 1, "We don't support auto-mips on texture arrays");
@@ -235,19 +229,10 @@ Luna::ColorBufferPtr Device::CreateColorBuffer(const ColorBufferDesc& colorBuffe
 
 Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBufferDesc)
 {
-	auto depthBuffer = std::make_shared<Luna::DX12::DepthBuffer>(this);
-
-	depthBuffer->m_type = depthBufferDesc.resourceType;
-	depthBuffer->m_width = depthBufferDesc.width;
-	depthBuffer->m_height = depthBufferDesc.height;
-	depthBuffer->m_arraySizeOrDepth = depthBufferDesc.arraySizeOrDepth;
-	depthBuffer->m_numMips = 1;
-	depthBuffer->m_numSamples = depthBufferDesc.numSamples;
-	depthBuffer->m_planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
-	depthBuffer->m_format = depthBufferDesc.format;
-	depthBuffer->m_dimension = ResourceTypeToTextureDimension(depthBuffer->m_type);
-	depthBuffer->m_clearDepth = depthBufferDesc.clearDepth;
-	depthBuffer->m_clearStencil = depthBufferDesc.clearStencil;
+	// Make a writable copy of the DepthBufferDesc, since we need to do
+	// a few DirectX-specific calculations and conversions.
+	DepthBufferDesc depthBufferDesc2 = depthBufferDesc;
+	depthBufferDesc2.planeCount = GetFormatPlaneCount(FormatToDxgi(depthBufferDesc.format).resourceFormat);
 
 	D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 	if (!depthBufferDesc.createShaderResources)
@@ -279,9 +264,8 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 	assert_succeeded(m_device->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE,
 		&resourceDesc, D3D12_RESOURCE_STATE_COMMON, &clearValue, IID_PPV_ARGS(&resource)));
 
-	SetDebugName(resource.get(), depthBufferDesc.name);
-
-	depthBuffer->m_resource = resource;
+	// Create Luna DX12 DepthBuffer object
+	auto depthBuffer = std::make_shared<Luna::DX12::DepthBuffer>(depthBufferDesc2, this, resource.get());
 
 	// Create descriptors and derived views
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -355,34 +339,27 @@ Luna::DepthBufferPtr Device::CreateDepthBuffer(const DepthBufferDesc& depthBuffe
 
 Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 {
-	ResourceState initialState = ResourceState::GenericRead;
+	// Make a writable copy of the GpuBufferDesc, since we need to do
+	// a few DirectX-specific calculations and conversions.
 
-	GpuBufferDesc gpuBufferDesc = gpuBufferDescIn;
+	GpuBufferDesc gpuBufferDesc2 = gpuBufferDescIn;
+	gpuBufferDesc2.usageState = ResourceState::GenericRead;
+
 	if (gpuBufferDescIn.resourceType == ResourceType::ConstantBuffer)
 	{
-		gpuBufferDesc.elementSize = Math::AlignUp(gpuBufferDescIn.elementSize, 256);
+		gpuBufferDesc2.elementSize = Math::AlignUp(gpuBufferDescIn.elementSize, 256);
 	}
 
-	// Create GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
-	gpuBuffer->m_type = gpuBufferDesc.resourceType;
-	gpuBuffer->m_usageState = initialState;
-	gpuBuffer->m_format = gpuBufferDesc.format;
-	gpuBuffer->m_elementSize = gpuBufferDescIn.elementSize;
-	gpuBuffer->m_elementCount = gpuBufferDesc.elementCount;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
+	// Allocate buffer
+	auto allocation = AllocateBuffer(gpuBufferDesc2);
+	auto resource = allocation->GetResource();
 
-	wil::com_ptr<D3D12MA::Allocation> allocation = AllocateBuffer(gpuBufferDesc);
-	ID3D12Resource* pResource = allocation->GetResource();
+	// Create Luna DX12 GpuBuffer object
+	auto gpuBuffer = std::make_shared<GpuBuffer>(gpuBufferDesc2, this, allocation.get());
 
-	SetDebugName(pResource, gpuBufferDesc.name);
+	const size_t bufferSize = gpuBuffer->GetBufferSize();
 
-	gpuBuffer->m_allocation = allocation;
-
-	const size_t bufferSize = gpuBufferDesc.elementCount * gpuBufferDesc.elementSize;
-
-	if (gpuBufferDesc.resourceType == ResourceType::ByteAddressBuffer || gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::ByteAddressBuffer || gpuBufferDesc2.resourceType == ResourceType::IndirectArgsBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
 			.Format						= DXGI_FORMAT_R32_TYPELESS,
@@ -394,7 +371,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
+		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(resource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
 			.Format				= DXGI_FORMAT_R32_TYPELESS,
@@ -405,106 +382,106 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 			}
 		};
 
-		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
+		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(resource, uavDesc);
 	}
 
-	if (gpuBufferDesc.resourceType == ResourceType::StructuredBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::StructuredBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
 			.Format						= DXGI_FORMAT_UNKNOWN,
 			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
 			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
 			.Buffer = {
-				.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
-				.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+				.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
+				.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
 				.Flags					= D3D12_BUFFER_SRV_FLAG_NONE
 			}
 		};
 
-		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
+		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(resource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
 			.Format				= DXGI_FORMAT_UNKNOWN,
 			.ViewDimension		= D3D12_UAV_DIMENSION_BUFFER,
 			.Buffer = {
-				.NumElements				= (uint32_t)gpuBufferDesc.elementCount,
-				.StructureByteStride		= (uint32_t)gpuBufferDesc.elementSize,
+				.NumElements				= (uint32_t)gpuBufferDesc2.elementCount,
+				.StructureByteStride		= (uint32_t)gpuBufferDesc2.elementSize,
 				.CounterOffsetInBytes		= 0,
 				.Flags						= D3D12_BUFFER_UAV_FLAG_NONE
 			}
 		};
 
-		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
+		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(resource, uavDesc);
 	}
 
-	if (gpuBufferDesc.resourceType == ResourceType::TypedBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::TypedBuffer)
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-			.Format						= FormatToDxgi(gpuBufferDesc.format).srvFormat,
+			.Format						= FormatToDxgi(gpuBufferDesc2.format).srvFormat,
 			.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
 			.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
 			.Buffer = {
-				.NumElements	= (uint32_t)gpuBufferDesc.elementCount,
+				.NumElements	= (uint32_t)gpuBufferDesc2.elementCount,
 				.Flags			= D3D12_BUFFER_SRV_FLAG_NONE
 			}
 		};
 
-		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
+		gpuBuffer->m_srvDescriptor.CreateShaderResourceView(resource, srvDesc);
 
 		D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-			.Format				= FormatToDxgi(gpuBufferDesc.format).srvFormat,
+			.Format				= FormatToDxgi(gpuBufferDesc2.format).srvFormat,
 			.ViewDimension		= D3D12_UAV_DIMENSION_BUFFER,
 			.Buffer = {
-				.NumElements	= (uint32_t)gpuBufferDesc.elementCount,
+				.NumElements	= (uint32_t)gpuBufferDesc2.elementCount,
 				.Flags			= D3D12_BUFFER_UAV_FLAG_NONE
 			}
 		};
 
-		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
+		gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(resource, uavDesc);
 	}
 
-	if (gpuBufferDesc.resourceType == ResourceType::ConstantBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::ConstantBuffer)
 	{
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{
-			.BufferLocation		= pResource->GetGPUVirtualAddress(),
-			.SizeInBytes		= (uint32_t)(gpuBufferDesc.elementCount * gpuBufferDesc.elementSize)
+			.BufferLocation		= resource->GetGPUVirtualAddress(),
+			.SizeInBytes		= (uint32_t)bufferSize
 		};
 
 		gpuBuffer->m_cbvDescriptor.CreateConstantBufferView(cbvDesc);
 	}
 
-	if (gpuBufferDesc.resourceType == ResourceType::VertexBuffer || gpuBufferDesc.resourceType == ResourceType::IndexBuffer)
+	if (gpuBufferDesc2.resourceType == ResourceType::VertexBuffer || gpuBufferDesc2.resourceType == ResourceType::IndexBuffer)
 	{
-		if (gpuBufferDesc.bAllowShaderResource)
+		if (gpuBufferDesc2.bAllowShaderResource)
 		{
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{
-				.Format						= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+				.Format						= FormatToDxgi(gpuBufferDesc2.format).resourceFormat,
 				.ViewDimension				= D3D12_SRV_DIMENSION_BUFFER,
 				.Shader4ComponentMapping	= D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
 				.Buffer = {
-					.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
-					.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+					.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
+					.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
 					.Flags					= D3D12_BUFFER_SRV_FLAG_NONE
 				}
 			};
 
-			gpuBuffer->m_srvDescriptor.CreateShaderResourceView(pResource, srvDesc);
+			gpuBuffer->m_srvDescriptor.CreateShaderResourceView(resource, srvDesc);
 		}
 
-		if (gpuBufferDesc.bAllowUnorderedAccess)
+		if (gpuBufferDesc2.bAllowUnorderedAccess)
 		{
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{
-				.Format			= FormatToDxgi(gpuBufferDesc.format).resourceFormat,
+				.Format			= FormatToDxgi(gpuBufferDesc2.format).resourceFormat,
 				.ViewDimension	= D3D12_UAV_DIMENSION_BUFFER,
 				.Buffer = {
-					.NumElements			= (uint32_t)gpuBufferDesc.elementCount,
-					.StructureByteStride	= (uint32_t)gpuBufferDesc.elementSize,
+					.NumElements			= (uint32_t)gpuBufferDesc2.elementCount,
+					.StructureByteStride	= (uint32_t)gpuBufferDesc2.elementSize,
 					.CounterOffsetInBytes	= 0,
 					.Flags					= D3D12_BUFFER_UAV_FLAG_NONE
 				}
 			};
 
-			gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(pResource, uavDesc);
+			gpuBuffer->m_uavDescriptor.CreateUnorderedAccessView(resource, uavDesc);
 		}
 	}
 
@@ -513,7 +490,7 @@ Luna::GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 		if (gpuBuffer->m_type == ResourceType::ConstantBuffer)
 		{
 			const size_t initialSize = gpuBuffer->GetBufferSize();
-			gpuBuffer->Update(initialSize, gpuBufferDesc.initialData);
+			gpuBuffer->Update(initialSize, gpuBufferDescIn.initialData);
 		}
 		else
 		{
@@ -1316,7 +1293,7 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pip
 	assert(numSbtRecords > 0);
 	const size_t sbtSize = sbtRecordStride * numSbtRecords;
 
-	// Create buffer
+	// Describe buffer
 	GpuBufferDesc sbtDesc{
 		.name					= "Shader Binding Table",
 		.resourceType			= ResourceType::UploadBuffer,
@@ -1326,23 +1303,11 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pip
 		.bShaderBindingTable	= true
 	};
 
-	auto bufferAllocation = AllocateBuffer(sbtDesc);
+	// Allocate buffer
+	auto allocation = AllocateBuffer(sbtDesc);
 
-	// Create GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
-	gpuBuffer->m_type = sbtDesc.resourceType;
-	gpuBuffer->m_usageState = ResourceState::Common;
-	gpuBuffer->m_format = sbtDesc.format;
-	gpuBuffer->m_elementSize = sbtDesc.elementSize;
-	gpuBuffer->m_elementCount = sbtDesc.elementCount;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_isCpuWriteable = HasFlag(sbtDesc.memoryAccess, MemoryAccess::CpuWrite);
-
-	ID3D12Resource* pResource = bufferAllocation->GetResource();
-
-	SetDebugName(pResource, sbtDesc.name);
-
-	gpuBuffer->m_allocation = bufferAllocation;
+	// Create Luna DX12 GpuBuffer object
+	auto gpuBuffer = std::make_shared<GpuBuffer>(sbtDesc, this, allocation.get());
 
 	// Map buffer memory for SBT record uploads
 	uint64_t gpuAddress = gpuBuffer->GetGpuAddress();
@@ -1412,8 +1377,8 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pip
 
 ITexture* Device::CreateUninitializedTexture(const std::string& name, const std::string& mapKey)
 {
-	Texture* tex = new Texture(this);
-	tex->m_name = name;
+	TextureDesc desc{};
+	Texture* tex = new Texture(desc, this, nullptr, name);
 	tex->m_mapKey = mapKey;
 	return tex;
 }
@@ -1437,7 +1402,6 @@ bool Device::InitializeTexture(ITexture* texture, const TextureInitializer& texI
 	texture12->m_numSamples = 1;
 	texture12->m_planeCount = GetFormatPlaneCount(FormatToDxgi(texInit.format).resourceFormat);
 	texture12->m_format = texInit.format;
-	texture12->m_dimension = texInit.dimension;
 
 	// TODO: Allocate this with D3D12MA
 
@@ -1524,24 +1488,22 @@ ColorBufferPtr Device::CreateColorBufferFromSwapChain(IDXGISwapChain* swapChain,
 	wil::com_ptr<ID3D12Resource> displayPlane;
 	assert_succeeded(swapChain->GetBuffer(imageIndex, IID_PPV_ARGS(&displayPlane)));
 
-	const std::string name = std::format("Primary SwapChain Image {}", imageIndex);
-	SetDebugName(displayPlane.get(), name);
-
 	D3D12_RESOURCE_DESC resourceDesc = displayPlane->GetDesc();
 	const uint8_t planeCount = GetFormatPlaneCount(resourceDesc.Format);
 
-	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>(this);
-	colorBuffer->m_type = ResourceType::Texture2D;
-	colorBuffer->m_width = resourceDesc.Width;
-	colorBuffer->m_height = resourceDesc.Height;
-	colorBuffer->m_arraySizeOrDepth = resourceDesc.DepthOrArraySize;
-	colorBuffer->m_numMips = 1;
-	colorBuffer->m_numSamples = resourceDesc.SampleDesc.Count;
-	colorBuffer->m_planeCount = planeCount;
-	colorBuffer->m_format = DxgiToFormat(resourceDesc.Format);
-	colorBuffer->m_dimension = ResourceTypeToTextureDimension(colorBuffer->m_type);
-	colorBuffer->m_clearColor = DirectX::Colors::Black;
-	colorBuffer->m_resource = displayPlane;
+	// Create Luna DX12 ColorBuffer object
+	ColorBufferDesc desc{
+		.name				= std::format("Primary SwapChain Image {}", imageIndex),
+		.width				= resourceDesc.Width,
+		.height				= resourceDesc.Height,
+		.arraySizeOrDepth	= resourceDesc.DepthOrArraySize,
+		.numMips			= 1,
+		.numSamples			= resourceDesc.SampleDesc.Count,
+		.planeCount			= planeCount,
+		.clearColor			= DirectX::Colors::Black
+	};
+
+	auto colorBuffer = std::make_shared<Luna::DX12::ColorBuffer>(desc, this, displayPlane.get());
 
 	colorBuffer->m_srvDescriptor.CreateShaderResourceView(displayPlane.get());
 	colorBuffer->m_rtvDescriptor.CreateRenderTargetView(displayPlane.get());
@@ -1872,22 +1834,18 @@ GpuBufferPtr Device::CreateRayTracingBuffer(size_t sizeInBytes, const std::strin
 		&allocation,
 		IID_NULL, NULL);
 
-	// Create GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
-	gpuBuffer->m_type = ResourceType::AccelerationStructure;
-	gpuBuffer->m_usageState = ResourceState::AccelStructBuildBlas;
-	gpuBuffer->m_format = Format::Unknown;
-	gpuBuffer->m_elementSize = sizeInBytes;
-	gpuBuffer->m_elementCount = 1;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_isCpuWriteable = false;
-	gpuBuffer->m_allocation = allocation;
+	// Create Luna DX12 GpuBuffer
+	GpuBufferDesc desc{
+		.name			= name,
+		.resourceType	= ResourceType::AccelerationStructure,
+		.usageState		= ResourceState::AccelStructBuildBlas,
+		.elementSize	= sizeInBytes
+	};
 
+	auto gpuBuffer = std::make_shared<GpuBuffer>(desc, this, allocation.get());
+
+	// Setup descriptor for acceleration structure
 	gpuBuffer->m_srvDescriptor.CreateAccelerationStructureView(allocation->GetResource());
-
-	// Set debug name
-	ID3D12Resource* pResource = allocation->GetResource();
-	SetDebugName(pResource, name);
 
 	return gpuBuffer;
 }
@@ -1908,21 +1866,18 @@ GpuBufferPtr Device::CreateRayTracingInstanceBuffer(size_t sizeInBytes, const vo
 		&allocation,
 		IID_NULL, NULL);
 
+	// Create Luna DX12 GpuBuffer
+	GpuBufferDesc desc{
+		.name			= name,
+		.resourceType	= ResourceType::UploadBuffer,
+		.usageState		= ResourceState::GenericRead,
+		.elementSize	= sizeInBytes
+	};
+
 	// Create GpuBuffer
-	auto gpuBuffer = std::make_shared<GpuBuffer>(this);
-	gpuBuffer->m_type = ResourceType::UploadBuffer;
-	gpuBuffer->m_usageState = ResourceState::GenericRead;
-	gpuBuffer->m_format = Format::Unknown;
-	gpuBuffer->m_elementSize = sizeInBytes;
-	gpuBuffer->m_elementCount = 1;
-	gpuBuffer->m_bufferSize = gpuBuffer->m_elementCount * gpuBuffer->m_elementSize;
-	gpuBuffer->m_isCpuWriteable = false;
-	gpuBuffer->m_allocation = allocation;
+	auto gpuBuffer = std::make_shared<GpuBuffer>(desc, this, allocation.get());
 
-	// Set debug name
-	ID3D12Resource* pResource = allocation->GetResource();
-	SetDebugName(pResource, name);
-
+	// Copy instance data into buffer
 	void* ptr = gpuBuffer->Map();
 	memcpy(ptr, initialData, sizeInBytes);
 	gpuBuffer->Unmap();

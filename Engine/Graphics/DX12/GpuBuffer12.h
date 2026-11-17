@@ -27,7 +27,7 @@ class GpuBuffer : public IGpuBuffer
 	friend class Device;
 
 public:
-	explicit GpuBuffer(Device* device);
+	GpuBuffer(const GpuBufferDesc& desc, Device* device, D3D12MA::Allocation* allocation);
 
 	void Update(size_t sizeInBytes, const void* data) override;
 	void Update(size_t sizeInBytes, size_t offset, const void* data) override;
@@ -50,8 +50,6 @@ protected:
 	Descriptor m_srvDescriptor{};
 	Descriptor m_uavDescriptor{};
 	Descriptor m_cbvDescriptor{};
-
-	bool m_isCpuWriteable{ false };
 };
 
 } // namespace Luna::DX12

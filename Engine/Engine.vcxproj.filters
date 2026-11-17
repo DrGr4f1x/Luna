@@ -227,6 +227,9 @@
     <ClCompile Include="Graphics\DX12\RayTracing\RayTracingPipeline12.cpp">
       <Filter>Graphics\DX12\RayTracing</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\TextureVK.cpp">
+      <Filter>Graphics\Vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />

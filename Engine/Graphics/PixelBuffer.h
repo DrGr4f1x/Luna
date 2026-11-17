@@ -24,6 +24,26 @@ enum class TextureDimension : uint8_t;
 class IPixelBuffer : public IGpuResource
 {
 public:
+	IPixelBuffer(
+		ResourceType type,
+		ResourceState usageState,
+		uint64_t width,
+		uint32_t height,
+		uint32_t arraySizeOrDepth,
+		uint32_t numMips,
+		uint32_t numSamples,
+		uint32_t planeCount,
+		Format format)
+		: IGpuResource{ type, usageState }
+		, m_width{ width }
+		, m_height{ height }
+		, m_arraySizeOrDepth{ arraySizeOrDepth }
+		, m_numMips{ numMips }
+		, m_numSamples{ numSamples }
+		, m_planeCount{ m_planeCount }
+		, m_format{ format }
+	{}
+
 	uint64_t GetWidth() const noexcept { return m_width; }
 	uint32_t GetHeight() const noexcept { return m_height; }
 	uint32_t GetDepth() const noexcept { return m_arraySizeOrDepth; }
@@ -32,7 +52,6 @@ public:
 	uint32_t GetNumSamples() const noexcept { return m_numSamples; }
 	uint32_t GetPlaneCount() const noexcept { return m_planeCount; }
 	Format GetFormat() const noexcept { return m_format; }
-	TextureDimension GetDimension() const noexcept { return m_dimension; }
 	uint32_t GetNumFaces() const noexcept { return HasAnyFlag(m_type, ResourceType::TextureCube_Type) ? 6 : 1; }
 
 protected:
@@ -43,7 +62,6 @@ protected:
 	uint32_t m_numSamples{ 1 };
 	uint32_t m_planeCount{ 1 };
 	Format m_format{ Format::Unknown };
-	TextureDimension m_dimension{ TextureDimension::Unknown };
 };
 
 using PixelBufferPtr = std::shared_ptr<IPixelBuffer>;

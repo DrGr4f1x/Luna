@@ -21,11 +21,15 @@ static_assert(sizeof(DrawIndexedIndirectArgs) == sizeof(D3D12_DRAW_INDEXED_ARGUM
 static_assert(sizeof(DispatchIndirectArgs) == sizeof(D3D12_DISPATCH_ARGUMENTS));
 
 
-GpuBuffer::GpuBuffer(Device* device)
+GpuBuffer::GpuBuffer(const GpuBufferDesc& desc, Device* device, D3D12MA::Allocation* allocation)
+	: IGpuBuffer{ desc.resourceType, desc.usageState, desc.format, desc.elementSize, desc.elementCount }
+	, m_allocation{ allocation }
 {
 	m_srvDescriptor.SetDevice(device);
 	m_uavDescriptor.SetDevice(device);
 	m_cbvDescriptor.SetDevice(device);
+
+	SetDebugName(m_allocation->GetResource(), desc.name);
 }
 
 
@@ -38,7 +42,6 @@ void GpuBuffer::Update(size_t sizeInBytes, const void* data)
 void GpuBuffer::Update(size_t sizeInBytes, size_t offset, const void* data)
 {
 	assert((sizeInBytes + offset) <= GetBufferSize());
-	assert(m_isCpuWriteable);
 
 	CD3DX12_RANGE readRange(0, 0);
 

@@ -27,6 +27,8 @@ class Texture : public ITexture
 	friend class Device;
 
 public:
+	Texture(const TextureDesc& desc, Device* device, CVkImage* image, const std::string& name);
+
 	bool IsValid() const override { return m_image != nullptr; }
 
 	const IDescriptor* GetDescriptor() const override { return &m_descriptor; }
