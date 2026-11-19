@@ -92,6 +92,7 @@
     <ClCompile Include="Graphics\Vulkan\FormatsVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\PipelineStateUtilVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\QueueVK.cpp" />
+    <ClCompile Include="Graphics\Vulkan\RayTracing\RayTracingPipelineVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RefCountingImplVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\RootSignatureVK.cpp" />
     <ClCompile Include="Graphics\Vulkan\TextureVK.cpp" />
@@ -173,7 +174,6 @@
     <ClInclude Include="Graphics\DX12\Queue12.h" />
     <ClInclude Include="Graphics\DX12\RayTracing\RayTracingGeometry12.h" />
     <ClInclude Include="Graphics\DX12\RayTracing\RayTracingPipeline12.h" />
-    <ClInclude Include="Graphics\DX12\RayTracing\ShaderBindingTable12.h" />
     <ClInclude Include="Graphics\DX12\RootSignature12.h" />
     <ClInclude Include="Graphics\DX12\Sampler12.h" />
     <ClInclude Include="Graphics\DX12\Shader12.h" />
@@ -227,7 +227,6 @@
     <ClInclude Include="Graphics\Vulkan\QueueVK.h" />
     <ClInclude Include="Graphics\Vulkan\RayTracing\RayTracingGeometryVK.h" />
     <ClInclude Include="Graphics\Vulkan\RayTracing\RayTracingPipelineVK.h" />
-    <ClInclude Include="Graphics\Vulkan\RayTracing\ShaderBindingTableVK.h" />
     <ClInclude Include="Graphics\Vulkan\RefCountingImplVK.h" />
     <ClInclude Include="Graphics\Vulkan\RootSignatureVK.h" />
     <ClInclude Include="Graphics\Vulkan\SamplerVK.h" />

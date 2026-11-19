@@ -230,6 +230,9 @@
     <ClCompile Include="Graphics\Vulkan\TextureVK.cpp">
       <Filter>Graphics\Vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\Vulkan\RayTracing\RayTracingPipelineVK.cpp">
+      <Filter>Graphics\Vulkan\RayTracing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
@@ -615,12 +618,6 @@
     </ClInclude>
     <ClInclude Include="Graphics\RayTracing\ShaderBindingTable.h">
       <Filter>Graphics\RayTracing</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\DX12\RayTracing\ShaderBindingTable12.h">
-      <Filter>Graphics\DX12\RayTracing</Filter>
-    </ClInclude>
-    <ClInclude Include="Graphics\Vulkan\RayTracing\ShaderBindingTableVK.h">
-      <Filter>Graphics\Vulkan\RayTracing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

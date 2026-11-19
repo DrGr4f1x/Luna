@@ -30,7 +30,6 @@
 
 #include "RayTracing\RayTracingGeometry12.h"
 #include "RayTracing\RayTracingPipeline12.h"
-#include "RayTracing\ShaderBindingTable12.h"
 
 
 #if ENABLE_D3D12_DEBUG_MARKERS
@@ -1186,25 +1185,23 @@ void CommandContext12::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, 
 }
 
 
-void CommandContext12::DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+void CommandContext12::DispatchRays(ShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
 {
 	FlushResourceBarriers();
 
-	ShaderBindingTable* shaderBindingTable12 = (ShaderBindingTable*)shaderBindingTable;
-
-	StridedAddressRegion rayGenRegion = shaderBindingTable12->GetRayGenerationShaderRecord();
-	StridedAddressRegion missRegion = shaderBindingTable12->GetMissShaderTable();
-	StridedAddressRegion hitGroupRegion = shaderBindingTable12->GetHitGroupTable();
+	SBTBuffer rayGenBuffer = shaderBindingTable->GetRayGenBuffer();
+	SBTBuffer missBuffer = shaderBindingTable->GetMissBuffer();
+	SBTBuffer hitGroupBuffer = shaderBindingTable->GetHitGroupBuffer();
 
 	D3D12_DISPATCH_RAYS_DESC dispatchDesc{};
-	dispatchDesc.HitGroupTable.StartAddress = hitGroupRegion.bufferAddress;
-	dispatchDesc.HitGroupTable.SizeInBytes = hitGroupRegion.size;
-	dispatchDesc.HitGroupTable.StrideInBytes = hitGroupRegion.stride;
-	dispatchDesc.MissShaderTable.StartAddress = missRegion.bufferAddress;
-	dispatchDesc.MissShaderTable.SizeInBytes = missRegion.size;
-	dispatchDesc.MissShaderTable.StrideInBytes = missRegion.stride;
-	dispatchDesc.RayGenerationShaderRecord.StartAddress = rayGenRegion.bufferAddress;
-	dispatchDesc.RayGenerationShaderRecord.SizeInBytes = rayGenRegion.size;
+	dispatchDesc.HitGroupTable.StartAddress = hitGroupBuffer.bufferAddress;
+	dispatchDesc.HitGroupTable.SizeInBytes = hitGroupBuffer.size;
+	dispatchDesc.HitGroupTable.StrideInBytes = hitGroupBuffer.stride;
+	dispatchDesc.MissShaderTable.StartAddress = missBuffer.bufferAddress;
+	dispatchDesc.MissShaderTable.SizeInBytes = missBuffer.size;
+	dispatchDesc.MissShaderTable.StrideInBytes = missBuffer.stride;
+	dispatchDesc.RayGenerationShaderRecord.StartAddress = rayGenBuffer.bufferAddress;
+	dispatchDesc.RayGenerationShaderRecord.SizeInBytes = rayGenBuffer.size;
 	dispatchDesc.Width = width;
 	dispatchDesc.Height = height;
 	dispatchDesc.Depth = 1;

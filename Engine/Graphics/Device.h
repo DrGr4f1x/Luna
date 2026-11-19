@@ -68,7 +68,7 @@ public:
 
 	virtual RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) = 0;
 
-	virtual ShaderBindingTablePtr CreateShaderBindingTable(RayTracingPipelinePtr pipeline) = 0;
+	virtual ShaderBindingTablePtr CreateShaderBindingTable(const ShaderBindingTableDesc& sbtDesc, RayTracingPipelinePtr pipeline) = 0;
 
 	virtual ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) = 0;
 	virtual bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) = 0;

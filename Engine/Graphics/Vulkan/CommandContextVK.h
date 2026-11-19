@@ -176,7 +176,7 @@ public:
 
 	void DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) override;
 
-	void DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) override;
+	void DispatchRays(ShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) override;
 
 	void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) override;
 

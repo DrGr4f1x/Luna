@@ -12,6 +12,8 @@
 
 #include "Graphics\RootSignature.h"
 #include "Graphics\PipelineState.h"
+#include "Graphics\RayTracing\ShaderBindingTable.h"
+
 
 namespace Luna
 {
@@ -53,8 +55,15 @@ struct RayTracingShaderLibraryEntry
 struct RayTracingPipelineDesc
 {
 	RootSignaturePtr rootSignature;
-	std::vector<RayTracingShaderLibraryEntry> shaderLibrary;
-	std::vector<ShaderGroupDesc> shaderGroups;
+
+	// Lists of shaders.  Must always have at least one raygen and miss shader.
+	std::vector<RayTracingShaderLibraryEntry> rayGenShaders;
+	std::vector<RayTracingShaderLibraryEntry> missShaders;
+	std::vector<RayTracingShaderLibraryEntry> hitGroupShaders;
+
+	// Indices into the hitGroupShaders list for each hit group
+	std::vector<ShaderGroupDesc> hitGroups;
+
 	uint32_t maxRecursionDepth{ 1 };
 	uint32_t maxPayloadSize{ 0 };
 	uint32_t maxRayHitAttributeSize{ 0 };
@@ -65,11 +74,7 @@ struct RayTracingPipelineDesc
 class IRayTracingPipeline
 {
 public:
-	virtual ~IRayTracingPipeline() = default;
-
-	virtual bool HasRayGenShader() const = 0;
-	virtual bool HasMissShader() const = 0;
-	virtual uint32_t GetNumHitGroups() const = 0;
+	virtual ~IRayTracingPipeline() noexcept = default;
 };
 
 using RayTracingPipelinePtr = std::shared_ptr<IRayTracingPipeline>;

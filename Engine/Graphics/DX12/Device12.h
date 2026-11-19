@@ -68,7 +68,7 @@ public:
 
 	RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) override;
 
-	ShaderBindingTablePtr CreateShaderBindingTable(RayTracingPipelinePtr pipeline) override;
+	ShaderBindingTablePtr CreateShaderBindingTable(const ShaderBindingTableDesc& sbtDesc, RayTracingPipelinePtr pipeline) override;
 
 	ITexture* CreateUninitializedTexture(const std::string& name, const std::string& mapKey) override;
 	bool InitializeTexture(ITexture* texture, const TextureInitializer& texInit) override;

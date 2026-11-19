@@ -22,20 +22,34 @@ class RayTracingPipeline : public IRayTracingPipeline
 	friend class Device;
 
 public:
+	~RayTracingPipeline() noexcept override = default;
+
+	RayTracingPipeline(const RayTracingPipelineDesc& desc, CVkPipeline* pipeline)
+		: m_desc{ desc }
+		, m_pipeline{ pipeline }
+	{}
+
+	void* GetRayGenShaderIdentifier(uint32_t index) const;
+	void* GetMissShaderIdentifier(uint32_t index) const;
+	void* GetHitGroupIdentifier(uint32_t index) const;
+	void* GetCallableShaderIdentifier(uint32_t index) const;
+
 	const RayTracingPipelineDesc& GetPipelineDesc() const { return m_desc; }
 
-	bool HasRayGenShader() const { return m_hasRayGenShader; }
-	bool HasMissShader() const { return m_hasMissShader; }
-	uint32_t GetNumHitGroups() const { return m_numHitGroups; }
-
 	VkPipeline GetPipeline() const { return m_pipeline ? m_pipeline->Get() : VK_NULL_HANDLE; }
+
+	void GatherShaderIdentifiers(Device* device, uint32_t numRayGenShaders, uint32_t numMissShaders, uint32_t numHitGroups, uint32_t numCallableShaders);
 
 protected:
 	RayTracingPipelineDesc m_desc{};
 	wil::com_ptr<CVkPipeline> m_pipeline;
-	bool m_hasRayGenShader{ false };
-	bool m_hasMissShader{ false };
-	uint32_t m_numHitGroups{ 0 };
+	
+	std::vector<void*> m_rayGenShaderIdentifiers;
+	std::vector<void*> m_missShaderIdentifiers;
+	std::vector<void*> m_hitGroupIdentifiers;
+	std::vector<void*> m_callableShaderIdentifiers;
+
+	std::vector<std::byte> m_shaderHandleStorage;
 };
 
 } // namespace Luna::VK

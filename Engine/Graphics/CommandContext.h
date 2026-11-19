@@ -33,7 +33,7 @@ class IRayTracingPipeline;
 class ResourceSet;
 class IRootSignature;
 class ISampler;
-class IShaderBindingTable;
+class ShaderBindingTable;
 struct RayTracingBuildInfoBase;
 
 
@@ -49,7 +49,7 @@ using QueryHeapPtr = std::shared_ptr<IQueryHeap>;
 using RayTracingPipelinePtr = std::shared_ptr<IRayTracingPipeline>;
 using RootSignaturePtr = std::shared_ptr<IRootSignature>;
 using SamplerPtr = std::shared_ptr<ISampler>;
-using ShaderBindingTablePtr = std::shared_ptr<IShaderBindingTable>;
+using ShaderBindingTablePtr = std::shared_ptr<ShaderBindingTable>;
 
 
 class ICommandContext
@@ -177,7 +177,7 @@ public:
 	
 	virtual void DispatchMesh(uint32_t groupCountX = 1, uint32_t groupCountY = 1, uint32_t groupCountZ = 1) = 0;
 
-	virtual void DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
+	virtual void DispatchRays(ShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) = 0;
 
 	virtual void Resolve(const IColorBuffer* srcBuffer, const IColorBuffer* destBuffer, Format format) = 0;
 

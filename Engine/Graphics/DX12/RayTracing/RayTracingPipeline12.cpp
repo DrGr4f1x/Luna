@@ -12,14 +12,65 @@
 
 #include "RayTracingPipeline12.h"
 
+#include "Graphics\DX12\Device12.h"
+
+using namespace std;
+
 
 namespace Luna::DX12
 {
 
-const wchar_t* RayTracingPipeline::GetHitGroupName(uint32_t index) const
+void* RayTracingPipeline::GetRayGenShaderIdentifier(uint32_t index) const
 {
-	assert(index < (uint32_t)m_hitGroupNames.size());
-	return m_hitGroupNames[index].c_str();
+	assert(index < m_rayGenShaderIdentifiers.size());
+	return m_rayGenShaderIdentifiers[index];
+}
+
+
+void* RayTracingPipeline::GetMissShaderIdentifier(uint32_t index) const
+{
+	assert(index < m_missShaderIdentifiers.size());
+	return m_missShaderIdentifiers[index];
+}
+
+
+void* RayTracingPipeline::GetHitGroupIdentifier(uint32_t index) const
+{
+	assert(index < m_hitGroupIdentifiers.size());
+	return m_hitGroupIdentifiers[index];
+}
+
+
+void* RayTracingPipeline::GetCallableShaderIdentifier(uint32_t index) const
+{
+	assert(index < m_callableShaderIdentifiers.size());
+	return m_callableShaderIdentifiers[index];
+}
+
+
+void RayTracingPipeline::GatherShaderIdentifiers(
+	const vector<wstring>& rayGenShaderNames,
+	const vector<wstring>& missShaderNames,
+	const vector<wstring>& hitGroupNames,
+	const vector<wstring>& callableShaderNames)
+{
+	auto stateObjectProperties = m_stateObject.query<ID3D12StateObjectProperties>();
+	assert(stateObjectProperties);
+
+	auto GatherIdentifiers = [stateObjectProperties](const vector<wstring>& names, vector<void*>& identifiers)
+		{
+			for (const auto& name : names)
+			{
+				void* identifier = stateObjectProperties->GetShaderIdentifier(name.c_str());
+				assert(identifier != nullptr);
+				identifiers.push_back(identifier);
+			}
+		};
+
+	GatherIdentifiers(rayGenShaderNames, m_rayGenShaderIdentifiers);
+	GatherIdentifiers(missShaderNames, m_missShaderIdentifiers);
+	GatherIdentifiers(hitGroupNames, m_hitGroupIdentifiers);
+	GatherIdentifiers(callableShaderNames, m_callableShaderIdentifiers);
 }
 
 } // namespace Luna::DX12

@@ -10,28 +10,59 @@
 
 #pragma once
 
+#include "Graphics\GpuBuffer.h"
+
 namespace Luna
 {
 
-struct StridedAddressRegion
+struct ShaderRecord
 {
-	uint64_t bufferAddress{ 0 };
-	size_t stride{ 0 };
+	uint32_t id{ 0 };
+	void* data{ nullptr };
 	size_t size{ 0 };
 };
 
 
-class IShaderBindingTable
+struct ShaderBindingTableDesc
 {
-public:
-	virtual ~IShaderBindingTable() = default;
-
-	virtual StridedAddressRegion GetRayGenerationShaderRecord() const = 0;
-	virtual StridedAddressRegion GetMissShaderTable() const = 0;
-	virtual StridedAddressRegion GetHitGroupTable() const = 0;
-	virtual StridedAddressRegion GetCallableShaderTable() const = 0;
+	std::vector<ShaderRecord> rayGenShaders;
+	std::vector<ShaderRecord> missShaders;
+	std::vector<ShaderRecord> hitGroups;
 };
 
-using ShaderBindingTablePtr = std::shared_ptr<IShaderBindingTable>;
+
+struct SBTBuffer
+{
+	GpuBufferPtr buffer;
+	uint64_t bufferAddress;
+	size_t size{ 0 };
+	size_t stride{ 0 };
+};
+
+
+class ShaderBindingTable
+{
+public:
+	ShaderBindingTable(SBTBuffer rayGenBuffer, SBTBuffer missBuffer, SBTBuffer hitGroupBuffer, SBTBuffer callableBuffer)
+		: m_rayGenBuffer{ rayGenBuffer }
+		, m_missBuffer{ missBuffer }
+		, m_hitGroupBuffer{ hitGroupBuffer }
+		, m_callableBuffer{ callableBuffer }
+	{}
+	virtual ~ShaderBindingTable() = default;
+
+	SBTBuffer GetRayGenBuffer() const { return m_rayGenBuffer; }
+	SBTBuffer GetMissBuffer() const { return m_missBuffer; }
+	SBTBuffer GetHitGroupBuffer() const { return m_hitGroupBuffer; }
+	SBTBuffer GetCallableBuffer() const { return m_callableBuffer; }
+
+protected:
+	SBTBuffer m_rayGenBuffer;
+	SBTBuffer m_missBuffer;
+	SBTBuffer m_hitGroupBuffer;
+	SBTBuffer m_callableBuffer;
+};
+
+using ShaderBindingTablePtr = std::shared_ptr<ShaderBindingTable>;
 
 } // namespace Luna

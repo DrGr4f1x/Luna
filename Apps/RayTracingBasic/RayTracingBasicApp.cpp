@@ -197,12 +197,16 @@ void RayTracingBasicApp::InitRayTracingPipeline()
 {
 	RayTracingPipelineDesc desc{
 		.rootSignature = m_globalRootSignature,
-		.shaderLibrary = {
-			{ ShaderType::RayGeneration, { .shaderFile = "RayGen", .entry = "raygen_main" }},
-			{ ShaderType::Miss, { .shaderFile = "Miss", .entry = "miss_main" }},
+		.rayGenShaders = {
+			{ ShaderType::RayGeneration, {.shaderFile = "RayGen", .entry = "raygen_main" }}
+		},
+		.missShaders = {
+			{ ShaderType::Miss, {.shaderFile = "Miss", .entry = "miss_main" }},
+		},
+		.hitGroupShaders = {
 			{ ShaderType::ClosestHit, { .shaderFile = "ClosestHit", .entry = "closesthit_main" }}
 		},
-		.shaderGroups = { ShaderGroupDesc(2) },
+		.hitGroups = { ShaderGroupDesc(0) },  // Index 0 in the hitGroupShaders list, i.e. the 'closesthit_main' shader
 		.maxPayloadSize = 3 * sizeof(float),
 		.maxRayHitAttributeSize = 2 * sizeof(float)
 	};
@@ -213,7 +217,13 @@ void RayTracingBasicApp::InitRayTracingPipeline()
 
 void RayTracingBasicApp::InitShaderBindingTable()
 {
-	m_shaderBindingTable = GetDevice()->CreateShaderBindingTable(m_rayTracingPipeline);
+	ShaderBindingTableDesc desc{
+		.rayGenShaders	= { ShaderRecord{ .id = 0 } }, // refers to the RayGen shader at index 0 in the library
+		.missShaders	= { ShaderRecord{ .id = 0 } }, // refers to the Miss shader at index 0 in the library
+		.hitGroups		= { ShaderRecord{ .id = 0 } }  // refers to the HitGroup at index 0 in the library
+	};
+
+	m_shaderBindingTable = GetDevice()->CreateShaderBindingTable(desc, m_rayTracingPipeline);
 }
 
 
@@ -231,7 +241,6 @@ void RayTracingBasicApp::InitColorTarget()
 
 void RayTracingBasicApp::InitDescriptorSet()
 {
-	//m_testSet = m_globalRootSignature->CreateDescriptorSet(0, { m_rayTracingTLAS });
 	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_rayGenConstantBuffer });
 }
 

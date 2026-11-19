@@ -31,7 +31,6 @@
 
 #include "RayTracing\RayTracingGeometryVK.h"
 #include "RayTracing\RayTracingPipelineVK.h"
-#include "RayTracing\ShaderBindingTableVK.h"
 
 
 #if ENABLE_VULKAN_DEBUG_MARKERS
@@ -1549,19 +1548,17 @@ void CommandContextVK::DispatchMesh(uint32_t groupCountX, uint32_t groupCountY, 
 }
 
 
-void CommandContextVK::DispatchRays(IShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+void CommandContextVK::DispatchRays(ShaderBindingTable* shaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
 {
 	PreDispatch();
 
-	ShaderBindingTable* shaderBindingTableVK = (ShaderBindingTable*)shaderBindingTable;
+	SBTBuffer rayGenBuffer = shaderBindingTable->GetRayGenBuffer();
+	SBTBuffer missBuffer = shaderBindingTable->GetMissBuffer();
+	SBTBuffer hitGroupBuffer = shaderBindingTable->GetHitGroupBuffer();
 
-	StridedAddressRegion rayGenRegion = shaderBindingTableVK->GetRayGenerationShaderRecord();
-	StridedAddressRegion missRegion = shaderBindingTableVK->GetMissShaderTable();
-	StridedAddressRegion hitGroupRegion = shaderBindingTableVK->GetHitGroupTable();
-
-	VkStridedDeviceAddressRegionKHR raygenShaderSbtEntry{ rayGenRegion.bufferAddress, rayGenRegion.stride, rayGenRegion.size };
-	VkStridedDeviceAddressRegionKHR missShaderSbtEntry{ missRegion.bufferAddress, missRegion.stride, missRegion.size };
-	VkStridedDeviceAddressRegionKHR hitShaderSbtEntry{ hitGroupRegion.bufferAddress, hitGroupRegion.stride, hitGroupRegion.size };
+	VkStridedDeviceAddressRegionKHR raygenShaderSbtEntry{ rayGenBuffer.bufferAddress, rayGenBuffer.stride, rayGenBuffer.size };
+	VkStridedDeviceAddressRegionKHR missShaderSbtEntry{ missBuffer.bufferAddress, missBuffer.stride, missBuffer.size };
+	VkStridedDeviceAddressRegionKHR hitShaderSbtEntry{ hitGroupBuffer.bufferAddress, hitGroupBuffer.stride, hitGroupBuffer.size };
 	VkStridedDeviceAddressRegionKHR callableShaderSbtEntry{};
 
 	vkCmdTraceRaysKHR(

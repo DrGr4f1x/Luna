@@ -32,7 +32,6 @@
 
 #include "RayTracing\RayTracingGeometryVK.h"
 #include "RayTracing\RayTracingPipelineVK.h"
-#include "RayTracing\ShaderBindingTableVK.h"
 
 using namespace std;
 
@@ -1336,86 +1335,107 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 
 	const auto* rootSignatureVK = (const IRootSignatureVK*)pipelineDesc.rootSignature.get();
 
-	int32_t rayGenShaderIndex = -1;
-	int32_t missShaderIndex = -1;
-
 	if (rootSignatureVK->GetDescriptorManagement() == DescriptorManagement::Heap)
 	{
 		const auto* heapRootSignature = (HeapRootSignature*)rootSignatureVK;
 
 		const ShaderSetAndBindingMapping& shaderSetAndBindingMapping = heapRootSignature->GetShaderSetAndBindingMapping();
 
-		int32_t shaderIndex = 0;
-		for (const auto& shaderEntry : pipelineDesc.shaderLibrary)
+		// RayGeneration shaders
+		for (const auto& libraryEntry : pipelineDesc.rayGenShaders)
 		{
-			switch (shaderEntry.type)
+			assert(libraryEntry.type == ShaderType::RayGeneration);
+			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.raygen.info);
+		}
+
+		// Miss shaders
+		for (const auto& libraryEntry : pipelineDesc.missShaders)
+		{
+			assert(libraryEntry.type == ShaderType::Miss);
+			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.miss.info);
+		}
+
+		// Hit group shaders
+		for (const auto& libraryEntry : pipelineDesc.hitGroupShaders)
+		{
+			switch (libraryEntry.type)
 			{
-			case ShaderType::RayGeneration:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, shaderSetAndBindingMapping.raygen.info);
-				assert(rayGenShaderIndex == -1);
-				rayGenShaderIndex = shaderIndex;
-				break;
-
-			case ShaderType::Miss:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, shaderSetAndBindingMapping.miss.info);
-				assert(missShaderIndex == -1);
-				missShaderIndex = shaderIndex;
-				break;
-
 			case ShaderType::AnyHit:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, shaderSetAndBindingMapping.anyhit.info);
+				AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.anyhit.info);
 				break;
 
 			case ShaderType::ClosestHit:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, shaderSetAndBindingMapping.closesthit.info);
+				AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.closesthit.info);
 				break;
 
 			case ShaderType::Intersection:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, shaderSetAndBindingMapping.intersection.info);
+				AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.intersection.info);
 				break;
 
-			case ShaderType::Callable:
-				AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, shaderSetAndBindingMapping.callable.info);
+			default:
+				assert(false);
 				break;
 			}
-			++shaderIndex;
 		}
 	}
 	else
 	{
-		int32_t shaderIndex = 0;
-		for (const auto& shaderEntry : pipelineDesc.shaderLibrary)
+		VkShaderDescriptorSetAndBindingMappingInfoEXT info{};
+
+		// RayGeneration shaders
+		for (const auto& libraryEntry : pipelineDesc.rayGenShaders)
 		{
-			switch (shaderEntry.type)
+			assert(libraryEntry.type == ShaderType::RayGeneration);
+			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
+		}
+
+		// Miss shaders
+		for (const auto& libraryEntry : pipelineDesc.missShaders)
+		{
+			assert(libraryEntry.type == ShaderType::Miss);
+			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
+		}
+
+		// Hit group shaders
+		for (const auto& libraryEntry : pipelineDesc.hitGroupShaders)
+		{
+			switch (libraryEntry.type)
 			{
-			case ShaderType::RayGeneration:
-				assert(rayGenShaderIndex == -1);
-				rayGenShaderIndex = shaderIndex;
+			case ShaderType::AnyHit:
+				AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
 				break;
 
-			case ShaderType::Miss:
-				assert(missShaderIndex == -1);
-				missShaderIndex = shaderIndex;
+			case ShaderType::ClosestHit:
+				AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
+				break;
+
+			case ShaderType::Intersection:
+				AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
+				break;
+
+			default:
+				assert(false);
 				break;
 			}
-
-			VkShaderDescriptorSetAndBindingMappingInfoEXT info{};
-			AddShaderStageCreateInfo(shaderEntry.type, shaderEntry.shaderNameAndEntry, info);
-
-			++shaderIndex;
 		}
 	}
 
 	// Setup shader groups
 	vector<VkRayTracingShaderGroupCreateInfoKHR> shaderGroupInfos;
+	
+	// Counts of shaders
+	uint32_t numRayGenShaders = (uint32_t)pipelineDesc.rayGenShaders.size();
+	uint32_t numMissShaders = (uint32_t)pipelineDesc.missShaders.size();
+	uint32_t numHitGroupShaders = (uint32_t)pipelineDesc.hitGroupShaders.size();
+	uint32_t numCallableShaders = 0;
 
-	// Intersection shader group
-	if (rayGenShaderIndex != -1)
+	// Intersection shader groups
+	for(uint32_t shaderIndex = 0; shaderIndex < numRayGenShaders; ++shaderIndex)
 	{
 		VkRayTracingShaderGroupCreateInfoKHR rayGenGroupInfo{
 			.sType					= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
 			.type					= VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
-			.generalShader			= (uint32_t)rayGenShaderIndex,
+			.generalShader			= shaderIndex,
 			.closestHitShader		= VK_SHADER_UNUSED_KHR,
 			.anyHitShader			= VK_SHADER_UNUSED_KHR,
 			.intersectionShader		= VK_SHADER_UNUSED_KHR
@@ -1423,23 +1443,28 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 		shaderGroupInfos.push_back(rayGenGroupInfo);
 	}
 
-	// Miss shader group
-	if (missShaderIndex != -1)
+	// Miss shader groups
+	for(uint32_t shaderIndex = 0; shaderIndex < numMissShaders; ++shaderIndex)
 	{
+		const uint32_t offset = numRayGenShaders;
+
 		VkRayTracingShaderGroupCreateInfoKHR rayGenGroupInfo{
 			.sType					= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
 			.type					= VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
-			.generalShader			= (uint32_t)missShaderIndex,
+			.generalShader			= shaderIndex + offset,
 			.closestHitShader		= VK_SHADER_UNUSED_KHR,
 			.anyHitShader			= VK_SHADER_UNUSED_KHR,
 			.intersectionShader		= VK_SHADER_UNUSED_KHR
 		};
 		shaderGroupInfos.push_back(rayGenGroupInfo);
 	}
+
+	const uint32_t hitGroupOffset = (uint32_t)shaderGroupInfos.size();
 
 	// Hit groups
-	uint32_t numHitGroups = 0;
-	for (uint32_t i = 0; i < (uint32_t)pipelineDesc.shaderGroups.size(); ++i)
+	const uint32_t numHitGroups = (uint32_t)pipelineDesc.hitGroups.size();
+
+	for (uint32_t hitGroupIndex = 0; hitGroupIndex < numHitGroups; ++hitGroupIndex)
 	{
 		VkRayTracingShaderGroupCreateInfoKHR groupInfo{
 			.sType				= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
@@ -1449,12 +1474,14 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			.intersectionShader = VK_SHADER_UNUSED_KHR
 		};
 
-		// Loop over the indices in the shader group
+		// Loop over the indices in the hit group
 		for (uint32_t j = 0; j < 3; ++j)
 		{
-			const int32_t lookupIndex = pipelineDesc.shaderGroups[i].shaderIndices[j];
+			int32_t lookupIndex = pipelineDesc.hitGroups[hitGroupIndex].shaderIndices[j];
 			if (lookupIndex == -1)
 				continue;
+
+			lookupIndex += hitGroupOffset;
 
 			Shader* shader = shaders[lookupIndex];
 
@@ -1465,22 +1492,20 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			case ShaderType::RayGeneration:
 			case ShaderType::Miss:
 			case ShaderType::Callable:
-				groupInfo.generalShader = lookupIndex;
+				// Shouldn't have these shader types in hit groups.
+				assert(false);
 				break;
 
 			case ShaderType::AnyHit:
 				groupInfo.anyHitShader = lookupIndex;
-				++numHitGroups;
 				break;
 
 			case ShaderType::ClosestHit:
 				groupInfo.closestHitShader = lookupIndex;
-				++numHitGroups;
 				break;
 
 			case ShaderType::Intersection:
 				groupInfo.intersectionShader = lookupIndex;
-				++numHitGroups;
 				break;
 			}
 		}
@@ -1538,133 +1563,152 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	}
 
 	// Create and return the Luna RayTracingPipeline object
-	auto raytracingPipeline = std::make_shared<RayTracingPipeline>();
-	raytracingPipeline->m_desc = pipelineDesc;
-	raytracingPipeline->m_pipeline = pipeline;
-	raytracingPipeline->m_hasRayGenShader = rayGenShaderIndex != -1;
-	raytracingPipeline->m_hasMissShader = missShaderIndex != -1;
-	raytracingPipeline->m_numHitGroups = numHitGroups;
+	auto raytracingPipeline = std::make_shared<RayTracingPipeline>(pipelineDesc, pipeline.get());
+	raytracingPipeline->GatherShaderIdentifiers(this, numRayGenShaders, numMissShaders, numHitGroups, numCallableShaders);
 	return raytracingPipeline;
 }
 
 
-ShaderBindingTablePtr Device::CreateShaderBindingTable(RayTracingPipelinePtr pipeline)
+ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableDesc& sbtDesc, RayTracingPipelinePtr pipeline)
 {
 	// Get the SBT alignment and the size of each SBT record
-	const size_t sbtRecordSize = m_caps.shaderStage.rayTracing.shaderGroupIdentifierSize;
+	const size_t shaderGroupIdentifierSize = m_caps.shaderStage.rayTracing.shaderGroupIdentifierSize;
 	const size_t tableAlignment = m_caps.memoryAlignment.shaderBindingTable;
-	const uint32_t sbtRecordStride = (uint32_t)Math::AlignUp(sbtRecordSize, tableAlignment);
-
-	// Compute table size
-	const size_t numSbtRecords =
-		(pipeline->HasRayGenShader() ? 1 : 0) +
-		(pipeline->HasMissShader() ? 1 : 0) +
-		pipeline->GetNumHitGroups();
-	assert(numSbtRecords > 0);
-	const size_t sbtSize = sbtRecordStride * numSbtRecords;
+	const uint32_t sbtRecordStride = (uint32_t)Math::AlignUp(shaderGroupIdentifierSize, tableAlignment);
 
 	RayTracingPipeline* pipelineVK = (RayTracingPipeline*)pipeline.get();
-	VkPipeline vkPipeline = pipelineVK->GetPipeline();
 
-	vector<std::byte> shaderHandleStorage(sbtSize);
-	vkGetRayTracingShaderGroupHandlesKHR(m_device->Get(), vkPipeline, 0, (uint32_t)numSbtRecords, sbtSize, shaderHandleStorage.data());
+	// SBTBuffers
+	SBTBuffer rayGenSBTBuffer{};
+	SBTBuffer missSBTBuffer{};
+	SBTBuffer hitGroupSBTBuffer{};
+	SBTBuffer callableSBTBuffer{};
 
-	// Create buffer
-	GpuBufferDesc sbtDesc{
-		.name					= "Shader Binding Table",
-		.resourceType			= ResourceType::UploadBuffer,
-		.memoryAccess			= MemoryAccess::CpuWrite | MemoryAccess::GpuRead,
-		.elementCount			= 1,
-		.elementSize			= sbtSize,
-		.bShaderBindingTable	= true
-	};
+	// Lambda helper to allocate SBT buffer
+	auto AllocateSBTBuffer = [this, tableAlignment](size_t size, const string& name) -> GpuBufferPtr
+		{
+			// Describe buffer
+			GpuBufferDesc bufferDesc{
+				.name					= name,
+				.resourceType			= ResourceType::UploadBuffer,
+				.memoryAccess			= MemoryAccess::CpuWrite | MemoryAccess::GpuRead,
+				.elementSize			= size,
+				.bShaderBindingTable	= true
+			};
 
-	VkBufferCreateInfo bufferCreateInfo{
-		.sType	= VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size	= sbtSize,
-		.usage	= VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-	};
+			VkBufferCreateInfo bufferCreateInfo{
+				.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+				.size = size,
+				.usage = VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+			};
 
-	VmaAllocationCreateInfo allocCreateInfo{};
-	allocCreateInfo.flags = GetMemoryFlags(sbtDesc.memoryAccess);
-	allocCreateInfo.usage = GetMemoryUsage(sbtDesc.memoryAccess);
+			VmaAllocationCreateInfo allocCreateInfo{};
+			allocCreateInfo.flags = GetMemoryFlags(bufferDesc.memoryAccess);
+			allocCreateInfo.usage = GetMemoryUsage(bufferDesc.memoryAccess);
+			allocCreateInfo.minAlignment = tableAlignment;
 
-	VkBuffer vkBuffer{ VK_NULL_HANDLE };
-	VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
+			VkBuffer vkBuffer{ VK_NULL_HANDLE };
+			VmaAllocation vmaBufferAllocation{ VK_NULL_HANDLE };
 
-	auto res = vmaCreateBuffer(*m_allocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
-	assert(res == VK_SUCCESS);
+			auto res = vmaCreateBuffer(*m_allocator, &bufferCreateInfo, &allocCreateInfo, &vkBuffer, &vmaBufferAllocation, nullptr);
+			assert(res == VK_SUCCESS);
 
-	SetDebugName(*m_device, vkBuffer, "Shader Binding Table");
+			SetDebugName(*m_device, vkBuffer, name);
 
-	auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferCreateInfo.size);
+			auto buffer = Create<CVkBuffer>(m_device.get(), m_allocator.get(), vkBuffer, vmaBufferAllocation, bufferCreateInfo.size);
 
-	// Create Luna Vulkan GpuBuffer for shader binding table
-	const uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
-	const bool isCpuWriteable = HasFlag(sbtDesc.memoryAccess, MemoryAccess::CpuWrite);
+			// Create Luna Vulkan GpuBuffer for shader binding table
+			const uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
+			const bool isCpuWriteable = HasFlag(bufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
-	auto gpuBuffer = std::make_shared<GpuBuffer>(sbtDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable);
+			auto gpuBuffer = std::make_shared<GpuBuffer>(bufferDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable);
 
-	// Copy SBT handles
-	std::byte* mem = (std::byte*)gpuBuffer->Map();
-	std::byte* dst = mem;
-	size_t srcOffset = 0;
-	// Ray-gen group
-	if (pipeline->HasRayGenShader())
+			return gpuBuffer;
+		};
+
+	// Ray gen table
+	if (!sbtDesc.rayGenShaders.empty())
 	{
-		memcpy(dst, shaderHandleStorage.data(), sbtRecordSize);
-		dst += sbtRecordStride;
-		srcOffset += sbtRecordSize;
-	}
-	// Miss group
-	if (pipeline->HasMissShader())
-	{
-		memcpy(dst, shaderHandleStorage.data() + srcOffset, sbtRecordSize);
-		dst += sbtRecordStride;
-		srcOffset += sbtRecordSize;
-	}
-	// Hit groups
-	if (pipeline->GetNumHitGroups() > 0)
-	{
-		memcpy(dst, shaderHandleStorage.data() + srcOffset, sbtRecordSize * pipeline->GetNumHitGroups());
-	}
-	gpuBuffer->Unmap();
+		size_t tableSize = sbtRecordStride;
 
-	// Fill in address regions
-	StridedAddressRegion rayGenRegion{};
-	StridedAddressRegion missRegion{};
-	StridedAddressRegion hitGroupRegion{};
+		auto gpuBuffer = AllocateSBTBuffer(tableSize, "RayGen Table");
 
-	uint64_t gpuAddress = gpuBuffer->GetGpuAddress();
-	if (pipeline->HasRayGenShader())
-	{
-		rayGenRegion.bufferAddress = gpuAddress;
-		rayGenRegion.size = sbtRecordStride;
-		rayGenRegion.stride = sbtRecordStride;
-		gpuAddress += sbtRecordStride;
+		// Get the ray generation shader index
+		const uint32_t shaderIndex = sbtDesc.rayGenShaders[0].id;
+
+		// Copy the shader record
+		std::byte* mem = (std::byte*)gpuBuffer->Map();
+		memcpy(mem, pipelineVK->GetRayGenShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
+		gpuBuffer->Unmap();
+
+		// Setup the SBTBuffer
+		rayGenSBTBuffer.buffer = gpuBuffer;
+		rayGenSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
+		rayGenSBTBuffer.size = tableSize;
+		rayGenSBTBuffer.stride = sbtRecordStride;
 	}
 
-	if (pipeline->HasMissShader())
+	// Miss table
+	if (!sbtDesc.missShaders.empty())
 	{
-		missRegion.bufferAddress = gpuAddress;
-		missRegion.size = sbtRecordStride;
-		missRegion.stride = sbtRecordStride;
-		gpuAddress += sbtRecordStride;
+		size_t tableSize = sbtRecordStride * sbtDesc.missShaders.size();
+
+		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Miss Table");
+
+		std::byte* mem = (std::byte*)gpuBuffer->Map();
+
+		for (uint32_t i = 0; i < (uint32_t)sbtDesc.missShaders.size(); ++i)
+		{
+			// Get the miss shader index
+			const uint32_t shaderIndex = sbtDesc.missShaders[i].id;
+
+			// Copy the shader record
+			memcpy(mem, pipelineVK->GetMissShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
+			mem += sbtRecordStride;
+		}
+
+		gpuBuffer->Unmap();
+
+		// Setup the SBTBuffer
+		missSBTBuffer.buffer = gpuBuffer;
+		missSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
+		missSBTBuffer.size = tableSize;
+		missSBTBuffer.stride = sbtRecordStride;
 	}
 
-	if (pipeline->GetNumHitGroups() > 0)
+	// Hit group table
+	if (!sbtDesc.hitGroups.empty())
 	{
-		hitGroupRegion.bufferAddress = gpuAddress;
-		hitGroupRegion.size = sbtRecordStride * pipeline->GetNumHitGroups();
-		hitGroupRegion.stride = sbtRecordStride;
+		size_t tableSize = sbtRecordStride * sbtDesc.hitGroups.size();
+
+		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Hit Group Table");
+
+		std::byte* mem = (std::byte*)gpuBuffer->Map();
+
+		for (uint32_t i = 0; i < (uint32_t)sbtDesc.hitGroups.size(); ++i)
+		{
+			// Get the hit group index
+			const uint32_t shaderIndex = sbtDesc.hitGroups[i].id;
+
+			// Copy the hit group record
+			memcpy(mem, pipelineVK->GetHitGroupIdentifier(shaderIndex), shaderGroupIdentifierSize);
+			mem += sbtRecordStride;
+		}
+
+		gpuBuffer->Unmap();
+
+		// Setup the SBTBuffer
+		hitGroupSBTBuffer.buffer = gpuBuffer;
+		hitGroupSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
+		hitGroupSBTBuffer.size = tableSize;
+		hitGroupSBTBuffer.stride = sbtRecordStride;
 	}
+
+	// Callable table
+	// TODO
 
 	// Create and return ShaderBindingTable
-	auto shaderBindingTable = make_shared<ShaderBindingTable>();
-	shaderBindingTable->m_sbt = gpuBuffer;
-	shaderBindingTable->m_rayGenRegion = rayGenRegion;
-	shaderBindingTable->m_missRegion = missRegion;
-	shaderBindingTable->m_hitGroupRegion = hitGroupRegion;
+	auto shaderBindingTable = make_shared<ShaderBindingTable>(rayGenSBTBuffer, missSBTBuffer, hitGroupSBTBuffer, callableSBTBuffer);
 
 	return shaderBindingTable;
 }
