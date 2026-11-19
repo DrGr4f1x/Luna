@@ -44,10 +44,17 @@ protected:
 	RayTracingPipelineDesc m_desc{};
 	wil::com_ptr<CVkPipeline> m_pipeline;
 	
-	std::vector<void*> m_rayGenShaderIdentifiers;
-	std::vector<void*> m_missShaderIdentifiers;
-	std::vector<void*> m_hitGroupIdentifiers;
-	std::vector<void*> m_callableShaderIdentifiers;
+	struct ShaderIdentifierInfo
+	{
+		size_t offsetInBytes{ 0 };
+		uint32_t numIdentifiers{ 0 };
+	};
+
+	ShaderIdentifierInfo m_rayGenShaderIdentifierInfo;
+	ShaderIdentifierInfo m_missShaderIdentifierInfo;
+	ShaderIdentifierInfo m_hitGroupIdentifierInfo;
+	ShaderIdentifierInfo m_callableShaderIdentifierInfo;
+	size_t m_shaderIdentifierSize{ 0 };
 
 	std::vector<std::byte> m_shaderHandleStorage;
 };

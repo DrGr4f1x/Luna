@@ -1429,7 +1429,7 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	uint32_t numHitGroupShaders = (uint32_t)pipelineDesc.hitGroupShaders.size();
 	uint32_t numCallableShaders = 0;
 
-	// Intersection shader groups
+	// Ray generation shader groups
 	for(uint32_t shaderIndex = 0; shaderIndex < numRayGenShaders; ++shaderIndex)
 	{
 		VkRayTracingShaderGroupCreateInfoKHR rayGenGroupInfo{
@@ -1459,7 +1459,7 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 		shaderGroupInfos.push_back(rayGenGroupInfo);
 	}
 
-	const uint32_t hitGroupOffset = (uint32_t)shaderGroupInfos.size();
+	const uint32_t hitGroupOffset = numRayGenShaders + numMissShaders;
 
 	// Hit groups
 	const uint32_t numHitGroups = (uint32_t)pipelineDesc.hitGroups.size();
