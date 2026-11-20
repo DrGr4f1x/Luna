@@ -1051,7 +1051,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 		assert(false);
 	}
 
-	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = RayTracingAccelerationStructureFlagsToDX12(geometryDesc.buildFlags);
 
 	// Get size info
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo{};
@@ -1084,7 +1084,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 
 GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 {
-	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = RayTracingAccelerationStructureFlagsToDX12(tlasDesc.buildFlags);
 
 	// Get size info
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO topLevelPrebuildInfo{};
@@ -1135,8 +1135,8 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	RayTracingBuildInfo buildInfo{};
 	buildInfo.scratchBuffer = scratchBuffer;
 	buildInfo.destBuffer = tlasBuffer;
-	buildInfo.flags = RayTracingAccelerationStructureFlags::FastTrace;
-	buildInfo.type = RayTracingAccelerationStructureType::BottomLevel;
+	buildInfo.flags = tlasDesc.buildFlags;
+	buildInfo.type = RayTracingAccelerationStructureType::TopLevel;
 	buildInfo.inputs = topLevelInputs;
 
 	CommandContext::BuildAccelerationStructure(&buildInfo);
@@ -1195,6 +1195,8 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			const auto& shaderNameAndEntry = libraryEntry.shaderNameAndEntry;
 
 			Shader* shader = LoadShader(libraryEntry.type, shaderNameAndEntry);
+			assert(shader != nullptr);
+
 			shaders.push_back(shader);
 
 			D3D12_SHADER_BYTECODE libdxil = CD3DX12_SHADER_BYTECODE(shader->GetByteCode(), shader->GetByteCodeSize());
@@ -1231,6 +1233,16 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	// Hit groups
 	for (uint32_t i = 0; i < (uint32_t)pipelineDesc.hitGroups.size(); ++i)
 	{
+		// If we're using a local root signature for this hit group, setup a subobject
+		CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT* localRootSigSubobject = nullptr;
+		if (pipelineDesc.hitGroups[i].localRootSignature)
+		{
+			RootSignature* localRootSignature = (RootSignature*)pipelineDesc.hitGroups[i].localRootSignature.get();
+
+			localRootSigSubobject = raytracingPipelineDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+			localRootSigSubobject->SetRootSignature(localRootSignature->GetRootSignature());
+		}
+
 		// Loop over the indices in the shader group
 		for (uint32_t j = 0; j < 3; ++j)
 		{
@@ -1248,28 +1260,55 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 				break;
 			}
 
+			// Get the shader entry point name (as wide string)
+			const wchar_t* entryName = shader->GetEntryW().c_str();
+
+			// Create a subobject for the hitgroup
 			auto hitgroup = raytracingPipelineDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 			hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
 
 			switch (shaderType)
 			{
 			case ShaderType::Intersection:
-				hitgroup->SetIntersectionShaderImport(shader->GetEntryW().c_str());
+				hitgroup->SetIntersectionShaderImport(entryName);
 				hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_PROCEDURAL_PRIMITIVE);
 				break;
 
 			case ShaderType::ClosestHit:
-				hitgroup->SetClosestHitShaderImport(shader->GetEntryW().c_str());
+				hitgroup->SetClosestHitShaderImport(entryName);
 				break;
 
 			case ShaderType::AnyHit:
-				hitgroup->SetAnyHitShaderImport(shader->GetEntryW().c_str());
+				hitgroup->SetAnyHitShaderImport(entryName);
 				break;
 			}
 
+			// Define explicit shader association for the local root signature.
+			if (localRootSigSubobject)
+			{
+				auto rootSignatureAssociation = raytracingPipelineDesc.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+				rootSignatureAssociation->SetSubobjectToAssociate(*localRootSigSubobject);
+				rootSignatureAssociation->AddExport(entryName);
+			}
+			
+			// Export the hitgroup name
 			std::wstring hitGroupName = std::format(L"hitgroup_{}", i);
 			hitgroup->SetHitGroupExport(hitGroupName.c_str());
 			hitGroupNames.push_back(hitGroupName);
+
+			// Local root signature for the hit group, if needed
+			if (pipelineDesc.hitGroups[i].localRootSignature)
+			{
+				RootSignature* localRootSignature = (RootSignature*)pipelineDesc.hitGroups[i].localRootSignature.get();
+
+				auto localRootSigObj = raytracingPipelineDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+				localRootSigObj->SetRootSignature(localRootSignature->GetRootSignature());
+
+				// Define explicit shader association for the local root signature
+				{
+					
+				}
+			}
 
 		} // for loop over shaders in shader group
 

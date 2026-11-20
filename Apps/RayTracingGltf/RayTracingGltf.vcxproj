@@ -47,11 +47,11 @@
       <Project>{ffe87dcb-69b8-4549-8d06-a681a29ef1d8}</Project>
     </ProjectReference>
   </ItemGroup>
-    <ItemGroup>
-    <None Include="Shaders\SamplePS.hlsl">
+  <ItemGroup>
+    <None Include="Shaders\Shadows.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="Shaders\SampleVS.hlsl">
+    <None Include="Shaders\RayTracing.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

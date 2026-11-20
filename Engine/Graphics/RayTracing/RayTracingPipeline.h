@@ -20,7 +20,7 @@ namespace Luna
 
 struct ShaderGroupDesc
 {
-	ShaderGroupDesc(int32_t i)
+	explicit ShaderGroupDesc(int32_t i)
 	{
 		shaderIndices[0] = i;
 		shaderIndices[1] = -1;
@@ -41,7 +41,32 @@ struct ShaderGroupDesc
 		shaderIndices[2] = k;
 	}
 
+	ShaderGroupDesc(int32_t i, RootSignaturePtr localRootSig)
+	{
+		shaderIndices[0] = i;
+		shaderIndices[1] = -1;
+		shaderIndices[2] = -1;
+		localRootSignature = localRootSig;
+	}
+
+	ShaderGroupDesc(int32_t i, int32_t j, RootSignaturePtr localRootSig)
+	{
+		shaderIndices[0] = i;
+		shaderIndices[1] = j;
+		shaderIndices[2] = -1;
+		localRootSignature = localRootSig;
+	}
+
+	ShaderGroupDesc(int32_t i, int32_t j, int32_t k, RootSignaturePtr localRootSig)
+	{
+		shaderIndices[0] = i;
+		shaderIndices[1] = j;
+		shaderIndices[2] = k;
+		localRootSignature = localRootSig;
+	}
+
 	int32_t shaderIndices[3]{ -1, -1, -1 };
+	RootSignaturePtr localRootSignature;
 };
 
 

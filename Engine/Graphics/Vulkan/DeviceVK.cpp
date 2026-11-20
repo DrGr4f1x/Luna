@@ -1080,7 +1080,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfo{
 		.sType			= VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
 		.type			= VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
-		.flags			= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+		.flags			= RayTracingAccelerationStructureFlagsToVulkan(geometryDesc.buildFlags),
 		.geometryCount	= 1,
 		.pGeometries	= &accelerationStructureGeometry
 	};
@@ -1121,7 +1121,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	VkAccelerationStructureBuildGeometryInfoKHR accelerationBuildGeometryInfo{
 		.sType						= VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
 		.type						= VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
-		.flags						= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+		.flags						= RayTracingAccelerationStructureFlagsToVulkan(geometryDesc.buildFlags),
 		.mode						= VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
 		.dstAccelerationStructure	= accelerationStructure->Get(),
 		.geometryCount				= 1,
@@ -1217,7 +1217,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfo{
 		.sType			= VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
 		.type			= VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
-		.flags			= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+		.flags			= RayTracingAccelerationStructureFlagsToVulkan(tlasDesc.buildFlags),
 		.geometryCount	= 1,
 		.pGeometries	= &accelerationStructureGeometry
 	};

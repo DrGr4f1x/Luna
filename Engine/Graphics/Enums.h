@@ -835,6 +835,7 @@ enum class RayTracingAccelerationStructureType : uint8_t
 
 enum class RayTracingAccelerationStructureFlags : uint16_t
 {
+	None					= 0,
 	AllowUpdate				= 0x0001,
 	AllowCompaction			= 0x0002,
 	FastTrace				= 0x0004,

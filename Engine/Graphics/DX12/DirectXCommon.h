@@ -32,9 +32,12 @@
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
 #include <dxgiformat.h>
+#include <dxcapi.h>
+#include <d3d12shader.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxcompiler.lib")
 
 #define D3D12_GPU_VIRTUAL_ADDRESS_NULL      ((D3D12_GPU_VIRTUAL_ADDRESS)0)
 #define D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN   ((D3D12_GPU_VIRTUAL_ADDRESS)-1)

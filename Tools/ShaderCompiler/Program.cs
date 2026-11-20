@@ -1086,7 +1086,7 @@ namespace ShaderCompiler
             {
                 shaderName = Path.GetFileName(shaderName);
             }
-            if (configLine.Entry != "main")
+            if (configLine.Entry is not null && configLine.Entry != "main")
             {
                 shaderName += "_" + configLine.Entry;
             }

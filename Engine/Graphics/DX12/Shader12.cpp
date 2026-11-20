@@ -14,6 +14,8 @@
 
 #include "FileSystem.h"
 
+#include "DirectXCommon.h"
+
 using namespace std;
 
 
@@ -53,10 +55,12 @@ pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
 Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry)
 {
 	std::string shaderFile = shaderNameAndEntry.shaderFile;
+#if 0
 	if (shaderNameAndEntry.entry != "main")
 	{
 		shaderFile = std::format("{}_{}", shaderNameAndEntry.shaderFile, shaderNameAndEntry.entry);
 	}
+#endif
 
 	auto [shaderFilenameWithExtension, exists] = GetShaderFilenameWithExtension(shaderFile);
 
@@ -71,7 +75,51 @@ Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry
 		.type					= type
 	};
 
-	return Shader::Load(shaderDesc);
+	auto* shader = Shader::Load(shaderDesc);
+
+#if 0
+	DxcBuffer dxcBuffer{
+		.Ptr = shader->GetByteCode(),
+		.Size = shader->GetByteCodeSize(),
+		.Encoding = DXC_CP_ACP
+	};
+
+	wil::com_ptr<IDxcUtils> dxcUtils;
+	DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+
+	wil::com_ptr<ID3D12ShaderReflection> reflection;
+	HRESULT hr = dxcUtils->CreateReflection(&dxcBuffer, IID_PPV_ARGS(&reflection));
+	if (SUCCEEDED(hr))
+	{
+		D3D12_SHADER_DESC shaderDesc12{};
+		reflection->GetDesc(&shaderDesc12);
+	}
+	else
+	{
+		wil::com_ptr<ID3D12LibraryReflection> libraryReflection;
+		hr = dxcUtils->CreateReflection(&dxcBuffer, IID_PPV_ARGS(&libraryReflection));
+		if (SUCCEEDED(hr))
+		{
+			D3D12_LIBRARY_DESC libraryDesc12{};
+			libraryReflection->GetDesc(&libraryDesc12);
+			for (uint32_t i = 0; i < libraryDesc12.FunctionCount; ++i)
+			{
+				auto functionReflection = libraryReflection->GetFunctionByIndex(i);
+				D3D12_FUNCTION_DESC functionDesc12{};
+				functionReflection->GetDesc(&functionDesc12); 
+				__debugbreak();
+
+			}
+			__debugbreak();
+		}
+		else
+		{
+			__debugbreak();
+		}
+	}
+#endif
+
+	return shader;
 }
 
 } // namespace Luna::DX12

@@ -14,6 +14,7 @@
     <Project Path="Apps/MeshletCull/MeshletCull.vcxproj" Id="cc17d821-d752-4c6f-aa6f-a55c5d713934" />
     <Project Path="Apps/MeshletInstancing/MeshletInstancing.vcxproj" Id="2976af93-059c-4e36-bf24-3b6d5472d621" />
     <Project Path="Apps/MeshletRender/MeshletRender.vcxproj" Id="c48c0411-36d3-40d4-8f91-54a85aed9640" />
+    <Project Path="Apps/RayTracingSimpleLighting/RayTracingSimpleLighting.vcxproj" Id="b35d311c-e81b-40eb-a779-b57920b87916" />
     <Project Path="Apps/VariableRateShading/VariableRateShading.vcxproj" Id="01efb9fd-d37d-476c-b622-57057f61a8a4" />
   </Folder>
   <Folder Name="/Apps/SaschaWillems/">

@@ -22,8 +22,7 @@ using namespace std;
 
 RayTracingGltfApp::RayTracingGltfApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-{
-}
+{}
 
 
 int RayTracingGltfApp::ProcessCommandLine(int argc, char* argv[])

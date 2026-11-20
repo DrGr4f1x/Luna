@@ -48,6 +48,7 @@ struct RayTracingGeometryDesc
 	std::string name;
 	RayTracingGeometryType geometryType{ RayTracingGeometryType::Triangles };
 	RayTracingGeometryFlags flags{ RayTracingGeometryFlags::None };
+	RayTracingAccelerationStructureFlags buildFlags{ RayTracingAccelerationStructureFlags::None };
 	union
 	{
 		RayTracingGeometryTrianglesDesc triangles;
@@ -78,6 +79,7 @@ struct RayTracingInstanceDesc
 struct RayTracingTLASDesc
 {
 	std::span<RayTracingInstanceDesc> instances;
+	RayTracingAccelerationStructureFlags buildFlags{ RayTracingAccelerationStructureFlags::None };
 };
 
 } // namespace Luna

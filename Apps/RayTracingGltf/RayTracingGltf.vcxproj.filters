@@ -21,11 +21,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\SampleVS.hlsl">
+    <None Include="Shaders\RayTracing.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\SamplePS.hlsl">
+    <None Include="Shaders\Shadows.hlsl">
       <Filter>Shaders</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>

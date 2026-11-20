@@ -145,7 +145,8 @@ void RayTracingBasicApp::InitRayTracingBLAS()
 	RayTracingGeometryDesc blasDesc{
 		.name			= "Triangle BLAS",
 		.geometryType	= RayTracingGeometryType::Triangles,
-		.flags			= RayTracingGeometryFlags::Opaque
+		.flags			= RayTracingGeometryFlags::Opaque,
+		.buildFlags		= RayTracingAccelerationStructureFlags::FastTrace
 	};
 	blasDesc.triangles.transform3x4 = 0;
 	blasDesc.triangles.indexFormat = Format::R32_UInt;
@@ -172,7 +173,8 @@ void RayTracingBasicApp::InitRayTracingTLAS()
 	vector<RayTracingInstanceDesc> instances = { instanceDesc };
 
 	RayTracingTLASDesc tlasDesc{
-		.instances = instances
+		.instances		= instances,
+		.buildFlags		= RayTracingAccelerationStructureFlags::FastTrace
 	};
 
 	m_rayTracingTLAS = GetDevice()->CreateTLAS(tlasDesc);
@@ -198,15 +200,15 @@ void RayTracingBasicApp::InitRayTracingPipeline()
 	RayTracingPipelineDesc desc{
 		.rootSignature = m_globalRootSignature,
 		.rayGenShaders = {
-			{ ShaderType::RayGeneration, {.shaderFile = "RayGen", .entry = "raygen_main" }}
+			{ ShaderType::RayGeneration, { .shaderFile = "RayGen", .entry = "raygen_main" }}
 		},
 		.missShaders = {
-			{ ShaderType::Miss, {.shaderFile = "Miss", .entry = "miss_main" }},
+			{ ShaderType::Miss, { .shaderFile = "Miss", .entry = "miss_main" }},
 		},
 		.hitGroupShaders = {
 			{ ShaderType::ClosestHit, { .shaderFile = "ClosestHit", .entry = "closesthit_main" }}
 		},
-		.hitGroups = { ShaderGroupDesc(0) },  // Index 0 in the hitGroupShaders list, i.e. the 'closesthit_main' shader
+		.hitGroups = { ShaderGroupDesc(0) },  // Index 0 in the hitGroupShaders list, i.e. the 'ClosestHit' shader
 		.maxPayloadSize = 3 * sizeof(float),
 		.maxRayHitAttributeSize = 2 * sizeof(float)
 	};
