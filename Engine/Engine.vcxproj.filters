@@ -233,6 +233,9 @@
     <ClCompile Include="Graphics\Vulkan\RayTracing\RayTracingPipelineVK.cpp">
       <Filter>Graphics\Vulkan\RayTracing</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\RayTracing\ShaderBindingTable.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />

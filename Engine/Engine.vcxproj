@@ -70,6 +70,7 @@
     <ClCompile Include="Graphics\Loaders\KTXTextureLoader.cpp" />
     <ClCompile Include="Graphics\Loaders\STBTextureLoader.cpp" />
     <ClCompile Include="Graphics\Model.cpp" />
+    <ClCompile Include="Graphics\RayTracing\ShaderBindingTable.cpp" />
     <ClCompile Include="Graphics\ResourceSet.cpp" />
     <ClCompile Include="Graphics\RootSignature.cpp" />
     <ClCompile Include="Graphics\Shader.cpp" />
