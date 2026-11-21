@@ -39,17 +39,37 @@ protected:
 	void InitRayTracingTLAS();
 	void InitRootSignatures();
 	void InitRayTracingPipeline();
+	void InitShaderBindingTable();
+	void InitColorTarget();
+	void InitDescriptorSets();
+
+	void UpdateCameraMatrices();
+	void UpdateConstantBuffer();
 
 protected:
+	struct SceneConstants
+	{
+		Math::Matrix4 projectionToWorld{ Math::kIdentity };
+		Math::Vector4 cameraPosition{ Math::kZero };
+		Math::Vector4 lightPosition{ Math::kZero };
+		Math::Vector4 lightAmbientColor{ Math::kZero };
+		Math::Vector4 lightDiffuseColor{ Math::kZero };
+	};
+	SceneConstants m_sceneConstants;
+
 	struct CubeConstants
 	{
-		Math::Vector4 albedo{};
+		Math::Vector4 albedo{ Math::kIdentity };
 	};
+	CubeConstants m_cubeConstants;
+
+	Luna::GpuBufferPtr m_sceneConstantBuffer;
 
 	Luna::RootSignaturePtr m_globalRootSignature;
 	Luna::RootSignaturePtr m_localRootSignature;
 
 	Luna::RayTracingPipelinePtr m_rayTracingPipeline;
+	Luna::ShaderBindingTablePtr m_shaderBindingTable;
 
 	struct Vertex
 	{
@@ -62,4 +82,14 @@ protected:
 
 	Luna::GpuBufferPtr m_cubeBLAS;
 	Luna::GpuBufferPtr m_rayTracingTLAS;
+
+	Luna::ColorBufferPtr m_colorTarget;
+	
+	Luna::DescriptorSetPtr m_colorTargetDescriptorSet;
+	Luna::DescriptorSetPtr m_geometryBufferDescriptorSet;
+
+	// Camera
+	Math::Vector4 m_eye{ Math::kIdentity };
+	Math::Vector4 m_at{ Math::kIdentity };
+	Math::Vector4 m_up{ Math::kIdentity };
 };

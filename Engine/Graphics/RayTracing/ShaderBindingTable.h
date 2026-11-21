@@ -28,6 +28,9 @@ struct ShaderBindingTableDesc
 	std::vector<ShaderRecord> rayGenShaders;
 	std::vector<ShaderRecord> missShaders;
 	std::vector<ShaderRecord> hitGroups;
+	size_t rayGenDataSize{ 0 };
+	size_t missDataSize{ 0 };
+	size_t hitGroupDataSize{ 0 };
 };
 
 

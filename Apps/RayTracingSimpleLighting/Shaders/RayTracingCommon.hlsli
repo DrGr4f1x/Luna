@@ -43,4 +43,5 @@ ByteAddressBuffer indexBuffer : BINDING(t1, 3);
 StructuredBuffer<Vertex> vertexBuffer : BINDING(t2, 3);
 
 ConstantBuffer<SceneConstantBuffer> sceneConstantBuffer : BINDING(b0, 2);
-ConstantBuffer<CubeConstantBuffer> cubeConstantBuffer : BINDING(b1, 0);
+[[vk::shader_record_ext]]
+ConstantBuffer<CubeConstantBuffer> cubeConstantBuffer : register(b1);

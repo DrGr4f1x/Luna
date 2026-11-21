@@ -636,10 +636,19 @@ Luna::RootSignaturePtr Device::CreateRootSignature(DescriptorHeapPtr descriptorH
 	}
 
 	// Setup flags
-	auto flags = ShaderStageToRootSignatureFlags(combinedShaderStages);
-	if (rootSignatureDesc.allowStreamOut)
+	D3D12_ROOT_SIGNATURE_FLAGS flags{};
+	if (rootSignatureDesc.localRootSignature)
 	{
-		flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+		// Cannot be combined with any other flags
+		flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+	}
+	else
+	{
+		flags = ShaderStageToRootSignatureFlags(combinedShaderStages);
+		if (rootSignatureDesc.allowStreamOut)
+		{
+			flags |= D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+		}
 	}
 
 	D3D12_VERSIONED_ROOT_SIGNATURE_DESC d3d12RootSignatureDesc{
@@ -1295,21 +1304,6 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			std::wstring hitGroupName = std::format(L"hitgroup_{}", i);
 			hitgroup->SetHitGroupExport(hitGroupName.c_str());
 			hitGroupNames.push_back(hitGroupName);
-
-			// Local root signature for the hit group, if needed
-			if (pipelineDesc.hitGroups[i].localRootSignature)
-			{
-				RootSignature* localRootSignature = (RootSignature*)pipelineDesc.hitGroups[i].localRootSignature.get();
-
-				auto localRootSigObj = raytracingPipelineDesc.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-				localRootSigObj->SetRootSignature(localRootSignature->GetRootSignature());
-
-				// Define explicit shader association for the local root signature
-				{
-					
-				}
-			}
-
 		} // for loop over shaders in shader group
 
 	} // for loop over shader groups
@@ -1365,29 +1359,38 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 	// Ray gen table
 	if (!sbtDesc.rayGenShaders.empty())
 	{
-		size_t tableSize = shaderGroupIdentifierSize;
+		size_t tableSize = shaderGroupIdentifierSize + sbtDesc.rayGenDataSize;
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "RayGen Table");
 
 		// Get the ray generation shader index
 		const uint32_t shaderIndex = sbtDesc.rayGenShaders[0].id;
 
+		// Verify extra data size
+		assert(sbtDesc.rayGenDataSize == sbtDesc.rayGenShaders[0].size);
+
 		// Copy the shader record
 		std::byte* mem = (std::byte*)gpuBuffer->Map();
 		memcpy(mem, pipeline12->GetRayGenShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
+		// Copy extra shader data
+		if (sbtDesc.rayGenDataSize > 0)
+		{
+			memcpy(mem + shaderGroupIdentifierSize, sbtDesc.rayGenShaders[0].data, sbtDesc.rayGenShaders[0].size);
+		}
 		gpuBuffer->Unmap();
 
 		// Setup the SBTBuffer
 		rayGenSBTBuffer.buffer = gpuBuffer;
 		rayGenSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
 		rayGenSBTBuffer.size = tableSize;
-		rayGenSBTBuffer.stride = shaderGroupIdentifierSize;
+		rayGenSBTBuffer.stride = tableSize;
 	}
 
 	// Miss table
 	if (!sbtDesc.missShaders.empty())
 	{
-		size_t tableSize = shaderGroupIdentifierSize * sbtDesc.missShaders.size();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + sbtDesc.missDataSize, shaderGroupIdentifierSize);
+		size_t tableSize = tableStride * sbtDesc.missShaders.size();
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Miss Table");
 
@@ -1398,9 +1401,17 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			// Get the miss shader index
 			const uint32_t shaderIndex = sbtDesc.missShaders[i].id;
 
+			// Verify extra data size
+			assert(sbtDesc.missDataSize == sbtDesc.missShaders[i].size);
+
 			// Copy the shader record
 			memcpy(mem, pipeline12->GetMissShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
-			mem += shaderGroupIdentifierSize;
+			// Copy extra shader data
+			if (sbtDesc.missDataSize > 0)
+			{
+				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.missShaders[i].data, sbtDesc.missShaders[i].size);
+			}
+			mem += tableStride;
 		}
 
 		gpuBuffer->Unmap();
@@ -1409,13 +1420,14 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		missSBTBuffer.buffer = gpuBuffer;
 		missSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
 		missSBTBuffer.size = tableSize;
-		missSBTBuffer.stride = shaderGroupIdentifierSize;
+		missSBTBuffer.stride = tableStride;
 	}
 
 	// Hit group table
 	if (!sbtDesc.hitGroups.empty())
 	{
-		size_t tableSize = shaderGroupIdentifierSize * sbtDesc.hitGroups.size();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + sbtDesc.hitGroupDataSize, shaderGroupIdentifierSize);
+		size_t tableSize = tableStride * sbtDesc.hitGroups.size();
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Hit Group Table");
 
@@ -1426,9 +1438,17 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			// Get the hit group index
 			const uint32_t shaderIndex = sbtDesc.hitGroups[i].id;
 
+			// Verify extra data size
+			assert(sbtDesc.hitGroupDataSize == sbtDesc.hitGroups[i].size);
+
 			// Copy the hit group record
 			memcpy(mem, pipeline12->GetHitGroupIdentifier(shaderIndex), shaderGroupIdentifierSize);
-			mem += shaderGroupIdentifierSize;
+			// Copy extra shader data
+			if (sbtDesc.hitGroupDataSize > 0)
+			{
+				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.hitGroups[i].data, sbtDesc.hitGroups[i].size);
+			}
+			mem += tableStride;
 		}
 
 		gpuBuffer->Unmap();
@@ -1437,7 +1457,7 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		hitGroupSBTBuffer.buffer = gpuBuffer;
 		hitGroupSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
 		hitGroupSBTBuffer.size = tableSize;
-		hitGroupSBTBuffer.stride = shaderGroupIdentifierSize;
+		hitGroupSBTBuffer.stride = tableStride;
 	}
 
 	// Callable table

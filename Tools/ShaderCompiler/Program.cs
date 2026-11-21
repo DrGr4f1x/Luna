@@ -1592,7 +1592,10 @@ namespace ShaderCompiler
                     commandArgs += " -T " + profile;
 
                     // Entry point
-                    commandArgs += " -E " + job.EntryPoint;
+                    if (job.EntryPoint != null)
+                    {
+                        commandArgs += " -E " + job.EntryPoint;
+                    }
 
                     // Defines
                     foreach (var define in job.Defines)

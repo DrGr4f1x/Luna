@@ -110,3 +110,4 @@ void closesthit_main(inout RayPayload payload, in MyAttributes attr)
 }
 
 
+// touch

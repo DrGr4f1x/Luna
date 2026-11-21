@@ -79,6 +79,11 @@ public:
 	static __forceinline Matrix4 MakeTranslation(float x, float y, float z) noexcept { return Matrix4(XMMatrixTranslation(x, y, z)); }
 	static __forceinline Matrix4 MakeTranslation(Vector3 vec) noexcept { return Matrix4(XMMatrixTranslationFromVector(vec)); }
 
+	static __forceinline Matrix4 MakeLookAt(Vector4 eye, Vector4 at, Vector4 up)
+	{
+		return Matrix4(XMMatrixLookAtRH(eye, at, up));
+	}
+
 	static __forceinline Matrix4 MakePerspective(float fovY, float aspect, float nearZ, float farZ) noexcept
 	{
 		return Matrix4(XMMatrixPerspectiveFovRH(fovY, aspect, nearZ, farZ));

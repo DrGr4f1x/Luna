@@ -69,10 +69,6 @@ pair<string, bool> GetShaderFilenameWithExtension(const string& shaderFilename)
 Shader* LoadShader(ShaderType type, const ShaderNameAndEntry& shaderNameAndEntry)
 {
 	std::string shaderFile = shaderNameAndEntry.shaderFile;
-	if (shaderNameAndEntry.entry != "main")
-	{
-		shaderFile = std::format("{}_{}", shaderNameAndEntry.shaderFile, shaderNameAndEntry.entry);
-	}
 
 	auto [shaderFilenameWithExtension, exists] = GetShaderFilenameWithExtension(shaderFile);
 
@@ -1053,6 +1049,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	accelerationStructureGeometry.flags = RayTracingGeometryFlagsToVulkan(geometryDesc.flags);
 	accelerationStructureGeometry.geometryType = RayTracingGeometryTypeToVulkan(geometryDesc.geometryType);
 
+	uint32_t numPrimitives = 0;
 	if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
 	{
 		accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
@@ -1063,7 +1060,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 		accelerationStructureGeometry.geometry.triangles.indexType = geometryDesc.triangles.indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 		accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = geometryDesc.triangles.indexBuffer;
 		accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = geometryDesc.triangles.transform3x4;
-
+		numPrimitives = (uint32_t)geometryDesc.triangles.indexCount / 3;
 	}
 	else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
 	{
@@ -1085,7 +1082,6 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 		.pGeometries	= &accelerationStructureGeometry
 	};
 
-	const uint32_t numPrimitives = 1;
 	VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfo{
 		.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR
 	};
@@ -1258,7 +1254,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	VkAccelerationStructureBuildGeometryInfoKHR accelerationBuildGeometryInfo{
 		.sType						= VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
 		.type						= VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR,
-		.flags						= VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR,
+		.flags						= RayTracingAccelerationStructureFlagsToVulkan(tlasDesc.buildFlags),
 		.mode						= VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
 		.dstAccelerationStructure	= accelerationStructure->Get(),
 		.geometryCount				= 1,
@@ -1629,16 +1625,24 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 	// Ray gen table
 	if (!sbtDesc.rayGenShaders.empty())
 	{
-		size_t tableSize = sbtRecordStride;
+		size_t tableSize = sbtRecordStride + sbtDesc.rayGenDataSize;
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "RayGen Table");
 
 		// Get the ray generation shader index
 		const uint32_t shaderIndex = sbtDesc.rayGenShaders[0].id;
 
+		// Verify extra data size
+		assert(sbtDesc.rayGenDataSize == sbtDesc.rayGenShaders[0].size);
+
 		// Copy the shader record
 		std::byte* mem = (std::byte*)gpuBuffer->Map();
 		memcpy(mem, pipelineVK->GetRayGenShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
+		// Copy extra shader data
+		if (sbtDesc.rayGenDataSize > 0)
+		{
+			memcpy(mem + shaderGroupIdentifierSize, sbtDesc.rayGenShaders[0].data, sbtDesc.rayGenShaders[0].size);
+		}
 		gpuBuffer->Unmap();
 
 		// Setup the SBTBuffer
@@ -1651,7 +1655,8 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 	// Miss table
 	if (!sbtDesc.missShaders.empty())
 	{
-		size_t tableSize = sbtRecordStride * sbtDesc.missShaders.size();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + sbtDesc.missDataSize, shaderGroupIdentifierSize);
+		size_t tableSize = tableStride * sbtDesc.missShaders.size();
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Miss Table");
 
@@ -1662,9 +1667,17 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			// Get the miss shader index
 			const uint32_t shaderIndex = sbtDesc.missShaders[i].id;
 
+			// Verify extra data size
+			assert(sbtDesc.missDataSize == sbtDesc.missShaders[i].size);
+
 			// Copy the shader record
 			memcpy(mem, pipelineVK->GetMissShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
-			mem += sbtRecordStride;
+			// Copy extra shader data
+			if (sbtDesc.missDataSize > 0)
+			{
+				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.missShaders[i].data, sbtDesc.missShaders[i].size);
+			}
+			mem += tableStride;
 		}
 
 		gpuBuffer->Unmap();
@@ -1673,13 +1686,14 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		missSBTBuffer.buffer = gpuBuffer;
 		missSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
 		missSBTBuffer.size = tableSize;
-		missSBTBuffer.stride = sbtRecordStride;
+		missSBTBuffer.stride = tableStride;
 	}
 
 	// Hit group table
 	if (!sbtDesc.hitGroups.empty())
 	{
-		size_t tableSize = sbtRecordStride * sbtDesc.hitGroups.size();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + sbtDesc.hitGroupDataSize, shaderGroupIdentifierSize);
+		size_t tableSize = tableStride * sbtDesc.hitGroups.size();
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Hit Group Table");
 
@@ -1690,9 +1704,17 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			// Get the hit group index
 			const uint32_t shaderIndex = sbtDesc.hitGroups[i].id;
 
+			// Verify extra data size
+			assert(sbtDesc.hitGroupDataSize == sbtDesc.hitGroups[i].size);
+
 			// Copy the hit group record
 			memcpy(mem, pipelineVK->GetHitGroupIdentifier(shaderIndex), shaderGroupIdentifierSize);
-			mem += sbtRecordStride;
+			// Copy extra shader data
+			if (sbtDesc.hitGroupDataSize > 0)
+			{
+				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.hitGroups[i].data, sbtDesc.hitGroups[i].size);
+			}
+			mem += tableStride;
 		}
 
 		gpuBuffer->Unmap();
@@ -1701,7 +1723,7 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		hitGroupSBTBuffer.buffer = gpuBuffer;
 		hitGroupSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
 		hitGroupSBTBuffer.size = tableSize;
-		hitGroupSBTBuffer.stride = sbtRecordStride;
+		hitGroupSBTBuffer.stride = tableStride;
 	}
 
 	// Callable table
