@@ -343,8 +343,7 @@ void RayTracingSimpleLightingApp::InitShaderBindingTable()
 		.missShaders	= { ShaderRecord{ .id = 0 } }, // refers to the Miss shader at index 0 in the library
 		.hitGroups		= { 
 			ShaderRecord{ .id = 0, .data = &m_cubeConstants, .size = sizeof(CubeConstants) } // refers to the HitGroup at index 0 in the library
-		},
-		.hitGroupDataSize	= sizeof(CubeConstants)
+		}
 	};
 
 	m_shaderBindingTable = GetDevice()->CreateShaderBindingTable(desc, m_rayTracingPipeline);

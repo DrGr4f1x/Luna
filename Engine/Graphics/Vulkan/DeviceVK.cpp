@@ -1625,21 +1625,19 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 	// Ray gen table
 	if (!sbtDesc.rayGenShaders.empty())
 	{
-		size_t tableSize = sbtRecordStride + sbtDesc.rayGenDataSize;
+		const size_t dataSize = sbtDesc.GetRayGenDataSize();
+		const size_t tableSize = sbtRecordStride + dataSize;
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "RayGen Table");
 
 		// Get the ray generation shader index
 		const uint32_t shaderIndex = sbtDesc.rayGenShaders[0].id;
 
-		// Verify extra data size
-		assert(sbtDesc.rayGenDataSize == sbtDesc.rayGenShaders[0].size);
-
 		// Copy the shader record
 		std::byte* mem = (std::byte*)gpuBuffer->Map();
 		memcpy(mem, pipelineVK->GetRayGenShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
 		// Copy extra shader data
-		if (sbtDesc.rayGenDataSize > 0)
+		if (dataSize > 0)
 		{
 			memcpy(mem + shaderGroupIdentifierSize, sbtDesc.rayGenShaders[0].data, sbtDesc.rayGenShaders[0].size);
 		}
@@ -1655,8 +1653,9 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 	// Miss table
 	if (!sbtDesc.missShaders.empty())
 	{
-		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + sbtDesc.missDataSize, shaderGroupIdentifierSize);
-		size_t tableSize = tableStride * sbtDesc.missShaders.size();
+		const size_t dataSize = sbtDesc.GetMissDataSize();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + dataSize, shaderGroupIdentifierSize);
+		const size_t tableSize = tableStride * sbtDesc.missShaders.size();
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Miss Table");
 
@@ -1667,13 +1666,10 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			// Get the miss shader index
 			const uint32_t shaderIndex = sbtDesc.missShaders[i].id;
 
-			// Verify extra data size
-			assert(sbtDesc.missDataSize == sbtDesc.missShaders[i].size);
-
 			// Copy the shader record
 			memcpy(mem, pipelineVK->GetMissShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
 			// Copy extra shader data
-			if (sbtDesc.missDataSize > 0)
+			if (dataSize > 0)
 			{
 				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.missShaders[i].data, sbtDesc.missShaders[i].size);
 			}
@@ -1692,8 +1688,9 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 	// Hit group table
 	if (!sbtDesc.hitGroups.empty())
 	{
-		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + sbtDesc.hitGroupDataSize, shaderGroupIdentifierSize);
-		size_t tableSize = tableStride * sbtDesc.hitGroups.size();
+		const size_t dataSize = sbtDesc.GetHitGroupDataSize();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + dataSize, shaderGroupIdentifierSize);
+		const size_t tableSize = tableStride * sbtDesc.hitGroups.size();
 
 		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Hit Group Table");
 
@@ -1704,13 +1701,10 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			// Get the hit group index
 			const uint32_t shaderIndex = sbtDesc.hitGroups[i].id;
 
-			// Verify extra data size
-			assert(sbtDesc.hitGroupDataSize == sbtDesc.hitGroups[i].size);
-
 			// Copy the hit group record
 			memcpy(mem, pipelineVK->GetHitGroupIdentifier(shaderIndex), shaderGroupIdentifierSize);
 			// Copy extra shader data
-			if (sbtDesc.hitGroupDataSize > 0)
+			if (dataSize > 0)
 			{
 				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.hitGroups[i].data, sbtDesc.hitGroups[i].size);
 			}
