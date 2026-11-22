@@ -27,7 +27,7 @@ public:
 	void SetLookIn(Math::Vector3 cameraPos, Math::Vector3 lookDir, Math::Vector3 upAxis) noexcept;
 	void SetLookIn(Math::Vector3 lookDir, Math::Vector3 upAxis) noexcept;
 
-	void SetOrientation(Math::Quaternion orientation) noexcept;
+	void SetRotation(Math::Quaternion basisRotation) noexcept;
 	void SetPosition(Math::Vector3 worldPos) noexcept;
 
 	void SetTransform(const Math::AffineTransform& xform) noexcept;
@@ -39,7 +39,6 @@ public:
 	const Math::Vector3 GetUpVec() const noexcept { return m_basis.GetY(); }
 	const Math::Vector3 GetForwardVec() const noexcept { return -m_basis.GetZ(); }
 
-	const Math::Matrix4 GetViewToWorldMatrix() const noexcept { return m_viewToWorldMatrix; }
 	const Math::Matrix4 GetViewMatrix() const noexcept { return m_viewMatrix; }
 	const Math::Matrix4 GetProjectionMatrix() const noexcept { return m_projectionMatrix; }
 	const Math::Matrix4 GetViewProjectionMatrix() const noexcept { return m_viewProjectionMatrix; }
@@ -53,10 +52,11 @@ protected:
 	void SetProjectionMatrix(const Math::Matrix4& projectionMatrix) noexcept;
 
 protected:
+	Math::OrthogonalTransform m_cameraToWorld{ Math::kIdentity };
+
 	// Cached for faster lookups
 	Math::Matrix3 m_basis{ Math::kIdentity };
 
-	Math::Matrix4 m_viewToWorldMatrix{ Math::kIdentity }; // View-to-World
 	Math::Matrix4 m_viewMatrix{ Math::kIdentity }; // World-to-View
 
 	Math::Matrix4 m_projectionMatrix{ Math::kIdentity }; // View-to-Projection
@@ -96,7 +96,8 @@ protected:
 
 inline void BaseCamera::SetLookAt(Math::Vector3 cameraPos, Math::Vector3 targetPos, Math::Vector3 upAxis) noexcept
 {
-	m_viewMatrix = Math::Matrix4(XMMatrixLookAtRH(cameraPos, targetPos, upAxis));
+	SetLookIn(targetPos - cameraPos, upAxis);
+	SetPosition(cameraPos);
 	Update(false);
 }
 
@@ -104,76 +105,77 @@ inline void BaseCamera::SetLookAt(Math::Vector3 cameraPos, Math::Vector3 targetP
 inline void BaseCamera::SetLookAt(Math::Vector3 targetPos, Math::Vector3 upAxis) noexcept
 {
 	const Math::Vector3 position = GetPosition();
-	m_viewMatrix = Math::Matrix4(XMMatrixLookAtRH(position, targetPos, upAxis));
+	SetLookAt(position, targetPos, upAxis);
 	Update(false);
 }
 
 
 inline void BaseCamera::SetLookIn(Math::Vector3 cameraPos, Math::Vector3 targetDir, Math::Vector3 upAxis) noexcept
 {
-	m_viewMatrix = Math::Matrix4(XMMatrixLookToRH(cameraPos, targetDir, upAxis));
+	SetLookIn(targetDir, upAxis);
+	SetPosition(cameraPos);
 	Update(false);
 }
 
 
 inline void BaseCamera::SetLookIn(Math::Vector3 targetDir, Math::Vector3 upAxis) noexcept
 {
-	const Math::Vector3 position = GetPosition();
-	m_viewMatrix = Math::Matrix4(XMMatrixLookToRH(position, targetDir, upAxis));
+	using namespace Math;
+
+	// Given, but ensure normalization
+	Scalar forwardLenSq = LengthSquare(targetDir);
+	targetDir = Select(targetDir * RecipSqrt(forwardLenSq), -Vector3(kZUnitVector), forwardLenSq < Scalar(0.000001f));
+
+	// Deduce a valid, orthogonal right vector
+	Vector3 right = Cross(targetDir, upAxis);
+	Scalar rightLenSq = LengthSquare(right);
+	right = Select(right * RecipSqrt(rightLenSq), Quaternion(Vector3(kYUnitVector), -XM_PIDIV2) * targetDir, rightLenSq < Scalar(0.000001f));
+
+	// Compute actual up vector
+	Vector3 up = Cross(right, targetDir);
+
+	// Finish constructing basis
+	m_basis = Matrix3(right, up, -targetDir);
+	m_cameraToWorld.SetRotation(Quaternion(m_basis));
+
 	Update(false);
 }
 
 
-inline void BaseCamera::SetOrientation(Math::Quaternion orientation) noexcept
+inline void BaseCamera::SetRotation(Math::Quaternion basisRotation) noexcept
 {
-	XMVECTOR xmScale{};
-	XMVECTOR xmRotQuat{};
-	XMVECTOR xmTrans{};
-	XMMatrixDecompose(&xmScale, &xmRotQuat, &xmTrans, m_viewToWorldMatrix);
+	using namespace Math;
 
-	m_viewMatrix = Math::Matrix4(XMMatrixAffineTransformation(xmScale, XMVectorZero(), orientation, xmTrans));
+	m_cameraToWorld.SetRotation(Normalize(basisRotation));
+	m_basis = Matrix3(m_cameraToWorld.GetRotation());
 	Update(false);
 }
 
 
 inline void BaseCamera::SetPosition(Math::Vector3 worldPos) noexcept
 {
-	XMVECTOR xmScale{};
-	XMVECTOR xmRotQuat{};
-	XMVECTOR xmTrans{};
-	XMMatrixDecompose(&xmScale, &xmRotQuat, &xmTrans, m_viewToWorldMatrix);
-
-	m_viewMatrix = Math::Matrix4(XMMatrixAffineTransformation(xmScale, XMVectorZero(), xmRotQuat, worldPos));
+	m_cameraToWorld.SetTranslation(worldPos);
 	Update(false);
 }
 
 
 inline void BaseCamera::SetTransform(const Math::AffineTransform& xform) noexcept
 {
-	SetLookIn(xform.GetTranslation(), -xform.GetZ(), xform.GetY());
+	SetLookIn(-xform.GetZ(), xform.GetY());
+	SetPosition(xform.GetTranslation());
 	Update(false);
 }
 
 
 inline const Math::Vector3 BaseCamera::GetPosition() const noexcept
 {
-	XMVECTOR xmScale{};
-	XMVECTOR xmRotQuat{};
-	XMVECTOR xmTrans{};
-	XMMatrixDecompose(&xmScale, &xmRotQuat, &xmTrans, m_viewToWorldMatrix);
-
-	return Math::Vector3(xmTrans);
+	return m_cameraToWorld.GetTranslation();
 }
 
 
 inline const Math::Quaternion BaseCamera::GetOrientation() const noexcept
 {
-	XMVECTOR xmScale{};
-	XMVECTOR xmRotQuat{};
-	XMVECTOR xmTrans{};
-	XMMatrixDecompose(&xmScale, &xmRotQuat, &xmTrans, m_viewToWorldMatrix);
-
-	return Math::Quaternion(xmRotQuat);
+	return m_cameraToWorld.GetRotation();
 }
 
 

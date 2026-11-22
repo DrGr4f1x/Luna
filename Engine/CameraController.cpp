@@ -89,9 +89,7 @@ void CameraController::SetOrbitTarget(Math::Vector3 target, float zoom, float mi
 	m_zoom = zoom;
 	m_orbitTarget = target;
 	m_minDistance = fabsf(minDistance);
-	Vector3 cameraPosition = m_targetCamera.GetPosition();
-	m_targetCamera.SetLookIn(target - cameraPosition, m_worldUp);
-	m_targetCamera.Update();
+	m_targetCamera.SetLookAt(target, m_worldUp);
 	RefreshFromCamera();
 }
 
@@ -212,7 +210,7 @@ void CameraController::UpdateArcBall(InputSystem* inputSystem, float deltaTime, 
 	}
 
 	const float epsilon = 0.05f;
-	m_currentPitch -= pitch;
+	m_currentPitch += pitch;
 	m_currentPitch = DirectX::XMMin(XM_PIDIV2 - epsilon, m_currentPitch);
 	m_currentPitch = DirectX::XMMax(-XM_PIDIV2 + epsilon, m_currentPitch);
 
@@ -231,9 +229,9 @@ void CameraController::UpdateArcBall(InputSystem* inputSystem, float deltaTime, 
 	m_zoom = DirectX::XMMax(m_minDistance, m_zoom);
 
 	// ArcBall logic
-	Vector3 position = Quaternion(m_currentPitch, m_currentHeading, 0.0f) * (-1.0f * Vector3(kZUnitVector));
+	Vector3 position = Quaternion(m_currentPitch, m_currentHeading, 0.0f) * Vector3(kZUnitVector);
 	position = m_zoom * position;
-	position += m_orbitTarget;
+	position -= m_orbitTarget;
 	m_targetCamera.SetLookAt(position, m_orbitTarget, Vector3(kYUnitVector));
 }
 

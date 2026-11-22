@@ -98,7 +98,7 @@ void RayTracingBasicApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		256.0f);
-	m_camera.SetPosition(Vector3(0.0f, 0.0f, -2.5f));
+	m_camera.SetPosition(Vector3(0.0f, 0.0f, 2.5f));
 
 	m_rayGenConstantBuffer = CreateConstantBuffer("Ray Gen Constant Buffer", 1, sizeof(RayGenConstants));
 

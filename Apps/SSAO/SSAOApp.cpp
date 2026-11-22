@@ -221,7 +221,7 @@ void SSAOApp::CreateDeviceDependentResources()
 		m_nearPlane,
 		m_farPlane);
 	m_camera.SetPosition({ 0.0f, 0.75f, 1.0f });
-	m_camera.SetOrientation(Quaternion(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f));
+	m_camera.SetRotation(Quaternion(0.0f, DirectX::XMConvertToRadians(90.0f), 0.0f));
 
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::WASD);
