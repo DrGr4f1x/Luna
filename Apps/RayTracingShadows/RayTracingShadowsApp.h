@@ -47,13 +47,31 @@ protected:
 	void UpdateConstantBuffer();
 
 protected:
+	struct SceneConstants
+	{
+		Math::Matrix4 viewInverse{ Math::kIdentity };
+		Math::Matrix4 projInverse{ Math::kIdentity };
+		Math::Vector4 lightPos{ Math::kZero };
+		int vertexStride{ 0 };
+	};
+
+	SceneConstants m_sceneConstants{};
+	Luna::GpuBufferPtr m_sceneConstantBuffer;
+
 	// Geometry and ray tracing acceleration structures
 	Luna::ModelPtr m_model;
-	std::vector<Luna::GpuBufferPtr> m_blasBuffers;
-	Luna::GpuBufferPtr m_rayTracingTLAS;
+	Luna::GpuBufferPtr m_blasBuffer;
+	//std::vector<Luna::GpuBufferPtr> m_blasBuffers;
+	Luna::GpuBufferPtr m_tlasBuffer;
 
 	// Root signature, ray tracing pipeline, shader binding table
 	Luna::RootSignaturePtr m_globalRootSignature;
 	Luna::RayTracingPipelinePtr m_rayTracingPipeline;
 	Luna::ShaderBindingTablePtr m_shaderBindingTable;
+
+	// Ray tracing render target, descriptor set
+	Luna::ColorBufferPtr m_colorTarget;
+	Luna::DescriptorSetPtr m_descriptorSet;
+
+	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };

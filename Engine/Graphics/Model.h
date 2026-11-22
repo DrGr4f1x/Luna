@@ -54,6 +54,7 @@ enum class ModelLoad
 	Debone						= 1 << 25,
 	RayTracingInput				= 1 << 26,
 	Force32BitIndices			= 1 << 27,
+	MergeBuffers				= 1 << 28,
 
 	ConvertToLeftHandded = MakeLeftHanded |
 	FlipUVs |
@@ -146,6 +147,10 @@ struct Model
 
 	std::vector<MeshPtr> meshes;
 	std::vector<MeshMaterial> materials;
+
+	// Merged index and vertex buffers
+	GpuBufferPtr mergedIndexBuffer;
+	GpuBufferPtr mergedVertexBuffer;
 };
 
 using ModelPtr = std::shared_ptr<Model>;

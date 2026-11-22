@@ -10,14 +10,6 @@
 
 #include "RayTracingCommon.hlsli"
 
-StructuredBuffer<float4> vertices : BINDING(t1, 1);
-StructuredBuffer<uint> indices : BINDING(t2, 1);
-
-struct Attributes
-{
-    float2 bary;
-};
-
 struct Vertex
 {
     float3 pos;
@@ -26,23 +18,33 @@ struct Vertex
     float2 uv;
 };
 
+StructuredBuffer<Vertex> vertices : BINDING(t1, 1);
+StructuredBuffer<uint> indices : BINDING(t2, 1);
+
+struct Attributes
+{
+    float2 bary;
+};
+
 
 Vertex UnpackVertex(uint index)
 {
 	// Unpack the vertices from the SSBO using the glTF vertex structure
 	// The multiplier is the size of the vertex divided by four float components (=16 bytes)
-    const int m = vertexSize / 16;
+    //const int m = 1; // vertexSize / 16;
 
-    float4 d0 = vertices[m * index + 0];
-    float4 d1 = vertices[m * index + 1];
-    float4 d2 = vertices[m * index + 2];
+    //float4 d0 = vertices[m * index + 0];
+    //float4 d1 = vertices[m * index + 1];
+    //float4 d2 = vertices[m * index + 2];
 
-    Vertex v;
-    v.pos = d0.xyz;
-    v.normal = float3(d0.w, d1.x, d1.y);
-    v.color = float4(d2.x, d2.y, d2.z, 1.0);
+    //Vertex v;
+    //v.pos = d0.xyz;
+    //v.normal = float3(d0.w, d1.x, d1.y);
+    //v.color = float4(d2.x, d2.y, d2.z, 1.0);
 
-    return v;
+    //return v;
+    
+    return vertices[index];
 }
 
 

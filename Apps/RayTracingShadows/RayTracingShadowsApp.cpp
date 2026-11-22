@@ -56,43 +56,105 @@ void RayTracingShadowsApp::Shutdown()
 
 void RayTracingShadowsApp::Update()
 {
-	// Application update tick
-	// Set m_bIsRunning to false if your application wants to exit
+	m_controller.Update(m_inputSystem.get(), (float)m_timer.GetElapsedSeconds(), m_mouseMoveHandled);
+
+	UpdateConstantBuffer();
 }
 
 
 void RayTracingShadowsApp::Render()
 {
-	// Application main render loop
-	Application::Render();
+	auto& context = GraphicsContext::Begin("Scene");
+
+	// Ray trace scene
+	context.TransitionResource(m_colorTarget, ResourceState::UnorderedAccess);
+
+	context.BindDescriptorHeap(GetDefaultDescriptorHeap());
+
+	auto& computeContext = context.GetComputeContext();
+
+	computeContext.SetRootSignature(m_globalRootSignature);
+	computeContext.SetRayTracingPipeline(m_rayTracingPipeline);
+	computeContext.SetRootSRV(0, m_tlasBuffer);
+	computeContext.SetDescriptors(1, m_descriptorSet);
+
+	computeContext.DispatchRays(m_shaderBindingTable, GetWindowWidth(), GetWindowHeight());
+
+	// Copy ray tracing results to back buffer
+	context.CopyColorBuffer(GetColorBuffer(), m_colorTarget);
+
+	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
+
+	context.Finish();
 }
 
 
 void RayTracingShadowsApp::CreateDeviceDependentResources()
 {
-	// Create any resources that depend on the device, but not the window size
+	m_camera.SetPerspectiveMatrix(
+		XMConvertToRadians(45.0f),
+		GetWindowAspectRatio(),
+		0.1f,
+		256.0f);
+	m_camera.SetPosition(Vector3(3.0f, 7.0f, 16.0f));
+
+	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
+	m_sceneConstants.lightPos = Vector4(40.0f, 50.0f, 25.0f, 1.0f);
 
 	LoadAssets();
 	InitRayTracingBLAS();
+	InitRayTracingTLAS();
+	InitRootSignature();
+	InitRayTracingPipeline();
+	InitShaderBindingTable();
+
+	m_controller.SetSpeedScale(0.01f);
+	m_controller.SetCameraMode(CameraMode::ArcBall);
+	m_controller.RefreshFromCamera();
+	m_controller.SetOrbitTarget(m_model->boundingBox.GetCenter(), Length(m_camera.GetPosition()), 4.0f);
 }
 
 
 void RayTracingShadowsApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
+	InitColorTarget();
+	InitDescriptorSet();
+	m_camera.SetAspectRatio(GetWindowAspectRatio());
 }
 
 
 void RayTracingShadowsApp::LoadAssets()
 {
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
-	const ModelLoad flags = ModelLoad::StandardDefault | ModelLoad::RayTracingInput | ModelLoad::Force32BitIndices;
+	const ModelLoad flags = ModelLoad::StandardDefault | ModelLoad::RayTracingInput | ModelLoad::Force32BitIndices | ModelLoad::MergeBuffers;
 	m_model = LoadModel("vulkanscene_shadow.gltf", layout, 1.0f, flags);
+
+	m_sceneConstants.vertexStride = layout.GetSizeInBytes();
 }
 
 
 void RayTracingShadowsApp::InitRayTracingBLAS()
 {
+	// Bottom-level geometry description
+	RayTracingGeometryDesc blasDesc{
+		.name			= "BLAS",
+		.geometryType	= RayTracingGeometryType::Triangles,
+		.flags			= RayTracingGeometryFlags::Opaque,
+		.buildFlags		= RayTracingAccelerationStructureFlags::FastTrace
+	};
+	blasDesc.triangles.transform3x4 = 0;
+	blasDesc.triangles.indexFormat = Format::R32_UInt;
+	blasDesc.triangles.vertexFormat = Format::RGB32_Float;
+	blasDesc.triangles.indexCount = m_model->mergedIndexBuffer->GetElementCount();
+	blasDesc.triangles.vertexCount = m_model->mergedVertexBuffer->GetElementCount();
+	blasDesc.triangles.vertexStride = m_model->mergedVertexBuffer->GetElementSize();
+	blasDesc.triangles.indexBuffer = m_model->mergedIndexBuffer->GetGpuAddress();
+	blasDesc.triangles.vertexBuffer = m_model->mergedVertexBuffer->GetGpuAddress();
+
+	m_blasBuffer = GetDevice()->CreateBLAS(blasDesc);
+
+#if 0
 	m_blasBuffers.clear();
 	m_blasBuffers.reserve(m_model->meshes.size());
 
@@ -117,14 +179,24 @@ void RayTracingShadowsApp::InitRayTracingBLAS()
 		auto blasBuffer = GetDevice()->CreateBLAS(blasDesc);
 		m_blasBuffers.push_back(blasBuffer);
 	}
+#endif
 }
 
 
 void RayTracingShadowsApp::InitRayTracingTLAS()
 {
 	vector<RayTracingInstanceDesc> instances;
-	instances.reserve(m_blasBuffers.size());
+	//instances.reserve(m_blasBuffers.size());
 
+	RayTracingInstanceDesc instanceDesc{
+		.blas			= m_blasBuffer,
+		.transform		= Matrix4{ kIdentity },
+		.instanceID		= 0,
+		.instanceMask	= 0xFF,
+	};
+	instances.push_back(instanceDesc);
+
+#if 0
 	for (auto blasBuffer : m_blasBuffers)
 	{
 		RayTracingInstanceDesc instanceDesc{
@@ -134,12 +206,13 @@ void RayTracingShadowsApp::InitRayTracingTLAS()
 			.instanceMask	= 0xFF,
 		};
 	}
+#endif
 
 	RayTracingTLASDesc tlasDesc{
 		.instances = instances
 	};
 
-	m_rayTracingTLAS = GetDevice()->CreateTLAS(tlasDesc);
+	m_tlasBuffer = GetDevice()->CreateTLAS(tlasDesc);
 }
 
 
@@ -184,7 +257,7 @@ void RayTracingShadowsApp::InitShaderBindingTable()
 {
 	ShaderBindingTableDesc desc{
 		.rayGenShaders	= { ShaderRecord{.id = 0 } }, // refers to the RayGen shader at index 0 in the library
-		.missShaders	= { ShaderRecord{.id = 0 } }, // refers to the Miss shader at index 0 in the library
+		.missShaders = { ShaderRecord{.id = 0 }, ShaderRecord{.id = 1 } }, // refers to the Miss shaders at indices 0 and 1 in the library
 		.hitGroups		= { ShaderRecord{.id = 0  } } // refers to the HitGroup at index 0 in the library
 	};
 
@@ -206,7 +279,7 @@ void RayTracingShadowsApp::InitColorTarget()
 
 void RayTracingShadowsApp::InitDescriptorSet()
 {
-	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer, m_sphereBuffer });
+	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer, m_model->mergedVertexBuffer, m_model->mergedIndexBuffer });
 }
 
 
@@ -224,6 +297,6 @@ void RayTracingShadowsApp::UpdateConstantBuffer()
 		const Vector4& prevLightPosition = m_sceneConstants.lightPos;
 		m_sceneConstants.lightPos = rotate * prevLightPosition;
 	}
-
+	
 	m_sceneConstantBuffer->Update(sizeof(m_sceneConstants), &m_sceneConstants);
 }

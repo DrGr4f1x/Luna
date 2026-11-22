@@ -208,6 +208,10 @@ protected:
 	bool m_loadMaterials{ false };
 
 	std::map<std::string, TexturePtr> m_textureCache;
+
+	// Merged index and vertex data
+	std::vector<uint32_t> m_mergedIndices;
+	std::vector<float> m_mergedVertices;
 };
 
 
@@ -242,6 +246,39 @@ ModelPtr ModelLoader::Load()
 	model->meshes.reserve(aiScene->mNumMeshes);
 
 	ProcessNode(model, aiScene->mRootNode, aiScene);
+
+	if (HasFlag(m_loadFlags, ModelLoad::MergeBuffers))
+	{
+		const bool rayTracingInput = HasFlag(m_loadFlags, ModelLoad::RayTracingInput);
+
+		// Merged index buffer
+		GpuBufferDesc indexBufferDesc{
+			.name			= "Model|IndexBuffer",
+			.resourceType	= ResourceType::IndexBuffer,
+			.memoryAccess	= MemoryAccess::GpuRead,
+			.elementCount	= m_mergedIndices.size(),
+			.elementSize	= sizeof(uint32_t),
+			.initialData	= m_mergedIndices.data(),
+			.bAllowShaderResource = true,
+			.bRayTracingBuildInput = rayTracingInput
+		};
+		model->mergedIndexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
+
+		// Merged vertex buffer
+		const size_t vertexStride = m_vertexLayout->GetSizeInBytes();
+
+		GpuBufferDesc vertexBufferDesc{
+			.name			= "Model|VertexBuffer",
+			.resourceType	= ResourceType::VertexBuffer,
+			.memoryAccess	= MemoryAccess::GpuRead,
+			.elementCount	= sizeof(float) * (m_mergedVertices.size() / vertexStride),
+			.elementSize	= vertexStride,
+			.initialData	= m_mergedVertices.data(),
+			.bAllowShaderResource = true,
+			.bRayTracingBuildInput = rayTracingInput
+		};
+		model->mergedVertexBuffer = m_device->CreateGpuBuffer(vertexBufferDesc);
+	}
 
 	return model;
 }
@@ -293,6 +330,8 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	MeshPart meshPart{};
 
 	vertexCount += aiMesh->mNumVertices;
+
+	uint32_t startVertex = m_mergedVertices.size() / m_vertexLayout->GetNumFloats();
 
 	aiColor4D defaultColor(0.0f, 0.0f, 0.0f, 1.0f);
 	aiScene->mMaterials[aiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, defaultColor);
@@ -363,7 +402,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 
 	// Find the max index value.  If less than 65536, we can use 16-bit indices
 	bool bUse16BitIndices = true;
-	if (HasFlag(m_loadFlags, ModelLoad::Force32BitIndices))
+	if (HasFlag(m_loadFlags, ModelLoad::Force32BitIndices) || HasFlag(m_loadFlags, ModelLoad::MergeBuffers))
 	{
 		bUse16BitIndices = false;
 	}
@@ -429,7 +468,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	uint32_t stride = m_vertexLayout->GetSizeInBytes();
 
 	GpuBufferDesc vertexBufferDesc{
-		.name			= "Model|VertexBuffer",
+		.name			= "Mesh|VertexBuffer",
 		.resourceType	= ResourceType::VertexBuffer,
 		.memoryAccess	= MemoryAccess::GpuRead,
 		.elementCount	= sizeof(float) * vertexData.size() / stride,
@@ -443,7 +482,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	stride = 3 * sizeof(float);
 	GpuBufferDesc positionOnlyVertexBufferDesc
 	{
-		.name			= "Model|VertexBuffer (Position Only)",
+		.name			= "Mesh|VertexBuffer (Position Only)",
 		.resourceType	= ResourceType::VertexBuffer,
 		.memoryAccess	= MemoryAccess::GpuRead,
 		.elementCount	= sizeof(float) * vertexDataPositionOnly.size() / stride,
@@ -457,7 +496,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	if (bUse16BitIndices)
 	{
 		GpuBufferDesc indexBufferDesc{
-			.name			= "Model|IndexBuffer",
+			.name			= "Mesh|IndexBuffer",
 			.resourceType	= ResourceType::IndexBuffer,
 			.memoryAccess	= MemoryAccess::GpuRead,
 			.format			= Format::R16_UInt,
@@ -471,7 +510,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	else
 	{
 		GpuBufferDesc indexBufferDesc{
-			.name			= "Model|IndexBuffer",
+			.name			= "Mesh|IndexBuffer",
 			.resourceType	= ResourceType::IndexBuffer,
 			.memoryAccess	= MemoryAccess::GpuRead,
 			.format			= Format::R32_UInt,
@@ -481,6 +520,17 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 			.bRayTracingBuildInput = rayTracingInput
 		};
 		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
+	}
+
+	// Merge index and vertex buffers
+	if (HasFlag(m_loadFlags, ModelLoad::MergeBuffers))
+	{
+		for (uint32_t index : indexData)
+		{
+			m_mergedIndices.push_back(index + startVertex);
+		}
+
+		m_mergedVertices.insert(m_mergedVertices.end(), vertexData.begin(), vertexData.end());
 	}
 
 	// Set bounding box
