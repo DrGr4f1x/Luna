@@ -1051,8 +1051,9 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	}
 	else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
 	{
-		// TODO
-		assert(false);
+		d3d12GeometryDesc.AABBs.AABBCount = geometryDesc.aabbs.aabbCount;
+		d3d12GeometryDesc.AABBs.AABBs.StartAddress = geometryDesc.aabbs.aabbBuffer;
+		d3d12GeometryDesc.AABBs.AABBs.StrideInBytes = geometryDesc.aabbs.aabbStride;
 	}
 	else
 	{
@@ -1252,6 +1253,8 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			localRootSigSubobject->SetRootSignature(localRootSignature->GetRootSignature());
 		}
 
+		CD3DX12_HIT_GROUP_SUBOBJECT* hitgroup = nullptr;
+
 		// Loop over the indices in the shader group
 		for (uint32_t j = 0; j < 3; ++j)
 		{
@@ -1273,7 +1276,10 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			const wchar_t* entryName = shader->GetEntryW().c_str();
 
 			// Create a subobject for the hitgroup
-			auto hitgroup = raytracingPipelineDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+			if (hitgroup == nullptr)
+			{
+				hitgroup = raytracingPipelineDesc.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
+			}
 			hitgroup->SetHitGroupType(D3D12_HIT_GROUP_TYPE_TRIANGLES);
 
 			switch (shaderType)
@@ -1299,12 +1305,15 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 				rootSignatureAssociation->SetSubobjectToAssociate(*localRootSigSubobject);
 				rootSignatureAssociation->AddExport(entryName);
 			}
-			
-			// Export the hitgroup name
+		} // for loop over shaders in shader group
+
+		// Export the hitgroup name
+		if (hitgroup)
+		{
 			std::wstring hitGroupName = std::format(L"hitgroup_{}", i);
 			hitgroup->SetHitGroupExport(hitGroupName.c_str());
 			hitGroupNames.push_back(hitGroupName);
-		} // for loop over shaders in shader group
+		}
 
 	} // for loop over shader groups
 

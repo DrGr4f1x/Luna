@@ -29,7 +29,7 @@ float IntersectSphere(const Sphere s, float3 ro, float3 rd)
 
 
 [shader("intersection")]
-void intersectionMain()
+void intersection_main()
 {
     Sphere sphere = spheres[PrimitiveIndex()];
     float hit = IntersectSphere(sphere, WorldRayOrigin(), WorldRayDirection());

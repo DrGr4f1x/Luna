@@ -1064,8 +1064,10 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	}
 	else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
 	{
-		// TODO
-		assert(false);
+		accelerationStructureGeometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
+		accelerationStructureGeometry.geometry.aabbs.stride = geometryDesc.aabbs.aabbStride;
+		accelerationStructureGeometry.geometry.aabbs.data.deviceAddress = geometryDesc.aabbs.aabbBuffer;
+		numPrimitives = (uint32_t)geometryDesc.aabbs.aabbCount;
 	}
 	else
 	{
@@ -1191,7 +1193,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 		instanceDesc.transform.matrix[2][2] = instance.transform.GetZ().GetZ();
 		instanceDesc.transform.matrix[2][3] = instance.transform.GetZ().GetW();
 
-		instanceDesc.instanceCustomIndex = 0; // instance.instanceID;
+		instanceDesc.instanceCustomIndex = instance.instanceID;
 		instanceDesc.mask = instance.instanceMask;
 		instanceDesc.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
 		instanceDesc.accelerationStructureReference = blas->GetAccelerationStructureDeviceAddress();

@@ -24,8 +24,7 @@ using namespace std;
 
 RayTracingSimpleLightingApp::RayTracingSimpleLightingApp(uint32_t width, uint32_t height)
 	: Application{ width, height, s_appName }
-{
-}
+{}
 
 
 int RayTracingSimpleLightingApp::ProcessCommandLine(int argc, char* argv[])

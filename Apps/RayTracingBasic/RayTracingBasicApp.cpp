@@ -86,7 +86,6 @@ void RayTracingBasicApp::Render()
 	context.TransitionResource(GetColorBuffer(), ResourceState::Present);
 
 	context.Finish();
-	
 }
 
 
