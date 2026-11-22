@@ -22,10 +22,8 @@ struct Vertex
 {
     float3 pos;
     float3 normal;
-    float2 uv;
     float4 color;
-    float4 _pad0;
-    float4 _pad1;
+    float2 uv;
 };
 
 

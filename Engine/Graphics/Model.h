@@ -52,6 +52,8 @@ enum class ModelLoad
 	FlipWindingOrder			= 1 << 23,
 	SplitByBoneCount			= 1 << 24,
 	Debone						= 1 << 25,
+	RayTracingInput				= 1 << 26,
+	Force32BitIndices			= 1 << 27,
 
 	ConvertToLeftHandded = MakeLeftHanded |
 	FlipUVs |

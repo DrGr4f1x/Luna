@@ -363,25 +363,33 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 
 	// Find the max index value.  If less than 65536, we can use 16-bit indices
 	bool bUse16BitIndices = true;
-	for (uint32_t j = 0; j < aiMesh->mNumFaces; ++j)
+	if (HasFlag(m_loadFlags, ModelLoad::Force32BitIndices))
 	{
-		const aiFace& Face = aiMesh->mFaces[j];
-		if (Face.mNumIndices != 3)
-			continue;
-		if (Face.mIndices[0] >= 65536)
+		bUse16BitIndices = false;
+	}
+
+	if (bUse16BitIndices)
+	{
+		for (uint32_t j = 0; j < aiMesh->mNumFaces; ++j)
 		{
-			bUse16BitIndices = false;
-			break;
-		}
-		if (Face.mIndices[1] >= 65536)
-		{
-			bUse16BitIndices = false;
-			break;
-		}
-		if (Face.mIndices[2] >= 65536)
-		{
-			bUse16BitIndices = false;
-			break;
+			const aiFace& Face = aiMesh->mFaces[j];
+			if (Face.mNumIndices != 3)
+				continue;
+			if (Face.mIndices[0] >= 65536)
+			{
+				bUse16BitIndices = false;
+				break;
+			}
+			if (Face.mIndices[1] >= 65536)
+			{
+				bUse16BitIndices = false;
+				break;
+			}
+			if (Face.mIndices[2] >= 65536)
+			{
+				bUse16BitIndices = false;
+				break;
+			}
 		}
 	}
 
@@ -414,6 +422,9 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 		}
 	}
 
+	// Is this model used for ray tracing?
+	const bool rayTracingInput = HasFlag(m_loadFlags, ModelLoad::RayTracingInput);
+
 	// Create vertex buffer
 	uint32_t stride = m_vertexLayout->GetSizeInBytes();
 
@@ -423,7 +434,8 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 		.memoryAccess	= MemoryAccess::GpuRead,
 		.elementCount	= sizeof(float) * vertexData.size() / stride,
 		.elementSize	= stride,
-		.initialData	= vertexData.data()
+		.initialData	= vertexData.data(),
+		.bRayTracingBuildInput = rayTracingInput
 	};
 	mesh->vertexBuffer = m_device->CreateGpuBuffer(vertexBufferDesc);
 
@@ -436,7 +448,8 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 		.memoryAccess	= MemoryAccess::GpuRead,
 		.elementCount	= sizeof(float) * vertexDataPositionOnly.size() / stride,
 		.elementSize	= stride,
-		.initialData	= vertexDataPositionOnly.data()
+		.initialData	= vertexDataPositionOnly.data(),
+		.bRayTracingBuildInput = rayTracingInput
 	};
 	mesh->vertexBufferPositionOnly = m_device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
 
@@ -447,9 +460,11 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 			.name			= "Model|IndexBuffer",
 			.resourceType	= ResourceType::IndexBuffer,
 			.memoryAccess	= MemoryAccess::GpuRead,
+			.format			= Format::R16_UInt,
 			.elementCount	= indexData16.size(),
 			.elementSize	= sizeof(uint16_t),
-			.initialData	= indexData16.data()
+			.initialData	= indexData16.data(),
+			.bRayTracingBuildInput = rayTracingInput
 		};
 		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
 	}
@@ -459,9 +474,11 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 			.name			= "Model|IndexBuffer",
 			.resourceType	= ResourceType::IndexBuffer,
 			.memoryAccess	= MemoryAccess::GpuRead,
+			.format			= Format::R32_UInt,
 			.elementCount	= indexData.size(),
 			.elementSize	= sizeof(uint32_t),
-			.initialData	= indexData.data()
+			.initialData	= indexData.data(),
+			.bRayTracingBuildInput = rayTracingInput
 		};
 		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
 	}
