@@ -43,6 +43,15 @@ Run from the repo root (needs Python 3). It copies `Programs/AppGen/Templates` i
 
 **Assets**: models are glTF (via assimp, `Graphics/Model.h`); textures via DDS/KTX/stb loaders in `Graphics/Loaders`. Math is DirectXMath-based (`Engine/Core/Math`, namespace `Math`).
 
+**Matrix conventions** (see the header comment in `Engine/Core/VectorMath.h`). Luna's `Math` wrappers use textbook **column-vector** math on top of DirectXMath, which uses row vectors. Don't apply the usual DirectX habits here:
+- Vectors are columns: `v' = M * v`. Transforms compose right to left: `clip = proj * view * model * pos` (e.g. `Camera::Update` computes `m_viewProjectionMatrix = m_projectionMatrix * m_viewMatrix`). `Matrix4::operator*(B)` is implemented as `XMMatrixMultiply(B, *this)`, so `A * B` applies `B` first.
+- Storage: a `Matrix4` is four consecutive `Vector4`s, `GetX()/GetY()/GetZ()/GetW()` = `XMMATRIX::r[0..3]`. In Luna's math these are **columns**: the X/Y/Z basis vectors and the translation (`GetW()`). Floats `[12..14]` hold the translation and floats `[3],[7],[11],[15]` are the bottom row; `Frustum(const Matrix4&)` relies on this. The bytes are identical to an XMMATRIX, so matrices built with `XMMatrix*` functions (LookAtRH, PerspectiveFovRH, ...) and `XMVector3Transform(v, M)` give correct results under Luna's interpretation. Just never multiply them with `XMMatrixMultiply` directly; use `operator*`.
+- Shaders: upload matrices **without transposing** and use `mul(M, v)` in HLSL (default `column_major` packing; the ShaderCompiler `--matrixRowMajor`/`-Zpr` option is off). `mul(v, M)` against an untransposed Luna matrix is a bug. For an HLSL `float3x3(T, B, N)` built from row vectors, `mul(TBN, v)` goes world→tangent and `mul(v, TBN)` goes tangent→world.
+- Coordinate system: right-handed (`*RH` DirectXMath functions), camera looks down -Z (`BaseCamera::GetForwardVec() == -basis.Z`). Projection depth is D3D-style [0,1]. `Camera::SetPerspectiveMatrix` takes **height/width** (`Application::GetWindowAspectRatio()` returns height/width).
+- Normals: transform with `Transpose(Invert(world))` (or `Invert(Transpose(world))`) and `mul(M, float4(n, 0))`. Planes: `Transpose(Invert(M)) * plane`. Plane extraction from a view-projection matrix (Gribb/Hartmann) needs the math *rows*, so take `Transpose(viewProj).GetX()...` (see `MeshletCullApp`).
+- API structs that want row-major 3x4 matrices with translation in column 3 (`D3D12_RAYTRACING_INSTANCE_DESC::Transform`, `VkTransformMatrixKHR`) need `out[r][c] = M.Get<c>()[r]`, i.e. copy rows of `Transpose(M)`. Translation comes from `GetW()`.
+- `Matrix3`/`AffineTransform` follow the same rules (`m_basis` columns + translation). `Quaternion::operator*` also composes right to left.
+
 **Profiling**: FramePro (`External/FramePro`, `LunaFramePro.h`) and PIX events (`ScopedEvent`, `Core/Profiling.h`).
 
 ## Conventions

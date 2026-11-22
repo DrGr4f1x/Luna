@@ -1115,20 +1115,25 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	for (const auto& instance : tlasDesc.instances)
 	{
 		D3D12_RAYTRACING_INSTANCE_DESC instanceDesc{};
-		instanceDesc.Transform[0][0] = instance.transform.GetX().GetX();
-		instanceDesc.Transform[0][1] = instance.transform.GetX().GetY();
-		instanceDesc.Transform[0][2] = instance.transform.GetX().GetZ();
-		instanceDesc.Transform[0][3] = instance.transform.GetX().GetW();
 
-		instanceDesc.Transform[1][0] = instance.transform.GetY().GetX();
-		instanceDesc.Transform[1][1] = instance.transform.GetY().GetY();
-		instanceDesc.Transform[1][2] = instance.transform.GetY().GetZ();
-		instanceDesc.Transform[1][3] = instance.transform.GetY().GetW();
+		// Luna matrices store columns (basis vectors + translation in W).  D3D12 wants a row-major 3x4
+		// with translation in column 3, so copy the first three rows of the transpose.
+		const Math::Matrix4 rowMajorTransform = Math::Transpose(instance.transform);
 
-		instanceDesc.Transform[2][0] = instance.transform.GetZ().GetX();
-		instanceDesc.Transform[2][1] = instance.transform.GetZ().GetY();
-		instanceDesc.Transform[2][2] = instance.transform.GetZ().GetZ();
-		instanceDesc.Transform[2][3] = instance.transform.GetZ().GetW();
+		instanceDesc.Transform[0][0] = rowMajorTransform.GetX().GetX();
+		instanceDesc.Transform[0][1] = rowMajorTransform.GetX().GetY();
+		instanceDesc.Transform[0][2] = rowMajorTransform.GetX().GetZ();
+		instanceDesc.Transform[0][3] = rowMajorTransform.GetX().GetW();
+
+		instanceDesc.Transform[1][0] = rowMajorTransform.GetY().GetX();
+		instanceDesc.Transform[1][1] = rowMajorTransform.GetY().GetY();
+		instanceDesc.Transform[1][2] = rowMajorTransform.GetY().GetZ();
+		instanceDesc.Transform[1][3] = rowMajorTransform.GetY().GetW();
+
+		instanceDesc.Transform[2][0] = rowMajorTransform.GetZ().GetX();
+		instanceDesc.Transform[2][1] = rowMajorTransform.GetZ().GetY();
+		instanceDesc.Transform[2][2] = rowMajorTransform.GetZ().GetZ();
+		instanceDesc.Transform[2][3] = rowMajorTransform.GetZ().GetW();
 
 		instanceDesc.InstanceID = instance.instanceID;
 		instanceDesc.InstanceMask = instance.instanceMask;

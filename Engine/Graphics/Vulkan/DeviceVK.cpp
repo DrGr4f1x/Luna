@@ -1178,20 +1178,25 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 		GpuBuffer* blas = (GpuBuffer*)instance.blas.get();
 
 		VkAccelerationStructureInstanceKHR instanceDesc{};
-		instanceDesc.transform.matrix[0][0] = instance.transform.GetX().GetX();
-		instanceDesc.transform.matrix[0][1] = instance.transform.GetX().GetY();
-		instanceDesc.transform.matrix[0][2] = instance.transform.GetX().GetZ();
-		instanceDesc.transform.matrix[0][3] = instance.transform.GetX().GetW();
 
-		instanceDesc.transform.matrix[1][0] = instance.transform.GetY().GetX();
-		instanceDesc.transform.matrix[1][1] = instance.transform.GetY().GetY();
-		instanceDesc.transform.matrix[1][2] = instance.transform.GetY().GetZ();
-		instanceDesc.transform.matrix[1][3] = instance.transform.GetY().GetW();
+		// Luna matrices store columns (basis vectors + translation in W).  VkTransformMatrixKHR is a row-major
+		// 3x4 with translation in column 3, so copy the first three rows of the transpose.
+		const Math::Matrix4 rowMajorTransform = Math::Transpose(instance.transform);
 
-		instanceDesc.transform.matrix[2][0] = instance.transform.GetZ().GetX();
-		instanceDesc.transform.matrix[2][1] = instance.transform.GetZ().GetY();
-		instanceDesc.transform.matrix[2][2] = instance.transform.GetZ().GetZ();
-		instanceDesc.transform.matrix[2][3] = instance.transform.GetZ().GetW();
+		instanceDesc.transform.matrix[0][0] = rowMajorTransform.GetX().GetX();
+		instanceDesc.transform.matrix[0][1] = rowMajorTransform.GetX().GetY();
+		instanceDesc.transform.matrix[0][2] = rowMajorTransform.GetX().GetZ();
+		instanceDesc.transform.matrix[0][3] = rowMajorTransform.GetX().GetW();
+
+		instanceDesc.transform.matrix[1][0] = rowMajorTransform.GetY().GetX();
+		instanceDesc.transform.matrix[1][1] = rowMajorTransform.GetY().GetY();
+		instanceDesc.transform.matrix[1][2] = rowMajorTransform.GetY().GetZ();
+		instanceDesc.transform.matrix[1][3] = rowMajorTransform.GetY().GetW();
+
+		instanceDesc.transform.matrix[2][0] = rowMajorTransform.GetZ().GetX();
+		instanceDesc.transform.matrix[2][1] = rowMajorTransform.GetZ().GetY();
+		instanceDesc.transform.matrix[2][2] = rowMajorTransform.GetZ().GetZ();
+		instanceDesc.transform.matrix[2][3] = rowMajorTransform.GetZ().GetW();
 
 		instanceDesc.instanceCustomIndex = instance.instanceID;
 		instanceDesc.mask = instance.instanceMask;
