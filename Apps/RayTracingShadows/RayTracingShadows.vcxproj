@@ -47,11 +47,21 @@
       <Project>{ffe87dcb-69b8-4549-8d06-a681a29ef1d8}</Project>
     </ProjectReference>
   </ItemGroup>
-    <ItemGroup>
-    <None Include="Shaders\SamplePS.hlsl">
+  <ItemGroup>
+    <None Include="Shaders\Payload.hlsli" />
+    <None Include="Shaders\RayTracingCommon.hlsli" />
+    <None Include="Shaders\Miss.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="Shaders\SampleVS.hlsl">
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ClosestHit.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\RayGen.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\Shadow.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>
