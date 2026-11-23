@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 #define INPUT_PATCH_SIZE 4
 #define OUTPUT_PATCH_SIZE 4
 
@@ -26,8 +28,7 @@ struct HSConstantOutput
 };
 
 
-[[vk::binding(0, 0)]]
-cbuffer HSConstants : register(b0)
+cbuffer HSConstants : BINDING(b0, 0)
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;
@@ -39,12 +40,9 @@ cbuffer HSConstants : register(b0)
     float tessellatedEdgeSize;
 };
 
+Texture2D heightTex : BINDING(t0, 0);
 
-[[vk::binding(1, 0)]]
-Texture2D heightTex : register(t0);
-
-[[vk::binding(0, 1)]]
-SamplerState linearSamplerMirror : register(s0);
+SamplerState linearSamplerMirror : BINDING(s0, 1);
 
 
 // Calculate the tessellation factor based on screen space
@@ -84,7 +82,7 @@ bool FrustumCheck(float4 pos, float2 uv)
 {
 	// Fixed radius (increase if patch size is increased in example)
     const float radius = 8.0f;
-    pos.y = heightTex.SampleLevel(linearSamplerMirror, uv, 0.0).r * displacementFactor;
+    pos.y += heightTex.SampleLevel(linearSamplerMirror, uv, 0.0).r * displacementFactor;
 
 	// Check sphere against frustum planes
     for (int i = 0; i < 6; i++)

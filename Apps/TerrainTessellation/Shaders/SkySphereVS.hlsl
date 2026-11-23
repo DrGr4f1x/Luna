@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct VSInput
 {
     float3 pos : POSITION;
@@ -23,8 +26,7 @@ struct VSOutput
 };
 
 
-[[vk::binding(0)]]
-cbuffer VSConstants
+cbuffer VSConstants : BINDING(b0, 0)
 {
     float4x4 modelViewProjectionMatrix;
 };

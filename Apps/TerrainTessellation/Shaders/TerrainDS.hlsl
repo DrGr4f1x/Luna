@@ -8,6 +8,8 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 #define INPUT_PATCH_SIZE 4
 #define OUTPUT_PATCH_SIZE 4
 
@@ -32,10 +34,11 @@ struct DSOutput
     float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
     float3 lightVec : TEXCOORD1;
+    float viewDepth : TEXCOORD2;
 };
 
-[[vk::binding(0, 2)]]
-cbuffer DSConstants : register(b0)
+
+cbuffer DSConstants : BINDING(b0, 2)
 {
     float4x4 projectionMatrix;
     float4x4 modelViewMatrix;
@@ -47,11 +50,9 @@ cbuffer DSConstants : register(b0)
     float tessellatedEdgeSize;
 };
 
-[[vk::binding(1, 2)]]
-Texture2D heightTex : register(t0);
+Texture2D heightTex : BINDING(t0, 2);
 
-[[vk::binding(0, 4)]]
-SamplerState linearSamplerMirror : register(s0);
+SamplerState linearSamplerMirror : BINDING(s0, 4);
 
 
 [domain("quad")]
@@ -75,10 +76,12 @@ DSOutput main(DSConstantInput constInput, float3 triCoords : SV_DomainLocation, 
     float4 pos = lerp(pos1, pos2, triCoords.y);
 
 	// Displace
-    pos.y -= heightTex.SampleLevel(linearSamplerMirror, output.uv, 0.0).r * displacementFactor;
+    pos.y += heightTex.SampleLevel(linearSamplerMirror, output.uv, 0.0).r * displacementFactor;
 	// Perspective projection
-    output.pos = mul(projectionMatrix, mul(modelViewMatrix, pos));
-
+    float4 viewPos = mul(modelViewMatrix, pos);
+    output.pos = mul(projectionMatrix, viewPos);
+    output.viewDepth = -viewPos.z; // RH, camera looks down -Z
+    
 	// Calculate vectors for lighting based on tessellated position
     float3 viewVec = -pos.xyz;
     output.lightVec = normalize(lightPos.xyz + viewVec);

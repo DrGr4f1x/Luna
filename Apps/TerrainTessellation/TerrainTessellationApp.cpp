@@ -117,13 +117,13 @@ void TerrainTessellationApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		512.0f);
-	m_camera.SetPosition(Vector3(-18.0f, -22.5f, -57.5f));
+	m_camera.SetPosition(Vector3(-18.0f, 45.5f, -57.5f));
 	//m_camera.SetRotation(Quaternion(XMConvertToRadians(7.5f), XMConvertToRadians(-343.0f), 0.0f));
 
 	m_controller.SetSpeedScale(0.01f);
 	m_controller.RefreshFromCamera();
 	m_controller.SetCameraMode(CameraMode::ArcBall);
-	m_controller.SetOrbitTarget(Vector3(0.0f, -2.0f, 0.0f), Length(m_camera.GetPosition()), 4.0f);
+	m_controller.SetOrbitTarget(Vector3(0.0f, 2.0f, 0.0f), Length(m_camera.GetPosition()), 4.0f);
 
 	InitRootSignatures();
 	InitConstantBuffers();
@@ -157,7 +157,7 @@ void TerrainTessellationApp::InitRootSignatures()
 	RootSignatureDesc skyRootSignatureDesc{
 		.name				= "Sky Root Signature",
 		.rootParameters		= {
-			RootCBV(0, ShaderStage::Vertex),
+			Table({ ConstantBuffer }, ShaderStage::Vertex),
 			Table({ TextureSRV }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Pixel)
 		}
@@ -168,7 +168,7 @@ void TerrainTessellationApp::InitRootSignatures()
 		.name				= "Terrain Root Signature",
 		.rootParameters		= {
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Hull),
-			Table({ Sampler}, ShaderStage::Hull),
+			Table({ Sampler }, ShaderStage::Hull),
 			Table({ ConstantBuffer, TextureSRV }, ShaderStage::Domain),
 			Table({ TextureSRV(0, 2) }, ShaderStage::Pixel),
 			Table({ Sampler }, ShaderStage::Domain),
@@ -212,7 +212,7 @@ void TerrainTessellationApp::InitPipelines()
 		.name				= "Graphics PSO",
 		.blendState			= CommonStates::BlendDisable(),
 		.depthStencilState	= CommonStates::DepthStateReadWriteReversed(),
-		.rasterizerState	= CommonStates::RasterizerDefaultCW(),
+		.rasterizerState	= CommonStates::RasterizerDefault(),
 		.rtvFormats			= { GetColorFormat() },
 		.dsvFormat			= GetDepthFormat(),
 		.topology			= PrimitiveTopology::PatchList_4_ControlPoint,
@@ -255,15 +255,16 @@ void TerrainTessellationApp::InitConstantBuffers()
 void TerrainTessellationApp::InitResourceSets()
 {
 	m_skyResources.Initialize(m_skyRootSignature);
+	m_skyResources.SetCBV(0, 0, m_skyConstantBuffer);
 	m_skyResources.SetSRV(1, 0, m_skyTexture);
 	m_skyResources.SetSampler(2, 0, m_samplerLinearWrap);
 
 	m_terrainResources.Initialize(m_terrainRootSignature);
 	m_terrainResources.SetCBV(0, 0, m_terrainConstantBuffer);
-	m_terrainResources.SetSRV(0, 1, m_terrainHeightMap);
+	m_terrainResources.SetSRV(0, 0, m_terrainHeightMap);
 	m_terrainResources.SetSampler(1, 0, m_samplerLinearMirror);
 	m_terrainResources.SetCBV(2, 0, m_terrainConstantBuffer);
-	m_terrainResources.SetSRV(2, 1, m_terrainHeightMap);
+	m_terrainResources.SetSRV(2, 0, m_terrainHeightMap);
 	m_terrainResources.SetSRV(3, 0, m_terrainHeightMap);
 	m_terrainResources.SetSRV(3, 1, m_terrainTextureArray);
 	m_terrainResources.SetSampler(4, 0, m_samplerLinearMirror);
@@ -404,8 +405,8 @@ void TerrainTessellationApp::LoadAssets()
 
 void TerrainTessellationApp::UpdateConstantBuffers()
 {
-	Matrix4 flipZMatrix{ kIdentity };
-	flipZMatrix.SetZ(Vector4(0.0f, 0.0f, -1.0f, 0.0f));
+	//Matrix4 flipZMatrix{ kIdentity };
+	//flipZMatrix.SetZ(Vector4(0.0f, 0.0f, -1.0f, 0.0f));
 
 	Matrix4 viewMatrix = m_camera.GetViewMatrix();
 	viewMatrix.SetW(Vector4(0.0f, 0.0f, 0.0f, 1.0f));
@@ -414,7 +415,7 @@ void TerrainTessellationApp::UpdateConstantBuffers()
 
 	m_terrainConstants.modelViewMatrix = m_camera.GetViewMatrix();
 	m_terrainConstants.projectionMatrix = m_camera.GetProjectionMatrix();
-	m_terrainConstants.lightPos = Vector4(-48.0f, -40.0f, 46.0f, 0.0f);
+	m_terrainConstants.lightPos = Vector4(-48.0f, 40.0f, 46.0f, 0.0f);
 	m_terrainConstants.displacementFactor = 32.0f;
 	m_terrainConstants.tessellationFactor = 0.75f;
 	m_terrainConstants.tessellatedEdgeSize = 20.0f;

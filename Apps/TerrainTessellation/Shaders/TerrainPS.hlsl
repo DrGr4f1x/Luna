@@ -8,26 +8,23 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
 struct PSInput
 {
     float4 pos : SV_Position;
     float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
     float3 lightVec : TEXCOORD1;
+    float viewDepth : TEXCOORD2;
 };
 
 
-[[vk::binding(0, 3)]]
-Texture2D heightTex : register(t0);
+Texture2D heightTex : BINDING(t0, 3);
+Texture2DArray layerTexArray : BINDING(t1, 3);
 
-[[vk::binding(1, 3)]]
-Texture2DArray layerTexArray : register(t1);
-
-[[vk::binding(0, 5)]]
-SamplerState linearSamplerMirror : register(s0);
-
-[[vk::binding(1, 5)]]
-SamplerState linearSamplerWrap : register(s1);
+SamplerState linearSamplerMirror : BINDING(s0, 5);
+SamplerState linearSamplerWrap : BINDING(s1, 5);
 
 
 float3 SampleTerrainLayer(float2 uv)
@@ -57,10 +54,10 @@ float3 SampleTerrainLayer(float2 uv)
     return color;
 }
 
-float Fog(float4 pos, float density)
+float Fog(float viewDepth, float density)
 {
     const float LOG2 = -1.442695;
-    float dist = pos.z / pos.w * 0.1;
+    float dist = viewDepth * 0.1;
     float d = density * dist;
     return 1.0 - clamp(exp2(d * d * LOG2), 0.0, 1.0);
 }
@@ -75,5 +72,5 @@ float4 main(PSInput input) : SV_Target
     float4 color = float4((ambient + diffuse) * SampleTerrainLayer(input.uv), 1.0);
 
     const float4 fogColor = float4(0.47, 0.5, 0.67, 0.0);
-    return lerp(color, fogColor, Fog(input.pos, 0.25));
+    return lerp(color, fogColor, Fog(input.viewDepth, 0.25));
 }
