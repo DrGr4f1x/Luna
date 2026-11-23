@@ -228,6 +228,7 @@ void RayTracingShadowsApp::InitRayTracingPipeline()
 			{ ShaderType::ClosestHit, {.shaderFile = "ClosestHit", .entry = "closesthit_main" } }
 		},
 		.hitGroups = { ShaderGroupDesc(0) },  // Index 0 in the hitGroupShaders list, i.e. the 'ClosestHit' shader
+		.maxRecursionDepth = 2,
 		.maxPayloadSize = 4 * sizeof(float),		// float4 pixelColor
 		.maxRayHitAttributeSize = 2 * sizeof(float) // float2 barycentrics
 	};
