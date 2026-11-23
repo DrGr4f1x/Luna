@@ -1033,48 +1033,62 @@ TexturePtr Device::CreateTexture3D(const TextureDesc& textureDesc)
 
 GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 {
-	D3D12_RAYTRACING_GEOMETRY_DESC d3d12GeometryDesc{
-		.Type	= RayTracingGeometryTypeToDX12(geometryDesc.geometryType),
-		.Flags	= RayTracingGeometryFlagsToDX12(geometryDesc.flags)
-	};
+	vector<RayTracingGeometryDesc> geometryDescs = { geometryDesc };
+	return CreateBLAS(geometryDescs, geometryDesc.buildFlags);
+}
 
-	if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
-	{
-		// Make sure the index buffer has an appropriate format
-		const auto indexFormat = geometryDesc.triangles.indexFormat;
-		assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
 
-		d3d12GeometryDesc.Triangles.IndexBuffer = geometryDesc.triangles.indexBuffer;
-		d3d12GeometryDesc.Triangles.IndexCount = (UINT)geometryDesc.triangles.indexCount;
-		d3d12GeometryDesc.Triangles.IndexFormat = indexFormat == Format::R32_UInt ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
-		d3d12GeometryDesc.Triangles.Transform3x4 = geometryDesc.triangles.transform3x4;
-		d3d12GeometryDesc.Triangles.VertexFormat = FormatToDxgi(geometryDesc.triangles.vertexFormat).srvFormat;
-		d3d12GeometryDesc.Triangles.VertexCount = (UINT)geometryDesc.triangles.vertexCount;
-		d3d12GeometryDesc.Triangles.VertexBuffer.StartAddress = geometryDesc.triangles.vertexBuffer;
-		d3d12GeometryDesc.Triangles.VertexBuffer.StrideInBytes = geometryDesc.triangles.vertexStride;
-	}
-	else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
+GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayTracingAccelerationStructureFlags buildFlags)
+{
+	vector<D3D12_RAYTRACING_GEOMETRY_DESC> d3d12GeometryDescs;
+
+	for (const auto& geometryDesc : geometryDescs)
 	{
-		d3d12GeometryDesc.AABBs.AABBCount = geometryDesc.aabbs.aabbCount;
-		d3d12GeometryDesc.AABBs.AABBs.StartAddress = geometryDesc.aabbs.aabbBuffer;
-		d3d12GeometryDesc.AABBs.AABBs.StrideInBytes = geometryDesc.aabbs.aabbStride;
-	}
-	else
-	{
-		// TODO
-		assert(false);
+		D3D12_RAYTRACING_GEOMETRY_DESC d3d12GeometryDesc{
+			.Type = RayTracingGeometryTypeToDX12(geometryDesc.geometryType),
+			.Flags = RayTracingGeometryFlagsToDX12(geometryDesc.flags)
+		};
+
+		if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
+		{
+			// Make sure the index buffer has an appropriate format
+			const auto indexFormat = geometryDesc.triangles.indexFormat;
+			assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
+
+			d3d12GeometryDesc.Triangles.IndexBuffer = geometryDesc.triangles.indexBuffer;
+			d3d12GeometryDesc.Triangles.IndexCount = (UINT)geometryDesc.triangles.indexCount;
+			d3d12GeometryDesc.Triangles.IndexFormat = indexFormat == Format::R32_UInt ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+			d3d12GeometryDesc.Triangles.Transform3x4 = geometryDesc.triangles.transform3x4;
+			d3d12GeometryDesc.Triangles.VertexFormat = FormatToDxgi(geometryDesc.triangles.vertexFormat).srvFormat;
+			d3d12GeometryDesc.Triangles.VertexCount = (UINT)geometryDesc.triangles.vertexCount;
+			d3d12GeometryDesc.Triangles.VertexBuffer.StartAddress = geometryDesc.triangles.vertexBuffer;
+			d3d12GeometryDesc.Triangles.VertexBuffer.StrideInBytes = geometryDesc.triangles.vertexStride;
+		}
+		else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
+		{
+			d3d12GeometryDesc.AABBs.AABBCount = geometryDesc.aabbs.aabbCount;
+			d3d12GeometryDesc.AABBs.AABBs.StartAddress = geometryDesc.aabbs.aabbBuffer;
+			d3d12GeometryDesc.AABBs.AABBs.StrideInBytes = geometryDesc.aabbs.aabbStride;
+		}
+		else
+		{
+			// TODO
+			assert(false);
+		}
+
+		d3d12GeometryDescs.push_back(d3d12GeometryDesc);
 	}
 
-	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS buildFlags = RayTracingAccelerationStructureFlagsToDX12(geometryDesc.buildFlags);
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12BuildFlags = RayTracingAccelerationStructureFlagsToDX12(buildFlags);
 
 	// Get size info
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO bottomLevelPrebuildInfo{};
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS bottomLevelInputs{
 		.Type				= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL,
-		.Flags				= buildFlags,
-		.NumDescs			= 1,
+		.Flags				= d3d12BuildFlags,
+		.NumDescs			= (UINT)d3d12GeometryDescs.size(),
 		.DescsLayout		= D3D12_ELEMENTS_LAYOUT_ARRAY,
-		.pGeometryDescs		= &d3d12GeometryDesc
+		.pGeometryDescs		= d3d12GeometryDescs.data()
 	};
 	m_dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&bottomLevelInputs, &bottomLevelPrebuildInfo);
 

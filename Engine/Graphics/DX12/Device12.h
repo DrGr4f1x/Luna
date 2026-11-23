@@ -64,6 +64,7 @@ public:
 	TexturePtr CreateTexture3D(const TextureDesc& textureDesc) override;
 
 	GpuBufferPtr CreateBLAS(const RayTracingGeometryDesc& geometryDesc) override;
+	GpuBufferPtr CreateBLAS(std::span<RayTracingGeometryDesc> geometryDescs, RayTracingAccelerationStructureFlags buildFlags) override;
 	GpuBufferPtr CreateTLAS(const RayTracingTLASDesc& tlasDesc) override;
 
 	RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) override;

@@ -1043,49 +1043,81 @@ TexturePtr Device::CreateTexture3D(const TextureDesc& textureDesc)
 
 GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 {
-	// Vulkan acceleration structure
-	VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
-	accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
-	accelerationStructureGeometry.flags = RayTracingGeometryFlagsToVulkan(geometryDesc.flags);
-	accelerationStructureGeometry.geometryType = RayTracingGeometryTypeToVulkan(geometryDesc.geometryType);
+	vector<RayTracingGeometryDesc> geometryDescs = { geometryDesc };
+	return CreateBLAS(geometryDescs, geometryDesc.buildFlags);
+}
 
-	uint32_t numPrimitives = 0;
-	if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
-	{
-		// Make sure the index buffer has an appropriate format
-		const auto indexFormat = geometryDesc.triangles.indexFormat;
-		assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
 
-		accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
-		accelerationStructureGeometry.geometry.triangles.vertexFormat = FormatToVulkan(geometryDesc.triangles.vertexFormat);
-		accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = geometryDesc.triangles.vertexBuffer;
-		accelerationStructureGeometry.geometry.triangles.vertexStride = geometryDesc.triangles.vertexStride;
-		accelerationStructureGeometry.geometry.triangles.maxVertex = (uint32_t)geometryDesc.triangles.vertexCount - 1;
-		accelerationStructureGeometry.geometry.triangles.indexType = indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
-		accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = geometryDesc.triangles.indexBuffer;
-		accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = geometryDesc.triangles.transform3x4;
-		numPrimitives = (uint32_t)geometryDesc.triangles.indexCount / 3;
-	}
-	else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
+GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayTracingAccelerationStructureFlags buildFlags)
+{
+	vector<VkAccelerationStructureGeometryKHR> vkAccelerationStructureGeometries;
+	vector<uint32_t> primitiveCounts;
+	std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRangeInfos{};
+	std::vector<VkAccelerationStructureBuildRangeInfoKHR*> pBuildRangeInfos{};
+
+	for (const auto& geometryDesc : geometryDescs)
 	{
-		accelerationStructureGeometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
-		accelerationStructureGeometry.geometry.aabbs.stride = geometryDesc.aabbs.aabbStride;
-		accelerationStructureGeometry.geometry.aabbs.data.deviceAddress = geometryDesc.aabbs.aabbBuffer;
-		numPrimitives = (uint32_t)geometryDesc.aabbs.aabbCount;
+
+		// Vulkan acceleration structure
+		VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
+		accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
+		accelerationStructureGeometry.flags = RayTracingGeometryFlagsToVulkan(geometryDesc.flags);
+		accelerationStructureGeometry.geometryType = RayTracingGeometryTypeToVulkan(geometryDesc.geometryType);
+
+		uint32_t numPrimitives = 0;
+		if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
+		{
+			// Make sure the index buffer has an appropriate format
+			const auto indexFormat = geometryDesc.triangles.indexFormat;
+			assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
+
+			accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
+			accelerationStructureGeometry.geometry.triangles.vertexFormat = FormatToVulkan(geometryDesc.triangles.vertexFormat);
+			accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = geometryDesc.triangles.vertexBuffer;
+			accelerationStructureGeometry.geometry.triangles.vertexStride = geometryDesc.triangles.vertexStride;
+			accelerationStructureGeometry.geometry.triangles.maxVertex = (uint32_t)geometryDesc.triangles.vertexCount - 1;
+			accelerationStructureGeometry.geometry.triangles.indexType = indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
+			accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = geometryDesc.triangles.indexBuffer;
+			accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = geometryDesc.triangles.transform3x4;
+			numPrimitives = (uint32_t)geometryDesc.triangles.indexCount / 3;
+		}
+		else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
+		{
+			accelerationStructureGeometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
+			accelerationStructureGeometry.geometry.aabbs.stride = geometryDesc.aabbs.aabbStride;
+			accelerationStructureGeometry.geometry.aabbs.data.deviceAddress = geometryDesc.aabbs.aabbBuffer;
+			numPrimitives = (uint32_t)geometryDesc.aabbs.aabbCount;
+		}
+		else
+		{
+			// TODO
+			assert(false);
+		}
+
+		vkAccelerationStructureGeometries.push_back(accelerationStructureGeometry);
+		primitiveCounts.push_back(numPrimitives);
+
+		VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo{
+			.primitiveCount = numPrimitives,
+			.primitiveOffset = 0,
+			.firstVertex = 0,
+			.transformOffset = 0
+		};
+		buildRangeInfos.push_back(accelerationStructureBuildRangeInfo);
 	}
-	else
+
+	for (auto& buildRangeInfo : buildRangeInfos)
 	{
-		// TODO
-		assert(false);
+		pBuildRangeInfos.push_back(&buildRangeInfo);
 	}
 
 	// Get size info
 	VkAccelerationStructureBuildGeometryInfoKHR accelerationStructureBuildGeometryInfo{
-		.sType			= VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
-		.type			= VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
-		.flags			= RayTracingAccelerationStructureFlagsToVulkan(geometryDesc.buildFlags),
-		.geometryCount	= 1,
-		.pGeometries	= &accelerationStructureGeometry
+		.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
+		.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
+		.flags = RayTracingAccelerationStructureFlagsToVulkan(buildFlags),
+		.geometryCount = (uint32_t)vkAccelerationStructureGeometries.size(),
+		.pGeometries	= vkAccelerationStructureGeometries.data()
 	};
 
 	VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfo{
@@ -1096,7 +1128,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 		m_device->Get(),
 		VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR,
 		&accelerationStructureBuildGeometryInfo,
-		&numPrimitives,
+		primitiveCounts.data(),
 		&accelerationStructureBuildSizesInfo
 	);
 
@@ -1123,26 +1155,18 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	VkAccelerationStructureBuildGeometryInfoKHR accelerationBuildGeometryInfo{
 		.sType						= VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR,
 		.type						= VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR,
-		.flags						= RayTracingAccelerationStructureFlagsToVulkan(geometryDesc.buildFlags),
+		.flags						= RayTracingAccelerationStructureFlagsToVulkan(buildFlags),
 		.mode						= VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR,
 		.dstAccelerationStructure	= accelerationStructure->Get(),
-		.geometryCount				= 1,
-		.pGeometries				= &accelerationStructureGeometry,
+		.geometryCount				= (uint32_t)vkAccelerationStructureGeometries.size(),
+		.pGeometries				= vkAccelerationStructureGeometries.data(),
 		.scratchData				= { .deviceAddress = scratchBuffer->GetBufferDeviceAddress() }
 	};
-
-	VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo{
-		.primitiveCount		= numPrimitives,
-		.primitiveOffset	= 0,
-		.firstVertex		= 0,
-		.transformOffset	= 0
-	};
-	vector<VkAccelerationStructureBuildRangeInfoKHR*> rangeInfos = { &accelerationStructureBuildRangeInfo };
 
 	// Fire off a one-shot command buffer to create the acceleration structure on the GPU
 	RayTracingBuildInfo buildInfo{
 		.buildGeometryInfo	= accelerationBuildGeometryInfo,
-		.rangeInfos			= rangeInfos
+		.rangeInfos			= pBuildRangeInfos
 	};
 	CommandContext::BuildAccelerationStructure(&buildInfo);
 
@@ -1155,7 +1179,7 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 
 	// Create Luna Vulkan GpuBuffer for the BLAS
 	GpuBufferDesc gpuBufferDesc{
-		.name			= geometryDesc.name,
+		.name			= "BLAS",
 		.resourceType	= ResourceType::AccelerationStructure,
 		.usageState		= ResourceState::GenericRead,
 		.elementSize	= accelerationStructureBuildSizesInfo.accelerationStructureSize

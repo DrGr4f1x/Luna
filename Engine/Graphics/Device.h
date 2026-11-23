@@ -64,6 +64,7 @@ public:
 	virtual TexturePtr CreateTexture3D(const TextureDesc& textureDesc) = 0;
 
 	virtual GpuBufferPtr CreateBLAS(const RayTracingGeometryDesc& geometryDesc) = 0;
+	virtual GpuBufferPtr CreateBLAS(std::span<RayTracingGeometryDesc> geometryDescs, RayTracingAccelerationStructureFlags buildFlags) = 0;
 	virtual GpuBufferPtr CreateTLAS(const RayTracingTLASDesc& tlasDesc) = 0;
 
 	virtual RayTracingPipelinePtr CreateRayTracingPipeline(const RayTracingPipelineDesc& pipelineDesc) = 0;
