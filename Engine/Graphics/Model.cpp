@@ -331,7 +331,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 
 	vertexCount += aiMesh->mNumVertices;
 
-	uint32_t startVertex = m_mergedVertices.size() / m_vertexLayout->GetNumFloats();
+	uint32_t startVertex = (uint32_t)m_mergedVertices.size() / m_vertexLayout->GetNumFloats();
 
 	aiColor4D defaultColor(0.0f, 0.0f, 0.0f, 1.0f);
 	aiScene->mMaterials[aiMesh->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, defaultColor);
@@ -468,12 +468,13 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	uint32_t stride = m_vertexLayout->GetSizeInBytes();
 
 	GpuBufferDesc vertexBufferDesc{
-		.name			= "Mesh|VertexBuffer",
+		.name			= std::format("{} - Vertex Buffer", aiMesh->mName.C_Str()),
 		.resourceType	= ResourceType::VertexBuffer,
 		.memoryAccess	= MemoryAccess::GpuRead,
 		.elementCount	= sizeof(float) * vertexData.size() / stride,
 		.elementSize	= stride,
 		.initialData	= vertexData.data(),
+		.bAllowShaderResource = rayTracingInput,
 		.bRayTracingBuildInput = rayTracingInput
 	};
 	mesh->vertexBuffer = m_device->CreateGpuBuffer(vertexBufferDesc);
@@ -482,12 +483,13 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	stride = 3 * sizeof(float);
 	GpuBufferDesc positionOnlyVertexBufferDesc
 	{
-		.name			= "Mesh|VertexBuffer (Position Only)",
+		.name			= std::format("{} - Vertex Buffer (Position Only)", aiMesh->mName.C_Str()),
 		.resourceType	= ResourceType::VertexBuffer,
 		.memoryAccess	= MemoryAccess::GpuRead,
 		.elementCount	= sizeof(float) * vertexDataPositionOnly.size() / stride,
 		.elementSize	= stride,
 		.initialData	= vertexDataPositionOnly.data(),
+		.bAllowShaderResource = rayTracingInput,
 		.bRayTracingBuildInput = rayTracingInput
 	};
 	mesh->vertexBufferPositionOnly = m_device->CreateGpuBuffer(positionOnlyVertexBufferDesc);
@@ -496,13 +498,13 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	if (bUse16BitIndices)
 	{
 		GpuBufferDesc indexBufferDesc{
-			.name			= "Mesh|IndexBuffer",
+			.name			= std::format("{} - Index Buffer", aiMesh->mName.C_Str()),
 			.resourceType	= ResourceType::IndexBuffer,
 			.memoryAccess	= MemoryAccess::GpuRead,
-			.format			= Format::R16_UInt,
 			.elementCount	= indexData16.size(),
 			.elementSize	= sizeof(uint16_t),
 			.initialData	= indexData16.data(),
+			.bAllowShaderResource = rayTracingInput,
 			.bRayTracingBuildInput = rayTracingInput
 		};
 		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
@@ -510,13 +512,13 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	else
 	{
 		GpuBufferDesc indexBufferDesc{
-			.name			= "Mesh|IndexBuffer",
+			.name			= std::format("{} - Index Buffer", aiMesh->mName.C_Str()),
 			.resourceType	= ResourceType::IndexBuffer,
 			.memoryAccess	= MemoryAccess::GpuRead,
-			.format			= Format::R32_UInt,
 			.elementCount	= indexData.size(),
 			.elementSize	= sizeof(uint32_t),
 			.initialData	= indexData.data(),
+			.bAllowShaderResource = rayTracingInput,
 			.bRayTracingBuildInput = rayTracingInput
 		};
 		mesh->indexBuffer = m_device->CreateGpuBuffer(indexBufferDesc);
@@ -534,6 +536,7 @@ void ModelLoader::ProcessMesh(ModelPtr model, const aiMesh* aiMesh, const aiScen
 	}
 
 	// Set bounding box
+	mesh->name = aiMesh->mName.C_Str();
 	mesh->boundingBox = Math::BoundingBoxFromMinMax(minExtents, maxExtents);
 
 	mesh->meshParts.push_back(meshPart);

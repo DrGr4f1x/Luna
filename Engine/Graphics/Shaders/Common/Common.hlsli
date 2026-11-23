@@ -25,6 +25,7 @@
 #define VK_DESCRIPTOR_SET(dset) ,space##dset
 
 #define BINDING(reg, set) register(reg VK_DESCRIPTOR_SET(set))
+#define BINDING_SPACE(reg, set) BINDING(reg, set)
 
 #else // DX12
 
@@ -43,5 +44,6 @@
 #define VK_DESCRIPTOR_SET(dset)
 
 #define BINDING(reg, set) register(reg)
+#define BINDING_SPACE(reg, set) register(reg, space##set)
 
 #endif // VK

@@ -13,7 +13,7 @@
 
 
 [shader("miss")]
-void shadow_main(inout Payload payload)
+void shadow_main(inout ShadowRayPayload payload)
 {
-    payload.shadowed = false;
+    payload.hit = false;
 }

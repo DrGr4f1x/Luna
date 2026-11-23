@@ -1040,9 +1040,13 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 
 	if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
 	{
+		// Make sure the index buffer has an appropriate format
+		const auto indexFormat = geometryDesc.triangles.indexFormat;
+		assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
+
 		d3d12GeometryDesc.Triangles.IndexBuffer = geometryDesc.triangles.indexBuffer;
 		d3d12GeometryDesc.Triangles.IndexCount = (UINT)geometryDesc.triangles.indexCount;
-		d3d12GeometryDesc.Triangles.IndexFormat = geometryDesc.triangles.indexFormat == Format::R32_UInt ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
+		d3d12GeometryDesc.Triangles.IndexFormat = indexFormat == Format::R32_UInt ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
 		d3d12GeometryDesc.Triangles.Transform3x4 = geometryDesc.triangles.transform3x4;
 		d3d12GeometryDesc.Triangles.VertexFormat = FormatToDxgi(geometryDesc.triangles.vertexFormat).srvFormat;
 		d3d12GeometryDesc.Triangles.VertexCount = (UINT)geometryDesc.triangles.vertexCount;
@@ -1101,7 +1105,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS topLevelInputs{
 		.Type			= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
 		.Flags			= buildFlags,
-		.NumDescs		= 1,
+		.NumDescs		= (UINT)tlasDesc.instances.size(),
 		.DescsLayout	= D3D12_ELEMENTS_LAYOUT_ARRAY
 	};
 	m_dxrDevice->GetRaytracingAccelerationStructurePrebuildInfo(&topLevelInputs, &topLevelPrebuildInfo);
@@ -1138,6 +1142,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 		instanceDesc.InstanceID = instance.instanceID;
 		instanceDesc.InstanceMask = instance.instanceMask;
 		instanceDesc.AccelerationStructure = instance.blas->GetGpuAddress();
+		instanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_CULL_DISABLE;
 
 		d3d12Instances.push_back(instanceDesc);
 	}

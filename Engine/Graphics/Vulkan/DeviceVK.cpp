@@ -1052,12 +1052,16 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 	uint32_t numPrimitives = 0;
 	if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
 	{
+		// Make sure the index buffer has an appropriate format
+		const auto indexFormat = geometryDesc.triangles.indexFormat;
+		assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
+
 		accelerationStructureGeometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
 		accelerationStructureGeometry.geometry.triangles.vertexFormat = FormatToVulkan(geometryDesc.triangles.vertexFormat);
 		accelerationStructureGeometry.geometry.triangles.vertexData.deviceAddress = geometryDesc.triangles.vertexBuffer;
 		accelerationStructureGeometry.geometry.triangles.vertexStride = geometryDesc.triangles.vertexStride;
 		accelerationStructureGeometry.geometry.triangles.maxVertex = (uint32_t)geometryDesc.triangles.vertexCount - 1;
-		accelerationStructureGeometry.geometry.triangles.indexType = geometryDesc.triangles.indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
+		accelerationStructureGeometry.geometry.triangles.indexType = indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 		accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = geometryDesc.triangles.indexBuffer;
 		accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = geometryDesc.triangles.transform3x4;
 		numPrimitives = (uint32_t)geometryDesc.triangles.indexCount / 3;
@@ -1225,7 +1229,7 @@ GpuBufferPtr Device::CreateTLAS(const RayTracingTLASDesc& tlasDesc)
 		.pGeometries	= &accelerationStructureGeometry
 	};
 
-	const uint32_t numPrimitives = 1;
+	const uint32_t numPrimitives = (uint32_t)tlasDesc.instances.size();
 	VkAccelerationStructureBuildSizesInfoKHR accelerationStructureBuildSizesInfo{
 		.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR
 	};

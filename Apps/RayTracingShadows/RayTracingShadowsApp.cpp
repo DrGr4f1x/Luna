@@ -77,6 +77,8 @@ void RayTracingShadowsApp::Render()
 	computeContext.SetRayTracingPipeline(m_rayTracingPipeline);
 	computeContext.SetRootSRV(0, m_tlasBuffer);
 	computeContext.SetDescriptors(1, m_descriptorSet);
+	computeContext.SetDescriptors(2, m_bindlessVertexBufferSet);
+	computeContext.SetDescriptors(3, m_bindlessIndexBufferSet);
 
 	computeContext.DispatchRays(m_shaderBindingTable, GetWindowWidth(), GetWindowHeight());
 
@@ -119,7 +121,7 @@ void RayTracingShadowsApp::CreateWindowSizeDependentResources()
 {
 	// Create any resources that depend on window size.  May be called when the window size changes.
 	InitColorTarget();
-	InitDescriptorSet();
+	InitDescriptorSets();
 	m_camera.SetAspectRatio(GetWindowAspectRatio());
 }
 
@@ -136,27 +138,9 @@ void RayTracingShadowsApp::LoadAssets()
 
 void RayTracingShadowsApp::InitRayTracingBLAS()
 {
-	// Bottom-level geometry description
-	RayTracingGeometryDesc blasDesc{
-		.name			= "BLAS",
-		.geometryType	= RayTracingGeometryType::Triangles,
-		.flags			= RayTracingGeometryFlags::Opaque,
-		.buildFlags		= RayTracingAccelerationStructureFlags::FastTrace
-	};
-	blasDesc.triangles.transform3x4 = 0;
-	blasDesc.triangles.indexFormat = Format::R32_UInt;
-	blasDesc.triangles.vertexFormat = Format::RGB32_Float;
-	blasDesc.triangles.indexCount = m_model->mergedIndexBuffer->GetElementCount();
-	blasDesc.triangles.vertexCount = m_model->mergedVertexBuffer->GetElementCount();
-	blasDesc.triangles.vertexStride = m_model->mergedVertexBuffer->GetElementSize();
-	blasDesc.triangles.indexBuffer = m_model->mergedIndexBuffer->GetGpuAddress();
-	blasDesc.triangles.vertexBuffer = m_model->mergedVertexBuffer->GetGpuAddress();
-
-	m_blasBuffer = GetDevice()->CreateBLAS(blasDesc);
-
-#if 0
 	m_blasBuffers.clear();
-	m_blasBuffers.reserve(m_model->meshes.size());
+	m_vertexBuffers.clear();
+	m_indexBuffers.clear();
 
 	for (auto mesh : m_model->meshes)
 	{
@@ -168,7 +152,7 @@ void RayTracingShadowsApp::InitRayTracingBLAS()
 			.buildFlags		= RayTracingAccelerationStructureFlags::FastTrace
 		};
 		blasDesc.triangles.transform3x4 = 0;
-		blasDesc.triangles.indexFormat = mesh->indexBuffer->GetFormat();
+		blasDesc.triangles.indexFormat = Format::R32_UInt;
 		blasDesc.triangles.vertexFormat = Format::RGB32_Float;
 		blasDesc.triangles.indexCount = mesh->indexBuffer->GetElementCount();
 		blasDesc.triangles.vertexCount = mesh->vertexBuffer->GetElementCount();
@@ -178,35 +162,30 @@ void RayTracingShadowsApp::InitRayTracingBLAS()
 
 		auto blasBuffer = GetDevice()->CreateBLAS(blasDesc);
 		m_blasBuffers.push_back(blasBuffer);
+
+		m_vertexBuffers.push_back(mesh->vertexBuffer);
+		m_indexBuffers.push_back(mesh->indexBuffer);
 	}
-#endif
 }
 
 
 void RayTracingShadowsApp::InitRayTracingTLAS()
 {
 	vector<RayTracingInstanceDesc> instances;
-	//instances.reserve(m_blasBuffers.size());
+	instances.reserve(m_blasBuffers.size());
 
-	RayTracingInstanceDesc instanceDesc{
-		.blas			= m_blasBuffer,
-		.transform		= Matrix4{ kIdentity },
-		.instanceID		= 0,
-		.instanceMask	= 0xFF,
-	};
-	instances.push_back(instanceDesc);
-
-#if 0
+	uint32_t instanceID = 0;
 	for (auto blasBuffer : m_blasBuffers)
 	{
 		RayTracingInstanceDesc instanceDesc{
 			.blas			= blasBuffer,
 			.transform		= Matrix4{ kIdentity },
-			.instanceID		= 0,
+			.instanceID		= instanceID,
 			.instanceMask	= 0xFF,
 		};
+		instances.push_back(instanceDesc);
+		++instanceID;
 	}
-#endif
 
 	RayTracingTLASDesc tlasDesc{
 		.instances = instances
@@ -218,11 +197,15 @@ void RayTracingShadowsApp::InitRayTracingTLAS()
 
 void RayTracingShadowsApp::InitRootSignature()
 {
+	const uint32_t numMeshes = (uint32_t)m_model->meshes.size();
+
 	RootSignatureDesc desc{
 		.name = "Global Root Signature",
 		.rootParameters = {
 			RootSRV(0, ShaderStage::AllRaytracing, 0, true /* isAccelerationStructure */),
-			Table({ TextureUAV(1, 1), ConstantBuffer(2, 1), StructuredBufferSRV(1, 2) }, ShaderStage::AllRaytracing)
+			Table({ TextureUAV(1, 1), ConstantBuffer(2, 1) }, ShaderStage::AllRaytracing),
+			Table({ BindlessStructuredBufferSRV(1, numMeshes, 2) }, ShaderStage::ClosestHit),
+			Table({ BindlessStructuredBufferSRV(2, numMeshes, 3) }, ShaderStage::ClosestHit)
 		}
 	};
 
@@ -257,7 +240,7 @@ void RayTracingShadowsApp::InitShaderBindingTable()
 {
 	ShaderBindingTableDesc desc{
 		.rayGenShaders	= { ShaderRecord{.id = 0 } }, // refers to the RayGen shader at index 0 in the library
-		.missShaders = { ShaderRecord{.id = 0 }, ShaderRecord{.id = 1 } }, // refers to the Miss shaders at indices 0 and 1 in the library
+		.missShaders	= { ShaderRecord{.id = 0 }, ShaderRecord{.id = 1 } }, // refers to the Miss shaders at indices 0 and 1 in the library
 		.hitGroups		= { ShaderRecord{.id = 0  } } // refers to the HitGroup at index 0 in the library
 	};
 
@@ -277,9 +260,15 @@ void RayTracingShadowsApp::InitColorTarget()
 }
 
 
-void RayTracingShadowsApp::InitDescriptorSet()
+void RayTracingShadowsApp::InitDescriptorSets()
 {
-	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer, m_model->mergedVertexBuffer, m_model->mergedIndexBuffer });
+	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer });
+
+	m_bindlessVertexBufferSet = m_globalRootSignature->CreateDescriptorSet(2);
+	m_bindlessVertexBufferSet->SetSRVs(1, m_vertexBuffers);
+
+	m_bindlessIndexBufferSet = m_globalRootSignature->CreateDescriptorSet(3);
+	m_bindlessIndexBufferSet->SetSRVs(2, m_indexBuffers);
 }
 
 

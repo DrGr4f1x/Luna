@@ -90,6 +90,16 @@ public:
 		}
 	}
 
+	void SetSRVs(uint32_t startSlot, std::span<GpuBufferPtr> buffers)
+	{
+		uint32_t slot = startSlot;
+		for (auto buffer : buffers)
+		{
+			SetSRV(slot, buffer);
+			++slot;
+		}
+	}
+
 	virtual void SetUAV(uint32_t slot, ColorBufferPtr colorBuffer, uint32_t uavIndex = 0) = 0;
 	virtual void SetUAV(uint32_t slot, DepthBufferPtr depthBuffer) = 0;
 	virtual void SetUAV(uint32_t slot, GpuBufferPtr gpuBuffer) = 0;

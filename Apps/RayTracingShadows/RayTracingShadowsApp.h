@@ -42,7 +42,7 @@ protected:
 	void InitRayTracingPipeline();
 	void InitShaderBindingTable();
 	void InitColorTarget();
-	void InitDescriptorSet();
+	void InitDescriptorSets();
 
 	void UpdateConstantBuffer();
 
@@ -60,8 +60,10 @@ protected:
 
 	// Geometry and ray tracing acceleration structures
 	Luna::ModelPtr m_model;
-	Luna::GpuBufferPtr m_blasBuffer;
-	//std::vector<Luna::GpuBufferPtr> m_blasBuffers;
+	//Luna::GpuBufferPtr m_blasBuffer;
+	std::vector<Luna::GpuBufferPtr> m_vertexBuffers;
+	std::vector<Luna::GpuBufferPtr> m_indexBuffers;
+	std::vector<Luna::GpuBufferPtr> m_blasBuffers;
 	Luna::GpuBufferPtr m_tlasBuffer;
 
 	// Root signature, ray tracing pipeline, shader binding table
@@ -72,6 +74,8 @@ protected:
 	// Ray tracing render target, descriptor set
 	Luna::ColorBufferPtr m_colorTarget;
 	Luna::DescriptorSetPtr m_descriptorSet;
+	Luna::DescriptorSetPtr m_bindlessVertexBufferSet;
+	Luna::DescriptorSetPtr m_bindlessIndexBufferSet;
 
 	Luna::CameraController m_controller{ m_camera, Math::Vector3(Math::kYUnitVector) };
 };

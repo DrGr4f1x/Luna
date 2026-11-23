@@ -32,7 +32,7 @@ void raygen_main()
     rayDesc.TMin = 0.001;
     rayDesc.TMax = 10000.0;
 
-    Payload payload = { float4(0, 0, 0, 0) };
+    Payload payload = { float3(0, 0, 0) };
     TraceRay(rs, RAY_FLAG_FORCE_OPAQUE, 0xff, 0, 0, 0, rayDesc, payload);
 
     image[int2(LaunchID.xy)] = float4(payload.hitValue, 0.0);

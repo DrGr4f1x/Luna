@@ -11,5 +11,10 @@
 struct Payload
 {
     float3 hitValue;
-    bool shadowed;
+};
+
+
+struct ShadowRayPayload
+{
+    bool hit;
 };

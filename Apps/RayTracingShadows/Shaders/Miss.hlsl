@@ -15,5 +15,5 @@
 [shader("miss")]
 void miss_main(inout Payload payload)
 {
-    payload.hitValue = float3(0.0, 0.0, 0.2);
+    payload.hitValue = float3(0.0, 0.0, 0.25);
 }
