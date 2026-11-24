@@ -23,6 +23,8 @@
     <None Include="Shaders\ClosestHit.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\RayGen.hlsl" />
+    <None Include="Shaders\Shadow.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -36,13 +38,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\Shadow.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\RayGen.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

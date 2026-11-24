@@ -20,6 +20,7 @@
     <None Include="Shaders\Miss.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\RayGen.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -33,10 +34,5 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\RayGen.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>
