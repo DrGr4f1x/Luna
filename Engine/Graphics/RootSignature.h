@@ -510,8 +510,17 @@ public:
 	// Helper to initialize a descriptor set with a list of resource descriptor sources
 	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex, std::initializer_list<DescriptorProvider> descriptorProviders) const;
 
+	// Helper to initialize a descriptor set with a list of textures
+	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex, std::span<TexturePtr> texture) const;
+
+	// Helper to initialize a descriptor set with a list of GPU buffers
+	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex, std::span<GpuBufferPtr> gpuBuffers) const;
+
 	// Helper to initialize a descriptor set with a list of samplers
-	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex, std::initializer_list<SamplerPtr> samplerProviders) const;
+	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex, std::initializer_list<SamplerPtr> samplers) const;
+
+	// Helper to initialize a descriptor set with a list of samplers
+	DescriptorSetPtr CreateDescriptorSet(uint32_t rootParamIndex, std::span<SamplerPtr> sampler) const;
 
 	// Descriptor heap
 	void SetDescriptorHeap(DescriptorHeapPtr descriptorHeap) { m_descriptorHeap = descriptorHeap; }

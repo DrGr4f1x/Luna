@@ -14,6 +14,18 @@
     <LunaShaderCfg Include="Shaders\shaders.cfg">
       <Filter>Shaders</Filter>
     </LunaShaderCfg>
+    <None Include="Shaders\RayTracingCommon.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\ClosestHit.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\RayGen.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Shadow.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -21,10 +33,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\RayTracing.hlsl">
+    <None Include="Shaders\AnyHit.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Shadows.hlsl">
+    <None Include="Shaders\Miss.hlsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -112,6 +112,7 @@ struct MeshMaterialData
 	std::optional<std::string> displacementTex;
 	std::optional<std::string> lightmapTex;
 	std::optional<std::string> reflectionTex;
+	std::optional<std::string> metallicRoughnessTex;
 };
 
 
@@ -182,6 +183,7 @@ void LogMaterialData(const MeshMaterialData& materialData)
 	LogTexture(materialData.displacementTex, "Displacement tex");
 	LogTexture(materialData.lightmapTex, "Light-map tex");
 	LogTexture(materialData.reflectionTex, "Reflection tex");
+	LogTexture(materialData.metallicRoughnessTex, "Metallic-roughness tex");
 }
 
 
@@ -198,6 +200,8 @@ protected:
 	int ProcessMaterial(ModelPtr model, const aiMaterial* aiMaterial, const aiScene* scene);
 	TexturePtr FindOrCreateTexture(const aiScene* scene, const string& textureName);
 	TexturePtr CreateTexture(const aiScene* scene, const string& textureName);
+
+	void SetupMeshMaterial(MeshMaterial& material, const MeshMaterialData& materialData, const aiScene* scene);
 
 protected:
 	IDevice* m_device{ nullptr };
@@ -626,28 +630,12 @@ int ModelLoader::ProcessMaterial(ModelPtr model, const aiMaterial* aiMaterial, c
 	GetString(materialData.displacementTex, AI_MATKEY_TEXTURE_DISPLACEMENT(0));
 	GetString(materialData.lightmapTex, AI_MATKEY_TEXTURE_LIGHTMAP(0));
 	GetString(materialData.reflectionTex, AI_MATKEY_TEXTURE_REFLECTION(0));
+	GetString(materialData.metallicRoughnessTex, AI_MATKEY_TEXTURE(aiTextureType_GLTF_METALLIC_ROUGHNESS, 0));
 
 	//LogMaterialData(materialData);
 
-	TexturePtr diffuseTex;
-	if (materialData.diffuseTex.has_value())
-	{
-		diffuseTex = FindOrCreateTexture(scene, materialData.diffuseTex.value());
-	}
-
-	TexturePtr normalTex;
-	if (materialData.normalTex.has_value())
-	{
-		normalTex = FindOrCreateTexture(scene, materialData.normalTex.value());
-	}
-
 	MeshMaterial material{};
-	if (materialData.diffuse)
-	{
-		material.diffuseColor = materialData.diffuse.value();
-	}
-	material.diffuseTexture = diffuseTex;
-	material.normalTexture = normalTex;
+	SetupMeshMaterial(material, materialData, scene);
 
 	int index = (int)model->materials.size();
 	model->materials.push_back(material);
@@ -695,6 +683,53 @@ TexturePtr ModelLoader::CreateTexture(const aiScene* scene, const string& textur
 
 		return texture;
 	}
+}
+
+
+void ModelLoader::SetupMeshMaterial(MeshMaterial& material, const MeshMaterialData& materialData, const aiScene* scene)
+{
+	auto SetColor = [](Color& dest, std::optional<Color> src) { dest = src.has_value() ? src.value() : DirectX::Colors::Black; };
+	auto SetFloat = [](float& dest, std::optional<float> src) { dest = src.has_value() ? src.value() : 0.0f; };
+	auto SetInt = [](int& dest, std::optional<int> src) { dest = src.has_value() ? src.value() : 0; };
+	auto SetTexture = [this, scene](TexturePtr& tex, std::optional<std::string> src)
+		{
+			if (src.has_value())
+			{
+				tex = FindOrCreateTexture(scene, src.value());
+			}
+		};
+
+	SetColor(material.diffuseColor, materialData.diffuse);
+	SetColor(material.specularColor, materialData.specular);
+	SetColor(material.ambientColor, materialData.ambient);
+	SetColor(material.emissiveColor, materialData.emissive);
+	SetColor(material.transparentColor, materialData.transparent);
+	SetColor(material.reflectiveColor, materialData.reflective);
+
+	SetFloat(material.opacity, materialData.opacity);
+	SetFloat(material.shininess, materialData.shininess);
+	SetFloat(material.specularStrength, materialData.specularStrength);
+	SetFloat(material.transparencyFactor, materialData.transparencyFactor);
+	SetFloat(material.bumpScaling, materialData.bumpScaling);
+	SetFloat(material.reflectivity, materialData.reflectivity);
+
+	SetInt(material.twoSided, materialData.twoSided);
+	SetInt(material.shadingModel, materialData.shadingModel);
+	SetInt(material.wireframe, materialData.wireframe);
+	SetInt(material.blendFunc, materialData.blendFunc);
+
+	SetTexture(material.diffuseTexture, materialData.diffuseTex);
+	SetTexture(material.specularTexture, materialData.specularTex);
+	SetTexture(material.ambientTexture, materialData.ambientTex);
+	SetTexture(material.emissiveTexture, materialData.emissiveTex);
+	SetTexture(material.normalTexture, materialData.normalTex);
+	SetTexture(material.heightTexture, materialData.heightTex);
+	SetTexture(material.shininessTexture, materialData.shininessTex);
+	SetTexture(material.opacityTexture, materialData.opacityTex);
+	SetTexture(material.displacementTexture, materialData.displacementTex);
+	SetTexture(material.lightmapTexture, materialData.lightmapTex);
+	SetTexture(material.reflectionTexture, materialData.reflectionTex);
+	SetTexture(material.metallicRoughnessTexture, materialData.metallicRoughnessTex);
 }
 
 

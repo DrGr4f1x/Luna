@@ -246,7 +246,7 @@ namespace ShaderCompiler
             #region SPIRV options
             Option<string> vulkanVersionOpt = new("--vulkanVersion")
             {
-                Description = "Vulkan environment version, maps t0 '-fspv-target-env' (default  = 1.3)"
+                Description = "Vulkan environment version, maps t0 '-fspv-target-env' (default = 1.3)"
             };
 
             Option<string[]> spirvExtOpt = new("--spirvExt")

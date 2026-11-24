@@ -41,6 +41,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <LunaShaderCfg Include="Shaders\shaders.cfg" />
+    <None Include="Shaders\RayTracingCommon.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\Engine.vcxproj">
@@ -48,10 +49,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Shadows.hlsl">
+    <None Include="Shaders\Miss.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="Shaders\RayTracing.hlsl">
+    <None Include="Shaders\AnyHit.hlsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\ClosestHit.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\RayGen.hlsl">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Shaders\Shadow.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

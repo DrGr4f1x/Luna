@@ -95,9 +95,41 @@ template <> struct EnableBitmaskOperators<ModelLoad> { static const bool enable 
 
 struct MeshMaterial
 { 
+	// Basic colors
 	Color diffuseColor{ DirectX::Colors::Black };
+	Color specularColor{ DirectX::Colors::Black };
+	Color ambientColor{ DirectX::Colors::Black };
+	Color emissiveColor{ DirectX::Colors::Black };
+	Color transparentColor{ DirectX::Colors::Black };
+	Color reflectiveColor{ DirectX::Colors::Black };
+
+	// Basic parameters
+	float opacity{ 0.0f };
+	float shininess{ 0.0f };
+	float specularStrength{ 0.0f };
+	float transparencyFactor{ 0.0f };
+	float bumpScaling{ 0.0f };
+	float reflectivity{ 0.0f };
+
+	// Rendering options
+	int twoSided{ 0 };
+	int shadingModel{ 0 };
+	int wireframe{ 0 };
+	int blendFunc{ 0 };
+
+	// Textures
 	TexturePtr diffuseTexture;
+	TexturePtr specularTexture;
+	TexturePtr ambientTexture;
+	TexturePtr emissiveTexture;
 	TexturePtr normalTexture;
+	TexturePtr heightTexture;
+	TexturePtr shininessTexture;
+	TexturePtr opacityTexture;
+	TexturePtr displacementTexture;
+	TexturePtr lightmapTexture;
+	TexturePtr reflectionTexture;
+	TexturePtr metallicRoughnessTexture;
 };
 
 

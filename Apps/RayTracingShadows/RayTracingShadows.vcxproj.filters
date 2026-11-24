@@ -23,8 +23,12 @@
     <None Include="Shaders\ClosestHit.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\RayGen.hlsl" />
-    <None Include="Shaders\Shadow.hlsl" />
+    <None Include="Shaders\RayGen.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Shadow.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

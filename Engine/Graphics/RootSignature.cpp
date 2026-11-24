@@ -227,7 +227,110 @@ DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, st
 }
 
 
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, std::span<TexturePtr> textures) const
+{
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
+
+	const auto& rootParameter = m_desc.rootParameters[rootParamIndex];
+	auto descIt = rootParameter.cbegin();
+
+	for (auto texture : textures)
+	{
+		if (descIt == rootParameter.cend())
+			break;
+
+		const DescriptorRegisterType registerType = GetDescriptorRegisterType((*descIt).type);
+		const uint32_t slot = (*descIt).registerIndex;
+
+		switch (registerType)
+		{
+		case DescriptorRegisterType::SRV:
+			descriptorSet->SetSRV(slot, texture);
+			break;
+
+		case DescriptorRegisterType::UAV:
+		case DescriptorRegisterType::CBV:
+		case DescriptorRegisterType::Sampler:
+			assert(false);
+			break;
+		}
+
+		++descIt;
+	}
+
+	return descriptorSet;
+}
+
+
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, std::span<GpuBufferPtr> gpuBuffers) const
+{
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
+
+	const auto& rootParameter = m_desc.rootParameters[rootParamIndex];
+	auto descIt = rootParameter.cbegin();
+
+	for (auto gpuBuffer : gpuBuffers)
+	{
+		if (descIt == rootParameter.cend())
+			break;
+
+		const DescriptorRegisterType registerType = GetDescriptorRegisterType((*descIt).type);
+		const uint32_t slot = (*descIt).registerIndex;
+
+		switch (registerType)
+		{
+		case DescriptorRegisterType::SRV:
+			descriptorSet->SetSRV(slot, gpuBuffer);
+			break;
+
+		case DescriptorRegisterType::UAV:
+			descriptorSet->SetUAV(slot, gpuBuffer);
+			break;
+
+		case DescriptorRegisterType::CBV:
+			descriptorSet->SetCBV(slot, gpuBuffer);
+			break;
+
+		case DescriptorRegisterType::Sampler:
+			assert(false);
+			break;
+		}
+
+		++descIt;
+	}
+
+	return descriptorSet;
+}
+
+
 DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, std::initializer_list<SamplerPtr> samplerProviders) const
+{
+	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
+
+	const auto& rootParameter = m_desc.rootParameters[rootParamIndex];
+	assert(rootParameter.IsSamplerTable());
+
+	auto descIt = rootParameter.cbegin();
+
+	for (auto sampler : samplerProviders)
+	{
+		if (descIt == rootParameter.cend())
+			break;
+
+		const DescriptorRegisterType registerType = GetDescriptorRegisterType((*descIt).type);
+		const uint32_t slot = (*descIt).registerIndex;
+
+		assert(registerType == DescriptorRegisterType::Sampler);
+		descriptorSet->SetSampler(slot, sampler);
+
+		++descIt;
+	}
+
+	return descriptorSet;
+}
+
+
+DescriptorSetPtr IRootSignature::CreateDescriptorSet(uint32_t rootParamIndex, std::span<SamplerPtr> samplerProviders) const
 {
 	auto descriptorSet = CreateDescriptorSet(rootParamIndex);
 

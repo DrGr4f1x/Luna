@@ -176,6 +176,15 @@ void CameraController::UpdateWASD(InputSystem* inputSystem, float deltaTime, boo
 		m_currentHeading += XM_2PI;
 	}
 
+	if (yaw == 0.0f && pitch == 0.0f && forward == 0.0f && strafe == 0.0f && ascent == 0.0f)
+	{
+		m_didUpdate = false;
+	}
+	else
+	{
+		m_didUpdate = true;
+	}
+
 	Vector3 cameraPosition = m_targetCamera.GetPosition();
 	Matrix3 orientation = Matrix3(m_worldEast, m_worldUp, -m_worldNorth) * Matrix3::MakeYRotation(m_currentHeading) * Matrix3::MakeXRotation(m_currentPitch);
 	Vector3 position = orientation * Vector3(strafe, ascent, -forward) + cameraPosition;
@@ -227,6 +236,15 @@ void CameraController::UpdateArcBall(InputSystem* inputSystem, float deltaTime, 
 	float zoom = ignoreInput ? 0.0f : inputSystem->GetAnalogInput(AnalogInput::kAnalogMouseScroll);
 	m_zoom += zoom;
 	m_zoom = DirectX::XMMax(m_minDistance, m_zoom);
+
+	if (yaw == 0.0f && pitch == 0.0f && zoom == 0.0f)
+	{
+		m_didUpdate = false;
+	}
+	else
+	{
+		m_didUpdate = true;
+	}
 
 	// ArcBall logic
 	Vector3 position = Quaternion(m_currentPitch, m_currentHeading, 0.0f) * Vector3(kZUnitVector);

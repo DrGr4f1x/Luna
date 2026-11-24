@@ -47,6 +47,8 @@ public:
 	void SetSpeedScale(float scale) noexcept { m_speedScale = scale; }
 	void SetPanScale(float scale) noexcept { m_panScale = scale; }
 
+	bool DidUpdate() const noexcept { return m_didUpdate; }
+
 private:
 	CameraController& operator=(const CameraController&) noexcept { return *this; }
 
@@ -71,6 +73,8 @@ private:
 
 	float m_currentHeading{ 0.0f };
 	float m_currentPitch{ 0.0f };
+	
+	bool m_didUpdate{ false };
 
 	float m_speedScale{ 1.0f };
 	float m_panScale{ 1.0f };

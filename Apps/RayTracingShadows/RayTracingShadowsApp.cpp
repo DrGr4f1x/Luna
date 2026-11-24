@@ -129,7 +129,7 @@ void RayTracingShadowsApp::CreateWindowSizeDependentResources()
 void RayTracingShadowsApp::LoadAssets()
 {
 	auto layout = VertexLayout<VertexComponent::PositionNormalColorTexcoord>();
-	const ModelLoad flags = ModelLoad::StandardDefault | ModelLoad::RayTracingInput | ModelLoad::Force32BitIndices | ModelLoad::MergeBuffers;
+	const ModelLoad flags = ModelLoad::StandardDefault | ModelLoad::RayTracingInput | ModelLoad::Force32BitIndices;
 	m_model = LoadModel("vulkanscene_shadow.gltf", layout, 1.0f, flags);
 
 	m_sceneConstants.vertexStride = layout.GetSizeInBytes();
@@ -160,7 +160,7 @@ void RayTracingShadowsApp::InitRayTracingBLAS()
 		blasDesc.triangles.indexBuffer = mesh->indexBuffer->GetGpuAddress();
 		blasDesc.triangles.vertexBuffer = mesh->vertexBuffer->GetGpuAddress();
 
-		auto blasBuffer = GetDevice()->CreateBLAS(blasDesc);
+		auto blasBuffer = m_device->CreateBLAS(blasDesc);
 		m_blasBuffers.push_back(blasBuffer);
 
 		m_vertexBuffers.push_back(mesh->vertexBuffer);
@@ -188,10 +188,11 @@ void RayTracingShadowsApp::InitRayTracingTLAS()
 	}
 
 	RayTracingTLASDesc tlasDesc{
-		.instances = instances
+		.instances = instances,
+		.buildFlags = RayTracingAccelerationStructureFlags::FastTrace
 	};
 
-	m_tlasBuffer = GetDevice()->CreateTLAS(tlasDesc);
+	m_tlasBuffer = m_device->CreateTLAS(tlasDesc);
 }
 
 
@@ -233,7 +234,7 @@ void RayTracingShadowsApp::InitRayTracingPipeline()
 		.maxRayHitAttributeSize = 2 * sizeof(float) // float2 barycentrics
 	};
 
-	m_rayTracingPipeline = GetDevice()->CreateRayTracingPipeline(desc);
+	m_rayTracingPipeline = m_device->CreateRayTracingPipeline(desc);
 }
 
 
@@ -245,17 +246,17 @@ void RayTracingShadowsApp::InitShaderBindingTable()
 		.hitGroups		= { ShaderRecord{.id = 0  } } // refers to the HitGroup at index 0 in the library
 	};
 
-	m_shaderBindingTable = GetDevice()->CreateShaderBindingTable(desc, m_rayTracingPipeline);
+	m_shaderBindingTable = m_device->CreateShaderBindingTable(desc, m_rayTracingPipeline);
 }
 
 
 void RayTracingShadowsApp::InitColorTarget()
 {
 	ColorBufferDesc colorDesc{
-		.name = "Ray Tracing Target",
-		.width = GetWindowWidth(),
-		.height = GetWindowHeight(),
-		.format = GetColorFormat()
+		.name		= "Ray Tracing Target",
+		.width		= GetWindowWidth(),
+		.height		= GetWindowHeight(),
+		.format		= GetColorFormat()
 	};
 	m_colorTarget = CreateColorBuffer(colorDesc);
 }
@@ -265,11 +266,11 @@ void RayTracingShadowsApp::InitDescriptorSets()
 {
 	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer });
 
-	m_bindlessVertexBufferSet = m_globalRootSignature->CreateDescriptorSet(2);
-	m_bindlessVertexBufferSet->SetSRVs(1, m_vertexBuffers);
+	m_bindlessVertexBufferSet = m_globalRootSignature->CreateDescriptorSet(2, m_vertexBuffers);
+	//m_bindlessVertexBufferSet->SetSRVs(1, m_vertexBuffers);
 
-	m_bindlessIndexBufferSet = m_globalRootSignature->CreateDescriptorSet(3);
-	m_bindlessIndexBufferSet->SetSRVs(2, m_indexBuffers);
+	m_bindlessIndexBufferSet = m_globalRootSignature->CreateDescriptorSet(3, m_indexBuffers);
+	//m_bindlessIndexBufferSet->SetSRVs(2, m_indexBuffers);
 }
 
 

@@ -6,9 +6,12 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 // Author:  David Elder
+//
 
+#include "RayTracingCommon.hlsli"
 
-float4 main( float4 pos : POSITION ) : SV_POSITION
+[shader("miss")]
+void shadow_main(inout Payload payload)
 {
-	return pos;
+    payload.shadowed = false;
 }
