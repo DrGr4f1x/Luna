@@ -37,6 +37,7 @@ struct VSInput
 struct VSOutput
 {
 	float4 pos : SV_POSITION;
+    float viewDepth : TEXCOORD0;
 };
 
 
@@ -44,7 +45,9 @@ VSOutput main(VSInput input)
 {
 	VSOutput output = (VSOutput)0;
 
-	output.pos = mul(projectionMatrix, mul(viewMatrix, mul(pushConstants.modelMatrix, float4(input.pos, 1.0))));
+    float4 viewPos = mul(viewMatrix, mul(pushConstants.modelMatrix, float4(input.pos, 1.0)));
+	output.pos = mul(projectionMatrix, viewPos);
+    output.viewDepth = -viewPos.z; // RH, camera looks down -Z
 
 	return output;
 }

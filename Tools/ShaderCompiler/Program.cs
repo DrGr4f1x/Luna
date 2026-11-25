@@ -130,7 +130,8 @@ namespace ShaderCompiler
 
             Option<uint> optimizationOpt = new("--optimization", "-O")
             {
-                Description = "Optimization level 03 (default = 3, disabled = 0)"
+                Description = "Optimization level 03 (default = 3, disabled = 0)",
+                DefaultValueFactory = _ => 3
             };
 
             Option<bool> warningsAreErrorsOpt = new("--WX")

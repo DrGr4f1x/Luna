@@ -33,7 +33,7 @@ protected:
 	void CreateWindowSizeDependentResources() final;
 
 	void InitRootSignatures();
-	void InitGraphicsPipelines();
+	void InitPipelines();
 	void InitLinkedListData();
 	void InitDescriptorSets();
 	void UpdateConstantBuffer();
@@ -48,19 +48,16 @@ protected:
 	};
 	SceneConstants m_sceneConstants{};
 
-	struct PushConstants
-	{
-		Math::Matrix4 modelMatrix{ Math::kIdentity };
-		Math::Vector4 color{ Math::kZero };
-	};
-	PushConstants m_pushConstants{};
-
 	// Constant buffer
 	Luna::GpuBufferPtr m_sceneConstantBuffer;
 
 	// Root signatures and PSOs
+	Luna::RootSignaturePtr m_clearBufferRootSignature;
+	Luna::RootSignaturePtr m_clearColorRootSignature;
 	Luna::RootSignaturePtr m_geometryRootSignature;
 	Luna::RootSignaturePtr m_colorRootSignature;
+	Luna::ComputePipelinePtr m_clearBufferPipeline;
+	Luna::ComputePipelinePtr m_clearColorPipeline;
 	Luna::GraphicsPipelinePtr m_geometryPipeline;
 	Luna::GraphicsPipelinePtr m_colorPipeline;
 	bool m_pipelinesCreated{ false };
@@ -75,7 +72,7 @@ protected:
 
 	struct Node
 	{
-		Math::Vector4 color{ Math::kZero };
+		float color[4];
 		float depth{ 0.0f };
 		uint32_t next{ 0 };
 	};
@@ -86,10 +83,16 @@ protected:
 	Luna::ColorBufferPtr m_listHeadTexture;
 
 	// Descriptor sets
+	Luna::DescriptorSetPtr m_clearColorDescriptorSet;
 	Luna::DescriptorSetPtr m_geometryDescriptorSet;
 	Luna::DescriptorSetPtr m_colorDescriptorSet;
 
 	// Models
+	struct ObjectData
+	{
+		Math::Matrix4 modelMatrix{ Math::kIdentity };
+		Math::Vector4 color{ Math::kZero };
+	};
 	Luna::ModelPtr m_cubeModel;
 	Luna::ModelPtr m_sphereModel;
 

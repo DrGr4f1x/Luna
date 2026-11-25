@@ -20,6 +20,12 @@
     <None Include="Shaders\ColorVS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\ClearBufferCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\ClearColorCS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">

@@ -27,10 +27,10 @@ struct Node
 };
 
 
-RWTexture2D<uint> headIndexImage : BINDING(u0, 0);
+Texture2D<uint> headIndexImage : BINDING(t0, 0);
 
 // Binding 0 : Position storage buffer
-RWStructuredBuffer<Node> nodes : BINDING(u1, 0);
+StructuredBuffer<Node> nodes : BINDING(t1, 0);
 
 
 float4 main(PSInput input) : SV_TARGET
@@ -40,8 +40,11 @@ float4 main(PSInput input) : SV_TARGET
 
     uint nodeIdx = headIndexImage[uint2(input.pos.xy)].r;
 
-    while (nodeIdx != 0xffffffff && count < MAX_FRAGMENT_COUNT)
+    while (nodeIdx != 0xffffffff)
     {
+        if (count >= MAX_FRAGMENT_COUNT)
+            break;
+        
         fragments[count] = nodes[nodeIdx];
         nodeIdx = fragments[count].next;
         ++count;

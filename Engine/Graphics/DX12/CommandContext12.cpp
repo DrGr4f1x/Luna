@@ -403,6 +403,17 @@ void CommandContext12::ClearDepthAndStencil(IDepthBuffer* depthBuffer)
 }
 
 
+void CommandContext12::BeginRendering(uint32_t width, uint32_t height)
+{
+	assert(!m_isRendering);
+	ResetRenderTargets();
+
+	BindRenderTargets();
+
+	m_isRendering = true;
+}
+
+
 void CommandContext12::BeginRendering(const IColorBuffer* colorBuffer)
 {
 	assert(!m_isRendering);

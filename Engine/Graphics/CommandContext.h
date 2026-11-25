@@ -97,6 +97,7 @@ public:
 	virtual void ClearStencil(IDepthBuffer* depthBuffer) = 0;
 	virtual void ClearDepthAndStencil(IDepthBuffer* depthBuffer) = 0;
 
+	virtual void BeginRendering(uint32_t width, uint32_t height) = 0;
 	virtual void BeginRendering(const IColorBuffer* renderTarget) = 0;
 	virtual void BeginRendering(const IColorBuffer* renderTarget, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
 	virtual void BeginRendering(const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) = 0;
@@ -273,6 +274,7 @@ public:
 	void ClearStencil(const DepthBufferPtr& depthBuffer);
 	void ClearDepthAndStencil(const DepthBufferPtr& depthBuffer);
 
+	void BeginRendering(uint32_t width, uint32_t height);
 	void BeginRendering(const ColorBufferPtr& renderTarget);
 	void BeginRendering(const ColorBufferPtr& renderTarget, const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
 	void BeginRendering(const DepthBufferPtr& depthTarget, DepthStencilAspect depthStencilAspect = DepthStencilAspect::ReadWrite);
@@ -575,6 +577,12 @@ inline void GraphicsContext::ClearStencil(const DepthBufferPtr& depthBuffer)
 inline void GraphicsContext::ClearDepthAndStencil(const DepthBufferPtr& depthBuffer)
 {
 	m_contextImpl->ClearDepthAndStencil(depthBuffer.get());
+}
+
+
+inline void GraphicsContext::BeginRendering(uint32_t width, uint32_t height)
+{
+	m_contextImpl->BeginRendering(width, height);
 }
 
 

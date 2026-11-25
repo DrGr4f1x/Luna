@@ -73,6 +73,7 @@ public:
 	void ClearStencil(IDepthBuffer* depthBuffer) override;
 	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
+	void BeginRendering(uint32_t width, uint32_t height) override;
 	void BeginRendering(const IColorBuffer* renderTarget) override;
 	void BeginRendering(const IColorBuffer* renderTarget, const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;
 	void BeginRendering(const IDepthBuffer* depthTarget, DepthStencilAspect depthStencilAspect) override;

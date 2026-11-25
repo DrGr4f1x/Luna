@@ -13,6 +13,7 @@
 struct PSInput
 {
 	float4 pos : SV_POSITION;
+    float viewDepth : TEXCOORD;
 };
 
 
@@ -59,7 +60,7 @@ void main(PSInput input)
 
         // Store node data
         nodeBuffer[nodeIdx].color = pushConstants.color;
-        nodeBuffer[nodeIdx].depth = input.pos.z;
+        nodeBuffer[nodeIdx].depth = input.viewDepth;
         nodeBuffer[nodeIdx].next = prevHeadIdx;
     }
 }

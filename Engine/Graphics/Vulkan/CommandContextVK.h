@@ -97,6 +97,7 @@ public:
 	void ClearStencil(IDepthBuffer* depthBuffer) override;
 	void ClearDepthAndStencil(IDepthBuffer* depthBuffer) override;
 
+	void BeginRendering(uint32_t width, uint32_t height) override;
 	void BeginRendering(const IColorBuffer* colorBuffer) override;
 	void BeginRendering(const IColorBuffer* colorBuffer, const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect) override;
 	void BeginRendering(const IDepthBuffer* depthBuffer, DepthStencilAspect depthStencilAspect) override;
@@ -208,6 +209,7 @@ private:
 
 	void UpdateAndBindDynamicDescriptors(bool graphicsPipe);
 
+	void SetRenderingArea(uint32_t width, uint32_t height);
 	void SetRenderingArea(const ColorBuffer& colorBuffer);
 	void SetRenderingArea(const DepthBuffer& depthBuffer);
 	void BeginRenderingBlock();

@@ -686,6 +686,16 @@ void CommandContextVK::ClearDepthAndStencil_Internal(IDepthBuffer* depthBuffer, 
 }
 
 
+void CommandContextVK::BeginRendering(uint32_t width, uint32_t height)
+{
+	ResetRenderTargets();
+
+	SetRenderingArea(width, height);
+
+	BeginRenderingBlock();
+}
+
+
 void CommandContextVK::BeginRendering(const IColorBuffer* colorBuffer)
 {
 	ResetRenderTargets();
@@ -1909,6 +1919,15 @@ void CommandContextVK::UpdateAndBindDynamicDescriptors(bool graphicsPipe)
 {
 	m_dynamicResourceDescriptorBuffer.UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
 	//m_dynamicSamplerDescriptorBuffer.UpdateAndBindDescriptorSets(m_commandBuffer, graphicsPipe);
+}
+
+
+void CommandContextVK::SetRenderingArea(uint32_t width, uint32_t height)
+{
+	m_renderingArea.offset.x = 0;
+	m_renderingArea.offset.y = 0;
+	m_renderingArea.extent.width = width;
+	m_renderingArea.extent.height = height;
 }
 
 
