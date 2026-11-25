@@ -20,7 +20,9 @@
     <None Include="Shaders\ClosestHit.hlsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Intersection.hlsl" />
+    <None Include="Shaders\Intersection.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -37,5 +39,6 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

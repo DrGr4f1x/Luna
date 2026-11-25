@@ -48,8 +48,8 @@ protected:
 protected:
 	struct SceneConstants
 	{
-		Math::Matrix4 viewInverse{ Math::kIdentity };
-		Math::Matrix4 projInverse{ Math::kIdentity };
+		Math::Matrix4 projectionToWorld{ Math::kIdentity };
+		Math::Vector3 cameraPos{ Math::kZero };
 		Math::Vector4 lightPos{ Math::kZero };
 	};
 

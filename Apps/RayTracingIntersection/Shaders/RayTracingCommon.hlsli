@@ -13,12 +13,14 @@
 RaytracingAccelerationStructure rs : BINDING(t0, 0);
 RWTexture2D<float4> image : BINDING(u1, 1);
 
-cbuffer CameraProperties : BINDING(b2, 1)
+struct SceneConstants
 {
-    float4x4 viewInverse;
-    float4x4 projInverse;
+    float4x4 projectionToWorld;
+    float3 cameraPosition;
     float4 lightPos;
 };
+ConstantBuffer<SceneConstants> sceneConstants : BINDING(b2, 1);
+
 
 struct Sphere
 {
@@ -28,10 +30,12 @@ struct Sphere
 };
 StructuredBuffer<Sphere> spheres : BINDING(t1, 1);
 
+
 struct Payload
 {
     float3 hitValue;
 };
+
 
 struct ProceduralPrimitiveAttributes
 {

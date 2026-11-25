@@ -20,7 +20,7 @@ void closesthit_main(inout Payload payload, in ProceduralPrimitiveAttributes att
     float3 worldNormal = normalize(worldPos - sphere.center);
 
     // Basic lighting
-    float3 lightVector = normalize(lightPos.xyz);
+    float3 lightVector = normalize(sceneConstants.lightPos.xyz);
     float dot_product = max(dot(lightVector, worldNormal), 0.2);
     payload.hitValue = sphere.color.rgb * dot_product;
 }

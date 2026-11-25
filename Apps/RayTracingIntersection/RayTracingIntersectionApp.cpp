@@ -298,8 +298,8 @@ void RayTracingIntersectionApp::InitDescriptorSet()
 
 void RayTracingIntersectionApp::UpdateConstantBuffer()
 {
-	m_sceneConstants.viewInverse = Invert(m_camera.GetViewMatrix());
-	m_sceneConstants.projInverse = Invert(m_camera.GetProjectionMatrix());
+	m_sceneConstants.projectionToWorld = Invert(m_camera.GetViewProjectionMatrix());
+	m_sceneConstants.cameraPos = m_camera.GetPosition();
 
 	// Rotate the light around Y axis.
 	{
