@@ -14,10 +14,12 @@
 RaytracingAccelerationStructure rs : BINDING(t0, 0);
 RWTexture2D<float4> image : BINDING(u1, 1);
 
-cbuffer SceneConstants : BINDING(b2, 1)
+struct SceneConstants
 {
-    float4x4 viewInverse;
-    float4x4 projInverse;
-    float4 lightPos;
+    float4x4 projectionToWorld;
+    float3 cameraPosition;
+    float3 lightPosition;
     int vertexSize;
 };
+
+ConstantBuffer<SceneConstants> sceneConstants : BINDING(b2, 1);

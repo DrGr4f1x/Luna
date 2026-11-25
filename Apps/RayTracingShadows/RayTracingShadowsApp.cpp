@@ -101,7 +101,7 @@ void RayTracingShadowsApp::CreateDeviceDependentResources()
 	m_camera.SetPosition(Vector3(3.0f, 7.0f, 16.0f));
 
 	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
-	m_sceneConstants.lightPos = Vector4(40.0f, 50.0f, 25.0f, 1.0f);
+	m_sceneConstants.lightPosition = Vector3(40.0f, 50.0f, 25.0f);
 
 	LoadAssets();
 	InitRayTracingBLAS();
@@ -276,8 +276,8 @@ void RayTracingShadowsApp::InitDescriptorSets()
 
 void RayTracingShadowsApp::UpdateConstantBuffer()
 {
-	m_sceneConstants.viewInverse = Invert(m_camera.GetViewMatrix());
-	m_sceneConstants.projInverse = Invert(m_camera.GetProjectionMatrix());
+	m_sceneConstants.projectionToWorld = Invert(m_camera.GetViewProjectionMatrix());
+	m_sceneConstants.cameraPosition = m_camera.GetPosition();
 
 	// Rotate the light around Y axis.
 	{
@@ -285,8 +285,8 @@ void RayTracingShadowsApp::UpdateConstantBuffer()
 		float elapsedTime = (float)m_timer.GetElapsedSeconds();
 		float angleToRotateBy = 360.0f * (elapsedTime / secondsToRotateAround);
 		Matrix4 rotate = Matrix3::MakeYRotation(XMConvertToRadians(angleToRotateBy));
-		const Vector4& prevLightPosition = m_sceneConstants.lightPos;
-		m_sceneConstants.lightPos = rotate * prevLightPosition;
+		const Vector3& prevLightPosition = m_sceneConstants.lightPosition;
+		m_sceneConstants.lightPosition = rotate * prevLightPosition;
 	}
 	
 	m_sceneConstantBuffer->Update(sizeof(m_sceneConstants), &m_sceneConstants);

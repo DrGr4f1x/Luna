@@ -11,24 +11,35 @@
 #include "RayTracingCommon.hlsli"
 
 
+inline void GenerateCameraRay(uint2 index, out float3 origin, out float3 direction)
+{
+    float2 xy = index + 0.5f; // center in the middle of the pixel.
+    float2 screenPos = xy / DispatchRaysDimensions().xy * 2.0 - 1.0;
+
+    // Invert Y for DirectX-style coordinates.
+    screenPos.y = -screenPos.y;
+
+    // Unproject the pixel coordinate into a ray.
+    float4 world = mul(sceneConstants.projectionToWorld, float4(screenPos, 0, 1));
+
+    world.xyz /= world.w;
+    origin = sceneConstants.cameraPosition.xyz;
+    direction = normalize(world.xyz - origin);
+}
+
+
 [shader("raygeneration")]
 void raygen_main()
 {
     uint3 LaunchID = DispatchRaysIndex();
-    uint3 LaunchSize = DispatchRaysDimensions();
-
-    const float2 pixelCenter = float2(LaunchID.xy) + float2(0.5, 0.5);
-    const float2 inUV = pixelCenter / float2(LaunchSize.xy);
-    float2 d = inUV * 2.0 - 1.0;
     
-    // Invert Y for DirectX-style coordinates.
-    d.y = -d.y;
-    
-    float4 target = mul(projInverse, float4(d.x, d.y, 0, 1));
+    float3 origin;
+    float3 direction;
+    GenerateCameraRay(LaunchID.xy, origin, direction);
 
     RayDesc rayDesc;
-    rayDesc.Origin = mul(viewInverse, float4(0, 0, 0, 1)).xyz;
-    rayDesc.Direction = mul(viewInverse, float4(normalize(target.xyz), 0)).xyz;
+    rayDesc.Origin = origin;
+    rayDesc.Direction = direction;
     rayDesc.TMin = 0.001;
     rayDesc.TMax = 10000.0;
 

@@ -49,9 +49,9 @@ protected:
 protected:
 	struct SceneConstants
 	{
-		Math::Matrix4 viewInverse{ Math::kIdentity };
-		Math::Matrix4 projInverse{ Math::kIdentity };
-		Math::Vector4 lightPos{ Math::kZero };
+		Math::Matrix4 projectionToWorld{ Math::kZero };
+		Math::Vector3 cameraPosition{ Math::kZero };
+		Math::Vector3 lightPosition{ Math::kZero };
 		int vertexStride{ 0 };
 	};
 

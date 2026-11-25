@@ -53,7 +53,7 @@ void closesthit_main(inout Payload payload, in Attributes attribs)
     float3 normal = normalize(v0.normal * barycentricCoords.x + v1.normal * barycentricCoords.y + v2.normal * barycentricCoords.z);
 
 	// Basic lighting
-    float3 lightVector = normalize(lightPos.xyz);
+    float3 lightVector = normalize(sceneConstants.lightPosition);
     float dot_product = max(dot(lightVector, normal), 0.2);
     payload.hitValue = v0.color.rgb * dot_product;
 

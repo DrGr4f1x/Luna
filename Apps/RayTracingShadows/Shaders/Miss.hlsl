@@ -8,7 +8,6 @@
 // Author:  David Elder
 //
 
-#include "Common.hlsli"
 #include "Payload.hlsli"
 
 

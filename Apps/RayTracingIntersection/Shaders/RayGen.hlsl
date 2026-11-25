@@ -10,6 +10,7 @@
 
 #include "RayTracingCommon.hlsli"
 
+
 inline void GenerateCameraRay(uint2 index, out float3 origin, out float3 direction)
 {
     float2 xy = index + 0.5f; // center in the middle of the pixel.
