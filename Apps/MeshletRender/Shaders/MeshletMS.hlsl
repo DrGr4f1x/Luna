@@ -53,7 +53,7 @@ struct Meshlet
 
 
 ConstantBuffer<Constants> Globals : BINDING(b0, 0);
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<MeshInfo> MeshInfo : register(b1);
 
 

@@ -23,7 +23,7 @@ struct Constants_t
     int height;
 };
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<Constants_t> Constants : register(b0);
 
 [numthreads(8, 8, 1)]

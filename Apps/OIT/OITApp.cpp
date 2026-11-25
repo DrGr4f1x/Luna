@@ -86,7 +86,7 @@ void OITApp::CreateWindowSizeDependentResources()
 
 	InitLinkedListData();
 
-	m_camera.SetAspectRatio(GetWindowAspectRatio())
+	m_camera.SetAspectRatio(GetWindowAspectRatio());
 }
 
 

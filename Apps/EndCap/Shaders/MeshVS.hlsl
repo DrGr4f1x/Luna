@@ -48,7 +48,7 @@ struct Model
     float3 posOffset;
     int applyCut;
 };
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<Model> Model : register(b1);
 
 

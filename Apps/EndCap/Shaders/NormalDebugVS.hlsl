@@ -28,7 +28,7 @@ struct PerModelData
 {
     float4 posOffsetId;
 };
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<PerModelData> Model : register(b0);
 
 

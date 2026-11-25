@@ -45,15 +45,8 @@ struct LightStruct
 };
 
 
-#if VK
-[[vk::push_constant]]
-LightStruct lights : BINDING(b1, 1);
-#else
-cbuffer VSLights
-{
-    LightStruct lights;
-};
-#endif
+VK_PUSH_CONSTANT
+ConstantBuffer<LightStruct> lights : register(b1);
 
 
 VSOutput main(VSInput input)

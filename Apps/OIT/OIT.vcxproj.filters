@@ -17,6 +17,9 @@
     <None Include="Shaders\ColorPS.hlsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\ColorVS.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Shaders">
@@ -34,10 +37,5 @@
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shaders\ColorVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

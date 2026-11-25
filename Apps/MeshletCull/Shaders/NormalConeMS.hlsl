@@ -35,7 +35,7 @@ struct Options
 };
 
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<Options> Options : register(b1);
 
 

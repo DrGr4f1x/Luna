@@ -24,7 +24,7 @@ struct MaterialConstants
 };
 
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<MaterialConstants> materialConstants : register(b0);
 
 

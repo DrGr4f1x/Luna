@@ -19,7 +19,7 @@ struct Constants_t
     int maxSize;
 };
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<Constants_t> Constants : register(b0);
 
 [numthreads(64, 1, 1)]

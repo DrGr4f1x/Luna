@@ -66,7 +66,7 @@ struct DrawMeshParams
 };
 
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<DrawMeshParams> DrawParams : register(b1); // Root parameter 1
 
 

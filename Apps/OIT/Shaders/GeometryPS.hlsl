@@ -39,11 +39,8 @@ struct PushConstants
 	float4 color;
 };
 
-#if VK
-VK_PUSH_CONSTANT PushConstants pushConstants : BINDING(b1, 1);
-#else
+VK_PUSH_CONSTANT
 ConstantBuffer<PushConstants> pushConstants : register(b1);
-#endif
 
 
 [earlydepthstencil]

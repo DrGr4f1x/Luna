@@ -41,15 +41,8 @@ struct ObjectPosition
     float3 objPos;
 };
 
-#if VK
-[[vk::push_constant]]
-ObjectPosition position;
-#else
-cbuffer VSPositions 
-{
-    ObjectPosition position;
-};
-#endif
+VK_PUSH_CONSTANT
+ConstantBuffer<ObjectPosition> position : register(b1);
 
 
 VSOutput main(VSInput input)

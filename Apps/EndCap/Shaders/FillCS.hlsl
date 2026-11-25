@@ -28,7 +28,7 @@ struct Constants_t
     int direction; // 0 = left-to-right, 1 = top-to-bottom
 };
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<Constants_t> Constants : register(b0);
 
 

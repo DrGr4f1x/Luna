@@ -34,7 +34,7 @@ struct IndexBufferConstants_t
     uint numIndices;
 };
 
-[[vk::push_constant]]
+VK_PUSH_CONSTANT
 ConstantBuffer<IndexBufferConstants_t> IndexBuffer : register(b1);
 
 
