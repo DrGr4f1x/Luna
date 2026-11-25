@@ -8,10 +8,7 @@
 // Author:  David Elder
 //
 
-struct Payload
-{
-    float3 hitValue;
-};
+#include "RayTracingCommon.hlsli"
 
 
 [shader("miss")]

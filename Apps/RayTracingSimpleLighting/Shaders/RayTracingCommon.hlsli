@@ -42,6 +42,6 @@ RWTexture2D<float4> renderTarget : BINDING(u0, 0);
 ByteAddressBuffer indexBuffer : BINDING(t1, 3);
 StructuredBuffer<Vertex> vertexBuffer : BINDING(t2, 3);
 
-ConstantBuffer<SceneConstantBuffer> sceneConstantBuffer : BINDING(b0, 2);
+ConstantBuffer<SceneConstantBuffer> sceneConstants : BINDING(b0, 2);
 [[vk::shader_record_ext]]
 ConstantBuffer<CubeConstantBuffer> cubeConstantBuffer : register(b1);

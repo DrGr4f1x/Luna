@@ -8,16 +8,7 @@
 // Author:  David Elder
 //
 
-struct Attributes
-{
-    float2 bary;
-};
-
-
-struct Payload
-{
-    float3 hitValue;
-};
+#include "RayTracingCommon.hlsli"
 
 
 [shader("closesthit")]

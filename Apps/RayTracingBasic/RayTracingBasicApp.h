@@ -58,8 +58,8 @@ protected:
 
 	struct RayGenConstants
 	{
-		Math::Matrix4 viewInverseMatrix{ Math::kIdentity };
-		Math::Matrix4 projectionInverseMatrix{ Math::kIdentity };
+		Math::Matrix4 projectionToWorldMatrix{ Math::kIdentity };
+		Math::Vector3 cameraPosition{ Math::kZero };
 	};
 
 	RayGenConstants m_rayGenConstants{};

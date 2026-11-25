@@ -127,10 +127,10 @@ void RayTracingBasicApp::InitRayTracingBLAS()
 		float pos[3];
 	};
 
-	vector<Vertex> vertices = {
-		{ {  1.0f,  1.0f, 0.0f } },
-		{ { -1.0f,  1.0f, 0.0f } },
-		{ {  0.0f, -1.0f, 0.0f } }
+	vector<Vertex> vertices = {		
+		{ {  0.0f,   1.0f,  0.0f } },
+		{ { -1.0f,  -1.0f,  0.0f } },
+		{ {  1.0f,  -1.0f,  0.0f } }
 	};
 
 	m_vertexBuffer = CreateRayTracingVertexBuffer<Vertex>("Vertex buffer", vertices);
@@ -186,7 +186,7 @@ void RayTracingBasicApp::InitRootSignature()
 		.name				= "Global Root Signature",
 		.rootParameters		= {
 			RootSRV(0, ShaderStage::RayGeneration, 0, true /* isAccelerationStructure */),
-			Table({ TextureUAV(1, 1), ConstantBuffer(2, 1) }, ShaderStage::RayGeneration)
+			Table({ TextureUAV, ConstantBuffer }, ShaderStage::RayGeneration)
 		}
 	};
 
@@ -248,8 +248,8 @@ void RayTracingBasicApp::InitDescriptorSet()
 
 void RayTracingBasicApp::UpdateConstantBuffer()
 {
-	m_rayGenConstants.viewInverseMatrix = Invert(m_camera.GetViewMatrix());
-	m_rayGenConstants.projectionInverseMatrix = Invert(m_camera.GetProjectionMatrix());
+	m_rayGenConstants.projectionToWorldMatrix = Invert(m_camera.GetViewProjectionMatrix());
+	m_rayGenConstants.cameraPosition = m_camera.GetPosition();
 
 	m_rayGenConstantBuffer->Update(sizeof(m_rayGenConstants), &m_rayGenConstants);
 }

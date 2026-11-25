@@ -41,6 +41,7 @@
   <ItemGroup>
     <None Include="packages.config" />
     <LunaShaderCfg Include="Shaders\shaders.cfg" />
+    <None Include="Shaders\RayTracingCommon.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Engine\Engine.vcxproj">

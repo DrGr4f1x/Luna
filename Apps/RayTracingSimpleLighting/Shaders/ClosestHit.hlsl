@@ -67,12 +67,12 @@ float3 HitAttribute(float3 vertexAttribute[3], BuiltInTriangleIntersectionAttrib
 // Diffuse lighting calculation.
 float4 CalculateDiffuseLighting(float3 hitPosition, float3 normal)
 {
-    float3 pixelToLight = normalize(sceneConstantBuffer.lightPosition.xyz - hitPosition);
+    float3 pixelToLight = normalize(sceneConstants.lightPosition.xyz - hitPosition);
 
     // Diffuse contribution.
     float fNDotL = max(0.0f, dot(pixelToLight, normal));
 
-    return cubeConstantBuffer.albedo * sceneConstantBuffer.lightDiffuseColor * fNDotL;
+    return cubeConstantBuffer.albedo * sceneConstants.lightDiffuseColor * fNDotL;
 }
 
 
@@ -104,10 +104,7 @@ void closesthit_main(inout RayPayload payload, in MyAttributes attr)
     float3 triangleNormal = HitAttribute(vertexNormals, attr);
 
     float4 diffuseColor = CalculateDiffuseLighting(hitPosition, triangleNormal);
-    float4 color = sceneConstantBuffer.lightAmbientColor + diffuseColor;
+    float4 color = sceneConstants.lightAmbientColor + diffuseColor;
 
     payload.color = color;
 }
-
-
-// touch
