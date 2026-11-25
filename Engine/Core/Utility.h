@@ -213,10 +213,3 @@ inline std::string MakeStr(const std::wstring& wstr)
 	}
 	return std::string();
 }
-
-
-template <typename T>
-inline size_t SizeOfInUint32()
-{
-	return (sizeof(T) - 1) / (sizeof(uint32_t) + 1);
-}

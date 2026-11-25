@@ -304,7 +304,7 @@ void RayTracingSimpleLightingApp::InitRootSignatures()
 	RootSignatureDesc localDesc{
 		.name				= "Local Root Signature",
 		.rootParameters		= {
-			RootConstants(1, (uint32_t)SizeOfInUint32<CubeConstants>(), ShaderStage::AllRaytracing)
+			RootConstants(1, sizeof(CubeConstants) / sizeof(uint32_t), ShaderStage::AllRaytracing)
 		},
 		.localRootSignature = true
 	};

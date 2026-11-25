@@ -31,7 +31,7 @@ struct VSOutput
 
 #include "Constants.hlsli"
 
-VSOutput VSMain(VSInput input)
+VSOutput main(VSInput input)
 {
     VSOutput result = (VSOutput) 0;
 

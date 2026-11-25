@@ -40,7 +40,7 @@ cbuffer GlassConstantBuffer : BINDING(b1, 1)
 #include "Lighting.hlsli"
 
 
-float4 PSMain(PSInput input) : SV_TARGET
+float4 main(PSInput input) : SV_TARGET
 {
     float4 diffuseColor = diffuseMap.Sample(sampleWrap, input.uv);
     float3 pixelNormal = CalcPerPixelNormal(input.uv, input.normal, input.tangent);

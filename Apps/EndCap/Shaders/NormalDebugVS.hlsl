@@ -8,6 +8,9 @@
 // Author:  David Elder
 //
 
+#include "Common.hlsli"
+
+
 struct VSInput
 {
     float3 pos : POSITION;
@@ -28,6 +31,7 @@ struct PerModelData
 {
     float4 posOffsetId;
 };
+
 VK_PUSH_CONSTANT
 ConstantBuffer<PerModelData> Model : register(b0);
 
