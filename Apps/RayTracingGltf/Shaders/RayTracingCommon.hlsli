@@ -40,15 +40,20 @@ struct Attributes
 };
 
 
-RaytracingAccelerationStructure rs : BINDING(t0, 0);
+RaytracingAccelerationStructure scene : BINDING(t0, 0);
 RWTexture2D<float4> image : BINDING(u0, 1);
 
-cbuffer SceneConstants : BINDING(b0, 1)
+struct SceneConstants
 {
     float4x4 viewInverse;
     float4x4 projInverse;
+    float4x4 projectionToWorld;
+    float3 cameraPosition;
+    float _pad0;
     uint frame;
 };
+
+ConstantBuffer<SceneConstants> sceneConstants : BINDING(b0, 1);
 
 StructuredBuffer<Vertex> vertexBuffers[] : BINDING_SPACE(t0, 2);
 StructuredBuffer<uint> indexBuffers[] : BINDING_SPACE(t1, 3);

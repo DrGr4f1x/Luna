@@ -64,6 +64,8 @@ protected:
 	{
 		Math::Matrix4 viewInverse{ Math::kIdentity };
 		Math::Matrix4 projInverse{ Math::kIdentity };
+		Math::Matrix4 projectionToWorld{ Math::kIdentity };
+		Math::Vector3 cameraPosition{ Math::kZero };
 		uint32_t frame{ 0 };
 	};
 	SceneConstants m_sceneConstants{};

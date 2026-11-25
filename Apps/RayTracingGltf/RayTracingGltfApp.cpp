@@ -294,6 +294,9 @@ void RayTracingGltfApp::UpdateConstantBuffer()
 {
 	m_sceneConstants.viewInverse = Invert(m_camera.GetViewMatrix());
 	m_sceneConstants.projInverse = Invert(m_camera.GetProjectionMatrix());
+	m_sceneConstants.projectionToWorld = Invert(m_camera.GetViewProjectionMatrix());
+	m_sceneConstants.cameraPosition = m_camera.GetPosition();
+
 	if (!m_controller.DidUpdate())
 	{
 		m_sceneConstants.frame++;

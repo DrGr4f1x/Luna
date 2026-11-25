@@ -10,32 +10,45 @@
 
 #include "RayTracingCommon.hlsli"
 
+
+inline void GenerateCameraRay(uint2 index, out float3 origin, out float3 direction)
+{
+    uint3 LaunchSize = DispatchRaysDimensions();
+    uint seed = tea(index.y * LaunchSize.x + index.x, sceneConstants.frame);
+
+    float r1 = rnd(seed);
+    float r2 = rnd(seed);
+    
+    float2 subpixel_jitter = sceneConstants.frame == 0 ? float2(0.5f, 0.5f) : float2(r1, r2);
+    
+    float2 xy = float2(index) + subpixel_jitter;
+    float2 screenPos = xy / DispatchRaysDimensions().xy * 2.0 - 1.0;
+
+    // Invert Y for DirectX-style coordinates.
+    screenPos.y = -screenPos.y;
+
+    // Unproject the pixel coordinate into a ray.
+    float4 world = mul(sceneConstants.projectionToWorld, float4(screenPos, 0, 1));
+
+    world.xyz /= world.w;
+    origin = sceneConstants.cameraPosition.xyz;
+    direction = normalize(world.xyz - origin);
+}
+
+
 [shader("raygeneration")]
 void raygen_main()
 {
     uint3 LaunchID = DispatchRaysIndex();
     uint3 LaunchSize = DispatchRaysDimensions();
 
-    uint seed = tea(LaunchID.y * LaunchSize.x + LaunchID.x, frame);
-
-    float r1 = rnd(seed);
-    float r2 = rnd(seed);
-
-    // Subpixel jitter: send the ray through a different position inside the pixel
-    // each time, to provide antialiasing.
-    float2 subpixel_jitter = frame == 0 ? float2(0.5f, 0.5f) : float2(r1, r2);
-    const float2 pixelCenter = float2(LaunchID.xy) + subpixel_jitter;
-    const float2 inUV = pixelCenter / float2(LaunchSize.xy);
-    float2 d = inUV * 2.0 - 1.0;
+    float3 origin;
+    float3 direction;
+    GenerateCameraRay(LaunchID.xy, origin, direction);
     
-    // Invert Y for DirectX-style coordinates.
-    d.y = -d.y;
-    
-    float4 target = mul(projInverse, float4(d.x, d.y, 0, 1));
-
     RayDesc rayDesc;
-    rayDesc.Origin = mul(viewInverse, float4(0, 0, 0, 1)).xyz;
-    rayDesc.Direction = mul(viewInverse, float4(normalize(target.xyz), 0)).xyz;
+    rayDesc.Origin = origin;
+    rayDesc.Direction = direction;
     rayDesc.TMin = 0.001;
     rayDesc.TMax = 10000.0;
 
@@ -49,17 +62,17 @@ void raygen_main()
     // Trace multiple rays for e.g. transparency
     for (int smpl = 0; smpl < samples; smpl++)
     {
-        payload.payloadSeed = tea(LaunchID.y * LaunchSize.x + LaunchID.x, frame);
-        TraceRay(rs, RAY_FLAG_NONE, 0xff, 0, 0, 0, rayDesc, payload);
+        payload.payloadSeed = tea(LaunchID.y * LaunchSize.x + LaunchID.x, sceneConstants.frame);
+        TraceRay(scene, RAY_FLAG_NONE, 0xff, 0, 0, 0, rayDesc, payload);
         hitValues += payload.hitValue;
     }
 
     float3 hitVal = hitValues / float(samples);
 
 #if 1
-    if (frame > 0)
+    if (sceneConstants.frame > 0)
     {
-        float a = 1.0f / float(frame + 1);
+        float a = 1.0f / float(sceneConstants.frame + 1);
         float3 old_color = image[int2(LaunchID.xy)].xyz;
         image[int2(LaunchID.xy)] = float4(lerp(old_color, hitVal, a), 1.0f);
     }
