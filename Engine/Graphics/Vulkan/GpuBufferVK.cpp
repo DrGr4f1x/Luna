@@ -22,11 +22,13 @@ GpuBuffer::GpuBuffer(
 	const GpuBufferDesc& desc,
 	CVkBuffer* buffer,
 	VkDeviceAddress deviceAddress,
-	bool isCpuWriteable)
+	bool isCpuWriteable,
+	bool isStorageBuffer)
 	: IGpuBuffer{ desc.resourceType, desc.usageState, desc.format, desc.elementSize, desc.elementCount }
 	, m_buffer{ buffer }
 	, m_deviceAddress{ deviceAddress }
 	, m_isCpuWriteable{ isCpuWriteable }
+	, m_isStorageBuffer{ isStorageBuffer }
 {}
 
 GpuBuffer::GpuBuffer(

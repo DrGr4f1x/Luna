@@ -31,7 +31,8 @@ public:
 		const GpuBufferDesc& desc,
 		CVkBuffer* buffer,
 		VkDeviceAddress deviceAddress,
-		bool isCpuWriteable);
+		bool isCpuWriteable,
+		bool isStorageBuffer);
 
 	GpuBuffer(
 		const GpuBufferDesc& desc,
@@ -66,6 +67,8 @@ public:
 	VkBuffer GetBuffer() const noexcept;
 	VkAccelerationStructureKHR GetAccelerationStructure() const noexcept;
 
+	bool IsStorageBuffer() const noexcept { return m_isStorageBuffer; }
+
 	void InitializeDescriptors(Device* device, bool hasSrv, bool hasUav);
 
 protected:
@@ -74,6 +77,7 @@ protected:
 	VkDeviceAddress m_deviceAddress{ 0 };
 	VkDeviceAddress m_accelerationStructureDeviceAddress{ 0 };
 	bool m_isCpuWriteable{ false };
+	bool m_isStorageBuffer{ false };
 
 	Descriptor m_srvDescriptor;
 	Descriptor m_uavDescriptor;

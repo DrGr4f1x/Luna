@@ -389,8 +389,12 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 
 	VkBufferUsageFlags extraFlags = VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
 
+	bool isStorageBuffer = false;
 	if (gpuBufferDesc.bAllowShaderResource || gpuBufferDesc.bAllowUnorderedAccess)
+	{
 		extraFlags |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		isStorageBuffer = true;
+	}
 	if (gpuBufferDesc.resourceType == ResourceType::IndirectArgsBuffer)
 		extraFlags |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 	if (gpuBufferDesc.bRayTracingBuildInput)
@@ -437,7 +441,7 @@ GpuBufferPtr Device::CreateGpuBuffer(const GpuBufferDesc& gpuBufferDescIn)
 	const uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), buffer->Get());
 	const bool isCpuWriteable = HasFlag(gpuBufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
-	auto gpuBuffer = std::make_shared<GpuBuffer>(gpuBufferDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable);
+	auto gpuBuffer = std::make_shared<GpuBuffer>(gpuBufferDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable, isStorageBuffer);
 
 	gpuBuffer->InitializeDescriptors(this, gpuBufferDesc.bAllowShaderResource, gpuBufferDesc.bAllowUnorderedAccess);
 	
@@ -1652,7 +1656,7 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 			const uint64_t bufferDeviceAddress = GetBufferDeviceAddress(m_device->Get(), vkBuffer);
 			const bool isCpuWriteable = HasFlag(bufferDesc.memoryAccess, MemoryAccess::CpuWrite);
 
-			auto gpuBuffer = std::make_shared<GpuBuffer>(bufferDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable);
+			auto gpuBuffer = std::make_shared<GpuBuffer>(bufferDesc, buffer.get(), bufferDeviceAddress, isCpuWriteable, false);
 
 			return gpuBuffer;
 		};

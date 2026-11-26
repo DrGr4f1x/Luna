@@ -1401,11 +1401,19 @@ void CommandContextVK::SetIndexBuffer(const IGpuBuffer* gpuBuffer)
 
 	if (m_useDeviceAddressCommands)
 	{
+		const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+
+		VkAddressCommandFlagsKHR flags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR;
+		if (gpuBufferVK->IsStorageBuffer())
+		{
+			flags |= VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR;
+		}
+
 		VkBindIndexBuffer3InfoKHR info{
 			.sType			= VK_STRUCTURE_TYPE_BIND_INDEX_BUFFER_3_INFO_KHR,
 			.pNext			= nullptr,
-			.addressRange	= {.address = gpuBuffer->GetGpuAddress(), .size = gpuBuffer->GetBufferSize() },
-			.addressFlags	= VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR,
+			.addressRange	= { .address = gpuBuffer->GetGpuAddress(), .size = gpuBuffer->GetBufferSize() },
+			.addressFlags	= flags,
 			.indexType		= indexType
 		};
 
@@ -1425,12 +1433,20 @@ void CommandContextVK::SetVertexBuffer(uint32_t slot, const IGpuBuffer* gpuBuffe
 {
 	if (m_useDeviceAddressCommands)
 	{
+		const GpuBuffer* gpuBufferVK = (const GpuBuffer*)gpuBuffer;
+
+		VkAddressCommandFlagsKHR flags = VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR;
+		if (gpuBufferVK->IsStorageBuffer())
+		{
+			flags |= VK_ADDRESS_COMMAND_STORAGE_BUFFER_USAGE_BIT_KHR;
+		}
+
 		VkBindVertexBuffer3InfoKHR info{
 			.sType			= VK_STRUCTURE_TYPE_BIND_VERTEX_BUFFER_3_INFO_KHR,
 			.pNext			= nullptr,
 			.setStride		= VK_FALSE,
 			.addressRange	= { .address = gpuBuffer->GetGpuAddress(), .size = gpuBuffer->GetBufferSize() },
-			.addressFlags	= VK_ADDRESS_COMMAND_FULLY_BOUND_BIT_KHR
+			.addressFlags	= flags
 		};
 
 		vkCmdBindVertexBuffers3KHR(m_commandBuffer, slot, 1, &info);

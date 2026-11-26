@@ -189,8 +189,7 @@ void RayTracingGltfApp::InitRayTracingBLAS()
 void RayTracingGltfApp::InitRayTracingTLAS()
 {
 	Matrix4 transformMatrix{ kIdentity };;
-	//transformMatrix.SetY(Vector4(0.0f, -1.0f, 0.0f, 0.0f));
-
+	
 	RayTracingInstanceDesc instanceDesc{
 		.blas			= m_blasBuffer,
 		.transform		= transformMatrix,

@@ -265,12 +265,8 @@ void RayTracingShadowsApp::InitColorTarget()
 void RayTracingShadowsApp::InitDescriptorSets()
 {
 	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer });
-
 	m_bindlessVertexBufferSet = m_globalRootSignature->CreateDescriptorSet(2, m_vertexBuffers);
-	//m_bindlessVertexBufferSet->SetSRVs(1, m_vertexBuffers);
-
 	m_bindlessIndexBufferSet = m_globalRootSignature->CreateDescriptorSet(3, m_indexBuffers);
-	//m_bindlessIndexBufferSet->SetSRVs(2, m_indexBuffers);
 }
 
 

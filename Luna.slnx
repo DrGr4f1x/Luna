@@ -73,6 +73,7 @@
     <Project Path="Apps/RadialBlur/RadialBlur.vcxproj" Id="1cbe17fe-fdf7-447e-919d-e723e22ed819">
       <BuildDependency Project="Tools/ShaderCompiler/ShaderCompiler.csproj" />
     </Project>
+    <Project Path="Apps/RayQuery/RayQuery.vcxproj" Id="873f5c06-85d5-4f42-9217-b10a5b81931b" />
     <Project Path="Apps/RayTracingBasic/RayTracingBasic.vcxproj" Id="9b04a349-32a9-4b0a-bd0c-695a36931f57" />
     <Project Path="Apps/RayTracingGltf/RayTracingGltf.vcxproj" Id="25b464c9-2a86-48d6-a45b-7367169483e7" />
     <Project Path="Apps/RayTracingIntersection/RayTracingIntersection.vcxproj" Id="1d309836-71aa-41ef-9640-d7701c61cf67" />
