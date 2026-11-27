@@ -23,7 +23,7 @@
 // DirectX 12 headers
 #include <d3d12.h>
 #if USE_AGILITY_SDK
-#define D3D12_AGILITY_SDK_VERSION 619
+#define D3D12_AGILITY_SDK_VERSION 620
 #include <d3dx12\d3dx12.h>
 #else
 #define D3D12_AGILITY_SDK_VERSION 0
