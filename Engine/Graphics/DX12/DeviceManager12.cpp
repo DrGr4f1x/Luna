@@ -396,6 +396,21 @@ void DeviceManager::CreateDeviceResources()
 	}
 	SetDebugName(m_dxgiFactory.get(), "DXGI Factory");
 
+	if (!m_deviceFactory)
+	{
+		if (!SUCCEEDED(D3D12GetInterface(CLSID_D3D12SDKConfiguration, IID_PPV_ARGS(&m_sdkConfig))))
+		{
+			LogFatal(LogDirectX) << "Failed to create sdkConfig object." << endl;
+			return;
+		}
+
+		if (!SUCCEEDED(m_sdkConfig->CreateDeviceFactory(D3D12_AGILITY_SDK_VERSION, ".\\D3D12\\", IID_PPV_ARGS(&m_deviceFactory))))
+		{
+			LogFatal(LogDirectX) << "Failed to create ID3D12DeviceFactory." << endl;
+			return;
+		}
+	}
+
 	wil::com_ptr<IDXGIFactory5> dxgiFactory5;
 	if (SUCCEEDED(m_dxgiFactory->QueryInterface(IID_PPV_ARGS(&dxgiFactory5))))
 	{
@@ -785,7 +800,8 @@ void DeviceManager::CreateDevice()
 	if (chosenAdapterIdx == warpAdapterIdx)
 	{
 		assert_succeeded(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&m_dxgiAdapter)));
-		assert_succeeded(D3D12CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(m_deviceFactory->CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		//assert_succeeded(D3D12CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		m_bIsWarpAdapter = true;
 
@@ -794,7 +810,8 @@ void DeviceManager::CreateDevice()
 	else
 	{
 		assert_succeeded(m_dxgiFactory->EnumAdapters((UINT)chosenAdapterIdx, &m_dxgiAdapter));
-		assert_succeeded(D3D12CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		assert_succeeded(m_deviceFactory->CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
+		//assert_succeeded(D3D12CreateDevice(m_dxgiAdapter.get(), m_bestFeatureLevel, IID_PPV_ARGS(&device)));
 
 		LogInfo(LogDirectX) << "Selected D3D12 adapter " << chosenAdapterIdx << endl;
 	}

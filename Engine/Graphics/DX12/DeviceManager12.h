@@ -135,10 +135,12 @@ private:
 	DxgiRLOHelper m_dxgiRLOHelper;
 
 	D3D_FEATURE_LEVEL m_bestFeatureLevel{ D3D_FEATURE_LEVEL_12_2 };
-	D3D_SHADER_MODEL m_bestShaderModel{ D3D_SHADER_MODEL_6_7 };
+	D3D_SHADER_MODEL m_bestShaderModel{ D3D_SHADER_MODEL_6_9 };
 
 	// DirectX objects
 	wil::com_ptr<IDXGIFactory4> m_dxgiFactory;
+	wil::com_ptr<ID3D12SDKConfiguration1> m_sdkConfig;
+	wil::com_ptr<ID3D12DeviceFactory> m_deviceFactory;
 	wil::com_ptr<IDXGIAdapter> m_dxgiAdapter;
 	wil::com_ptr<ID3D12Device> m_dxDevice;
 	DeviceRLDOHelper m_deviceRLDOHelper;
