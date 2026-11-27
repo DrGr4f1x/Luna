@@ -42,7 +42,7 @@ private:
 
 private:
 	// Camera controls
-	float m_zoom{ -2.5f };
+	float m_zoom{ 2.5f };
 	Luna::CameraController m_controller;
 
 	// Vertex layout used in this example

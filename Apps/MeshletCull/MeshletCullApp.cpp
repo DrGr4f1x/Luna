@@ -272,14 +272,14 @@ void MeshletCullApp::CreateDeviceDependentResources()
 		GetWindowAspectRatio(),
 		0.1f,
 		1000.0f);
-	m_camera.SetPosition(Vector3(0.0f, -15.0f, -40.0f));
+	m_camera.SetPosition(Vector3(0.0f, -15.0f, 40.0f));
 
 	m_debugCamera.SetPerspectiveMatrix(
 		DirectX::XMConvertToRadians(60.0f),
 		GetWindowAspectRatio(),
 		1.0f,
 		300.0f);
-	m_debugCamera.SetPosition(Vector3(0.0f, -10.0f, -21.0f));
+	m_debugCamera.SetPosition(Vector3(0.0f, -10.0f, 21.0f));
 
 	m_constantBuffer = CreateConstantBuffer("Constant Buffer", 1, sizeof(Constants));
 

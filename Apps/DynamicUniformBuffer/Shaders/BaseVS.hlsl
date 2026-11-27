@@ -18,7 +18,7 @@ cbuffer VSConstants : BINDING(b0, 0)
 };
 
 
-cbuffer VSModelConstants : BINDING(b1, 0)
+cbuffer VSModelConstants : BINDING(b1, 1)
 {
     float4x4 modelMatrix;
 };
