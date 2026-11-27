@@ -48,7 +48,7 @@ void* RayTracingPipeline::GetCallableShaderIdentifier(uint32_t index) const
 }
 
 
-void RayTracingPipeline::GatherShaderIdentifiers(Device* device, uint32_t numRayGenShaders, uint32_t numMissShaders, uint32_t numHitGroups, uint32_t numCallableShaders)
+void RayTracingPipeline::GatherShaderIdentifiers(Device* device, uint32_t numRayGenShaders, uint32_t numMissShaders, uint32_t numCallableShaders, uint32_t numHitGroups)
 {
 	const auto& caps = device->GetDeviceCaps();
 
@@ -56,7 +56,7 @@ void RayTracingPipeline::GatherShaderIdentifiers(Device* device, uint32_t numRay
 	m_shaderIdentifierSize = caps.shaderStage.rayTracing.shaderGroupIdentifierSize;
 
 	// Compute total size of shader handles
-	const uint32_t numHandles = numRayGenShaders + numMissShaders + numHitGroups + numCallableShaders;
+	const uint32_t numHandles = numRayGenShaders + numMissShaders + numCallableShaders + numHitGroups;
 	const uint32_t totalShaderIdentifierSize = (uint32_t)m_shaderIdentifierSize * numHandles;
 
 	// Get the shader group handles
@@ -72,13 +72,13 @@ void RayTracingPipeline::GatherShaderIdentifiers(Device* device, uint32_t numRay
 	m_missShaderIdentifierInfo.numIdentifiers = numMissShaders;
 	m_missShaderIdentifierInfo.offsetInBytes = m_rayGenShaderIdentifierInfo.offsetInBytes + (m_rayGenShaderIdentifierInfo.numIdentifiers * m_shaderIdentifierSize);
 
-	// Setup hit group identifier info
-	m_hitGroupIdentifierInfo.numIdentifiers = numHitGroups;
-	m_hitGroupIdentifierInfo.offsetInBytes = m_missShaderIdentifierInfo.offsetInBytes + (m_missShaderIdentifierInfo.numIdentifiers * m_shaderIdentifierSize);
-
-	// Finally, setup the callable shader identifier info
+	// Setup the callable shader identifier info
 	m_callableShaderIdentifierInfo.numIdentifiers = numCallableShaders;
-	m_callableShaderIdentifierInfo.offsetInBytes = m_hitGroupIdentifierInfo.offsetInBytes + (m_hitGroupIdentifierInfo.numIdentifiers * m_shaderIdentifierSize);
+	m_callableShaderIdentifierInfo.offsetInBytes = m_missShaderIdentifierInfo.offsetInBytes + (m_missShaderIdentifierInfo.numIdentifiers * m_shaderIdentifierSize);
+
+	// Finally, setup hit group identifier info
+	m_hitGroupIdentifierInfo.numIdentifiers = numHitGroups;
+	m_hitGroupIdentifierInfo.offsetInBytes = m_callableShaderIdentifierInfo.offsetInBytes + (m_callableShaderIdentifierInfo.numIdentifiers * m_shaderIdentifierSize);
 }
 
 } // namespace Luna::VK

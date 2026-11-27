@@ -45,26 +45,26 @@ protected:
 	void UpdateConstantBuffer();
 
 protected:
-	Luna::GpuBufferPtr m_indexBuffer;
-	Luna::GpuBufferPtr m_vertexBuffer;
-
-	Luna::GpuBufferPtr m_triangleBLAS;
-	Luna::GpuBufferPtr m_rayTracingTLAS;
-
-	Luna::RootSignaturePtr m_globalRootSignature;
-
-	Luna::RayTracingPipelinePtr m_rayTracingPipeline;
-	Luna::ShaderBindingTablePtr m_shaderBindingTable;
-
-	struct RayGenConstants
+	// Scene constants, constant buffer
+	struct SceneConstants
 	{
 		Math::Matrix4 projectionToWorldMatrix{ Math::kIdentity };
 		Math::Vector3 cameraPosition{ Math::kZero };
 	};
 
-	RayGenConstants m_rayGenConstants{};
-	Luna::GpuBufferPtr m_rayGenConstantBuffer;
+	SceneConstants m_sceneConstants{};
+	Luna::GpuBufferPtr m_sceneConstantBuffer;
 
+	// Ray tracing BLAS, TLAS
+	Luna::GpuBufferPtr m_blasBuffer;
+	Luna::GpuBufferPtr m_tlasBuffer;;
+
+	// Root signature, ray tracing pipeline, shader binding table
+	Luna::RootSignaturePtr m_rootSignature;
+	Luna::RayTracingPipelinePtr m_rayTracingPipeline;
+	Luna::ShaderBindingTablePtr m_shaderBindingTable;
+
+	// Ray tracing render target, descriptor set
 	Luna::ColorBufferPtr m_colorTarget;
 	Luna::DescriptorSetPtr m_descriptorSet;
 };

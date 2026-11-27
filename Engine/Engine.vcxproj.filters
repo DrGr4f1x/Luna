@@ -234,7 +234,7 @@
       <Filter>Graphics\Vulkan\RayTracing</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\RayTracing\ShaderBindingTable.cpp">
-      <Filter>Graphics</Filter>
+      <Filter>Graphics\RayTracing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

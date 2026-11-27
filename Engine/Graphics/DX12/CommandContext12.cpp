@@ -1203,6 +1203,7 @@ void CommandContext12::DispatchRays(ShaderBindingTable* shaderBindingTable, uint
 	SBTBuffer rayGenBuffer = shaderBindingTable->GetRayGenBuffer();
 	SBTBuffer missBuffer = shaderBindingTable->GetMissBuffer();
 	SBTBuffer hitGroupBuffer = shaderBindingTable->GetHitGroupBuffer();
+	SBTBuffer callableBuffer = shaderBindingTable->GetCallableBuffer();
 
 	D3D12_DISPATCH_RAYS_DESC dispatchDesc{};
 	dispatchDesc.HitGroupTable.StartAddress = hitGroupBuffer.bufferAddress;
@@ -1213,6 +1214,9 @@ void CommandContext12::DispatchRays(ShaderBindingTable* shaderBindingTable, uint
 	dispatchDesc.MissShaderTable.StrideInBytes = missBuffer.stride;
 	dispatchDesc.RayGenerationShaderRecord.StartAddress = rayGenBuffer.bufferAddress;
 	dispatchDesc.RayGenerationShaderRecord.SizeInBytes = rayGenBuffer.size;
+	dispatchDesc.CallableShaderTable.StartAddress = callableBuffer.bufferAddress;
+	dispatchDesc.CallableShaderTable.SizeInBytes = callableBuffer.size;
+	dispatchDesc.CallableShaderTable.StrideInBytes = callableBuffer.stride;
 	dispatchDesc.Width = width;
 	dispatchDesc.Height = height;
 	dispatchDesc.Depth = 1;

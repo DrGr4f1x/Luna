@@ -150,6 +150,18 @@ public:
 	__forceinline friend Vector4 operator*(float v1, Vector4 v2) noexcept { return Scalar(v1) * v2; }
 	__forceinline friend Vector4 operator/(float v1, Vector4 v2) noexcept { return Scalar(v1) / v2; }
 
+	float operator[](int i) const
+	{
+		assert(i >= 0 && i < 4);
+		return m_vec.m128_f32[i];
+	}
+
+	float& operator[](int i)
+	{
+		assert(i >= 0 && i < 4);
+		return m_vec.m128_f32[i];
+	}
+
 protected:
 	XMVECTOR m_vec;
 };

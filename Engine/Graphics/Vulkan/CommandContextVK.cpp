@@ -1581,11 +1581,12 @@ void CommandContextVK::DispatchRays(ShaderBindingTable* shaderBindingTable, uint
 	SBTBuffer rayGenBuffer = shaderBindingTable->GetRayGenBuffer();
 	SBTBuffer missBuffer = shaderBindingTable->GetMissBuffer();
 	SBTBuffer hitGroupBuffer = shaderBindingTable->GetHitGroupBuffer();
+	SBTBuffer callableBuffer = shaderBindingTable->GetCallableBuffer();
 
 	VkStridedDeviceAddressRegionKHR raygenShaderSbtEntry{ rayGenBuffer.bufferAddress, rayGenBuffer.stride, rayGenBuffer.size };
 	VkStridedDeviceAddressRegionKHR missShaderSbtEntry{ missBuffer.bufferAddress, missBuffer.stride, missBuffer.size };
 	VkStridedDeviceAddressRegionKHR hitShaderSbtEntry{ hitGroupBuffer.bufferAddress, hitGroupBuffer.stride, hitGroupBuffer.size };
-	VkStridedDeviceAddressRegionKHR callableShaderSbtEntry{};
+	VkStridedDeviceAddressRegionKHR callableShaderSbtEntry{ callableBuffer.bufferAddress, callableBuffer.stride, callableBuffer.size };
 
 	vkCmdTraceRaysKHR(
 		m_commandBuffer,

@@ -45,6 +45,20 @@ size_t ShaderBindingTableDesc::GetMissDataSize() const
 }
 
 
+size_t ShaderBindingTableDesc::GetCallableDataSize() const
+{
+	if (callableShaders.size() > 0)
+	{
+		auto res = std::max_element(callableShaders.begin(), callableShaders.end(), [](const ShaderRecord& a, const ShaderRecord& b)
+			{
+				return std::max(a.size, b.size);
+			});
+		return res->size;
+	}
+	return 0;
+}
+
+
 size_t ShaderBindingTableDesc::GetHitGroupDataSize() const
 {
 	if (hitGroups.size() > 0)

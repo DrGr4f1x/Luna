@@ -46,7 +46,6 @@ protected:
 	void UpdateConstantBuffer();
 
 protected:
-
 	// Root signature, pipeline, SBT
 	Luna::RootSignaturePtr m_rootSignature;
 	Luna::RayTracingPipelinePtr m_rayTracingPipeline;
@@ -76,7 +75,7 @@ protected:
 	std::vector<Luna::TexturePtr> m_occlusionTextures;
 	Luna::SamplerPtr m_sampler;
 
-	// Ray tracing render target, descriptor set
+	// Ray tracing render target, descriptor sets
 	Luna::ColorBufferPtr m_colorTarget;
 	Luna::DescriptorSetPtr m_descriptorSet;
 	Luna::DescriptorSetPtr m_bindlessVertexBufferSet;

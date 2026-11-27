@@ -43,6 +43,21 @@ public:
 		m_mat.r[2] = SetWToZero(xyz.GetZ());
 		m_mat.r[3] = SetWToOne(w);
 	}
+	__forceinline Matrix4(
+		float f00, float f01, float f02, float f03,
+		float f10, float f11, float f12, float f13,
+		float f20, float f21, float f22, float f23,
+		float f30, float f31, float f32, float f33)
+	{ 
+		XMFLOAT4 temp{ f00, f01, f02, f03 };
+		m_mat.r[0] = XMLoadFloat4(&temp);
+		temp = { f10, f11, f12, f13 };
+		m_mat.r[1] = XMLoadFloat4(&temp);
+		temp = { f20, f21, f22, f23 };
+		m_mat.r[2] = XMLoadFloat4(&temp);
+		temp = { f30, f31, f32, f33 };
+		m_mat.r[3] = XMLoadFloat4(&temp);
+	}
 	__forceinline Matrix4(const AffineTransform& xform) noexcept { *this = Matrix4(xform.GetBasis(), xform.GetTranslation()); }
 	__forceinline Matrix4(const OrthogonalTransform& xform) noexcept { *this = Matrix4(Matrix3(xform.GetRotation()), xform.GetTranslation()); }
 	__forceinline explicit Matrix4(const XMMATRIX& mat) noexcept { m_mat = mat; }

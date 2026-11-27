@@ -1038,10 +1038,41 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 }
 
 
+GpuBufferPtr Device::CreateTransformBuffer(std::span<Math::Matrix4> transforms)
+{
+	const size_t dataSize = transforms.size() * 12 * sizeof(float);
+
+	GpuBufferDesc desc{
+		.name			= "Transform Buffer",
+		.resourceType	= ResourceType::VertexBuffer,
+		.memoryAccess	= MemoryAccess::CpuWrite | MemoryAccess::GpuRead,
+		.elementCount	= 12 * transforms.size(),
+		.elementSize	= sizeof(float),
+		.bRayTracingBuildInput = true
+	};
+
+	auto buffer = CreateGpuBuffer(desc);
+
+	XMFLOAT3X4* ptr = (XMFLOAT3X4*)buffer->Map();
+
+	for (const auto& transform : transforms)
+	{
+		XMStoreFloat3x4(ptr, transform);
+		ptr++;
+	}
+
+	buffer->Unmap();
+	return buffer;
+}
+
+
 GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayTracingAccelerationStructureFlags buildFlags)
 {
 	vector<D3D12_RAYTRACING_GEOMETRY_DESC> d3d12GeometryDescs;
 
+	constexpr uint32_t transform3x4Size = 12 * sizeof(float);
+
+	uint32_t i = 0;
 	for (const auto& geometryDesc : geometryDescs)
 	{
 		D3D12_RAYTRACING_GEOMETRY_DESC d3d12GeometryDesc{
@@ -1055,10 +1086,16 @@ GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayT
 			const auto indexFormat = geometryDesc.triangles.indexFormat;
 			assert(indexFormat == Format::R32_UInt || indexFormat == Format::R16_UInt);
 
+			uint64_t transformBufferAddress = 0;
+			if (geometryDesc.triangles.transform3x4)
+			{
+				transformBufferAddress = geometryDesc.triangles.transform3x4 + geometryDesc.triangles.transformOffset * transform3x4Size;
+			}
+
 			d3d12GeometryDesc.Triangles.IndexBuffer = geometryDesc.triangles.indexBuffer;
 			d3d12GeometryDesc.Triangles.IndexCount = (UINT)geometryDesc.triangles.indexCount;
 			d3d12GeometryDesc.Triangles.IndexFormat = indexFormat == Format::R32_UInt ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT;
-			d3d12GeometryDesc.Triangles.Transform3x4 = geometryDesc.triangles.transform3x4;
+			d3d12GeometryDesc.Triangles.Transform3x4 = transformBufferAddress;
 			d3d12GeometryDesc.Triangles.VertexFormat = FormatToDxgi(geometryDesc.triangles.vertexFormat).srvFormat;
 			d3d12GeometryDesc.Triangles.VertexCount = (UINT)geometryDesc.triangles.vertexCount;
 			d3d12GeometryDesc.Triangles.VertexBuffer.StartAddress = geometryDesc.triangles.vertexBuffer;
@@ -1077,6 +1114,7 @@ GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayT
 		}
 
 		d3d12GeometryDescs.push_back(d3d12GeometryDesc);
+		++i;
 	}
 
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS d3d12BuildFlags = RayTracingAccelerationStructureFlagsToDX12(buildFlags);
@@ -1256,6 +1294,14 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 		missShaderNames.push_back(shaders.back()->GetEntryW());
 	}
 
+	// Callable shaders
+	for (const auto& libraryEntry : pipelineDesc.callableShaders)
+	{
+		assert(libraryEntry.type == ShaderType::Callable);
+		AddShader(libraryEntry);
+		callableShaderNames.push_back(shaders.back()->GetEntryW());
+	}
+
 	const uint32_t hitGroupOffset = (uint32_t)shaders.size();
 
 	// Hit group shaders
@@ -1347,7 +1393,7 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 
 	// Create and return the Luna DX12 RayTracingPipeline object
 	auto raytracingPipeline = std::make_shared<RayTracingPipeline>(pipelineDesc, stateObject.get());
-	raytracingPipeline->GatherShaderIdentifiers(rayGenShaderNames, missShaderNames, hitGroupNames, callableShaderNames);
+	raytracingPipeline->GatherShaderIdentifiers(rayGenShaderNames, missShaderNames, callableShaderNames, hitGroupNames);
 
 	return raytracingPipeline;
 }
@@ -1452,6 +1498,41 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		missSBTBuffer.stride = tableStride;
 	}
 
+	// Callable table
+	if (!sbtDesc.callableShaders.empty())
+	{
+		const size_t dataSize = sbtDesc.GetCallableDataSize();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + dataSize, shaderGroupIdentifierSize);
+		const size_t tableSize = tableStride * sbtDesc.callableShaders.size();
+
+		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Callable Table");
+
+		std::byte* mem = (std::byte*)gpuBuffer->Map();
+
+		for (uint32_t i = 0; i < (uint32_t)sbtDesc.callableShaders.size(); ++i)
+		{
+			// Get the callable shader index
+			const uint32_t shaderIndex = sbtDesc.callableShaders[i].id;
+
+			// Copy the shader record
+			memcpy(mem, pipeline12->GetCallableShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
+			// Copy extra shader data
+			if (dataSize > 0)
+			{
+				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.callableShaders[i].data, sbtDesc.callableShaders[i].size);
+			}
+			mem += tableStride;
+		}
+
+		gpuBuffer->Unmap();
+
+		// Setup the SBTBuffer
+		callableSBTBuffer.buffer = gpuBuffer;
+		callableSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
+		callableSBTBuffer.size = tableSize;
+		callableSBTBuffer.stride = tableStride;
+	}
+
 	// Hit group table
 	if (!sbtDesc.hitGroups.empty())
 	{
@@ -1487,11 +1568,8 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		hitGroupSBTBuffer.stride = tableStride;
 	}
 
-	// Callable table
-	// TODO
-
 	// Create and return ShaderBindingTable
-	auto shaderBindingTable = make_shared<ShaderBindingTable>(rayGenSBTBuffer, missSBTBuffer, hitGroupSBTBuffer, callableSBTBuffer);
+	auto shaderBindingTable = make_shared<ShaderBindingTable>(rayGenSBTBuffer, missSBTBuffer, callableSBTBuffer, hitGroupSBTBuffer);
 
 	return shaderBindingTable;
 }

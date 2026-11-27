@@ -51,8 +51,8 @@ void* RayTracingPipeline::GetCallableShaderIdentifier(uint32_t index) const
 void RayTracingPipeline::GatherShaderIdentifiers(
 	const vector<wstring>& rayGenShaderNames,
 	const vector<wstring>& missShaderNames,
-	const vector<wstring>& hitGroupNames,
-	const vector<wstring>& callableShaderNames)
+	const vector<wstring>& callableShaderNames,
+	const vector<wstring>& hitGroupNames)
 {
 	auto stateObjectProperties = m_stateObject.query<ID3D12StateObjectProperties>();
 	assert(stateObjectProperties);
@@ -69,8 +69,8 @@ void RayTracingPipeline::GatherShaderIdentifiers(
 
 	GatherIdentifiers(rayGenShaderNames, m_rayGenShaderIdentifiers);
 	GatherIdentifiers(missShaderNames, m_missShaderIdentifiers);
-	GatherIdentifiers(hitGroupNames, m_hitGroupIdentifiers);
 	GatherIdentifiers(callableShaderNames, m_callableShaderIdentifiers);
+	GatherIdentifiers(hitGroupNames, m_hitGroupIdentifiers);
 }
 
 } // namespace Luna::DX12

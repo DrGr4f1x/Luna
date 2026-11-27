@@ -26,6 +26,7 @@ struct RayTracingGeometryTrianglesDesc
 	size_t vertexStride{ 0 };
 	uint64_t indexBuffer{ 0 };
 	uint64_t vertexBuffer{ 0 };
+	uint32_t transformOffset{ 0 };
 };
 
 

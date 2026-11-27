@@ -27,10 +27,12 @@ struct ShaderBindingTableDesc
 {
 	std::vector<ShaderRecord> rayGenShaders;
 	std::vector<ShaderRecord> missShaders;
+	std::vector<ShaderRecord> callableShaders;
 	std::vector<ShaderRecord> hitGroups;
 	
 	size_t GetRayGenDataSize() const;
 	size_t GetMissDataSize() const;
+	size_t GetCallableDataSize() const;
 	size_t GetHitGroupDataSize() const;
 };
 
@@ -47,24 +49,24 @@ struct SBTBuffer
 class ShaderBindingTable
 {
 public:
-	ShaderBindingTable(SBTBuffer rayGenBuffer, SBTBuffer missBuffer, SBTBuffer hitGroupBuffer, SBTBuffer callableBuffer)
+	ShaderBindingTable(SBTBuffer rayGenBuffer, SBTBuffer missBuffer, SBTBuffer callableBuffer, SBTBuffer hitGroupBuffer)
 		: m_rayGenBuffer{ rayGenBuffer }
 		, m_missBuffer{ missBuffer }
-		, m_hitGroupBuffer{ hitGroupBuffer }
 		, m_callableBuffer{ callableBuffer }
+		, m_hitGroupBuffer{ hitGroupBuffer }
 	{}
 	virtual ~ShaderBindingTable() = default;
 
 	SBTBuffer GetRayGenBuffer() const { return m_rayGenBuffer; }
 	SBTBuffer GetMissBuffer() const { return m_missBuffer; }
-	SBTBuffer GetHitGroupBuffer() const { return m_hitGroupBuffer; }
 	SBTBuffer GetCallableBuffer() const { return m_callableBuffer; }
+	SBTBuffer GetHitGroupBuffer() const { return m_hitGroupBuffer; }
 
 protected:
 	SBTBuffer m_rayGenBuffer;
 	SBTBuffer m_missBuffer;
-	SBTBuffer m_hitGroupBuffer;
 	SBTBuffer m_callableBuffer;
+	SBTBuffer m_hitGroupBuffer;
 };
 
 using ShaderBindingTablePtr = std::shared_ptr<ShaderBindingTable>;

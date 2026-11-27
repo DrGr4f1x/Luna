@@ -30,14 +30,14 @@ public:
 
 	void* GetRayGenShaderIdentifier(uint32_t index) const;
 	void* GetMissShaderIdentifier(uint32_t index) const;
-	void* GetHitGroupIdentifier(uint32_t index) const;
 	void* GetCallableShaderIdentifier(uint32_t index) const;
+	void* GetHitGroupIdentifier(uint32_t index) const;
 
 	void GatherShaderIdentifiers(
 		const std::vector<std::wstring>& rayGenShaderNames,
 		const std::vector<std::wstring>& missShaderNames,
-		const std::vector<std::wstring>& hitGroupNames,
-		const std::vector<std::wstring>& callableShaderNames);
+		const std::vector<std::wstring>& callableShaderNames,
+		const std::vector<std::wstring>& hitGroupNames);
 
 protected:
 	RayTracingPipelineDesc m_desc{};
@@ -45,8 +45,8 @@ protected:
 
 	std::vector<void*> m_rayGenShaderIdentifiers;
 	std::vector<void*> m_missShaderIdentifiers;
-	std::vector<void*> m_hitGroupIdentifiers;
 	std::vector<void*> m_callableShaderIdentifiers;
+	std::vector<void*> m_hitGroupIdentifiers;
 };
 
 } // Luna::DX12

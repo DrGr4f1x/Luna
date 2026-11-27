@@ -1052,6 +1052,34 @@ GpuBufferPtr Device::CreateBLAS(const RayTracingGeometryDesc& geometryDesc)
 }
 
 
+GpuBufferPtr Device::CreateTransformBuffer(std::span<Math::Matrix4> transforms)
+{
+	const size_t dataSize = transforms.size() * 12 * sizeof(float);
+
+	GpuBufferDesc desc{
+		.name			= "Transform Buffer",
+		.resourceType	= ResourceType::StructuredBuffer,
+		.memoryAccess	= MemoryAccess::CpuWrite | MemoryAccess::GpuRead,
+		.elementCount	= 12 * transforms.size(),
+		.elementSize	= sizeof(float),
+		.bRayTracingBuildInput = true
+	};
+
+	auto buffer = CreateGpuBuffer(desc);
+
+	XMFLOAT3X4* ptr = (XMFLOAT3X4*)buffer->Map();
+
+	for (const auto& transform : transforms)
+	{
+		XMStoreFloat3x4(ptr, transform);
+		ptr++;
+	}
+
+	buffer->Unmap();
+	return buffer;
+}
+
+
 GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayTracingAccelerationStructureFlags buildFlags)
 {
 	vector<VkAccelerationStructureGeometryKHR> vkAccelerationStructureGeometries;
@@ -1059,9 +1087,10 @@ GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayT
 	std::vector<VkAccelerationStructureBuildRangeInfoKHR> buildRangeInfos{};
 	std::vector<VkAccelerationStructureBuildRangeInfoKHR*> pBuildRangeInfos{};
 
+	constexpr uint32_t transform3x4Size = 12 * sizeof(float);
+
 	for (const auto& geometryDesc : geometryDescs)
 	{
-
 		// Vulkan acceleration structure
 		VkAccelerationStructureGeometryKHR accelerationStructureGeometry{};
 		accelerationStructureGeometry.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR;
@@ -1069,6 +1098,7 @@ GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayT
 		accelerationStructureGeometry.geometryType = RayTracingGeometryTypeToVulkan(geometryDesc.geometryType);
 
 		uint32_t numPrimitives = 0;
+		uint32_t transformOffset = 0;
 		if (geometryDesc.geometryType == RayTracingGeometryType::Triangles)
 		{
 			// Make sure the index buffer has an appropriate format
@@ -1083,6 +1113,7 @@ GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayT
 			accelerationStructureGeometry.geometry.triangles.indexType = indexFormat == Format::R32_UInt ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
 			accelerationStructureGeometry.geometry.triangles.indexData.deviceAddress = geometryDesc.triangles.indexBuffer;
 			accelerationStructureGeometry.geometry.triangles.transformData.deviceAddress = geometryDesc.triangles.transform3x4;
+			transformOffset = geometryDesc.triangles.transformOffset * transform3x4Size;
 			numPrimitives = (uint32_t)geometryDesc.triangles.indexCount / 3;
 		}
 		else if (geometryDesc.geometryType == RayTracingGeometryType::AABBs)
@@ -1102,10 +1133,10 @@ GpuBufferPtr Device::CreateBLAS(span<RayTracingGeometryDesc> geometryDescs, RayT
 		primitiveCounts.push_back(numPrimitives);
 
 		VkAccelerationStructureBuildRangeInfoKHR accelerationStructureBuildRangeInfo{
-			.primitiveCount = numPrimitives,
-			.primitiveOffset = 0,
-			.firstVertex = 0,
-			.transformOffset = 0
+			.primitiveCount		= numPrimitives,
+			.primitiveOffset	= 0,
+			.firstVertex		= 0,
+			.transformOffset	= transformOffset
 		};
 		buildRangeInfos.push_back(accelerationStructureBuildRangeInfo);
 	}
@@ -1390,6 +1421,13 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.miss.info);
 		}
 
+		// Callable shaders
+		for (const auto& libraryEntry : pipelineDesc.callableShaders)
+		{
+			assert(libraryEntry.type == ShaderType::Callable);
+			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, shaderSetAndBindingMapping.miss.info);
+		}
+
 		// Hit group shaders
 		for (const auto& libraryEntry : pipelineDesc.hitGroupShaders)
 		{
@@ -1431,6 +1469,13 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
 		}
 
+		// Callable shaders
+		for (const auto& libraryEntry : pipelineDesc.callableShaders)
+		{
+			assert(libraryEntry.type == ShaderType::Callable);
+			AddShaderStageCreateInfo(libraryEntry.type, libraryEntry.shaderNameAndEntry, info);
+		}
+
 		// Hit group shaders
 		for (const auto& libraryEntry : pipelineDesc.hitGroupShaders)
 		{
@@ -1461,8 +1506,8 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	// Counts of shaders
 	uint32_t numRayGenShaders = (uint32_t)pipelineDesc.rayGenShaders.size();
 	uint32_t numMissShaders = (uint32_t)pipelineDesc.missShaders.size();
+	uint32_t numCallableShaders = (uint32_t)pipelineDesc.callableShaders.size();
 	uint32_t numHitGroupShaders = (uint32_t)pipelineDesc.hitGroupShaders.size();
-	uint32_t numCallableShaders = 0;
 
 	// Ray generation shader groups
 	for(uint32_t shaderIndex = 0; shaderIndex < numRayGenShaders; ++shaderIndex)
@@ -1483,7 +1528,7 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 	{
 		const uint32_t offset = numRayGenShaders;
 
-		VkRayTracingShaderGroupCreateInfoKHR rayGenGroupInfo{
+		VkRayTracingShaderGroupCreateInfoKHR missGroupInfo{
 			.sType					= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
 			.type					= VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
 			.generalShader			= shaderIndex + offset,
@@ -1491,10 +1536,26 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 			.anyHitShader			= VK_SHADER_UNUSED_KHR,
 			.intersectionShader		= VK_SHADER_UNUSED_KHR
 		};
-		shaderGroupInfos.push_back(rayGenGroupInfo);
+		shaderGroupInfos.push_back(missGroupInfo);
 	}
 
-	const uint32_t hitGroupOffset = numRayGenShaders + numMissShaders;
+	// Callable shader groups
+	for (uint32_t shaderIndex = 0; shaderIndex < numCallableShaders; ++shaderIndex)
+	{
+		const uint32_t offset = numRayGenShaders + numMissShaders;
+
+		VkRayTracingShaderGroupCreateInfoKHR callableGroupInfo{
+			.sType					= VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR,
+			.type					= VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR,
+			.generalShader			= shaderIndex + offset,
+			.closestHitShader		= VK_SHADER_UNUSED_KHR,
+			.anyHitShader			= VK_SHADER_UNUSED_KHR,
+			.intersectionShader		= VK_SHADER_UNUSED_KHR
+		};
+		shaderGroupInfos.push_back(callableGroupInfo);
+	}
+
+	const uint32_t hitGroupOffset = numRayGenShaders + numMissShaders + numCallableShaders;
 
 	// Hit groups
 	const uint32_t numHitGroups = (uint32_t)pipelineDesc.hitGroups.size();
@@ -1599,7 +1660,7 @@ RayTracingPipelinePtr Device::CreateRayTracingPipeline(const RayTracingPipelineD
 
 	// Create and return the Luna RayTracingPipeline object
 	auto raytracingPipeline = std::make_shared<RayTracingPipeline>(pipelineDesc, pipeline.get());
-	raytracingPipeline->GatherShaderIdentifiers(this, numRayGenShaders, numMissShaders, numHitGroups, numCallableShaders);
+	raytracingPipeline->GatherShaderIdentifiers(this, numRayGenShaders, numMissShaders, numCallableShaders, numHitGroups);
 	return raytracingPipeline;
 }
 
@@ -1724,6 +1785,41 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		missSBTBuffer.stride = tableStride;
 	}
 
+	// Callable table
+	if (!sbtDesc.callableShaders.empty())
+	{
+		const size_t dataSize = sbtDesc.GetCallableDataSize();
+		const size_t tableStride = Math::AlignUp(shaderGroupIdentifierSize + dataSize, shaderGroupIdentifierSize);
+		const size_t tableSize = tableStride * sbtDesc.callableShaders.size();
+
+		auto gpuBuffer = AllocateSBTBuffer(tableSize, "Callable Table");
+
+		std::byte* mem = (std::byte*)gpuBuffer->Map();
+
+		for (uint32_t i = 0; i < (uint32_t)sbtDesc.callableShaders.size(); ++i)
+		{
+			// Get the miss shader index
+			const uint32_t shaderIndex = sbtDesc.callableShaders[i].id;
+
+			// Copy the shader record
+			memcpy(mem, pipelineVK->GetCallableShaderIdentifier(shaderIndex), shaderGroupIdentifierSize);
+			// Copy extra shader data
+			if (dataSize > 0)
+			{
+				memcpy(mem + shaderGroupIdentifierSize, sbtDesc.callableShaders[i].data, sbtDesc.callableShaders[i].size);
+			}
+			mem += tableStride;
+		}
+
+		gpuBuffer->Unmap();
+
+		// Setup the SBTBuffer
+		callableSBTBuffer.buffer = gpuBuffer;
+		callableSBTBuffer.bufferAddress = gpuBuffer->GetGpuAddress();
+		callableSBTBuffer.size = tableSize;
+		callableSBTBuffer.stride = tableStride;
+	}
+
 	// Hit group table
 	if (!sbtDesc.hitGroups.empty())
 	{
@@ -1759,11 +1855,8 @@ ShaderBindingTablePtr Device::CreateShaderBindingTable(const ShaderBindingTableD
 		hitGroupSBTBuffer.stride = tableStride;
 	}
 
-	// Callable table
-	// TODO
-
 	// Create and return ShaderBindingTable
-	auto shaderBindingTable = make_shared<ShaderBindingTable>(rayGenSBTBuffer, missSBTBuffer, hitGroupSBTBuffer, callableSBTBuffer);
+	auto shaderBindingTable = make_shared<ShaderBindingTable>(rayGenSBTBuffer, missSBTBuffer, callableSBTBuffer, hitGroupSBTBuffer);
 
 	return shaderBindingTable;
 }

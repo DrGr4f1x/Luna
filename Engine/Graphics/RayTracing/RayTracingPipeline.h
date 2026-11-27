@@ -84,6 +84,7 @@ struct RayTracingPipelineDesc
 	// Lists of shaders.  Must always have at least one raygen and miss shader.
 	std::vector<RayTracingShaderLibraryEntry> rayGenShaders;
 	std::vector<RayTracingShaderLibraryEntry> missShaders;
+	std::vector<RayTracingShaderLibraryEntry> callableShaders;
 	std::vector<RayTracingShaderLibraryEntry> hitGroupShaders;
 
 	// Indices into the hitGroupShaders list for each hit group

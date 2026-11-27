@@ -75,6 +75,7 @@
     </Project>
     <Project Path="Apps/RayQuery/RayQuery.vcxproj" Id="873f5c06-85d5-4f42-9217-b10a5b81931b" />
     <Project Path="Apps/RayTracingBasic/RayTracingBasic.vcxproj" Id="9b04a349-32a9-4b0a-bd0c-695a36931f57" />
+    <Project Path="Apps/RayTracingCallable/RayTracingCallable.vcxproj" Id="347cdee3-a07d-49c4-80ea-504870444e53" />
     <Project Path="Apps/RayTracingGltf/RayTracingGltf.vcxproj" Id="25b464c9-2a86-48d6-a45b-7367169483e7" />
     <Project Path="Apps/RayTracingIntersection/RayTracingIntersection.vcxproj" Id="1d309836-71aa-41ef-9640-d7701c61cf67" />
     <Project Path="Apps/RayTracingShadows/RayTracingShadows.vcxproj" Id="5a70ee76-44de-453e-9c76-dd2ed87ff1ec" />

@@ -73,9 +73,9 @@ void RayTracingBasicApp::Render()
 
 	auto& computeContext = context.GetComputeContext();
 
-	computeContext.SetRootSignature(m_globalRootSignature);
+	computeContext.SetRootSignature(m_rootSignature);
 	computeContext.SetRayTracingPipeline(m_rayTracingPipeline);
-	computeContext.SetRootSRV(0, m_rayTracingTLAS);
+	computeContext.SetRootSRV(0, m_tlasBuffer);
 	computeContext.SetDescriptors(1, m_descriptorSet);
 
 	computeContext.DispatchRays(m_shaderBindingTable, GetWindowWidth(), GetWindowHeight());
@@ -100,7 +100,7 @@ void RayTracingBasicApp::CreateDeviceDependentResources()
 		256.0f);
 	m_camera.SetPosition(Vector3(0.0f, 0.0f, 2.5f));
 
-	m_rayGenConstantBuffer = CreateConstantBuffer("Ray Gen Constant Buffer", 1, sizeof(RayGenConstants));
+	m_sceneConstantBuffer = CreateConstantBuffer("Scene Constant Buffer", 1, sizeof(SceneConstants));
 
 	InitRayTracingBLAS();
 	InitRayTracingTLAS();
@@ -133,12 +133,12 @@ void RayTracingBasicApp::InitRayTracingBLAS()
 		{ {  1.0f,  -1.0f,  0.0f } }
 	};
 
-	m_vertexBuffer = CreateRayTracingVertexBuffer<Vertex>("Vertex buffer", vertices);
+	auto vertexBuffer = CreateRayTracingVertexBuffer<Vertex>("Vertex buffer", vertices);
 
 	// Setup index buffer for a single triangle
 	vector<uint32_t> indices = { 0, 1, 2 };
 	
-	m_indexBuffer = CreateRayTracingIndexBuffer("Index buffer", indices);
+	auto indexBuffer = CreateRayTracingIndexBuffer("Index buffer", indices);
 
 	// Bottom-level geometry description
 	RayTracingGeometryDesc blasDesc{
@@ -153,20 +153,20 @@ void RayTracingBasicApp::InitRayTracingBLAS()
 	blasDesc.triangles.indexCount = indices.size();
 	blasDesc.triangles.vertexCount = vertices.size();
 	blasDesc.triangles.vertexStride = sizeof(Vertex);
-	blasDesc.triangles.indexBuffer = m_indexBuffer->GetGpuAddress();
-	blasDesc.triangles.vertexBuffer = m_vertexBuffer->GetGpuAddress();
+	blasDesc.triangles.indexBuffer = indexBuffer->GetGpuAddress();
+	blasDesc.triangles.vertexBuffer = vertexBuffer->GetGpuAddress();
 
-	m_triangleBLAS = GetDevice()->CreateBLAS(blasDesc);
+	m_blasBuffer = GetDevice()->CreateBLAS(blasDesc);
 }
 
 
 void RayTracingBasicApp::InitRayTracingTLAS()
 {
 	RayTracingInstanceDesc instanceDesc{
-		.blas			= m_triangleBLAS,
+		.blas			= m_blasBuffer,
 		.transform		= Matrix4{ kIdentity },
 		.instanceID		= 1,
-		.instanceMask	= 0xFF,
+		.instanceMask	= 0xFF
 	};
 
 	vector<RayTracingInstanceDesc> instances = { instanceDesc };
@@ -176,7 +176,7 @@ void RayTracingBasicApp::InitRayTracingTLAS()
 		.buildFlags		= RayTracingAccelerationStructureFlags::FastTrace
 	};
 
-	m_rayTracingTLAS = GetDevice()->CreateTLAS(tlasDesc);
+	m_tlasBuffer = GetDevice()->CreateTLAS(tlasDesc);
 }
 
 
@@ -190,14 +190,14 @@ void RayTracingBasicApp::InitRootSignature()
 		}
 	};
 
-	m_globalRootSignature = CreateRootSignature(desc);
+	m_rootSignature = CreateRootSignature(desc);
 }
 
 
 void RayTracingBasicApp::InitRayTracingPipeline()
 {
 	RayTracingPipelineDesc desc{
-		.rootSignature = m_globalRootSignature,
+		.rootSignature = m_rootSignature,
 		.rayGenShaders = {
 			{ ShaderType::RayGeneration, { .shaderFile = "RayGen", .entry = "raygen_main" }}
 		},
@@ -242,14 +242,14 @@ void RayTracingBasicApp::InitColorTarget()
 
 void RayTracingBasicApp::InitDescriptorSet()
 {
-	m_descriptorSet = m_globalRootSignature->CreateDescriptorSet(1, { m_colorTarget, m_rayGenConstantBuffer });
+	m_descriptorSet = m_rootSignature->CreateDescriptorSet(1, { m_colorTarget, m_sceneConstantBuffer });
 }
 
 
 void RayTracingBasicApp::UpdateConstantBuffer()
 {
-	m_rayGenConstants.projectionToWorldMatrix = Invert(m_camera.GetViewProjectionMatrix());
-	m_rayGenConstants.cameraPosition = m_camera.GetPosition();
+	m_sceneConstants.projectionToWorldMatrix = Invert(m_camera.GetViewProjectionMatrix());
+	m_sceneConstants.cameraPosition = m_camera.GetPosition();
 
-	m_rayGenConstantBuffer->Update(sizeof(m_rayGenConstants), &m_rayGenConstants);
+	m_sceneConstantBuffer->Update(sizeof(SceneConstants), &m_sceneConstants);
 }

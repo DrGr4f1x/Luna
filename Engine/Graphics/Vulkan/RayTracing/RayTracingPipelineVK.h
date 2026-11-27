@@ -31,14 +31,14 @@ public:
 
 	void* GetRayGenShaderIdentifier(uint32_t index) const;
 	void* GetMissShaderIdentifier(uint32_t index) const;
-	void* GetHitGroupIdentifier(uint32_t index) const;
 	void* GetCallableShaderIdentifier(uint32_t index) const;
+	void* GetHitGroupIdentifier(uint32_t index) const;
 
 	const RayTracingPipelineDesc& GetPipelineDesc() const { return m_desc; }
 
 	VkPipeline GetPipeline() const { return m_pipeline ? m_pipeline->Get() : VK_NULL_HANDLE; }
 
-	void GatherShaderIdentifiers(Device* device, uint32_t numRayGenShaders, uint32_t numMissShaders, uint32_t numHitGroups, uint32_t numCallableShaders);
+	void GatherShaderIdentifiers(Device* device, uint32_t numRayGenShaders, uint32_t numMissShaders, uint32_t numCallableShaders, uint32_t numHitGroups);
 
 protected:
 	RayTracingPipelineDesc m_desc{};
@@ -52,8 +52,8 @@ protected:
 
 	ShaderIdentifierInfo m_rayGenShaderIdentifierInfo;
 	ShaderIdentifierInfo m_missShaderIdentifierInfo;
-	ShaderIdentifierInfo m_hitGroupIdentifierInfo;
 	ShaderIdentifierInfo m_callableShaderIdentifierInfo;
+	ShaderIdentifierInfo m_hitGroupIdentifierInfo;
 	size_t m_shaderIdentifierSize{ 0 };
 
 	std::vector<std::byte> m_shaderHandleStorage;
